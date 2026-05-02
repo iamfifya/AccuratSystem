@@ -27,7 +27,7 @@ namespace AccuratPanelCarWashing.Models
         public string CarBodyType { get; set; }
         public DateTime Time { get; set; }
         public decimal TotalPrice { get; set; }
-        public int ShiftId { get; set; }
+        public int? ShiftId { get; set; }
         public int BranchId { get; set; } = AppSettings.CurrentBranchId;
         public string Notes { get; set; }
         public List<int> ServiceIds { get; set; } = new List<int>();

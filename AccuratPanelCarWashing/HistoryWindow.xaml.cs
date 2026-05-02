@@ -93,39 +93,42 @@ namespace AccuratPanelCarWashing
         {
             try
             {
+                // 1. Загружаем все необходимые справочники один раз
                 var allShifts = await _apiService.GetShiftsAsync();
+                var allOrders = await _apiService.GetOrdersAsync();
+                var allServices = await _apiService.GetServicesAsync();
+                var allUsers = await _apiService.GetUsersAsync();
+
+                // 2. Ищем закрытые смены за этот день для статистики
                 var closedShiftsOnDate = allShifts.Where(s => s.Date.Date == date.Date && s.IsClosed).ToList();
 
-                if (!closedShiftsOnDate.Any())
+                // 3. ФИЛЬТРАЦИЯ ЗАКАЗОВ И ЗАПИСЕЙ:
+                // Берем заказы, которые либо привязаны к закрытым сменам этого дня,
+                // либо являются предварительными записями на эту дату.
+                var shiftIdsOnDate = closedShiftsOnDate.Select(s => s.Id).ToList();
+
+                var ordersOnDate = allOrders.Where(o =>
+                    (o.ShiftId.HasValue && shiftIdsOnDate.Contains(o.ShiftId.Value)) || // Заказы из закрытых смен
+                    (o.IsAppointment && o.Time.Date == date.Date) // Предварительные записи на этот день
+                ).ToList();
+
+                if (!ordersOnDate.Any())
                 {
                     Box1History = new List<OrderDisplayItem>();
                     Box2History = new List<OrderDisplayItem>();
                     Box3History = new List<OrderDisplayItem>();
-                    ShiftSummary = "В этот день закрытых смен нет.";
+                    ShiftSummary = "Данных за этот день нет.";
                     return;
                 }
 
-                var allOrdersOnDate = new List<CarWashOrder>();
-
-                // Чтобы не дергать API в цикле, загрузим все заказы и отфильтруем
-                var allOrders = await _apiService.GetOrdersAsync();
-
-                foreach (var shift in closedShiftsOnDate)
-                {
-                    var shiftOrders = allOrders.Where(o => o.ShiftId == shift.Id).ToList();
-                    allOrdersOnDate.AddRange(shiftOrders);
-                }
-
-                var allServices = await _apiService.GetServicesAsync();
-                var allUsers = await _apiService.GetUsersAsync();
-
-                var displayItems = allOrdersOnDate.Select(o => new OrderDisplayItem
+                // 4. Преобразуем в элементы для отображения
+                var displayItems = ordersOnDate.Select(o => new OrderDisplayItem
                 {
                     Id = o.Id,
                     CarModel = o.CarModel,
                     CarNumber = o.CarNumber,
-                    Time = o.Time,
-                    WasherName = allUsers.FirstOrDefault(u => u.Id == o.WasherId)?.FullName ?? "Не назначен",
+                    Time = TimeHelper.ToMsk(o.Time), // Используем хелпер для корректного времени
+                    WasherName = allUsers.FirstOrDefault(u => u.Id == o.WasherId)?.FullName ?? (o.IsAppointment ? "📅 Запись" : "Не назначен"),
                     ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id =>
                     {
                         var svc = allServices.FirstOrDefault(s => s.Id == id);
@@ -143,14 +146,16 @@ namespace AccuratPanelCarWashing
                     IsAppointment = o.IsAppointment
                 }).OrderBy(i => i.Time).ToList();
 
+                // 5. Распределяем по боксам
                 Box1History = displayItems.Where(i => i.BoxNumber == 1).ToList();
                 Box2History = displayItems.Where(i => i.BoxNumber == 2).ToList();
                 Box3History = displayItems.Where(i => i.BoxNumber == 3).ToList();
 
-                var completedOrders = allOrdersOnDate.Where(o => o.Status == "Выполнен").ToList();
+                // 6. Обновляем сводку (только по реально выполненным заказам)
+                var completedOrders = ordersOnDate.Where(o => o.Status == "Выполнен").ToList();
                 decimal totalRevenue = completedOrders.Sum(o => o.FinalPrice);
 
-                ShiftSummary = $"✅ Машин: {completedOrders.Count} | 💰 Выручка: {totalRevenue:N0} ₽";
+                ShiftSummary = $"✅ Выполнено: {completedOrders.Count} | ⏳ Записей: {ordersOnDate.Count(o => o.IsAppointment)} | 💰 Выручка: {totalRevenue:N0} ₽";
             }
             catch (Exception ex)
             {
