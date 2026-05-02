@@ -81,14 +81,6 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        private void HistoryDatePicker_SelectedDateChanged(object sender, DateTime? e)
-        {
-            if (e.HasValue)
-            {
-                _ = LoadHistoryForDateAsync(e.Value);
-            }
-        }
-
         private async Task LoadHistoryForDateAsync(DateTime date)
         {
             try
