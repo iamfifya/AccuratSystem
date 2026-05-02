@@ -60,12 +60,14 @@
 
 Примените миграции Entity Framework для создания таблиц:
 
-Bash
-dotnet ef database update
+```Bash
+    dotnet ef database update
+```
 Запустите сервер:
 
-Bash
-dotnet run
+```Bash
+    dotnet run
+```
 2. Запуск клиентского приложения
 Откройте общее решение AccuratSystem.sln или AccuratSystem.slnx в Visual Studio.
 
