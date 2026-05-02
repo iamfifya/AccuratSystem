@@ -37,7 +37,7 @@ jobs:
 
     # 4. Восстанавливаем пакеты для WPF проекта
     - name: Restore NuGet Packages (WPF)
-      run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
+      run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory AccuratPanelCarWashing\packages
 
     # 5. Восстанавливаем пакеты для Web API
     - name: Restore .NET Packages (API)
