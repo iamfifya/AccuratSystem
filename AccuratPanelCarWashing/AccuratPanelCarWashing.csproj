@@ -318,7 +318,6 @@
       <DependentUpon>WasherSelectionDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ZeroToVisibilityConverter.cs" />
-    <Resource Include="Глянец - Панель управления.ico" />
     <Page Include="AddEditClientWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
