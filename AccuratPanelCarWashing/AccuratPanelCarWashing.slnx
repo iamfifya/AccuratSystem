@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../Akkurat.WebAPI/Accurat.WebAPI.csproj" />
+  <Project Path="AccuratPanelCarWashing.csproj" Id="91065681-afbe-4ea9-867d-6d9885c61197" />
+</Solution>

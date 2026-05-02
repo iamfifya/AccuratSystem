@@ -1,0 +1,63 @@
+<Window x:Class="AccuratPanelCarWashing.StartShiftWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AccuratPanelCarWashing"
+        mc:Ignorable="d"
+        Title="Начать смену"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Width="450" Height="700"
+        Background="#F5F6FA"
+        BorderBrush="Black"
+        BorderThickness="1"
+        WindowStyle="None"
+        Foreground="Black">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="🚗 Новая смена" FontSize="24" FontWeight="Bold" 
+                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,20" Grid.Row="0"/>
+
+        <Label Content="📅 Дата смены:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
+        <local:CustomDatePicker x:Name="ShiftDatePicker" Grid.Row="2" Height="50" 
+                        SelectedDate="{Binding SelectedDate, Mode=TwoWay}"/>
+
+        <Label Content="👥 Выберите сотрудников:" Grid.Row="3" Margin="0,10,0,5" FontWeight="SemiBold"/>
+
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Employees}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#BDC3C7" BorderThickness="0,0,0,1" Padding="10,5">
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                      Margin="5">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding FullName}" FontSize="13" Margin="5,0" Foreground="Black"/>
+                                    <TextBlock Text="{Binding IsAdmin, Converter={StaticResource BoolToRoleConverter}}" 
+                                               FontSize="10" Foreground="#7F8C8D" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="5" Margin="0,15">
+            <Button Content="✅ Начать смену" Click="StartShiftButton_Click" Width="150" Height="35" 
+                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
+            <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
+                    Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,148 @@
+<Window x:Class="AccuratPanelCarWashing.ReportsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Отчеты по сменам"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        MinWidth="900" MinHeight="550"
+        Width="1080" Height="650"
+        Background="#F5F6FA"
+        BorderBrush="Black"
+        BorderThickness="1"
+        WindowStyle="None"
+        WindowState="Maximized"
+        Foreground="Black">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <TextBlock Text="📊 История смен" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding CurrentBranchInfo}" FontSize="16" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="#F8F9FA" CornerRadius="10" Padding="10">
+                <StackPanel>
+                    <TextBlock Text="📁 Закрытые смены" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <ListBox x:Name="ReportsListBox" MinHeight="400" 
+                             SelectionChanged="ReportSelectionChanged"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="#F8F9FA"
+                             HorizontalContentAlignment="Stretch">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="White" CornerRadius="3" Height="auto">
+                                    <Grid Height="auto">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Margin="5,0,5,0" Grid.Column="0" FontWeight="Bold" 
+                                                   Text="{Binding Date, StringFormat=📅 {0:dd.MM.yyyy}}" 
+                                                   FontSize="14" VerticalAlignment="Center" Foreground="Black"/>
+
+                                        <TextBlock Margin="5,0,5,0" Grid.Column="1" 
+                                                   Text="{Binding TotalCars, StringFormat=🚗 {0}}" 
+                                                   HorizontalAlignment="Center" FontSize="14" 
+                                                   VerticalAlignment="Center" Foreground="Black"/>
+
+                                        <TextBlock Margin="5,0,5,0" Grid.Column="2" 
+                                                   Text="{Binding TotalRevenue, StringFormat=💰 {0:N0} ₽}" 
+                                                   Foreground="#27AE60" FontSize="14" 
+                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Background="#F8F9FA" CornerRadius="10" Padding="15" Margin="10,0,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Foreground="Black">
+                    <StackPanel>
+                        <TextBlock Text="📋 Детали смены" FontSize="16" FontWeight="Bold" 
+                                   HorizontalAlignment="Center" Margin="0,0,0,15"/>
+
+                        <Border Background="White" CornerRadius="8" Padding="15" Margin="0,5">
+                            <StackPanel>
+                                <TextBlock Text="{Binding SelectedReport.Date, StringFormat=📅 Дата: {0:dd.MM.yyyy}}"/>
+                                <TextBlock Text="{Binding SelectedReport.StartTime, StringFormat=🕐 Начало: {0:HH:mm:ss}}" Margin="0,3,0,0"/>
+                                <TextBlock Text="{Binding SelectedReport.EndTime, StringFormat=🕒 Конец: {0:HH:mm:ss}}" Margin="0,3,0,0"/>
+                                <TextBlock Text="{Binding SelectedReport.TotalCars, StringFormat=🚗 Всего машин: {0}}" Margin="0,5,0,0"/>
+
+                                <TextBlock Text="{Binding SelectedReport.TotalRevenue, StringFormat=💰 Общая выручка: {0:N0} ₽}" 
+                                           FontWeight="Bold" Foreground="#27AE60" Margin="0,5,0,0" TextWrapping="Wrap"/>
+
+                                <TextBlock Text="{Binding SelectedReport.TotalWasherEarnings, StringFormat=👤 Мойщикам (Начислено): {0:N0} ₽}" 
+                                           Foreground="#8E44AD" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SelectedReport.TotalCompanyEarnings, StringFormat=🏢 Компании (Грязными): {0:N0} ₽}" 
+                                           Foreground="#34495E" Margin="0,3,0,0" TextWrapping="Wrap"/>
+
+                                <TextBlock Text="{Binding SelectedReport.TotalExpenses, StringFormat=📉 Расходы за смену: {0:N0} ₽}" 
+                                           Foreground="#E74C3C" Margin="0,10,0,0" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SelectedReport.TotalAdvances, StringFormat=💸 Выдано авансов: {0:N0} ₽}" 
+                                           Foreground="#F39C12" Margin="0,3,0,0" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SelectedReport.NetProfit, StringFormat=💎 Чистая прибыль (ЧПКО): {0:N0} ₽}" 
+                                           Foreground="#2ECC71" Margin="0,5,0,0" FontWeight="Bold" FontSize="14" TextWrapping="Wrap"/>
+
+                                <TextBlock Text="{Binding SelectedReport.Notes, StringFormat=📝 Примечание: {0}}" 
+                                           FontSize="12" Foreground="#7F8C8D" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Separator Margin="0,15" Height="1" Background="#BDC3C7"/>
+
+                        <TextBlock Text="👥 Работа сотрудников (Зарплата)" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <ItemsControl ItemsSource="{Binding SelectedReport.EmployeesWork}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="White" CornerRadius="5" Padding="10" Margin="0,3">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1.2*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding EmployeeName}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding CarsWashed, StringFormat=🚗 {0} шт.}" 
+                                                       Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Earnings, StringFormat=💰 Начислено: {0:N0} ₽}" 
+                                                       Foreground="#27AE60" Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding Advances, StringFormat=🔻 Авансы: {0:N0} ₽}" 
+                                                       Foreground="#E74C3C" Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding ToPay, StringFormat=💳 НА РУКИ: {0:N0} ₽}" 
+                                                       Foreground="#8E44AD" Margin="10,0" FontWeight="Bold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20">
+            <Button Content="📅 Интервальный отчет" Click="CustomReportButton_Click" 
+                    Width="200" Height="35" Margin="5" Background="#3498DB" Foreground="White" Cursor="Hand"/>
+            <Button Content="📄 Экспорт смены" Click="ExportButton_Click" 
+                    Width="150" Height="35" Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
+            <Button Content="✖ Закрыть" Click="CloseButton_Click" 
+                    Width="120" Height="35" Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>

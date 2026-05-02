@@ -1,0 +1,271 @@
+<Window x:Class="AccuratPanelCarWashing.EmployeeCardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AccuratPanelCarWashing"
+        mc:Ignorable="d"
+        Title="Сотрудники"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        MinWidth="800" MinHeight="500"
+        Width="1000" Height="600"
+        Background="#F5F6FA"
+        BorderBrush="Black"
+        BorderThickness="1"
+        WindowStyle="None"
+        WindowState="Maximized"
+        Foreground="Black">
+
+    <Window.Resources>
+        <Style x:Key="HeaderCellStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="TableRowStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="#E9ECEF"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F0F8FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="GridSplitterStyle" TargetType="GridSplitter">
+            <Setter Property="Width" Value="4"/>
+            <Setter Property="Background" Value="#BDC3C7"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="ShowsPreview" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#3498DB"/>
+                    <Setter Property="Cursor" Value="SizeWE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <TextBlock Text="👥 Сотрудники" FontSize="24" FontWeight="Bold" 
+                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15" Grid.Row="0"/>
+
+        <!-- Панель управления -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15" 
+                    HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Button Content="➕ Добавить сотрудника" Click="AddButton_Click" 
+                    MinWidth="140" Height="35" 
+                    Margin="5" Background="#27AE60" Foreground="White"/>
+            <Button x:Name="ScheduleButton" Content="📅 График сотрудников" 
+                    Click="ScheduleButton_Click" Padding="15,8" Margin="0,0,10,0"
+                    Background="#F39C12" Foreground="White" BorderThickness="0"
+                    Cursor="Hand" Height="35"/>
+            <Label Content="🔍 Поиск:" VerticalContentAlignment="Center" Margin="20,0,0,0"/>
+            <TextBox x:Name="SearchFilterTextBox" 
+                     Width="250" Height="35" Margin="5" Padding="5"
+                     KeyUp="SearchFilterTextBox_KeyUp"/>
+        </StackPanel>
+
+        <!-- Заголовок таблицы -->
+        <Border Grid.Row="2" Background="#2C3E50" Height="45" CornerRadius="4,4,0,0">
+            <Grid x:Name="HeaderGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.8*" MinWidth="50"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="3*" MinWidth="150"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="2*" MinWidth="120"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="2*" MinWidth="100"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="2*" MinWidth="120"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="ID" Style="{StaticResource HeaderCellStyle}" Padding="10,8"/>
+                <GridSplitter Grid.Column="1" Style="{StaticResource GridSplitterStyle}"/>
+                <TextBlock Text="ФИО" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Left" Padding="10,8" Grid.Column="2"/>
+                <GridSplitter Grid.Column="3" Style="{StaticResource GridSplitterStyle}"/>
+                <TextBlock Text="Телефон" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Left" Padding="10,8" Grid.Column="4"/>
+                <GridSplitter Grid.Column="5" Style="{StaticResource GridSplitterStyle}"/>
+                <TextBlock Text="Логин" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Left" Padding="10,8" Grid.Column="6"/>
+                <GridSplitter Grid.Column="7" Style="{StaticResource GridSplitterStyle}"/>
+                <TextBlock Text="Должность" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Center" Padding="10,8" Grid.Column="8"/>
+                <GridSplitter Grid.Column="9" Style="{StaticResource GridSplitterStyle}"/>
+                <TextBlock Text="Статус" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Center" Padding="10,8" Grid.Column="10"/>
+            </Grid>
+        </Border>
+
+        <!-- Таблица с данными -->
+        <ScrollViewer Grid.Row="3" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Auto"
+                      CanContentScroll="True">
+            <Grid x:Name="DataGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.8*" MinWidth="50"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="3*" MinWidth="150"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="2*" MinWidth="100"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="2*" MinWidth="120"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                </Grid.ColumnDefinitions>
+
+                <GridSplitter Grid.Column="1" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="3" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="5" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="7" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="9" Style="{StaticResource GridSplitterStyle}"/>
+
+                <ListBox x:Name="EmployeesListView" 
+                         Grid.ColumnSpan="11"
+                         SelectionMode="Single" 
+                         Background="White"
+                         BorderThickness="0"
+                         SelectionChanged="EmployeesListView_SelectionChanged"
+                         MouseDoubleClick="EmployeesListView_MouseDoubleClick"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingPanel.ScrollUnit="Pixel"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling">
+
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="✏ Редактировать" Click="EditEmployeeMenuItem_Click"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border x:Name="RowBorder" Style="{StaticResource TableRowStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0.8*" MinWidth="50"/>
+                                        <ColumnDefinition Width="3*" MinWidth="150"/>
+                                        <ColumnDefinition Width="2*" MinWidth="100"/>
+                                        <ColumnDefinition Width="2*" MinWidth="100"/>
+                                        <ColumnDefinition Width="2*" MinWidth="120"/>
+                                        <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="{Binding Id}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <TextBlock Text="{Binding FullName}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="1"/>
+
+                                    <TextBlock Text="{Binding Phone}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="2"
+                                               Foreground="#7F8C8D"/>
+                                    
+                                    <TextBlock Text="{Binding Login}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="3"/>
+
+                                    <TextBlock Text="{Binding IsAdmin, Converter={StaticResource BoolToRoleConverter}}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               Grid.Column="4"/>
+
+                                    <!-- Статус с использованием триггера -->
+                                    <TextBlock Grid.Column="5" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Трудоустроен"/>
+                                                <Setter Property="Foreground" Value="Green"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Text" Value="Уволен"/>
+                                                        <Setter Property="Foreground" Value="Red"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter TargetName="RowBorder" Property="Background" Value="#E3F2FD"/>
+                                    <Setter TargetName="RowBorder" Property="BorderBrush" Value="#2196F3"/>
+                                    <Setter TargetName="RowBorder" Property="BorderThickness" Value="0,0,0,2"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
+            <Button Content="✖ Закрыть" Click="CloseButton_Click" 
+                    MinWidth="80" Height="35" 
+                    Margin="5" Background="#E74C3C" Foreground="White"/>
+        </StackPanel>
+    </Grid>
+</Window>

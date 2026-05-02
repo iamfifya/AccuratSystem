@@ -1,0 +1,342 @@
+<Window x:Class="AccuratPanelCarWashing.ClientsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AccuratPanelCarWashing"
+        xmlns:controls="clr-namespace:AccuratPanelCarWashing.Controls" 
+        mc:Ignorable="d"
+        Title="Клиентская база"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        MinWidth="900" MinHeight="500"
+        Width="1100" Height="700"
+        Background="#F5F6FA"
+        BorderBrush="Black"
+        BorderThickness="1"
+        WindowStyle="None"
+        WindowState="Maximized"
+        Foreground="Black">
+
+    <Window.Resources>
+        <!-- Стиль для ячейки заголовка -->
+        <Style x:Key="HeaderCellStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- Стиль для строки (при наведении) -->
+        <Style x:Key="TableRowStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="#E9ECEF"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F0F8FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стиль для GridSplitter -->
+        <Style x:Key="GridSplitterStyle" TargetType="GridSplitter">
+            <Setter Property="Width" Value="4"/>
+            <Setter Property="Background" Value="#BDC3C7"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="ShowsPreview" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#3498DB"/>
+                    <Setter Property="Cursor" Value="SizeWE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <TextBlock Text="👥 Клиентская база" FontSize="24" FontWeight="Bold" 
+                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15" Grid.Row="0"/>
+
+        <!-- Панель управления -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15" 
+                    HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Button Content="➕ Добавить клиента" Click="AddClient_Click" 
+                    MinWidth="120" MaxWidth="160" Height="35" 
+                    Margin="5" Background="#27AE60" Foreground="White"/>
+            <Button x:Name="EditClientButton" Content="✏ Редактировать" Click="EditClient_Click" 
+                    MinWidth="100" MaxWidth="140" Height="35" 
+                    Margin="5" Background="#3498DB" Foreground="White"/>
+            <Button x:Name="ShowStatsButton" Content="📊 Статистика клиента" Click="ShowStatsButton_Click" 
+                    MinWidth="100" MaxWidth="180" Height="35" 
+                    Margin="5" Background="#F39C12" Foreground="White"/>
+            <Label Content="🔍 Поиск:" VerticalContentAlignment="Center" Margin="20,0,0,0"/>
+            <TextBox x:Name="SearchTextBox" Width="250" Height="35" Margin="5" Padding="5"
+                     TextChanged="SearchTextBox_TextChanged"/>
+        </StackPanel>
+
+        <!-- Заголовок таблицы (отдельно, вне ScrollViewer) -->
+        <Border Grid.Row="2" Background="#2C3E50" Height="45" CornerRadius="4,4,0,0">
+            <Grid x:Name="HeaderGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.6*" MinWidth="40"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.8*" MinWidth="100"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.5*" MinWidth="100"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.0*" MinWidth="70"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="0.7*" MinWidth="50"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="0.8*" MinWidth="70"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="ID" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8"/>
+
+                <GridSplitter Grid.Column="1" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="ФИО" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="2"/>
+
+                <GridSplitter Grid.Column="3" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="Телефон" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="4"/>
+
+                <GridSplitter Grid.Column="5" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="Марка/Модель" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="6"/>
+
+                <GridSplitter Grid.Column="7" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="Госномер" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="8"/>
+
+                <GridSplitter Grid.Column="9" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="Визитов" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="10"/>
+
+                <GridSplitter Grid.Column="11" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="Сумма" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="12"/>
+
+                <GridSplitter Grid.Column="13" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="Ср. чек" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="14"/>
+
+                <GridSplitter Grid.Column="15" Style="{StaticResource GridSplitterStyle}"/>
+
+                <TextBlock Text="Посл. визит" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="16"/>
+            </Grid>
+        </Border>
+
+        <!-- Таблица с данными (ScrollViewer только для данных) -->
+        <ScrollViewer Grid.Row="3" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Auto"
+                      CanContentScroll="True">
+            <Grid x:Name="DataGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.6*" MinWidth="40"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.8*" MinWidth="100"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.5*" MinWidth="100"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.0*" MinWidth="70"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="0.7*" MinWidth="50"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="0.8*" MinWidth="70"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- GridSplitter для данных (визуально те же, что и в заголовке) -->
+                <GridSplitter Grid.Column="1" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="3" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="5" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="7" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="9" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="11" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="13" Style="{StaticResource GridSplitterStyle}"/>
+                <GridSplitter Grid.Column="15" Style="{StaticResource GridSplitterStyle}"/>
+
+                <!-- Список клиентов (занимает все колонки) -->
+                <ListBox x:Name="ClientsListBox" 
+                         Grid.ColumnSpan="17"
+                         SelectionMode="Single" 
+                         Background="White"
+                         BorderThickness="0"
+                         MouseDoubleClick="ClientsListBox_MouseDoubleClick"
+                         SelectionChanged="ClientsListBox_SelectionChanged"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingPanel.ScrollUnit="Pixel"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         Foreground="Black">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="✏ Редактировать" Click="EditClientMenuItem_Click"/>
+                            <Separator/>
+                            <MenuItem Header="📊 Показать статистику" Click="ShowStatsMenuItem_Click"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border x:Name="RowBorder" Style="{StaticResource TableRowStyle}">
+                                <Grid> 
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0.6*" MinWidth="40"/>
+                                        <ColumnDefinition Width="1.8*" MinWidth="100"/>
+                                        <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                                        <ColumnDefinition Width="1.5*" MinWidth="100"/>
+                                        <ColumnDefinition Width="1.0*" MinWidth="70"/>
+                                        <ColumnDefinition Width="0.7*" MinWidth="50"/>
+                                        <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                                        <ColumnDefinition Width="0.8*" MinWidth="70"/>
+                                        <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="{Binding Id}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <TextBlock Text="{Binding FullName}" 
+                                               HorizontalAlignment="Left" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="1"/>
+
+                                    <TextBlock Text="{Binding Phone}" 
+                                               HorizontalAlignment="Left" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="2"/>
+
+                                    <TextBlock Text="{Binding CarModel}" 
+                                               HorizontalAlignment="Left" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="3"/>
+
+                                    <TextBlock Text="{Binding CarNumber}" 
+                                               HorizontalAlignment="Left" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="4"/>
+
+                                    <TextBlock Text="{Binding VisitsCount}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               Grid.Column="5"/>
+
+                                    <TextBlock Text="{Binding TotalSpent, StringFormat={}{0:N0} ₽}" 
+                                               HorizontalAlignment="Right" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               Foreground="#27AE60"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="6"/>
+
+                                    <TextBlock Text="{Binding AverageCheck, StringFormat={}{0:N0} ₽}" 
+                                               HorizontalAlignment="Right" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="7"/>
+
+                                    <TextBlock Text="{Binding LastVisitDate, StringFormat=dd.MM.yyyy}" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               Padding="10,8"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="8"/>
+                                </Grid>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter TargetName="RowBorder" Property="Background" Value="#E3F2FD"/>
+                                    <Setter TargetName="RowBorder" Property="BorderBrush" Value="#2196F3"/>
+                                    <Setter TargetName="RowBorder" Property="BorderThickness" Value="0,0,0,2"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
+            <Button Content="✖ Закрыть" Click="CloseButton_Click" 
+                    MinWidth="80" MaxWidth="120" Height="35" 
+                    Margin="5" Background="#E74C3C" Foreground="White"/>
+        </StackPanel>
+
+    </Grid>
+    <controls:ClientDetailsOverlay x:Name="DetailsOverlay" Visibility="Collapsed" Panel.ZIndex="100"/>
+
+    </Grid>
+</Window>

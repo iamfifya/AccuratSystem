@@ -1,0 +1,168 @@
+<Window x:Class="AccuratPanelCarWashing.AppointmentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AccuratPanelCarWashing"
+        xmlns:controls="clr-namespace:AccuratPanelCarWashing.Controls"
+        mc:Ignorable="d"
+        Title="Предварительная запись"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Width="650" Height="850"
+        Background="#F5F6FA"
+        BorderBrush="Black"
+        BorderThickness="1"
+        WindowStyle="SingleBorderWindow"
+        Foreground="Black">
+
+    <Window.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <local:IntToBoolConverter x:Key="IntToBoolConverter"/>
+    </Window.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="📅 Предварительная запись" FontSize="24" FontWeight="Bold" 
+                       Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15" Grid.Row="0"/>
+
+            <!-- Марка и модель -->
+            <Label Content="Марка и модель авто:" Grid.Row="1" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <TextBox x:Name="CarModelTextBox" Grid.Row="2" Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
+
+            <!-- Госномер -->
+            <Label Content="Государственный номер:" Grid.Row="3" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <TextBox x:Name="CarNumberTextBox" Grid.Row="4" Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
+
+            <!-- Тип кузова (категория) -->
+            <Label Content="Категория кузова:" Grid.Row="5" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <controls:CustomComboBox x:Name="BodyTypeComboBox" Grid.Row="6" Margin="0,5,0,10" Height="50"
+                         SelectedValue="{Binding SelectedBodyTypeCategory}"
+                         SelectedValuePath="Tag"
+                         Placeholder="Выберите категорию"/>
+
+            <!-- Дата и время записи -->
+            <Label Content="📅 Дата и время записи:" Grid.Row="7" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <Grid Grid.Row="8" Margin="0,5,0,10" Height="50">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <local:CustomDatePicker x:Name="AppointmentDatePicker" Grid.Column="0" Height="50"/>
+                <TextBlock Grid.Column="1" Text=" " VerticalAlignment="Center" Margin="5,0"/>
+                <TextBox x:Name="AppointmentTimeTextBox" Grid.Column="2" TextAlignment="Center" Height="50" Width="80" Text="08:00"/>
+            </Grid>
+
+            <!-- Длительность мойки -->
+            <Label Content="⏱️ Длительность мойки (минуты):" Grid.Row="9" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <TextBox x:Name="DurationTextBox" Grid.Row="10" Margin="0,5,0,10" Height="50" Padding="5" Text="60"/>
+
+            <!-- Выбор бокса -->
+            <Label Content="🚘 Выберите предпочтительный бокс:" Grid.Row="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <StackPanel Grid.Row="12" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,10">
+                <RadioButton x:Name="Box1Radio" Content="Бокс 1" GroupName="BoxNumber" IsChecked="True" Margin="10,5" FontSize="14" Foreground="Black" Height="50" VerticalAlignment="Center"/>
+                <RadioButton x:Name="Box2Radio" Content="Бокс 2" GroupName="BoxNumber" Margin="10,5" FontSize="14" Foreground="Black" Height="50" VerticalAlignment="Center"/>
+                <RadioButton x:Name="Box3Radio" Content="Бокс 3" GroupName="BoxNumber" Margin="10,5" FontSize="14" Foreground="Black" Height="50" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Выбор услуг -->
+            <Label Content="🛠️ Выберите услуги:" Grid.Row="13" Margin="0,10,0,5" FontWeight="SemiBold"/>
+            <ListBox x:Name="ServicesListBox" Grid.Row="14" MinHeight="120" MaxHeight="180" Margin="0,5,0,10"
+                     ItemsSource="{Binding Services}" SelectionMode="Multiple">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="8,8"/>
+                        <Setter Property="MinHeight" Value="40"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#3498DB"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Name}" Grid.Column="0" 
+                                       VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding Price, StringFormat={}{0:N0} ₽}" Grid.Column="1" 
+                                       Foreground="#27AE60" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Дополнительная стоимость -->
+            <Label Content="💰 Дополнительная стоимость:" Grid.Row="15" Margin="0,10,0,0" FontWeight="SemiBold"/>
+            <TextBox x:Name="ExtraCostTextBox" Grid.Row="16" Margin="0,5,0,10" Height="50" Padding="5" Text="0"/>
+
+            <!-- Причина доп. стоимости -->
+            <Label Content="📝 Причина дополнительной стоимости:" Grid.Row="17" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <TextBox x:Name="ExtraCostReasonTextBox" Grid.Row="18" Margin="0,5,0,10" Height="50" Padding="5" 
+                     TextWrapping="Wrap" AcceptsReturn="True"/>
+
+            <!-- Итоговая сумма -->
+            <Border Grid.Row="19" Background="#F0F8FF" CornerRadius="5" Padding="10" Margin="0,10">
+                <StackPanel>
+                    <TextBlock x:Name="ServicesTotalText" FontSize="12" Foreground="#7F8C8D" 
+                               HorizontalAlignment="Center" Text="{Binding ServicesTotal, StringFormat=💰 Услуги: {0:N0} ₽}"/>
+                    <TextBlock x:Name="ExtraCostText" FontSize="12" Foreground="#E67E22" 
+                               HorizontalAlignment="Center" Text="{Binding ExtraCost, StringFormat=➕ Дополнительно: {0:N0} ₽}"/>
+                    <TextBlock x:Name="TotalPriceTextBlock" FontSize="16" FontWeight="Bold" Foreground="#27AE60"
+                               HorizontalAlignment="Center" Text="{Binding FinalTotal, StringFormat=💰 Итого: {0:N0} ₽}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Статус проверки -->
+            <Border Grid.Row="20" Background="#FFF9E6" CornerRadius="5" Padding="10" Margin="0,10">
+                <TextBlock x:Name="AvailabilityText" FontSize="11" Foreground="#E67E22"
+                           HorizontalAlignment="Center" Text="🟢 Бокс свободен в указанное время"/>
+            </Border>
+
+            <!-- Кнопки -->
+            <StackPanel Grid.Row="21" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,20">
+                <Button Content="✅ Записать" Click="SaveButton_Click" Width="120" Height="35" 
+                        Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
+                <Button Content="🔍 Проверить" Click="CheckAvailabilityButton_Click" Width="100" Height="35" 
+                        Margin="5" Background="#3498DB" Foreground="White" Cursor="Hand"/>
+                <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
+                        Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

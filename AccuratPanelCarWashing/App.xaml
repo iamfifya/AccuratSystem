@@ -1,0 +1,35 @@
+<Application x:Class="AccuratPanelCarWashing.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AccuratPanelCarWashing">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/OrderCardTemplate.xaml"/>
+                <ResourceDictionary Source="/Styles/AppStyles.xaml"/>
+                <ResourceDictionary Source="/Styles/CustomComboBoxStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Конвертеры -->
+            <local:BoolToRoleConverter x:Key="BoolToRoleConverter"/>
+            <local:IntToBoolConverter x:Key="IntToBoolConverter"/>
+            <local:PercentageConverter x:Key="PercentageConverter"/>
+            <local:ActiveToStatusConverter x:Key="ActiveToStatusConverter"/>
+            <local:ActiveToColorConverter x:Key="ActiveToColorConverter"/>
+            <local:ActiveToBackgroundConverter x:Key="ActiveToBackgroundConverter"/>
+            <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+            <local:CompletedToStatusConverter x:Key="CompletedToStatusConverter"/>
+            <local:StatusToColorConverter x:Key="StatusToColorConverter"/>
+            <local:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
+            <local:AppointmentToStyleConverter x:Key="AppointmentToStyleConverter"/>
+            <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <local:AppointmentToBackgroundConverter x:Key="AppointmentToBackgroundConverter"/>
+            <local:ItemStyleConverter x:Key="ItemStyleConverter"/>
+            <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+            <local:SafePriceConverter x:Key="SafePriceConverter"/>
+            <local:CurrencyConverter x:Key="CurrencyConverter"/>
+            <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <local:DecimalToEmptyZeroConverter x:Key="DecimalToEmptyZeroConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
