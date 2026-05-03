@@ -94,11 +94,11 @@ namespace AccuratPanelCarWashing
 
         private void SetupStaticLists()
         {
-            BodyTypeComboBox.ItemsSource = new List<KeyValuePair<string, string>> {
-        new KeyValuePair<string, string>("Категория 1 (Легковая)", "1"),
-        new KeyValuePair<string, string>("Категория 2 (Универсал)", "2"),
-        new KeyValuePair<string, string>("Категория 3 (Кроссовер)", "3"),
-        new KeyValuePair<string, string>("Категория 4 (Внедорожник)", "4")
+            BodyTypeComboBox.ItemsSource = new List<KeyValuePair<string, int>> {
+        new KeyValuePair<string, int>("Категория 1 (Легковая)", 1),
+        new KeyValuePair<string, int>("Категория 2 (Универсал)", 2),
+        new KeyValuePair<string, int>("Категория 3 (Кроссовер)", 3),
+        new KeyValuePair<string, int>("Категория 4 (Внедорожник)", 4)
     };
             BodyTypeComboBox.DisplayMemberPath = "Key";
             BodyTypeComboBox.SelectedValuePath = "Value";
@@ -146,6 +146,19 @@ namespace AccuratPanelCarWashing
                 if (PaymentMethodComboBox.SelectedValue is string pm) _viewModel.CurrentOrder.PaymentMethod = pm;
 
                 this.IsEnabled = false; // Блокируем UI на время запроса
+
+                // Внутри SaveButton_Click перед вызовом SaveOrderAsync:
+                if (_currentShift != null)
+                {
+                    _viewModel.CurrentOrder.ShiftId = _currentShift.Id;
+                    _viewModel.CurrentOrder.BranchId = _currentShift.BranchId;
+
+                    // ВАЖНО: Если у тебя мойка, нужно проставить департамент
+                    if (string.IsNullOrEmpty(_viewModel.CurrentOrder.Department))
+                    {
+                        _viewModel.CurrentOrder.Department = "Wash"; // Или логика выбора
+                    }
+                }
 
                 // 3. Вызываем асинхронное сохранение во ViewModel (которое стучит в API)
                 var result = await _viewModel.SaveOrderAsync();

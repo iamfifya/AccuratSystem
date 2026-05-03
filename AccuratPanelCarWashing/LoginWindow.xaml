@@ -17,7 +17,7 @@
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- 0: Заголовок "Глянец" -->
+            <!-- 0: Заголовок "Accurat" -->
             <RowDefinition Height="Auto"/>
             <!-- 1: Логин Label -->
             <RowDefinition Height="Auto"/>

@@ -88,7 +88,6 @@ namespace AccuratPanelCarWashing
                 if (_selectedItem != null) _selectedItem.IsSelected = true;
 
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItem)));
-                RefreshItems();
             }
         }
 
@@ -129,13 +128,6 @@ namespace AccuratPanelCarWashing
 
         public void RefreshData() => _ = LoadDataAsync();
 
-        private void RefreshItems()
-        {
-            // Принудительно "передергиваем" коллекцию вкладок, чтобы UI обновился
-            var temp = BranchTabs;
-            BranchTabs = null;
-            BranchTabs = temp;
-        }
 
         // ==========================================
         // ЗАГРУЗКА ДАННЫХ ИЗ API (ВЫЗЫВАЕТСЯ РЕДКО)
