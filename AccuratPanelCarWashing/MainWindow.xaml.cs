@@ -30,6 +30,7 @@ namespace AccuratPanelCarWashing
         //  Свойства для видимости
         public bool IsDirector => _currentUser?.Role == 1;
         public bool IsSingleBranch => _currentUser?.Role != 1;
+        public bool IsAdminOrDirector => _currentUser?.Role == 1 || _currentUser?.Role == 2;
 
         // Кэши для быстрого UI без постоянных запросов к серверу
         private List<Service> _cachedServices = new List<Service>();
@@ -495,10 +496,10 @@ namespace AccuratPanelCarWashing
         private void EmployeesButton_Click(object sender, RoutedEventArgs e) => App.GetService<EmployeeCardWindow>().ShowDialog();
         private void CashboxButton_Click(object sender, RoutedEventArgs e) { if (_currentShift == null) { MessageBox.Show("Откройте смену!", "Внимание"); return; } CashboxPanel.Show(_currentShift); }
         private void ServicesButton_Click(object sender, RoutedEventArgs e) => App.GetService<ServiceManagementWindow>().ShowDialog();
-        private void ReportsButton_Click(object sender, RoutedEventArgs e) => new ReportsWindow().ShowDialog();
+        private void ReportsButton_Click(object sender, RoutedEventArgs e) => new ReportsWindow(_currentUser).ShowDialog();
         private void ExitButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
         private void ClientsButton_Click(object sender, RoutedEventArgs e) => App.GetService<ClientsWindow>().ShowDialog();
-        private void HistoryButton_Click(object sender, RoutedEventArgs e) => new HistoryWindow().ShowDialog();
+        private void HistoryButton_Click(object sender, RoutedEventArgs e) => new HistoryWindow(_currentUser).ShowDialog();
         private void AppointmentButton_Click(object sender, RoutedEventArgs e) { var win = App.GetService<AppointmentWindow>(); win.Closed += (s, args) => _ = LoadDataAsync(); win.ShowDialog(); }
         private void ViewAppointmentsButton_Click(object sender, RoutedEventArgs e)
         {

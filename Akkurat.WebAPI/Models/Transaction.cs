@@ -18,5 +18,7 @@ namespace Accurat.WebAPI.Models
         public string Type { get; set; } = string.Empty; // "Приход", "Расход", "Аванс"
         public string Comment { get; set; } = string.Empty;
         public DateTime DateTime { get; set; } = DateTime.UtcNow;
+
+        public string Department { get; set; } // "Wash", "Service" или "General" (для общих расходов филиала)
     }
 }

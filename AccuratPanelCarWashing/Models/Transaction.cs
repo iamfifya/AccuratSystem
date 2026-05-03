@@ -17,6 +17,8 @@ namespace AccuratPanelCarWashing.Models
         public string Comment { get; set; }
         public DateTime DateTime { get; set; }
 
+        public string Department { get; set; } // "Wash", "Service" или "General" (для общих расходов филиала)
+
         // --- Помощники для визуального интерфейса (C# 7.3 compatible) ---
         public string FormattedAmount
         {

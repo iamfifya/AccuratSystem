@@ -14,7 +14,7 @@ namespace AccuratPanelCarWashing.Services
 
         public ApiService()
         {
-            // Базовый адрес. Убедись, что порт совпадает с портом твоего API!
+            // Убедись, что порт совпадает с твоим API
             _http = new HttpClient { BaseAddress = new Uri("https://localhost:7165/api/") };
         }
 
@@ -34,7 +34,6 @@ namespace AccuratPanelCarWashing.Services
 
         public async Task CloseShiftAsync(int id)
         {
-            // Используем SendAsync для PATCH, так как в старых версиях HttpClient нет PatchAsync
             var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"Shifts/{id}/close");
             var response = await _http.SendAsync(request);
             response.EnsureSuccessStatusCode();
@@ -143,40 +142,30 @@ namespace AccuratPanelCarWashing.Services
         }
         #endregion
 
-        // В ApiService.cs, в регион #region ЗАКАЗЫ (ORDERS) или создайте новый
-
-        #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА (для записей)
+        #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА
         public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int box, DateTime startTime, int durationMinutes)
         {
             try
             {
-                // Загружаем все заказы и фильтруем локально
                 var allOrders = await GetOrdersAsync();
-
                 var endTime = startTime.AddMinutes(durationMinutes);
 
-                // Проверяем пересечения: только активные записи на том же боксе
                 var conflicts = allOrders.Where(o =>
                     o.IsAppointment &&
                     o.BoxNumber == box &&
                     o.Status != "Отменен" &&
                     o.Status != "Выполнен" &&
-                    // Пересечение временных интервалов
                     o.Time < endTime &&
-                    o.Time.AddMinutes(60) > startTime // 60 мин — средняя длительность, можно сделать параметром
+                    o.Time.AddMinutes(60) > startTime
                 ).ToList();
 
                 return !conflicts.Any();
             }
-            catch
-            {
-                // При ошибке считаем, что время свободно (или верните false для безопасности)
-                return true;
-            }
+            catch { return true; }
         }
         #endregion
 
-        #region Авторизация с привзкой к филиалу
+        #region АВТОРИЗАЦИЯ И ФИЛИАЛЫ
         public async Task<List<Branch>> GetBranchesAsync()
         {
             try { return await _http.GetFromJsonAsync<List<Branch>>("Branches") ?? new List<Branch>(); }
@@ -193,18 +182,10 @@ namespace AccuratPanelCarWashing.Services
         #endregion
 
         #region ФИНАНСЫ (TRANSACTIONS)
-
-        // Получаем транзакции только для конкретного филиала
         public async Task<List<Transaction>> GetTransactionsByBranchAsync(int branchId)
         {
-            try
-            {
-                return await _http.GetFromJsonAsync<List<Transaction>>($"Transactions/branch/{branchId}") ?? new List<Transaction>();
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new Exception($"Финансы (Transactions): {ex.Message}");
-            }
+            try { return await _http.GetFromJsonAsync<List<Transaction>>($"Transactions/branch/{branchId}") ?? new List<Transaction>(); }
+            catch (HttpRequestException ex) { throw new Exception($"Финансы (Transactions): {ex.Message}"); }
         }
 
         public async Task<Transaction> CreateTransactionAsync(Transaction transaction)
@@ -216,7 +197,6 @@ namespace AccuratPanelCarWashing.Services
 
         public class CashboxSummary { public decimal CashInHand { get; set; } public decimal TotalExpenses { get; set; } public decimal NetCashProfit { get; set; } }
 
-        // В сам класс ApiService добавь:
         public async Task<CashboxSummary> GetShiftCashboxSummaryAsync(int shiftId)
         {
             try { return await _http.GetFromJsonAsync<CashboxSummary>($"Shifts/{shiftId}/cashbox") ?? new CashboxSummary(); }
@@ -231,36 +211,27 @@ namespace AccuratPanelCarWashing.Services
         #endregion
 
         #region ОТЧЕТЫ (REPORTS)
-        public async Task<List<ShiftReport>> GetShiftReportsAsync(DateTime start, DateTime end)
+        // ⚡ ОБНОВЛЕНО: Добавлен параметр branchId
+        public async Task<List<ShiftReport>> GetShiftReportsAsync(int branchId, DateTime start, DateTime end)
         {
-            // ДОБАВЛЯЕМ BRANCH ID В ЗАПРОС
-            int branchId = AppSettings.CurrentBranchId;
             try { return await _http.GetFromJsonAsync<List<ShiftReport>>($"Reports/shifts?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ShiftReport>(); }
             catch { return new List<ShiftReport>(); }
         }
 
         public class ClientStatsResponse { public int NewClients { get; set; } public int UniqueClients { get; set; } }
 
-        public async Task<ClientStatsResponse> GetClientsStatsAsync(DateTime start, DateTime end)
+        // ⚡ ОБНОВЛЕНО: Добавлен параметр branchId
+        public async Task<ClientStatsResponse> GetClientsStatsAsync(int branchId, DateTime start, DateTime end)
         {
-            // ДОБАВЛЯЕМ BRANCH ID В ЗАПРОС
-            int branchId = AppSettings.CurrentBranchId;
             try { return await _http.GetFromJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={start:O}&end={end:O}") ?? new ClientStatsResponse(); }
             catch { return new ClientStatsResponse(); }
         }
 
-        public async Task<List<Transaction>> GetTransactionsByDateRangeAsync(DateTime start, DateTime end)
+        // ⚡ ОБНОВЛЕНО: Добавлен параметр branchId
+        public async Task<List<Transaction>> GetTransactionsByDateRangeAsync(int branchId, DateTime start, DateTime end)
         {
-            int branchId = AppSettings.CurrentBranchId;
-            try
-            {
-                // ПУТЬ ДОЛЖЕН БЫТЬ "Transactions/range"
-                return await _http.GetFromJsonAsync<List<Transaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<Transaction>();
-            }
-            catch
-            {
-                return new List<Transaction>();
-            }
+            try { return await _http.GetFromJsonAsync<List<Transaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<Transaction>(); }
+            catch { return new List<Transaction>(); }
         }
         #endregion
 

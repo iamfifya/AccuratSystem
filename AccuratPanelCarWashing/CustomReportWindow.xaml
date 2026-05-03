@@ -2,201 +2,155 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AccuratPanelCarWashing"
-        Title="Выборочный отчет"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="CanResize"
-        MinWidth="950" MinHeight="600"
-        Width="1050" Height="750"
-        Background="#F5F6FA"
-        BorderBrush="Black"
-        BorderThickness="1"
-        WindowStyle="None"
-        WindowState="Maximized"
-        Foreground="Black">
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        Title="Интервальный отчет"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
+        MinWidth="1100" MinHeight="750" Width="1200" Height="850"
+        Background="#F5F6FA" WindowStyle="None" WindowState="Maximized" Foreground="Black">
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- Вкладки -->
+            <RowDefinition Height="Auto"/> <!-- Заголовок -->
+            <RowDefinition Height="Auto"/> <!-- Выбор дат -->
+            <RowDefinition Height="*"/>    <!-- Контент -->
+            <RowDefinition Height="Auto"/> <!-- Кнопки -->
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,15">
-            <TextBlock Text="📊 Интервальный отчет" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
-            <TextBlock Text="{Binding CurrentBranchInfo}" FontSize="16" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+        <!-- 1. Вкладки (как в MainWindow) -->
+        <TabControl Grid.Row="0" ItemsSource="{Binding BranchTabs}" 
+                    SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
+                    Margin="0,0,0,10" Background="#f0f0f2" BorderThickness="0">
+            <TabControl.ItemContainerStyle>
+                <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                    <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                </Style>
+            </TabControl.ItemContainerStyle>
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding BranchName}" FontSize="11" FontWeight="Bold"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate/>
+            </TabControl.ContentTemplate>
+        </TabControl>
+
+        <!-- 2. Заголовок -->
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,15">
+            <TextBlock Text="📊 Интервальная аналитика" FontSize="24" FontWeight="Bold" Foreground="#2C3E50"/>
+            <TextBlock Text="{Binding SelectedBranchTab.BranchName}" FontSize="14" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
         </StackPanel>
 
-        <Grid Grid.Row="1" Margin="0,0,0,15">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <Label Grid.Column="0" Content="С:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <local:CustomDatePicker x:Name="StartDatePicker" Grid.Column="1" Height="50" Width="350"/>
-
-            <Label Grid.Column="2" Content="По:" VerticalAlignment="Center" Margin="10,0,5,0"/>
-            <local:CustomDatePicker x:Name="EndDatePicker" Grid.Column="3" Height="50" Width="350"/>
-
-            <Button Grid.Column="4" Content="📊 Сформировать" Click="GenerateReportButton_Click" 
-                    Width="160" Height="35" Margin="15,0,0,0" Background="#3498DB" Foreground="White" Cursor="Hand"/>
+        <!-- 3. Фильтры -->
+        <Grid Grid.Row="2" Margin="0,0,0,15" HorizontalAlignment="Center">
+            <StackPanel Orientation="Horizontal">
+                <Label Content="С:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <local:CustomDatePicker x:Name="StartDatePicker" Height="45" Width="400"/>
+                <Label Content="По:" VerticalAlignment="Center" Margin="15,0,5,0"/>
+                <local:CustomDatePicker x:Name="EndDatePicker" Height="45" Width="400"/>
+                <Button Content="🚀 Сформировать" Click="GenerateReportButton_Click" 
+                        Width="160" Height="35" Margin="20,0,0,0" Background="#3498DB" Foreground="White" Cursor="Hand"/>
+            </StackPanel>
         </Grid>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Background="White">
-            <StackPanel>
-                <StackPanel x:Name="ReportContent" Visibility="Collapsed" Margin="10">
-
-                    <Border Background="#E8F0FE" CornerRadius="10" Padding="15" Margin="0,0,0,15">
-                        <StackPanel HorizontalAlignment="Left">
-                            <TextBlock x:Name="PeriodText" FontSize="14" FontWeight="Bold" Foreground="#2C3E50"/>
-                            <TextBlock x:Name="DaysCountText" FontSize="12" Foreground="#7F8C8D" Margin="0,5,0,0"/>
+        <!-- 4. Основной контент -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="ReportContent" Visibility="Collapsed" Margin="10">
+                
+                <!-- Верхние карточки (Общее) -->
+                <UniformGrid Columns="4" Margin="0,0,0,15">
+                    <Border Style="{StaticResource StatCard}" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="💰 Общая выручка" FontSize="12" Foreground="#7F8C8D"/>
+                            <TextBlock x:Name="TotalRevenueText" FontSize="22" FontWeight="Bold" Foreground="#27AE60"/>
                         </StackPanel>
                     </Border>
+                    <Border Style="{StaticResource StatCard}" Margin="5" Background="#34495E">
+                        <StackPanel>
+                            <TextBlock Text="💎 Чистая прибыль" FontSize="12" Foreground="#BDC3C7"/>
+                            <TextBlock x:Name="NetProfitText" FontSize="22" FontWeight="Bold" Foreground="#2ECC71"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatCard}" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="🚗 Всего заказов" FontSize="12" Foreground="#7F8C8D"/>
+                            <TextBlock x:Name="TotalCarsText" FontSize="22" FontWeight="Bold" Foreground="#2C3E50"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatCard}" Margin="5">
+                        <StackPanel>
+                            <TextBlock Text="👥 Новых клиентов" FontSize="12" Foreground="#7F8C8D"/>
+                            <TextBlock x:Name="NewClientsText" FontSize="22" FontWeight="Bold" Foreground="#3498DB"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
 
-                    <Border Background="#F8F9FA" CornerRadius="10" Padding="15" Margin="0,0,0,15">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                <TextBlock Text="🚗 Всего машин" FontSize="12" Foreground="#7F8C8D"/>
-                                <TextBlock x:Name="TotalCarsText" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                                <TextBlock Text="💰 Общая выручка" FontSize="12" Foreground="#7F8C8D"/>
-                                <TextBlock x:Name="TotalRevenueText" FontSize="24" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                                <TextBlock Text="👤 Мойщикам (Начислено)" FontSize="12" Foreground="#7F8C8D"/>
-                                <TextBlock x:Name="TotalWasherText" FontSize="24" FontWeight="Bold" Foreground="#8E44AD" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="3" HorizontalAlignment="Center">
-                                <TextBlock Text="🏢 Компании (Грязными)" FontSize="12" Foreground="#7F8C8D"/>
-                                <TextBlock x:Name="TotalCompanyText" FontSize="24" FontWeight="Bold" Foreground="#E67E22" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="4" HorizontalAlignment="Center">
-                                <TextBlock Text="Уникальных клиентов:" Width="150" FontWeight="Bold" Foreground="#34495E" TextAlignment="Center"/>
-                                <TextBlock x:Name="UniqueClientsText" HorizontalAlignment="Center" FontSize="24" Text="0" FontWeight="Bold" Foreground="#2980B9"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="5" HorizontalAlignment="Center">
-                                <TextBlock Text="Новых клиентов:" Width="150" FontWeight="Bold" Foreground="#34495E" TextAlignment="Center"/>
-                                <TextBlock x:Name="NewClientsText" HorizontalAlignment="Center" FontSize="24" Text="0" FontWeight="Bold" Foreground="#27AE60"/>
-                            </StackPanel>
-                        </Grid>
+                <!-- ⚡ ГРАФИКИ ⚡ -->
+                <Grid Height="300" Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/> <!-- Линейный график -->
+                        <ColumnDefinition Width="1*"/> <!-- Пирог -->
+                    </Grid.ColumnDefinitions>
+                    
+                    <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="10" Margin="5">
+                        <lvc:CartesianChart Series="{Binding RevenueSeries}" LegendLocation="None">
+                            <lvc:CartesianChart.AxisX>
+                                <lvc:Axis Title="Даты" Labels="{Binding Labels}"/>
+                            </lvc:CartesianChart.AxisX>
+                        </lvc:CartesianChart>
                     </Border>
 
-                    <Border Background="#34495E" CornerRadius="10" Padding="15" Margin="0,0,0,15">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                <TextBlock Text="📉 Расходы (Химия, нужды)" FontSize="12" Foreground="#BDC3C7" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="TotalExpensesText" FontSize="20" FontWeight="Bold" Foreground="#E74C3C" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                                <TextBlock Text="👤 Уже выдано авансов" FontSize="12" Foreground="#BDC3C7" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="TotalAdvancesText" FontSize="20" FontWeight="Bold" Foreground="#F39C12" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                                <TextBlock Text="💎 Чистая прибыль (ЧПКО)" FontSize="12" Foreground="#BDC3C7" HorizontalAlignment="Center"/>
-                                <TextBlock x:Name="NetProfitText" FontSize="24" FontWeight="Bold" Foreground="#2ECC71" HorizontalAlignment="Center"/>
-                            </StackPanel>
-                        </Grid>
+                    <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" Margin="5">
+                        <lvc:PieChart Series="{Binding ShareSeries}" LegendLocation="Bottom" InnerRadius="40"/>
                     </Border>
+                </Grid>
 
-                    <TextBlock Text="💰 Зарплатная ведомость" FontSize="16" FontWeight="Bold" Foreground="#2C3E50" Margin="0,15,0,5"/>
-                    <TextBlock Text="(Расчет с учетом минималки и выданных авансов)" FontSize="11" Foreground="#7F8C8D" Margin="0,0,0,10"/>
+                <!-- ⚡ РАЗДЕЛЕНИЕ ПО ДЕПАРТАМЕНТАМ ⚡ -->
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                    <ListView x:Name="EmployeesSalaryList" Height="200" Background="White">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Header="Сотрудник" Width="200" DisplayMemberBinding="{Binding EmployeeName}"/>
-                                <GridViewColumn Header="Машин" Width="80" DisplayMemberBinding="{Binding CarsWashed}"/>
-                                <GridViewColumn Header="Начислено ЗП" Width="140" DisplayMemberBinding="{Binding Earnings, StringFormat={}{0:N0} ₽}"/>
-                                <GridViewColumn Header="Взято авансов" Width="130" DisplayMemberBinding="{Binding Advances, StringFormat={}{0:N0} ₽}"/>
-                                <GridViewColumn Header="К ВЫПЛАТЕ" Width="150" DisplayMemberBinding="{Binding ToPay, StringFormat={}{0:N0} ₽}"/>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+                    <!-- Мойка -->
+                    <GroupBox Header="🧽 МОЙКА" Grid.Column="0" Margin="5">
+                        <StackPanel Margin="10">
+                            <TextBlock x:Name="WashRevenueText" FontSize="18" FontWeight="Bold" Foreground="#27AE60"/>
+                            <TextBlock x:Name="WashCarsText" FontSize="14" Foreground="#7F8C8D"/>
+                            <TextBlock x:Name="WashProfitText" FontSize="16" FontWeight="Bold" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </GroupBox>
 
-                    <TextBlock Text="💳 Способы оплаты" FontSize="16" FontWeight="Bold" Foreground="#2C3E50" Margin="0,20,0,10"/>
-                    <Border Background="#F8F9FA" CornerRadius="10" Padding="15" Margin="0,0,0,15">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                    <!-- Сервис -->
+                    <GroupBox Header="🔧 АВТОСЕРВИС" Grid.Column="1" Margin="5">
+                        <StackPanel Margin="10">
+                            <TextBlock x:Name="ServiceRevenueText" FontSize="18" FontWeight="Bold" Foreground="#27AE60"/>
+                            <TextBlock x:Name="ServiceCarsText" FontSize="14" Foreground="#7F8C8D"/>
+                            <TextBlock x:Name="ServiceProfitText" FontSize="16" FontWeight="Bold" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
 
-                            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="10" Margin="5">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="💵 Наличные" FontSize="12" FontWeight="SemiBold" Foreground="#2C3E50"/>
-                                    <TextBlock x:Name="CustomCashCountText" FontSize="20" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="CustomCashAmountText" FontSize="12" Foreground="#7F8C8D"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" Margin="5">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="💳 Карта" FontSize="12" FontWeight="SemiBold" Foreground="#2C3E50"/>
-                                    <TextBlock x:Name="CustomCardCountText" FontSize="20" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="CustomCardAmountText" FontSize="12" Foreground="#7F8C8D"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="10" Margin="5">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="📱 Перевод" FontSize="12" FontWeight="SemiBold" Foreground="#2C3E50"/>
-                                    <TextBlock x:Name="CustomTransferCountText" FontSize="20" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="CustomTransferAmountText" FontSize="12" Foreground="#7F8C8D"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="3" Background="White" CornerRadius="8" Padding="10" Margin="5">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="📱 QR-код" FontSize="12" FontWeight="SemiBold" Foreground="#2C3E50"/>
-                                    <TextBlock x:Name="CustomQrCountText" FontSize="20" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="CustomQrAmountText" FontSize="12" Foreground="#7F8C8D"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Border>
-
-                </StackPanel>
-
-                <TextBlock x:Name="NoDataText" Text="Выберите период и нажмите 'Сформировать'" 
-                           FontSize="14" Foreground="#7F8C8D" HorizontalAlignment="Center" 
-                           Margin="0,100,0,0"/>
+                <!-- Зарплатная ведомость -->
+                <TextBlock Text="💰 Зарплатная ведомость" Style="{StaticResource SectionTitle}"/>
+                <ListView x:Name="EmployeesSalaryList" MinHeight="150" Background="White" Margin="0,5">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Сотрудник" Width="250" DisplayMemberBinding="{Binding EmployeeName}"/>
+                            <GridViewColumn Header="Заказов" Width="80" DisplayMemberBinding="{Binding CarsWashed}"/>
+                            <GridViewColumn Header="Начислено" Width="120" DisplayMemberBinding="{Binding Earnings, StringFormat={}{0:N0} ₽}"/>
+                            <GridViewColumn Header="Авансы" Width="100" DisplayMemberBinding="{Binding Advances, StringFormat={}{0:N0} ₽}"/>
+                            <GridViewColumn Header="К ВЫПЛАТЕ" Width="150" DisplayMemberBinding="{Binding ToPay, StringFormat={}{0:N0} ₽}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
             </StackPanel>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
-            <Button Content="📄 Экспорт в Excel" Click="ExportButton_Click" Width="150" Height="35" 
-                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
-            <Button Content="✖ Закрыть" Click="CloseButton_Click" Width="120" Height="35" 
-                    Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
+            <Button Content="📄 В Excel" Click="ExportButton_Click" Background="#27AE60" Width="120"/>
+            <Button Content="✖ Закрыть" Click="CloseButton_Click" Background="#E74C3C" Width="100"/>
         </StackPanel>
     </Grid>
 </Window>

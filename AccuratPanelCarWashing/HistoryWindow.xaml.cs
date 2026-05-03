@@ -2,10 +2,10 @@ using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Threading.Tasks;
 
 namespace AccuratPanelCarWashing
@@ -14,42 +14,39 @@ namespace AccuratPanelCarWashing
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly ApiService _apiService; // Заменили SqliteDataService на ApiService
+        private readonly ApiService _apiService;
+        private User _currentUser;
 
-        private List<OrderDisplayItem> _box1History;
-        private List<OrderDisplayItem> _box2History;
-        private List<OrderDisplayItem> _box3History;
+        // Свойства для вкладок
+        public bool IsDirector => _currentUser?.Role == 1;
+
+        private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
+        public ObservableCollection<BranchTabItem> BranchTabs
+        {
+            get => _branchTabs;
+            set { _branchTabs = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BranchTabs))); }
+        }
+
+        private BranchTabItem _selectedBranchTab;
+        public BranchTabItem SelectedBranchTab
+        {
+            get => _selectedBranchTab;
+            set { _selectedBranchTab = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab))); }
+        }
+
         private string _shiftSummary;
-
-        public List<OrderDisplayItem> Box1History
-        {
-            get => _box1History;
-            set { _box1History = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box1History))); }
-        }
-
-        public List<OrderDisplayItem> Box2History
-        {
-            get => _box2History;
-            set { _box2History = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box2History))); }
-        }
-
-        public List<OrderDisplayItem> Box3History
-        {
-            get => _box3History;
-            set { _box3History = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box3History))); }
-        }
-
         public string ShiftSummary
         {
             get => _shiftSummary;
             set { _shiftSummary = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShiftSummary))); }
         }
 
-        // 1. УБИРАЕМ SqliteDataService ИЗ КОНСТРУКТОРА
-        public HistoryWindow()
+        // Конструктор теперь принимает User
+        public HistoryWindow(User currentUser)
         {
             InitializeComponent();
             _apiService = new ApiService();
+            _currentUser = currentUser;
             DataContext = this;
 
             _ = InitializeHistoryAsync();
@@ -59,7 +56,40 @@ namespace AccuratPanelCarWashing
         {
             try
             {
-                // Ищем последнюю закрытую смену, чтобы не показывать пустой экран
+                // 1. ЗАГРУЖАЕМ ФИЛИАЛЫ И ФОРМИРУЕМ ВКЛАДКИ
+                var allBranches = await _apiService.GetBranchesAsync();
+                BranchTabs.Clear();
+
+                if (IsDirector)
+                {
+                    foreach (var b in allBranches)
+                    {
+                        BranchTabs.Add(new BranchTabItem
+                        {
+                            BranchId = b.Id,
+                            BranchName = b.Name,
+                            BranchWorkZones = GenerateZonesForBranch(b)
+                        });
+                    }
+                }
+                else
+                {
+                    var myBranch = allBranches.FirstOrDefault(b => b.Id == AppSettings.CurrentBranchId);
+                    if (myBranch != null)
+                    {
+                        BranchTabs.Add(new BranchTabItem
+                        {
+                            BranchId = myBranch.Id,
+                            BranchName = myBranch.Name,
+                            BranchWorkZones = GenerateZonesForBranch(myBranch)
+                        });
+                    }
+                }
+
+                if (BranchTabs.Any())
+                    SelectedBranchTab = BranchTabs.First();
+
+                // 2. ИЩЕМ ДАТУ ПОСЛЕДНЕЙ СМЕНЫ
                 var allShifts = await _apiService.GetShiftsAsync();
                 var lastClosedShift = allShifts
                                         .Where(s => s.IsClosed)
@@ -81,45 +111,61 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        private ObservableCollection<WorkZone> GenerateZonesForBranch(Branch branch)
+        {
+            var zones = new ObservableCollection<WorkZone>();
+            for (int i = 1; i <= branch.WashBaysCount; i++)
+                zones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"БОКС {i}", Department = "Wash" });
+            for (int i = 1; i <= branch.ServiceLiftsCount; i++)
+                zones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"ПОДЪЕМНИК {i}", Department = "Service" });
+            return zones;
+        }
+
+        private void HistoryDatePicker_SelectedDateChanged(object sender, DateTime? e)
+        {
+            if (e.HasValue)
+            {
+                _ = LoadHistoryForDateAsync(e.Value);
+            }
+        }
+
         private async Task LoadHistoryForDateAsync(DateTime date)
         {
             try
             {
-                // 1. Загружаем все необходимые справочники один раз
                 var allShifts = await _apiService.GetShiftsAsync();
                 var allOrders = await _apiService.GetOrdersAsync();
                 var allServices = await _apiService.GetServicesAsync();
                 var allUsers = await _apiService.GetUsersAsync();
 
-                // 2. Ищем закрытые смены за этот день для статистики
                 var closedShiftsOnDate = allShifts.Where(s => s.Date.Date == date.Date && s.IsClosed).ToList();
-
-                // 3. ФИЛЬТРАЦИЯ ЗАКАЗОВ И ЗАПИСЕЙ:
-                // Берем заказы, которые либо привязаны к закрытым сменам этого дня,
-                // либо являются предварительными записями на эту дату.
                 var shiftIdsOnDate = closedShiftsOnDate.Select(s => s.Id).ToList();
 
                 var ordersOnDate = allOrders.Where(o =>
-                    (o.ShiftId.HasValue && shiftIdsOnDate.Contains(o.ShiftId.Value)) || // Заказы из закрытых смен
-                    (o.IsAppointment && o.Time.Date == date.Date) // Предварительные записи на этот день
+                    (o.ShiftId.HasValue && shiftIdsOnDate.Contains(o.ShiftId.Value)) ||
+                    (o.IsAppointment && o.Time.Date == date.Date)
                 ).ToList();
 
                 if (!ordersOnDate.Any())
                 {
-                    Box1History = new List<OrderDisplayItem>();
-                    Box2History = new List<OrderDisplayItem>();
-                    Box3History = new List<OrderDisplayItem>();
+                    // Очищаем списки во всех зонах
+                    foreach (var tab in BranchTabs)
+                        foreach (var zone in tab.BranchWorkZones)
+                            zone.Orders.Clear();
+
                     ShiftSummary = "Данных за этот день нет.";
                     return;
                 }
 
-                // 4. Преобразуем в элементы для отображения
+                // Маппинг заказов
                 var displayItems = ordersOnDate.Select(o => new OrderDisplayItem
                 {
                     Id = o.Id,
+                    BranchId = o.BranchId,     // ⚡ ВАЖНО для вкладок
+                    Department = o.Department, // ⚡ ВАЖНО для вкладок
                     CarModel = o.CarModel,
                     CarNumber = o.CarNumber,
-                    Time = TimeHelper.ToMsk(o.Time), // Используем хелпер для корректного времени
+                    Time = TimeHelper.ToMsk(o.Time),
                     WasherName = allUsers.FirstOrDefault(u => u.Id == o.WasherId)?.FullName ?? (o.IsAppointment ? "📅 Запись" : "Не назначен"),
                     ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id =>
                     {
@@ -138,12 +184,24 @@ namespace AccuratPanelCarWashing
                     IsAppointment = o.IsAppointment
                 }).OrderBy(i => i.Time).ToList();
 
-                // 5. Распределяем по боксам
-                Box1History = displayItems.Where(i => i.BoxNumber == 1).ToList();
-                Box2History = displayItems.Where(i => i.BoxNumber == 2).ToList();
-                Box3History = displayItems.Where(i => i.BoxNumber == 3).ToList();
+                // ⚡ РАСПРЕДЕЛЕНИЕ ПО ВКЛАДКАМ И БОКСАМ
+                foreach (var tab in BranchTabs)
+                {
+                    foreach (var zone in tab.BranchWorkZones)
+                    {
+                        var ordersForZone = displayItems.Where(i =>
+                            i.BranchId == tab.BranchId &&
+                            i.BoxNumber == zone.ZoneNumber &&
+                            i.Department == zone.Department).ToList();
 
-                // 6. Обновляем сводку (только по реально выполненным заказам)
+                        zone.Orders.Clear();
+                        foreach (var o in ordersForZone)
+                        {
+                            zone.Orders.Add(o);
+                        }
+                    }
+                }
+
                 var completedOrders = ordersOnDate.Where(o => o.Status == "Выполнен").ToList();
                 decimal totalRevenue = completedOrders.Sum(o => o.FinalPrice);
 

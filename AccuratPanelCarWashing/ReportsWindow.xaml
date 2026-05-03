@@ -20,10 +20,41 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
-            <TextBlock Text="📊 История смен" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
-            <TextBlock Text="{Binding CurrentBranchInfo}" FontSize="16" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,5,0,0"/>
-        </StackPanel>
+        <Grid Grid.Row="0" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0" Text="📊 Ежедневные отчеты" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+            <!-- Вкладки филиалов -->
+            <TabControl Grid.Column="1" 
+                        ItemsSource="{Binding BranchTabs}" 
+                        SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
+                        Background="Transparent" 
+                        BorderThickness="0"
+                        VerticalAlignment="Center">
+                
+                <TabControl.ItemContainerStyle>
+                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                        <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    </Style>
+                </TabControl.ItemContainerStyle>
+
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding BranchName}" FontSize="12" FontWeight="Bold"/>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+                        <!-- Пустой контент -->
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+        </Grid>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>

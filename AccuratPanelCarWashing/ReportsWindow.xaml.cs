@@ -2,6 +2,7 @@ using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -16,49 +17,101 @@ namespace AccuratPanelCarWashing
         private List<ShiftReport> _reports;
         private ShiftReport _selectedReport;
         private readonly ApiService _apiService;
+        private readonly User _currentUser;
+
+        public bool IsDirector => _currentUser?.Role == 1;
 
         public List<ShiftReport> Reports
         {
             get { return _reports; }
-            set
-            {
-                _reports = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Reports)));
-            }
+            set { _reports = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Reports))); }
         }
 
         public ShiftReport SelectedReport
         {
             get { return _selectedReport; }
+            set { _selectedReport = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedReport))); }
+        }
+
+        private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
+        public ObservableCollection<BranchTabItem> BranchTabs
+        {
+            get => _branchTabs;
+            set { _branchTabs = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BranchTabs))); }
+        }
+
+        private BranchTabItem _selectedBranchTab;
+        public BranchTabItem SelectedBranchTab
+        {
+            get => _selectedBranchTab;
             set
             {
-                _selectedReport = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedReport)));
+                _selectedBranchTab = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
+
+                // При переключении вкладки загружаем отчеты для выбранного филиала
+                if (_selectedBranchTab != null)
+                {
+                    LoadReports(_selectedBranchTab.BranchId);
+                }
             }
         }
 
-        // ДОБАВЛЯЕМ СВОЙСТВО:
-        public string CurrentBranchInfo => !string.IsNullOrEmpty(AppSettings.CurrentBranchName) ? $"📍 Текущий филиал: {AppSettings.CurrentBranchName}" : "";
-
-        public ReportsWindow()
+        public ReportsWindow(User currentUser)
         {
             InitializeComponent();
             _apiService = new ApiService();
+            _currentUser = currentUser;
             DataContext = this;
-            LoadReports();
+
+            InitializeTabsAsync();
         }
 
-        private async void LoadReports()
+        private async void InitializeTabsAsync()
         {
             try
             {
-                // Запрашиваем широкий диапазон, конвертируем границы в UTC
+                var allBranches = await _apiService.GetBranchesAsync();
+                BranchTabs.Clear();
+
+                if (IsDirector)
+                {
+                    // ⚡ ДОБАВЛЯЕМ ПУНКТ "ВСЯ СЕТЬ"
+                    BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Все филиалы (Сеть)" });
+
+                    foreach (var b in allBranches)
+                    {
+                        BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
+                    }
+                }
+                else
+                {
+                    var myBranch = allBranches.FirstOrDefault(b => b.Id == AppSettings.CurrentBranchId);
+                    if (myBranch != null)
+                    {
+                        BranchTabs.Add(new BranchTabItem { BranchId = myBranch.Id, BranchName = myBranch.Name });
+                    }
+                }
+
+                if (BranchTabs.Any())
+                    SelectedBranchTab = BranchTabs.First(); // Это автоматически вызовет LoadReports
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки филиалов: {ex.Message}");
+            }
+        }
+
+        private async void LoadReports(int branchId)
+        {
+            try
+            {
                 DateTime startUtc = TimeHelper.ToUtc(new DateTime(2020, 1, 1));
                 DateTime endUtc = TimeHelper.ToUtc(new DateTime(2050, 1, 1));
 
-                var allReports = await _apiService.GetShiftReportsAsync(startUtc, endUtc);
+                // ⚡ Передаем branchId в API
+                var allReports = await _apiService.GetShiftReportsAsync(branchId, startUtc, endUtc);
 
-                // КОНВЕРТИРУЕМ СЕРВЕРНОЕ ВРЕМЯ ОБРАТНО В МОСКОВСКОЕ
                 foreach (var report in allReports)
                 {
                     report.Date = TimeHelper.ToMsk(report.Date);
@@ -69,14 +122,21 @@ namespace AccuratPanelCarWashing
 
                 Reports = allReports.OrderByDescending(r => r.Date).ToList();
 
+                ReportsListBox.ItemsSource = null; // Сброс привязки для обновления UI
                 if (Reports.Any())
                 {
                     ReportsListBox.ItemsSource = Reports;
+                    // Автоматически выбираем первый отчет в списке
+                    ReportsListBox.SelectedIndex = 0;
+                }
+                else
+                {
+                    SelectedReport = null;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка загрузки отчетов: {ex.Message}");
             }
         }
 
@@ -87,7 +147,8 @@ namespace AccuratPanelCarWashing
 
         private void CustomReportButton_Click(object sender, RoutedEventArgs e)
         {
-            var customReportWin = new CustomReportWindow();
+            // Передадим пользователя и сюда
+            var customReportWin = new CustomReportWindow(_currentUser);
             customReportWin.ShowDialog();
         }
 
@@ -135,9 +196,9 @@ namespace AccuratPanelCarWashing
         {
             var lines = new List<string>();
 
-            // ДОБАВЛЯЕМ СТРОКУ С ФИЛИАЛОМ:
-            lines.Add($"Отчет по филиалу: {AppSettings.CurrentBranchName}");
-            lines.Add(""); // Пустая строка для отступа
+            string branchTitle = SelectedBranchTab != null ? SelectedBranchTab.BranchName : "Неизвестно";
+            lines.Add($"Отчет по филиалу: {branchTitle}");
+            lines.Add("");
 
             lines.Add("Дата;Время начала;Время окончания;Машин;Выручка;Начислено Мойщикам;Расходы;Выдано авансов;Чистая прибыль(ЧПКО);Примечание");
             lines.Add($"{report.Date:dd.MM.yyyy};{report.StartTime:HH:mm};{report.EndTime:HH:mm};" +

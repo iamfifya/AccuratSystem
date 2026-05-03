@@ -11,6 +11,20 @@ namespace Accurat.WebAPI.Models
         public decimal TotalWasherEarnings { get; set; }
         public decimal TotalCompanyEarnings { get; set; }
 
+        // МОЙКА
+        public int WashTotalCars { get; set; }
+        public decimal WashTotalRevenue { get; set; }
+        public decimal WashCompanyEarnings { get; set; }
+        public decimal WashTotalExpenses { get; set; }
+        public decimal WashNetProfit => WashCompanyEarnings - WashTotalExpenses;
+
+        // СЕРВИС
+        public int ServiceTotalCars { get; set; }
+        public decimal ServiceTotalRevenue { get; set; }
+        public decimal ServiceCompanyEarnings { get; set; }
+        public decimal ServiceTotalExpenses { get; set; }
+        public decimal ServiceNetProfit => ServiceCompanyEarnings - ServiceTotalExpenses;
+
         public int CashCount { get; set; }
         public decimal CashAmount { get; set; }
 
