@@ -49,22 +49,28 @@ namespace AccuratPanelCarWashing
             try
             {
                 this.IsEnabled = false;
-
-                // 1. Авторизация на сервере
                 var user = await _apiService.AuthenticateAsync(login, password);
 
                 if (user != null)
                 {
-                    // 2. Устанавливаем выбранный филиал в глобальные настройки приложения
                     AppSettings.CurrentBranchId = selectedBranch.Id;
                     AppSettings.CurrentBranchName = selectedBranch.Name;
+                    AppSettings.CurrentBranchWashBaysCount = selectedBranch.WashBaysCount;
+                    AppSettings.CurrentBranchServiceLiftsCount = selectedBranch.ServiceLiftsCount;
 
                     Logger.SetUserContext(user.FullName, user.Id);
-                    Logger.Info("Вход выполнен", "AUTH", $"Филиал: {selectedBranch.Name}");
 
-                    // 3. ПЕРЕДАЕМ ТОЛЬКО USER В MAINWINDOW (без Sqlite)
-                    var mainWindow = new MainWindow(user);
-                    mainWindow.Show();
+                    // 🔹 НОВАЯ ЛОГИКА МАРШРУТИЗАЦИИ
+                    if (user.Role == 1) // Директор
+                    {
+                        var directorWin = new MainWindow(user);
+                        directorWin.Show();
+                    }
+                    else // Админ, Мойщик, Сотрудник сервиса
+                    {
+                        var mainWindow = new MainWindow(user);
+                        mainWindow.Show();
+                    }
                     this.Close();
                 }
                 else

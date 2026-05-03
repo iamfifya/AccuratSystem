@@ -269,6 +269,7 @@
     <Compile Include="Models\AppointmentDisplayItem.cs" />
     <Compile Include="Models\AppSettings.cs" />
     <Compile Include="Models\Branch.cs" />
+    <Compile Include="Models\BranchTabItem.cs" />
     <Compile Include="Models\Client.cs" />
     <Compile Include="Models\EmployeeShiftReport.cs" />
     <Compile Include="Models\OrderDisplayItem.cs" />
@@ -314,6 +315,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ViewModels\WorkZone.cs" />
     <Compile Include="WasherSelectionDialog.xaml.cs">
       <DependentUpon>WasherSelectionDialog.xaml</DependentUpon>
     </Compile>

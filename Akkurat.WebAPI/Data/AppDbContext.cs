@@ -49,17 +49,21 @@ namespace Accurat.WebAPI.Data
             modelBuilder.Entity<Branch>().HasData(
                 new Branch
                 {
-                    Id = 1, // Внимание: EF Core не любит Id = 0 для автоинкрементных PK, лучше начать с 1
+                    Id = 1,
                     Name = "ACCURAT - Девятый м-н",
                     Address = "ул. Строителей, 54",
-                    Type = 1
+                    Type = 1,
+                    WashBaysCount = 2,// Например, здесь 2 бокса
+                    ServiceLiftsCount = 0
                 },
                 new Branch
                 {
                     Id = 2,
                     Name = "ACCURAT - В разработке",
                     Address = "в разработке",
-                    Type = 3
+                    Type = 3,
+                    WashBaysCount = 0,    // 2 бокса
+                    ServiceLiftsCount = 2 // 2 подъемника
                 }
             );
 

@@ -4,6 +4,7 @@ using AccuratPanelCarWashing.Services;
 using AccuratPanelCarWashing.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -26,6 +27,10 @@ namespace AccuratPanelCarWashing
         private User _currentUser;
         private string _searchFilter = "";
 
+        // 🔹 Свойства для видимости
+        public bool IsDirector => _currentUser?.Role == 1;
+        public bool IsSingleBranch => _currentUser?.Role != 1;
+
         // Кэши для быстрого UI без постоянных запросов к серверу
         private List<Service> _cachedServices = new List<Service>();
         private List<User> _cachedUsers = new List<User>();
@@ -33,6 +38,21 @@ namespace AccuratPanelCarWashing
 
         private decimal _companyEarnings;
         private decimal _totalRevenue;
+
+        // Наша главная коллекция вкладок
+        private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
+        public ObservableCollection<BranchTabItem> BranchTabs
+        {
+            get => _branchTabs;
+            set { _branchTabs = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BranchTabs))); }
+        }
+
+        private BranchTabItem _selectedBranchTab;
+        public BranchTabItem SelectedBranchTab
+        {
+            get => _selectedBranchTab;
+            set { _selectedBranchTab = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab))); }
+        }
 
         public string ActiveUserInfo
         {
@@ -85,25 +105,12 @@ namespace AccuratPanelCarWashing
         public decimal CompanyEarnings { get => _companyEarnings; set { _companyEarnings = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CompanyEarnings))); } }
         public decimal TotalRevenue { get => _totalRevenue; set { _totalRevenue = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalRevenue))); } }
 
-        private List<OrderDisplayItem> _box1Items;
-        private List<OrderDisplayItem> _box2Items;
-        private List<OrderDisplayItem> _box3Items;
-
-        public List<OrderDisplayItem> Box1Items { get => _box1Items; set { _box1Items = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box1Items))); } }
-        public List<OrderDisplayItem> Box2Items { get => _box2Items; set { _box2Items = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box2Items))); } }
-        public List<OrderDisplayItem> Box3Items { get => _box3Items; set { _box3Items = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box3Items))); } }
-
         public MainWindow(User user)
         {
             InitializeComponent();
             _apiService = new ApiService();
             _currentUser = user;
             DataContext = this;
-
-            if (AppointmentsOverlay != null)
-            {
-                AppointmentsOverlay.CurrentShift = _currentShift;
-            }
 
             _ = LoadDataAsync();
         }
@@ -118,9 +125,10 @@ namespace AccuratPanelCarWashing
 
         private void RefreshItems()
         {
-            var temp1 = Box1Items; Box1Items = null; Box1Items = temp1;
-            var temp2 = Box2Items; Box2Items = null; Box2Items = temp2;
-            var temp3 = Box3Items; Box3Items = null; Box3Items = temp3;
+            // Принудительно "передергиваем" коллекцию вкладок, чтобы UI обновился
+            var temp = BranchTabs;
+            BranchTabs = null;
+            BranchTabs = temp;
         }
 
         // ==========================================
@@ -130,16 +138,52 @@ namespace AccuratPanelCarWashing
         {
             try
             {
+                // 1. ЗАГРУЖАЕМ ФИЛИАЛЫ
+                var allBranches = await _apiService.GetBranchesAsync();
+
+                BranchTabs.Clear();
+
+                if (IsDirector)
+                {
+                    // Директор видит все филиалы
+                    foreach (var b in allBranches)
+                    {
+                        BranchTabs.Add(new BranchTabItem
+                        {
+                            BranchId = b.Id,
+                            BranchName = b.Name,
+                            BranchWorkZones = GenerateZonesForBranch(b)
+                        });
+                    }
+                }
+                else
+                {
+                    // Остальные видят только свой рабочий филиал
+                    var myBranch = allBranches.FirstOrDefault(b => b.Id == AppSettings.CurrentBranchId);
+                    if (myBranch != null)
+                    {
+                        BranchTabs.Add(new BranchTabItem
+                        {
+                            BranchId = myBranch.Id,
+                            BranchName = myBranch.Name,
+                            BranchWorkZones = GenerateZonesForBranch(myBranch)
+                        });
+                    }
+                }
+
+                // Выбираем первую вкладку по умолчанию
+                if (BranchTabs.Any())
+                    SelectedBranchTab = BranchTabs.First();
+
+                // 2. ЗАГРУЖАЕМ ОСТАЛЬНЫЕ ДАННЫЕ
                 var allShifts = await _apiService.GetShiftsAsync();
                 _cachedUsers = await _apiService.GetUsersAsync();
                 _cachedServices = await _apiService.GetServicesAsync();
-
-                // Загружаем все заказы (и активные, и записи)
                 var allOrdersFromApi = await _apiService.GetOrdersAsync();
 
+                // Пока берем просто открытую смену
                 _currentShift = allShifts.FirstOrDefault(s => !s.IsClosed);
 
-                // Фильтруем заказы для текущей смены и записи на сегодня
                 if (_currentShift != null)
                 {
                     _allOrders = allOrdersFromApi.Where(o => o.ShiftId == _currentShift.Id || o.IsAppointment).ToList();
@@ -158,15 +202,31 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        // Вспомогательный метод: собирает боксы и подъемники в один список для конкретного филиала
+        private ObservableCollection<WorkZone> GenerateZonesForBranch(Branch branch)
+        {
+            var zones = new ObservableCollection<WorkZone>();
+
+            // Генерируем боксы мойки
+            for (int i = 1; i <= branch.WashBaysCount; i++)
+                zones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"БОКС {i}", Department = "Wash" });
+
+            // Генерируем подъемники сервиса
+            for (int i = 1; i <= branch.ServiceLiftsCount; i++)
+                zones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"ПОДЪЕМНИК {i}", Department = "Service" });
+
+            return zones;
+        }
+
         // ==========================================
         // ЛОКАЛЬНАЯ ФИЛЬТРАЦИЯ (МГНОВЕННАЯ)
         // ==========================================
+
         private void ApplyFilterAndDisplay()
         {
             var filteredOrders = _allOrders.AsEnumerable();
             var filteredApts = _todayAppointments.Where(a => !a.IsCompleted).AsEnumerable();
 
-            // Если в поиске что-то есть, фильтруем локальный список
             if (!string.IsNullOrWhiteSpace(_searchFilter))
             {
                 string filter = _searchFilter.ToLower();
@@ -179,10 +239,11 @@ namespace AccuratPanelCarWashing
                     (a.CarModel != null && a.CarModel.ToLower().Contains(filter)));
             }
 
-            // Формируем карточки заказов
             var orderItems = filteredOrders.Select(o => new OrderDisplayItem
             {
                 Id = o.Id,
+                BranchId = o.BranchId,
+                Department = o.Department,
                 CarModel = o.CarModel,
                 CarNumber = o.CarNumber,
                 Time = o.Time,
@@ -201,41 +262,49 @@ namespace AccuratPanelCarWashing
                 IsCompleted = o.Status == "Завершен" || o.Status == "Выполнен",
             });
 
-            // Формируем карточки записей (только с флагом IsAppointment)
             var appointmentItems = filteredOrders
-                .Where(o => o.IsAppointment &&
-           (o.Status == "Предварительная запись" ||
-            o.Status == "Запись" ||
-            o.Status == "Ожидает"))
+                .Where(o => o.IsAppointment && (o.Status == "Предварительная запись" || o.Status == "Запись" || o.Status == "Ожидает"))
                 .Select(o => new OrderDisplayItem
                 {
-                    Id = o.Id,  // ✅ Теперь используем Id заказа, а не 0!
+                    Id = o.Id,
+                    BranchId = o.BranchId,
+                    Department = o.Department,
                     CarModel = o.CarModel,
                     CarNumber = o.CarNumber,
                     Time = o.Time,
                     WasherName = o.WasherId > 0 ? GetWasherName(o.WasherId) : "📅 Запись",
-                    ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>())
-                        .Select(id => _cachedServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
+                    ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id => _cachedServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
                     FinalPrice = o.FinalPrice,
                     ExtraCost = o.ExtraCost,
                     ExtraCostReason = o.ExtraCostReason,
                     BoxNumber = o.BoxNumber,
-                    Status = o.Status,  // "Предварительная запись", "Просрочена" и т.д.
+                    Status = o.Status,
                     IsAppointment = true,
                     IsCompleted = o.Status == "Выполнен" || o.Status == "Отменен",
                     PaymentMethod = o.PaymentMethod,
-                    DurationMinutes = o.DurationMinutes,  // Если есть поле
+                    DurationMinutes = o.DurationMinutes,
                 });
-
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Записей найдено: {appointmentItems.Count()}");
-            foreach (var apt in appointmentItems)
-                System.Diagnostics.Debug.WriteLine($"  - Id={apt.Id}, Status='{apt.Status}', Box={apt.BoxNumber}");
 
             var allDisplayItems = orderItems.Concat(appointmentItems).OrderBy(i => i.Time).ToList();
 
-            Box1Items = allDisplayItems.Where(i => i.BoxNumber == 1).ToList();
-            Box2Items = allDisplayItems.Where(i => i.BoxNumber == 2).ToList();
-            Box3Items = allDisplayItems.Where(i => i.BoxNumber == 3).ToList();
+            // ⚡ САМОЕ ГЛАВНОЕ: Раскидываем заказы по нужным вкладкам и боксам
+            foreach (var tab in BranchTabs)
+            {
+                foreach (var zone in tab.BranchWorkZones)
+                {
+                    // Ищем заказ, который совпадает по филиалу, номеру бокса и департаменту (Мойка/Сервис)
+                    var ordersForZone = allDisplayItems.Where(i =>
+                        i.BranchId == tab.BranchId &&
+                        i.BoxNumber == zone.ZoneNumber &&
+                        i.Department == zone.Department).ToList();
+
+                    zone.Orders.Clear();
+                    foreach (var o in ordersForZone)
+                    {
+                        zone.Orders.Add(o);
+                    }
+                }
+            }
         }
 
         private string GetWasherName(int? washerId)
@@ -445,7 +514,7 @@ namespace AccuratPanelCarWashing
 
         private void EditOrderMenuItem_Click(object sender, RoutedEventArgs e) { if (SelectedItem != null) OpenEditOrder(SelectedItem); else MessageBox.Show("Выберите заказ"); }
 
-        
+
 
         private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
@@ -531,61 +600,6 @@ namespace AccuratPanelCarWashing
     // ==========================================
     // ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ (ОБЯЗАТЕЛЬНО НУЖНЫ)
     // ==========================================
-    public class OrderDisplayItem : INotifyPropertyChanged
-    {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public int Id { get; set; }
-        public string CarNumber { get; set; }
-        public string CarModel { get; set; }
-        public DateTime Time { get; set; }
-        public string WasherName { get; set; }
-        public string ServicesList { get; set; }
-        public decimal FinalPrice { get; set; }
-        public decimal ExtraCost { get; set; }
-        public string ExtraCostReason { get; set; }
-        public int BoxNumber { get; set; }
-        public string Status { get; set; }
-        public bool IsAppointment { get; set; }
-        public bool IsCompleted { get; set; }
-        public int DurationMinutes { get; set; } = 60;
-        public string PaymentMethod { get; set; }
-
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set { _isSelected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected))); }
-        }
-
-        public decimal DiscountPercent { get; set; }
-        public decimal DiscountAmount { get; set; }
-        public decimal OriginalTotalPrice { get; set; }
-
-        public string DiscountDisplay
-        {
-            get
-            {
-                if (DiscountPercent > 0) return $"−{DiscountPercent:F0}%";
-                if (DiscountAmount > 0) return $"−{DiscountAmount:N0} ₽";
-                return "";
-            }
-        }
-
-        public string StatusDisplay
-        {
-            get
-            {
-                if (IsAppointment && Status == "Предварительная запись")
-                    return Time < DateTime.Now ? "⚠️ Просрочена" : "📅 Запись";
-                return Status;
-            }
-        }
-
-        public bool HasDiscount => DiscountPercent > 0 || DiscountAmount > 0;
-        public string OriginalPriceDisplay => OriginalTotalPrice > 0 ? $"{OriginalTotalPrice:N0} ₽" : "";
-        public bool ShowOriginalPrice => HasDiscount && OriginalTotalPrice > 0;
-    }
 
     public class WasherStat
     {

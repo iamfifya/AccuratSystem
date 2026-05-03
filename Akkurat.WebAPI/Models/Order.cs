@@ -10,6 +10,7 @@ namespace Accurat.WebAPI.Models
         public string CarModel { get; set; } = string.Empty;
         public int BodyTypeCategory { get; set; } = 1;
         public string? CarBodyType { get; set; }
+        public string Department { get; set; } = "Wash"; // "Wash" или "Service"
 
         public DateTime Time { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = "Выполняется";

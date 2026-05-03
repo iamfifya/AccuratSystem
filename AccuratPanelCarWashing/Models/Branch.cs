@@ -1,4 +1,7 @@
 // Models/Branch.cs
+using DocumentFormat.OpenXml.Drawing.Charts;
+using System.Collections.Generic;
+
 namespace AccuratPanelCarWashing.Models
 {
     public class Branch
@@ -6,6 +9,10 @@ namespace AccuratPanelCarWashing.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
-        public int Type { get; set; } // 1 - Автомойка, 2 - Сервис
+        public int Type { get; set; } // 1 - Автомойка, 2 - Сервис, 3 - Смешанный
+
+        // Новые поля для динамического интерфейса
+        public int WashBaysCount { get; set; }    // Количество моечных боксов
+        public int ServiceLiftsCount { get; set; } // Количество подъемников сервиса
     }
 }

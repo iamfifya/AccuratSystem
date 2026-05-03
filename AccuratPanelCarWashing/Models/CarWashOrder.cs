@@ -20,7 +20,6 @@ namespace AccuratPanelCarWashing.Models
         [RegularExpression(@"^[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}$",
             ErrorMessage = "Неверный формат госномера (пример: А123ВС77)")]
         public string CarNumber { get; set; }
-
         public bool IsAppointment { get; set; } = false; // Признак предварительной записи
         public int BodyTypeCategory { get; set; } = 1; // 1-4 категория кузова
 
@@ -28,7 +27,8 @@ namespace AccuratPanelCarWashing.Models
         public DateTime Time { get; set; }
         public decimal TotalPrice { get; set; }
         public int? ShiftId { get; set; }
-        public int BranchId { get; set; } = AppSettings.CurrentBranchId;
+        public int BranchId { get; set; }
+        public string Department { get; set; }
         public string Notes { get; set; }
         public List<int> ServiceIds { get; set; } = new List<int>();
         public int BoxNumber { get; set; }

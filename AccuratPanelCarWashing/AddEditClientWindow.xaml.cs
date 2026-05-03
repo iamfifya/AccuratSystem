@@ -1,6 +1,7 @@
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 
@@ -8,7 +9,11 @@ namespace AccuratPanelCarWashing
 {
     public partial class AddEditClientWindow : Window
     {
+        // Добавили readonly
         private readonly ApiService _apiService;
+        private List<CarWashOrder> _allOrders = new List<CarWashOrder>();
+        // Если _todayAppointments тоже просит, сделай так:
+        private readonly List<Appointment> _todayAppointments = new List<Appointment>();
         public Client CurrentClient { get; set; }
         public string WindowTitle { get; set; }
 
