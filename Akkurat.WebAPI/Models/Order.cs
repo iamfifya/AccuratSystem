@@ -13,7 +13,7 @@ namespace Accurat.WebAPI.Models
         public string Department { get; set; } = "Wash"; // "Wash" или "Service"
 
         public DateTime Time { get; set; } = DateTime.UtcNow;
-        public string Status { get; set; } = "Выполняется";
+        public string Status { get; set; } = "В работе";
         public string PaymentMethod { get; set; } = "Наличные";
         public string? Notes { get; set; }
 

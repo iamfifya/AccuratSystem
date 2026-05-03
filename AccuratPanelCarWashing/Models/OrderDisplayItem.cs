@@ -46,7 +46,7 @@ namespace AccuratPanelCarWashing.Models
                     {
                         case "Предварительная запись":
                             return "📅 Ожидает";
-                        case "Выполняется":
+                        case "В работе":
                             return "🔄 В работе";
                         case "Выполнен":
                             return "✅ Выполнен";

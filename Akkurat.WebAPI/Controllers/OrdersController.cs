@@ -33,7 +33,7 @@ namespace Accurat.WebAPI.Controllers
         {
             // Уважаем время клиента, но жестко приводим к UTC
             order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
-            order.Status = "Выполняется";
+            order.Status = "В работе";
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();

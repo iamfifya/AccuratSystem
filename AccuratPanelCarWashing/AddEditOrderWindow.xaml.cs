@@ -131,7 +131,7 @@ namespace AccuratPanelCarWashing
             BodyTypeComboBox.SelectedValuePath = "Value";
 
             StatusComboBox.ItemsSource = new List<KeyValuePair<string, string>> {
-        new KeyValuePair<string, string>("🟢 Выполняется", "Выполняется"),
+        new KeyValuePair<string, string>("🟢 В работе", "В работе"),
         new KeyValuePair<string, string>("✅ Выполнен", "Выполнен"),
         new KeyValuePair<string, string>("❌ Отменен", "Отменен")
     };
@@ -266,7 +266,7 @@ namespace AccuratPanelCarWashing
             if (result == MessageBoxResult.Yes)
             {
                 _viewModel.CurrentOrder.IsAppointment = false;
-                _viewModel.CurrentOrder.Status = "Выполняется";
+                _viewModel.CurrentOrder.Status = "В работе";
                 SaveButton_Click(sender, e);
             }
         }

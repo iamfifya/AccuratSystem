@@ -65,7 +65,7 @@ namespace AccuratPanelCarWashing.Models
         public string BoxName => $"Бокс {BoxNumber}";
 
         public string Error => null;
-        public string Status { get; set; } = "Выполняется";
+        public string Status { get; set; } = "В работе";
 
         public string this[string columnName]
         {

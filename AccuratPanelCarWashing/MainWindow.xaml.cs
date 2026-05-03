@@ -329,7 +329,7 @@ namespace AccuratPanelCarWashing
                 var totalWasherEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).WasherEarnings);
                 CompanyEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).CompanyEarnings);
 
-                var inProgressCount = _allOrders.Count(o => o.Status == "Выполняется");
+                var inProgressCount = _allOrders.Count(o => o.Status == "В работе");
                 var cancelledCount = _allOrders.Count(o => o.Status == "Отменен");
 
                 TotalOrdersInfo = $"🚗 Выполнено: {completedOrders.Count} | 🟢 В работе: {inProgressCount} | ❌ Отменено: {cancelledCount} | 👤 Мойщикам: {totalWasherEarnings:N0} ₽";
@@ -557,7 +557,7 @@ namespace AccuratPanelCarWashing
             }
 
             //  ДОБАВЛЯЕМ ПРОВЕРКУ НА АКТИВНЫЕ ЗАКАЗЫ 
-            bool hasActiveOrders = _allOrders.Any(o => o.Status == "Выполняется" || o.Status == "В работе");
+            bool hasActiveOrders = _allOrders.Any(o => o.Status == "В работе" || o.Status == "В работе");
             if (hasActiveOrders)
             {
                 MessageBox.Show("Нельзя закрыть смену! Завершите или отмените все активные заказы.",

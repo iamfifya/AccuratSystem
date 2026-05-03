@@ -308,7 +308,7 @@ namespace AccuratPanelCarWashing.ViewModels
                     ServiceIds = new List<int>(),
                     ExtraCost = 0,
                     ExtraCostReason = "",
-                    Status = "Выполняется",
+                    Status = "В работе",
                     PaymentMethod = "Наличные",
                     IsAppointment = false,
                     ClientId = null,
