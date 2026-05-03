@@ -155,7 +155,7 @@
                         ItemsSource="{Binding BranchTabs}" 
                         SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
                         Margin="0,0,0,10" 
-                        Background="Transparent" 
+                        Background="#f0f0f2" 
                         BorderThickness="0">
 
                 <!--  ВОТ ИСПРАВЛЕНИЕ: Наследуем твой красивый дизайн из словаря через BasedOn  -->
