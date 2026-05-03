@@ -46,9 +46,9 @@
         <Grid Grid.Row="2" Margin="0,0,0,15" HorizontalAlignment="Center">
             <StackPanel Orientation="Horizontal">
                 <Label Content="С:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <local:CustomDatePicker x:Name="StartDatePicker" Height="45" Width="400"/>
+                <local:CustomDatePicker x:Name="StartDatePicker" Height="50" Width="400"/>
                 <Label Content="По:" VerticalAlignment="Center" Margin="15,0,5,0"/>
-                <local:CustomDatePicker x:Name="EndDatePicker" Height="45" Width="400"/>
+                <local:CustomDatePicker x:Name="EndDatePicker" Height="50" Width="400"/>
                 <Button Content="🚀 Сформировать" Click="GenerateReportButton_Click" 
                         Width="160" Height="35" Margin="20,0,0,0" Background="#3498DB" Foreground="White" Cursor="Hand"/>
             </StackPanel>
