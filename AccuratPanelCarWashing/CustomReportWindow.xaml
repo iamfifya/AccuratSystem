@@ -86,7 +86,7 @@
                     </Border>
                 </UniformGrid>
 
-                <!-- ⚡ ГРАФИКИ ⚡ -->
+                <!--  ГРАФИКИ  -->
                 <Grid Height="300" Margin="0,0,0,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/> <!-- Линейный график -->
@@ -106,7 +106,7 @@
                     </Border>
                 </Grid>
 
-                <!-- ⚡ РАЗДЕЛЕНИЕ ПО ДЕПАРТАМЕНТАМ ⚡ -->
+                <!--  РАЗДЕЛЕНИЕ ПО ДЕПАРТАМЕНТАМ  -->
                 <Grid Margin="0,0,0,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>

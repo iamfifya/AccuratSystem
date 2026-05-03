@@ -211,7 +211,7 @@ namespace AccuratPanelCarWashing.Services
         #endregion
 
         #region ОТЧЕТЫ (REPORTS)
-        // ⚡ ОБНОВЛЕНО: Добавлен параметр branchId
+        //  ОБНОВЛЕНО: Добавлен параметр branchId
         public async Task<List<ShiftReport>> GetShiftReportsAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<List<ShiftReport>>($"Reports/shifts?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ShiftReport>(); }
@@ -220,14 +220,14 @@ namespace AccuratPanelCarWashing.Services
 
         public class ClientStatsResponse { public int NewClients { get; set; } public int UniqueClients { get; set; } }
 
-        // ⚡ ОБНОВЛЕНО: Добавлен параметр branchId
+        //  ОБНОВЛЕНО: Добавлен параметр branchId
         public async Task<ClientStatsResponse> GetClientsStatsAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={start:O}&end={end:O}") ?? new ClientStatsResponse(); }
             catch { return new ClientStatsResponse(); }
         }
 
-        // ⚡ ОБНОВЛЕНО: Добавлен параметр branchId
+        //  ОБНОВЛЕНО: Добавлен параметр branchId
         public async Task<List<Transaction>> GetTransactionsByDateRangeAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<List<Transaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<Transaction>(); }

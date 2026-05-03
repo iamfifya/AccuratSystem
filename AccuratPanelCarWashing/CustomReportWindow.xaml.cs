@@ -70,7 +70,7 @@ namespace AccuratPanelCarWashing
 
                 if (!periodReports.Any()) { MessageBox.Show("Нет данных за период"); return; }
 
-                // ⚡ РАСЧЕТ ДЕПАРТАМЕНТОВ (используем новые поля BaseReport)
+                //  РАСЧЕТ ДЕПАРТАМЕНТОВ (используем новые поля BaseReport)
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
                 decimal netProfit = periodReports.Sum(r => r.TotalCompanyEarnings) - transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
 
@@ -91,7 +91,7 @@ namespace AccuratPanelCarWashing
                 ServiceProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.ServiceNetProfit):N0} ₽";
                 ServiceProfitText.Foreground = new SolidColorBrush(Colors.DarkBlue);
 
-                // ⚡ ГРАФИКИ LiveCharts ⚡
+                //  ГРАФИКИ LiveCharts 
                 RevenueSeries = new SeriesCollection {
                     new LineSeries {
                         Title = "Выручка",

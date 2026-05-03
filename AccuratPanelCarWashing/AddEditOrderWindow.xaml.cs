@@ -44,14 +44,30 @@ namespace AccuratPanelCarWashing
         {
             try
             {
-                // Загружаем мойщиков и клиентов с сервера
+                // 1. Загружаем мойщиков, клиентов И ФИЛИАЛЫ с сервера
                 var allUsers = await _apiService.GetUsersAsync();
                 var allClients = await _apiService.GetClientsAsync();
+                var allBranches = await _apiService.GetBranchesAsync();
 
-                // Обновляем комбобоксы
                 WasherComboBox.ItemsSource = allUsers;
                 _viewModel.Washers = allUsers;
                 ClientComboBox.ItemsSource = allClients;
+
+                //  ГЕНЕРИРУЕМ ДИНАМИЧЕСКИЕ ЗОНЫ ДЛЯ ТЕКУЩЕГО ФИЛИАЛА
+                int branchId = _currentShift?.BranchId ?? AppSettings.CurrentBranchId;
+                var currentBranch = allBranches.FirstOrDefault(b => b.Id == branchId);
+                var availableZones = new List<ZoneItem>();
+
+                if (currentBranch != null)
+                {
+                    for (int i = 1; i <= currentBranch.WashBaysCount; i++)
+                        availableZones.Add(new ZoneItem { Name = $"🧽 Бокс {i} (Мойка)", BoxNumber = i, Department = "Wash" });
+
+                    for (int i = 1; i <= currentBranch.ServiceLiftsCount; i++)
+                        availableZones.Add(new ZoneItem { Name = $"🔧 Подъемник {i} (Сервис)", BoxNumber = i, Department = "Service" });
+                }
+
+                ZoneComboBox.ItemsSource = availableZones;
 
                 // Если это редактирование — выставляем текущие значения
                 if (order != null)
@@ -71,7 +87,11 @@ namespace AccuratPanelCarWashing
                     if (!string.IsNullOrEmpty(order.PaymentMethod))
                         PaymentMethodComboBox.SelectedValue = order.PaymentMethod;
 
-                    // Время
+                    //  Выбираем нужную зону из списка
+                    var selectedZone = availableZones.FirstOrDefault(z => z.BoxNumber == order.BoxNumber && z.Department == order.Department);
+                    if (selectedZone != null)
+                        ZoneComboBox.SelectedItem = selectedZone;
+
                     OrderDatePicker.SelectedDate = order.Time;
                     OrderTimeTextBox.Text = order.Time.ToString("HH:mm");
                 }
@@ -81,16 +101,18 @@ namespace AccuratPanelCarWashing
                     OrderDatePicker.SelectedDate = DateTime.Now;
                     OrderTimeTextBox.Text = DateTime.Now.ToString("HH:mm");
                     if (allUsers.Any()) WasherComboBox.SelectedItem = allUsers.FirstOrDefault();
+
+                    // Выбираем первый свободный бокс по умолчанию
+                    if (availableZones.Any()) ZoneComboBox.SelectedItem = availableZones.First();
                 }
-
-                
-
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки данных с сервера: {ex.Message}", "Ошибка API");
             }
         }
+
+
 
         private void SetupStaticLists()
         {
@@ -130,7 +152,6 @@ namespace AccuratPanelCarWashing
                     if (TimeSpan.TryParse(OrderTimeTextBox.Text, out var time))
                     {
                         DateTime localTime = OrderDatePicker.SelectedDate.Value.Date + time;
-                        // ИСПРАВЛЕНИЕ: Конвертируем в UTC
                         _viewModel.CurrentOrder.Time = DateTime.SpecifyKind(localTime, DateTimeKind.Utc);
                     }
                     else
@@ -139,28 +160,28 @@ namespace AccuratPanelCarWashing
                     }
                 }
 
-                // 2. Собираем данные из комбобоксов, которые не привязаны напрямую
+                // 2. Собираем данные из комбобоксов
                 if (WasherComboBox.SelectedValue is int wid) _viewModel.CurrentOrder.WasherId = wid;
                 if (ClientComboBox.SelectedValue is int cid) _viewModel.CurrentOrder.ClientId = cid;
                 if (StatusComboBox.SelectedValue is string st) _viewModel.CurrentOrder.Status = st;
                 if (PaymentMethodComboBox.SelectedValue is string pm) _viewModel.CurrentOrder.PaymentMethod = pm;
 
+                //  3. ЧИТАЕМ ДАННЫЕ ИЗ ВЫБРАННОЙ ЗОНЫ
+                if (ZoneComboBox.SelectedItem is ZoneItem selectedZone)
+                {
+                    _viewModel.CurrentOrder.BoxNumber = selectedZone.BoxNumber;
+                    _viewModel.CurrentOrder.Department = selectedZone.Department; // Автоматически "Wash" или "Service"!
+                }
+
                 this.IsEnabled = false; // Блокируем UI на время запроса
 
-                // Внутри SaveButton_Click перед вызовом SaveOrderAsync:
                 if (_currentShift != null)
                 {
                     _viewModel.CurrentOrder.ShiftId = _currentShift.Id;
                     _viewModel.CurrentOrder.BranchId = _currentShift.BranchId;
-
-                    // ВАЖНО: Если у тебя мойка, нужно проставить департамент
-                    if (string.IsNullOrEmpty(_viewModel.CurrentOrder.Department))
-                    {
-                        _viewModel.CurrentOrder.Department = "Wash"; // Или логика выбора
-                    }
                 }
 
-                // 3. Вызываем асинхронное сохранение во ViewModel (которое стучит в API)
+                // 4. Вызываем асинхронное сохранение во ViewModel
                 var result = await _viewModel.SaveOrderAsync();
 
                 if (result.success)
@@ -217,5 +238,11 @@ namespace AccuratPanelCarWashing
                 SaveButton_Click(sender, e);
             }
         }
+    }
+    public class ZoneItem
+    {
+        public string Name { get; set; }
+        public int BoxNumber { get; set; }
+        public string Department { get; set; }
     }
 }

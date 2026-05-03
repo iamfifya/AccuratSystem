@@ -157,19 +157,11 @@
             <TextBox x:Name="DurationTextBox" Grid.Row="12" Margin="0,5,0,10" Height="50" Padding="5" Text="60"
                      Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-            <!-- Выбор бокса -->
-            <Label Content="🚘 Выберите бокс:" Grid.Row="13" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <StackPanel Grid.Row="14" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,10">
-                <RadioButton Content="Бокс 1" GroupName="BoxNumber" Foreground="Black"
-                             IsChecked="{Binding CurrentOrder.BoxNumber, Converter={StaticResource IntToBoolConverter}, ConverterParameter=1}" 
-                             Margin="10,5" Height="30" VerticalAlignment="Center"/>
-                <RadioButton Content="Бокс 2" GroupName="BoxNumber" Foreground="Black"
-                             IsChecked="{Binding CurrentOrder.BoxNumber, Converter={StaticResource IntToBoolConverter}, ConverterParameter=2}" 
-                             Margin="10,5" Height="30" VerticalAlignment="Center"/>
-                <RadioButton Content="Бокс 3" GroupName="BoxNumber" Foreground="Black"
-                             IsChecked="{Binding CurrentOrder.BoxNumber, Converter={StaticResource IntToBoolConverter}, ConverterParameter=3}" 
-                             Margin="10,5" Height="30" VerticalAlignment="Center"/>
-            </StackPanel>
+            <!-- Выбор рабочей зоны (Бокс или Подъемник) -->
+            <Label Content="🚘 Выберите зону:" Grid.Row="13" Margin="0,5,0,0" FontWeight="SemiBold"/>
+            <controls:CustomComboBox x:Name="ZoneComboBox" Grid.Row="14" Margin="0,5,0,10" Height="50"
+                                     DisplayMemberPath="Name"
+                                     Placeholder="Выберите рабочую зону"/>
 
             <!-- Выбор мойщика (только для заказов) -->
             <Label Content="👤 Выберите мойщика:" Grid.Row="15" Margin="0,5,0,0" FontWeight="SemiBold"

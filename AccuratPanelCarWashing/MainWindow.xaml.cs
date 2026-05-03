@@ -13,6 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AccuratPanelCarWashing
 {
@@ -26,6 +27,8 @@ namespace AccuratPanelCarWashing
         private Shift _currentShift;
         private User _currentUser;
         private string _searchFilter = "";
+
+        private HubConnection _hubConnection;
 
         //  Свойства для видимости
         public bool IsDirector => _currentUser?.Role == 1;
@@ -118,6 +121,8 @@ namespace AccuratPanelCarWashing
             DataContext = this;
 
             _ = LoadDataAsync();
+
+            InitializeSignalR();
         }
 
         public void SetUser(User user)
@@ -580,18 +585,35 @@ namespace AccuratPanelCarWashing
             if (sender is ListBox listBox && listBox.SelectedItem is OrderDisplayItem selected) OpenEditOrder(selected);
         }
 
-        private async Task ValidateClientStatsAsync(int clientId)
+        private async void InitializeSignalR()
         {
-            var clients = await _apiService.GetClientsAsync();
-            var client = clients.FirstOrDefault(c => c.Id == clientId);
-            if (client == null) return;
+            // Строим подключение (порт берем из твоих логов API)
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("https://localhost:7165/hubs/app")
+                .WithAutomaticReconnect() // Автоматически переподключаться при обрыве сети
+                .Build();
 
-            var clientOrders = _allOrders.Where(o => o.ClientId == clientId && o.Status == "Выполнен").ToList();
-            client.VisitsCount = clientOrders.Count;
-            client.TotalSpent = clientOrders.Sum(o => o.FinalPrice);
-            client.LastVisitDate = clientOrders.Any() ? clientOrders.Max(o => o.Time) : (DateTime?)null;
+            // Подписываемся на событие "UpdateData", которое мы отправляем с сервера
+            _hubConnection.On("UpdateData", () =>
+            {
+                // ВАЖНО: SignalR работает в фоновом потоке. 
+                // Чтобы обновить UI (WPF), нужно перебросить вызов в главный поток интерфейса.
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    RefreshData(); // Вызываем твой метод перезагрузки данных
+                });
+            });
 
-            await _apiService.UpdateClientAsync(client);
+            try
+            {
+                // Запускаем слушателя
+                await _hubConnection.StartAsync();
+                System.Diagnostics.Debug.WriteLine("SignalR Connected!");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SignalR Connection Error: {ex.Message}");
+            }
         }
     }
 

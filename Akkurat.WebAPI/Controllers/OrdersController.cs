@@ -2,6 +2,8 @@
 using Accurat.WebAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Accurat.WebAPI.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -10,10 +12,12 @@ namespace Accurat.WebAPI.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<AppHub> _hubContext;
 
-        public OrdersController(AppDbContext context)
+        public OrdersController(AppDbContext context, IHubContext<AppHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // 1. Получить все заказы
@@ -34,6 +38,8 @@ namespace Accurat.WebAPI.Controllers
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
+            await _hubContext.Clients.All.SendAsync("UpdateData");
+
             return Ok(order);
         }
 
@@ -47,6 +53,8 @@ namespace Accurat.WebAPI.Controllers
 
             _context.Entry(order).State = EntityState.Modified;
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync("UpdateData");
 
             return NoContent();
         }

@@ -1,7 +1,9 @@
 using Accurat.WebAPI.Data;
+using Accurat.WebAPI.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore; // Подключаем Scalar
 using Npgsql;
+using Scalar.AspNetCore; // Подключаем Scalar
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,8 @@ var dataSource = dataSourceBuilder.Build();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dataSource));
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // 4. Настраиваем визуальный интерфейс
@@ -44,5 +48,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<Accurat.WebAPI.Hubs.AppHub>("/hubs/app");
 
 app.Run();

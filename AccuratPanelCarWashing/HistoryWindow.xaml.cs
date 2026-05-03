@@ -161,8 +161,8 @@ namespace AccuratPanelCarWashing
                 var displayItems = ordersOnDate.Select(o => new OrderDisplayItem
                 {
                     Id = o.Id,
-                    BranchId = o.BranchId,     // ⚡ ВАЖНО для вкладок
-                    Department = o.Department, // ⚡ ВАЖНО для вкладок
+                    BranchId = o.BranchId,     //  ВАЖНО для вкладок
+                    Department = o.Department, //  ВАЖНО для вкладок
                     CarModel = o.CarModel,
                     CarNumber = o.CarNumber,
                     Time = TimeHelper.ToMsk(o.Time),
@@ -184,7 +184,7 @@ namespace AccuratPanelCarWashing
                     IsAppointment = o.IsAppointment
                 }).OrderBy(i => i.Time).ToList();
 
-                // ⚡ РАСПРЕДЕЛЕНИЕ ПО ВКЛАДКАМ И БОКСАМ
+                //  РАСПРЕДЕЛЕНИЕ ПО ВКЛАДКАМ И БОКСАМ
                 foreach (var tab in BranchTabs)
                 {
                     foreach (var zone in tab.BranchWorkZones)

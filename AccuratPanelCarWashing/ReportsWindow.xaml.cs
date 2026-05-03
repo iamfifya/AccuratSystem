@@ -76,7 +76,7 @@ namespace AccuratPanelCarWashing
 
                 if (IsDirector)
                 {
-                    // ⚡ ДОБАВЛЯЕМ ПУНКТ "ВСЯ СЕТЬ"
+                    //  ДОБАВЛЯЕМ ПУНКТ "ВСЯ СЕТЬ"
                     BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Все филиалы (Сеть)" });
 
                     foreach (var b in allBranches)
@@ -109,7 +109,7 @@ namespace AccuratPanelCarWashing
                 DateTime startUtc = TimeHelper.ToUtc(new DateTime(2020, 1, 1));
                 DateTime endUtc = TimeHelper.ToUtc(new DateTime(2050, 1, 1));
 
-                // ⚡ Передаем branchId в API
+                //  Передаем branchId в API
                 var allReports = await _apiService.GetShiftReportsAsync(branchId, startUtc, endUtc);
 
                 foreach (var report in allReports)
