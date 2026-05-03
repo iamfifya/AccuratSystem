@@ -247,7 +247,11 @@ namespace AccuratPanelCarWashing.ViewModels
                     Notes = _existingOrder.Notes,
                     DiscountPercent = _existingOrder.DiscountPercent,
                     DiscountAmount = _existingOrder.DiscountAmount,
-                    OriginalTotalPrice = _existingOrder.OriginalTotalPrice
+                    OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
+
+                    // ИСПРАВЛЕНИЕ: Переносим привязку к филиалу и департаменту
+                    BranchId = _existingOrder.BranchId,
+                    Department = _existingOrder.Department
                 };
                 _discountPercent = CurrentOrder.DiscountPercent;
                 _discountAmount = CurrentOrder.DiscountAmount;
@@ -274,7 +278,11 @@ namespace AccuratPanelCarWashing.ViewModels
                     Notes = _existingOrder.Notes,
                     DiscountPercent = _existingOrder.DiscountPercent,
                     DiscountAmount = _existingOrder.DiscountAmount,
-                    OriginalTotalPrice = _existingOrder.OriginalTotalPrice
+                    OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
+
+                    // ИСПРАВЛЕНИЕ: Переносим привязку к филиалу и департаменту
+                    BranchId = _existingOrder.BranchId,
+                    Department = _existingOrder.Department
                 };
                 SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory;
                 _windowTitle = "✏ Редактирование записи";
@@ -297,7 +305,10 @@ namespace AccuratPanelCarWashing.ViewModels
                     PaymentMethod = "Наличные",
                     IsAppointment = false,
                     ClientId = null,
-                    Notes = ""
+                    Notes = "",
+
+                    // ИСПРАВЛЕНИЕ: Дефолтное значение для новых заказов
+                    BranchId = AppSettings.CurrentBranchId
                 };
                 _windowTitle = "➕ Добавление заказа";
             }

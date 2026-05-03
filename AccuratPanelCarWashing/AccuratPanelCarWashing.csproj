@@ -323,9 +323,6 @@
     </Compile>
     <Compile Include="AppointmentToBackgroundConverter.cs" />
     <Compile Include="AppointmentToStyleConverter.cs" />
-    <Compile Include="AppointmentWindow.xaml.cs">
-      <DependentUpon>AppointmentWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="BoolToRoleConverter.cs" />
     <Compile Include="BoolToVisibilityConverter.cs" />
     <Compile Include="ClientDetailsWindow.xaml.cs">
@@ -400,7 +397,6 @@
     <Compile Include="StatusToBackgroundConverter.cs" />
     <Compile Include="StatusToColorConverter.cs" />
     <Compile Include="ViewModels\AddEditOrderViewModel.cs" />
-    <Compile Include="ViewModels\AppointmentViewModel.cs" />
     <Compile Include="ViewModels\ServiceViewModel.cs" />
     <Compile Include="StartShiftWindow.xaml.cs">
       <DependentUpon>StartShiftWindow.xaml</DependentUpon>
@@ -423,10 +419,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="AddEditServiceWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="AppointmentWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

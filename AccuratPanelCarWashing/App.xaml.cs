@@ -46,7 +46,6 @@ namespace AccuratPanelCarWashing
 
             // Регистрируем ViewModels как Transient (новый экземпляр при каждом запросе)
             services.AddTransient<AddEditOrderViewModel>();
-            services.AddTransient<AppointmentViewModel>();
 
             // Регистрируем окна как Transient
             services.AddTransient<LoginWindow>();
@@ -59,7 +58,6 @@ namespace AccuratPanelCarWashing
             services.AddTransient<ReportsWindow>();
             services.AddTransient<CustomReportWindow>();
             services.AddTransient<StartShiftWindow>();
-            services.AddTransient<AppointmentWindow>();
             services.AddTransient<ClientsWindow>();
             services.AddTransient<AddEditClientWindow>();
             services.AddTransient<ScheduleWindow>();

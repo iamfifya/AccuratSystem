@@ -497,15 +497,12 @@ namespace AccuratPanelCarWashing
         private void ExitButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
         private void ClientsButton_Click(object sender, RoutedEventArgs e) => App.GetService<ClientsWindow>().ShowDialog();
         private void HistoryButton_Click(object sender, RoutedEventArgs e) => new HistoryWindow(_currentUser).ShowDialog();
-        private void AppointmentButton_Click(object sender, RoutedEventArgs e) { var win = App.GetService<AppointmentWindow>(); win.Closed += (s, args) => _ = LoadDataAsync(); win.ShowDialog(); }
         private void ViewAppointmentsButton_Click(object sender, RoutedEventArgs e)
         {
             if (AppointmentsOverlay != null)
             {
                 // Отписываемся от старых подписок (чтобы не дублировать)
                 AppointmentsOverlay.OnEditRequested -= OpenEditOrder;
-                // Подписываемся
-                AppointmentsOverlay.OnEditRequested += OpenEditOrder;
 
                 System.Diagnostics.Debug.WriteLine($"[DEBUG] ✅ Подписка OnEditRequested установлена");
 

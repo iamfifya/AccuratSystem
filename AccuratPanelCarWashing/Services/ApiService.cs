@@ -143,7 +143,7 @@ namespace AccuratPanelCarWashing.Services
         #endregion
 
         #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА
-        public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int box, DateTime startTime, int durationMinutes)
+        public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int box, DateTime startTime, int durationMinutes, int excludeOrderId = 0)
         {
             try
             {
@@ -152,11 +152,12 @@ namespace AccuratPanelCarWashing.Services
 
                 var conflicts = allOrders.Where(o =>
                     o.IsAppointment &&
+                    o.Id != excludeOrderId && // ⚡ Игнорируем саму себя при проверке
                     o.BoxNumber == box &&
                     o.Status != "Отменен" &&
                     o.Status != "Выполнен" &&
                     o.Time < endTime &&
-                    o.Time.AddMinutes(60) > startTime
+                    o.Time.AddMinutes(o.DurationMinutes > 0 ? o.DurationMinutes : 60) > startTime
                 ).ToList();
 
                 return !conflicts.Any();

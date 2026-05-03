@@ -310,9 +310,34 @@ namespace AccuratPanelCarWashing.Controls
 
         private void NewAppointmentButton_Click(object sender, RoutedEventArgs e)
         {
-            var appointmentWin = App.GetService<AppointmentWindow>();
-            appointmentWin.Closed += (s, args) => _ = LoadAppointmentsAsync();
-            appointmentWin.ShowDialog();
+            var viewModel = App.GetService<AddEditOrderViewModel>();
+
+            // Получаем текущий активный филиал из главного окна
+            var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+            int currentBranchId = mainWindow?.SelectedBranchTab?.BranchId ?? AppSettings.CurrentBranchId;
+
+            // Создаем заготовку для новой записи
+            var newAppointment = new CarWashOrder
+            {
+                Id = 0,
+                IsAppointment = true,
+                Status = "Предварительная запись",
+                Time = DateTime.Now.AddDays(1).Date.AddHours(12), // Завтра в 12:00
+                PaymentMethod = "Не указано",
+                BoxNumber = 1,
+                Department = "Wash",
+                BodyTypeCategory = 1,
+                BranchId = currentBranchId // Явно передаем ID филиала
+            };
+
+            var editWin = new AddEditOrderWindow(viewModel, _currentShift, newAppointment);
+            editWin.Closed += (s, args) =>
+            {
+                _ = LoadAppointmentsAsync();
+                var mainWin = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                mainWin?.RefreshData();
+            };
+            editWin.ShowDialog();
         }
 
         // В обработчике кнопки:

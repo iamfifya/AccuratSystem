@@ -72,6 +72,11 @@ namespace AccuratPanelCarWashing
                 // Если это редактирование — выставляем текущие значения
                 if (order != null)
                 {
+                    if (order.IsAppointment)
+                    {
+                        DurationTextBox.Text = order.DurationMinutes > 0 ? order.DurationMinutes.ToString() : "60";
+                    }
+
                     if (order.WasherId > 0)
                         WasherComboBox.SelectedValue = order.WasherId;
 
@@ -171,6 +176,33 @@ namespace AccuratPanelCarWashing
                 {
                     _viewModel.CurrentOrder.BoxNumber = selectedZone.BoxNumber;
                     _viewModel.CurrentOrder.Department = selectedZone.Department; // Автоматически "Wash" или "Service"!
+                }
+
+                // ⚡ ПРОВЕРКА ДОСТУПНОСТИ ДЛЯ ЗАПИСЕЙ ⚡
+                if (_viewModel.CurrentOrder.IsAppointment)
+                {
+                    if (int.TryParse(DurationTextBox.Text, out int duration))
+                        _viewModel.CurrentOrder.DurationMinutes = duration;
+                    else
+                        _viewModel.CurrentOrder.DurationMinutes = 60; // По умолчанию
+
+                    bool isAvailable = await _apiService.CheckBoxAvailabilityForAppointmentAsync(
+                        _viewModel.CurrentOrder.BoxNumber,
+                        _viewModel.CurrentOrder.Time,
+                        _viewModel.CurrentOrder.DurationMinutes,
+                        _viewModel.CurrentOrder.Id); // Передаем ID, чтобы игнорировать саму себя
+
+                    if (!isAvailable)
+                    {
+                        MessageBox.Show($"Время {_viewModel.CurrentOrder.Time:HH:mm} в выбранной зоне уже занято!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return; // Останавливаем сохранение
+                    }
+                }
+
+                // Подстраховка: если BranchId почему-то остался нулем, берем текущий филиал
+                if (_viewModel.CurrentOrder.BranchId <= 0)
+                {
+                    _viewModel.CurrentOrder.BranchId = AppSettings.CurrentBranchId;
                 }
 
                 this.IsEnabled = false; // Блокируем UI на время запроса
