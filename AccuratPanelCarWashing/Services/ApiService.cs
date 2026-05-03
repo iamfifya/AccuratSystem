@@ -152,7 +152,7 @@ namespace AccuratPanelCarWashing.Services
 
                 var conflicts = allOrders.Where(o =>
                     o.IsAppointment &&
-                    o.Id != excludeOrderId && // ⚡ Игнорируем саму себя при проверке
+                    o.Id != excludeOrderId && // Игнорируем саму себя при проверке
                     o.BoxNumber == box &&
                     o.Status != "Отменен" &&
                     o.Status != "Выполнен" &&

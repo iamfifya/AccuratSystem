@@ -75,11 +75,18 @@ namespace AccuratPanelCarWashing.ViewModels
             get => _selectedBodyTypeCategory;
             set
             {
-                if (_selectedBodyTypeCategory != value)  // ← Проверка на изменение
+                if (_selectedBodyTypeCategory != value)
                 {
                     _selectedBodyTypeCategory = value;
+
+                    // ДОБАВЛЯЕМ ВОТ ЭТУ ПРОВЕРКУ И ОБНОВЛЕНИЕ МОДЕЛИ:
+                    if (CurrentOrder != null)
+                    {
+                        CurrentOrder.BodyTypeCategory = value;
+                    }
+
                     OnPropertyChanged(nameof(SelectedBodyTypeCategory));
-                    UpdateServicePrices();  // ← ← ← ВОТ ЭТА СТРОКА!
+                    UpdateServicePrices();
                 }
             }
         }
@@ -356,14 +363,24 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             if (Services != null && _allServicesCache.Any())
             {
-                foreach (var vm in Services)
+                // Запоминаем, какие услуги уже были отмечены галочками
+                var selectedIds = Services.Where(s => s.IsSelected).Select(s => s.Id).ToList();
+
+                // Создаем новую коллекцию, чтобы WPF гарантированно перерисовал интерфейс
+                var newServices = new ObservableCollection<ServiceViewModel>();
+
+                foreach (var s in _allServicesCache)
                 {
-                    var service = _allServicesCache.FirstOrDefault(s => s.Id == vm.Id);
-                    if (service != null)
+                    newServices.Add(new ServiceViewModel
                     {
-                        vm.Price = service.GetPrice(SelectedBodyTypeCategory);
-                    }
+                        Id = s.Id,
+                        Name = s.Name,
+                        Price = s.GetPrice(SelectedBodyTypeCategory),
+                        IsSelected = selectedIds.Contains(s.Id)
+                    });
                 }
+
+                Services = newServices; // Обновляем свойство, UI перерисовывает список с новыми ценами
                 Recalculate();
             }
         }

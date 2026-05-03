@@ -178,7 +178,7 @@ namespace AccuratPanelCarWashing
                     _viewModel.CurrentOrder.Department = selectedZone.Department; // Автоматически "Wash" или "Service"!
                 }
 
-                // ⚡ ПРОВЕРКА ДОСТУПНОСТИ ДЛЯ ЗАПИСЕЙ ⚡
+                // ПРОВЕРКА ДОСТУПНОСТИ ДЛЯ ЗАПИСЕЙ 
                 if (_viewModel.CurrentOrder.IsAppointment)
                 {
                     if (int.TryParse(DurationTextBox.Text, out int duration))

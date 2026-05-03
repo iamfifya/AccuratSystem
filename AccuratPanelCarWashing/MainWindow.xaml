@@ -126,6 +126,8 @@
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
                     <Style TargetType="ListBoxItem">
+                        <!-- СВЯЗЫВАЕМ СИСТЕМНОЕ ВЫДЕЛЕНИЕ С МОДЕЛЬЮ -->
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
