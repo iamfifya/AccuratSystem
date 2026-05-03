@@ -46,27 +46,18 @@ namespace AccuratPanelCarWashing.Services
         /// Формирует полный расчет зарплаты мойщика за смену (с учетом авансов и минималки).
         /// </summary>
         public static WasherShiftStats CalculateShiftStats(
-            IEnumerable<CarWashOrder> completedOrders,
-            List<Service> allServices,
-            decimal advancesTaken = 0m,
-            bool isWasherAdmin = false)
+                      IEnumerable<CarWashOrder> completedOrders,
+                      List<Service> allServices,
+                      decimal advancesTaken = 0m,
+                      bool isWasherAdmin = false)
         {
             // 1. Считаем чистые заработанные 35%
             decimal basePay = completedOrders.Sum(o => Calculate(o, allServices).WasherEarnings);
 
-            // 2. Считаем доплату до минималки (если он не админ)
-            decimal topUp = 0m;
-            if (!isWasherAdmin && basePay < MIN_WASHER_PAY_PER_SHIFT && basePay > 0)
-            {
-                // Если basePay == 0 (нет заказов), то минималка не платится (или платится? Настроим так: если хоть что-то помыл или просто вышел - платим. Оставим: если была работа, докидываем). 
-                // Давай сделаем так: если вообще вышел на смену (вызвали метод), минималка гарантирована.
-                topUp = MIN_WASHER_PAY_PER_SHIFT - basePay;
-            }
-
             return new WasherShiftStats
             {
                 BaseEarnings = basePay,
-                MinWageTopUp = topUp,
+                MinWageTopUp = 0m, // Доплата до минималки отключена
                 AdvancesTotal = advancesTaken
             };
         }

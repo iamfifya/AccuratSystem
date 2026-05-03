@@ -92,10 +92,9 @@ namespace Accurat.WebAPI.Controllers
                     var emp = allUsers.FirstOrDefault(u => u.Id == group.Key);
                     decimal empRevenue = group.Sum(o => o.FinalPrice);
 
-                    // Доходы сотрудника (база 35% + доплата до минималки 1000)
-                    decimal empBaseEarnings = group.Sum(o => (o.OriginalTotalPrice + o.ExtraCost) * 0.35m);
-                    decimal empTopUp = (empBaseEarnings > 0 && empBaseEarnings < 1000m) ? (1000m - empBaseEarnings) : 0;
-                    decimal empTotalEarnings = empBaseEarnings + empTopUp;
+                    // Доходы сотрудника (только база 35%)
+                    decimal empBaseEarnings = group.Sum(o => (o.TotalPrice + o.ExtraCost) * 0.35m);
+                    decimal empTotalEarnings = empBaseEarnings; // Доплата убрана
 
                     decimal empAdvances = transactions.Where(t => t.EmployeeId == emp?.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
 
@@ -105,14 +104,12 @@ namespace Accurat.WebAPI.Controllers
                     // Пропорциональное разделение доли компании между Мойкой и Сервисом
                     var empWashRevenue = group.Where(o => o.Department == "Wash").Sum(o => o.FinalPrice);
                     var empServiceRevenue = group.Where(o => o.Department == "Service").Sum(o => o.FinalPrice);
-                    var empWashBase = group.Where(o => o.Department == "Wash").Sum(o => (o.OriginalTotalPrice + o.ExtraCost) * 0.35m);
-                    var empServiceBase = group.Where(o => o.Department == "Service").Sum(o => (o.OriginalTotalPrice + o.ExtraCost) * 0.35m);
+                    var empWashBase = group.Where(o => o.Department == "Wash").Sum(o => (o.TotalPrice + o.ExtraCost) * 0.35m);
+                    var empServiceBase = group.Where(o => o.Department == "Service").Sum(o => (o.TotalPrice + o.ExtraCost) * 0.35m);
 
-                    decimal washTopUp = empBaseEarnings > 0 ? empTopUp * (empWashBase / empBaseEarnings) : 0;
-                    decimal serviceTopUp = empBaseEarnings > 0 ? empTopUp * (empServiceBase / empBaseEarnings) : 0;
-
-                    totalWashCompanyEarnings += (empWashRevenue - (empWashBase + washTopUp));
-                    totalServiceCompanyEarnings += (empServiceRevenue - (empServiceBase + serviceTopUp));
+                    // Вычитаем только базовую ЗП из доли компании (добавочные коэффициенты topUp удалены)
+                    totalWashCompanyEarnings += (empWashRevenue - empWashBase);
+                    totalServiceCompanyEarnings += (empServiceRevenue - empServiceBase);
 
                     report.EmployeesWork.Add(new EmployeeReport
                     {

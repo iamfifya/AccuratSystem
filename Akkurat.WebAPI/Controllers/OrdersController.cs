@@ -31,6 +31,11 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Order>> CreateOrder(Order order)
         {
+            if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
+            {
+                return BadRequest("Для выполненного заказа требуется указать способ оплаты.");
+            }
+
             // Уважаем время клиента, но жестко приводим к UTC
             order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
             order.Status = "В работе";
@@ -47,6 +52,11 @@ namespace Accurat.WebAPI.Controllers
         public async Task<IActionResult> UpdateOrder(int id, Order order)
         {
             if (id != order.Id) return BadRequest();
+
+            if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
+            {
+                return BadRequest("Для выполненного заказа требуется указать способ оплаты.");
+            }
 
             // Обязательно спасаем время от ошибки PostgreSQL
             order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);

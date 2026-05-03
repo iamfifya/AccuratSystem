@@ -91,6 +91,12 @@ namespace AccuratPanelCarWashing
                 ServiceProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.ServiceNetProfit):N0} ₽";
                 ServiceProfitText.Foreground = new SolidColorBrush(Colors.DarkBlue);
 
+                // ЗАПОЛНЯЕМ СПОСОБЫ ОПЛАТЫ
+                CashTotalText.Text = $"{periodReports.Sum(r => r.CashAmount):N0} ₽ ({periodReports.Sum(r => r.CashCount)} шт.)";
+                CardTotalText.Text = $"{periodReports.Sum(r => r.CardAmount):N0} ₽ ({periodReports.Sum(r => r.CardCount)} шт.)";
+                TransferTotalText.Text = $"{periodReports.Sum(r => r.TransferAmount):N0} ₽ ({periodReports.Sum(r => r.TransferCount)} шт.)";
+                QrTotalText.Text = $"{periodReports.Sum(r => r.QrAmount):N0} ₽ ({periodReports.Sum(r => r.QrCount)} шт.)";
+
                 //  ГРАФИКИ LiveCharts 
                 RevenueSeries = new SeriesCollection {
                     new LineSeries {

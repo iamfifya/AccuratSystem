@@ -139,9 +139,11 @@ namespace AccuratPanelCarWashing
             StatusComboBox.SelectedValuePath = "Value";
 
             PaymentMethodComboBox.ItemsSource = new List<KeyValuePair<string, string>> {
+        new KeyValuePair<string, string>("❓ Не указано", "Не указано"),
         new KeyValuePair<string, string>("💵 Наличные", "Наличные"),
         new KeyValuePair<string, string>("💳 Карта", "Карта"),
-        new KeyValuePair<string, string>("📱 Перевод", "Перевод")
+        new KeyValuePair<string, string>("📱 Перевод", "Перевод"),
+        new KeyValuePair<string, string>("📱 QR-код", "QR-код")
     };
             PaymentMethodComboBox.DisplayMemberPath = "Key";
             PaymentMethodComboBox.SelectedValuePath = "Value";

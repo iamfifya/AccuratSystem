@@ -132,6 +132,39 @@
                     </GroupBox>
                 </Grid>
 
+                <!-- СПОСОБЫ ОПЛАТЫ -->
+                <TextBlock Text="💳 Способы оплаты за период" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="💵 Наличные" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="CashTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="💳 Карта" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="CardTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="📱 Перевод" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TransferTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="3">
+                            <TextBlock Text="📱 QR-код" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="QrTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                
                 <!-- Зарплатная ведомость -->
                 <TextBlock Text="💰 Зарплатная ведомость" Style="{StaticResource SectionTitle}"/>
                 <ListView x:Name="EmployeesSalaryList" MinHeight="150" Background="White" Margin="0,5">

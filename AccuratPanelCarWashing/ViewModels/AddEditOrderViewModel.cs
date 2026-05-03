@@ -207,6 +207,7 @@ namespace AccuratPanelCarWashing.ViewModels
 
             SyncServiceIds();
             CurrentOrder.TotalPrice = ServicesTotal;
+            CurrentOrder.OriginalTotalPrice = ServicesTotal;
             CurrentOrder.BodyTypeCategory = SelectedBodyTypeCategory;
             CurrentOrder.FinalPrice = FinalTotal; // Обязательно считаем итог для БД
 
@@ -389,13 +390,53 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             if (!IsAppointment)  // Только для обычных заказов
             {
-                if (CurrentOrder.WasherId <= 0) { /* ошибка */ }
-                if (CurrentOrder.ShiftId <= 0) { /* ошибка */ }
+                // ⚡ ИСПРАВЛЕНИЕ: Жестко проверяем, что мойщик выбран
+                if (CurrentOrder.WasherId <= 0)
+                {
+                    MessageBox.Show("Выберите сотрудника (мойщика), который выполнял заказ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+
+                if (CurrentOrder.ShiftId <= 0)
+                {
+                    MessageBox.Show("Нет активной смены для привязки заказа!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
             }
-            if (string.IsNullOrWhiteSpace(CurrentOrder.CarModel)) { MessageBox.Show("Введите марку и модель автомобиля", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); return false; }
-            if (string.IsNullOrWhiteSpace(CurrentOrder.CarNumber)) { MessageBox.Show("Введите государственный номер", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); return false; }
-            if (Services?.Any(s => s.IsSelected) != true) { MessageBox.Show("Выберите хотя бы одну услугу", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); return false; }
-            if (ExtraCost > 0 && string.IsNullOrWhiteSpace(CurrentOrder.ExtraCostReason)) { MessageBox.Show("Укажите причину дополнительной стоимости", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning); return false; }
+
+            if (string.IsNullOrWhiteSpace(CurrentOrder.CarModel))
+            {
+                MessageBox.Show("Введите марку и модель автомобиля", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(CurrentOrder.CarNumber))
+            {
+                MessageBox.Show("Введите государственный номер", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (Services?.Any(s => s.IsSelected) != true)
+            {
+                MessageBox.Show("Выберите хотя бы одну услугу", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (ExtraCost > 0 && string.IsNullOrWhiteSpace(CurrentOrder.ExtraCostReason))
+            {
+                MessageBox.Show("Укажите причину дополнительной стоимости", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (CurrentOrder.Status == "Выполнен")
+            {
+                if (string.IsNullOrWhiteSpace(CurrentOrder.PaymentMethod) || CurrentOrder.PaymentMethod == "Не указано")
+                {
+                    MessageBox.Show("Для завершения заказа необходимо выбрать способ оплаты!", "Ошибка валидации", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+            }
+
             return true;
         }
 
