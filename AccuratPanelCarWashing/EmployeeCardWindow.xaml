@@ -18,6 +18,9 @@
         Foreground="Black">
 
     <Window.Resources>
+
+        <local:RoleToTextConverter x:Key="RoleToTextConverter"/>
+
         <Style x:Key="HeaderCellStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="White"/>
@@ -99,8 +102,6 @@
                     <ColumnDefinition Width="1.2*" MinWidth="80"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="ID" Style="{StaticResource HeaderCellStyle}" Padding="10,8"/>
-                <GridSplitter Grid.Column="1" Style="{StaticResource GridSplitterStyle}"/>
                 <TextBlock Text="ФИО" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Left" Padding="10,8" Grid.Column="2"/>
                 <GridSplitter Grid.Column="3" Style="{StaticResource GridSplitterStyle}"/>
                 <TextBlock Text="Телефон" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Left" Padding="10,8" Grid.Column="4"/>
@@ -194,12 +195,6 @@
                                         <ColumnDefinition Width="1.2*" MinWidth="80"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="{Binding Id}" 
-                                               HorizontalAlignment="Center" 
-                                               VerticalAlignment="Center" 
-                                               Padding="10,8"
-                                               TextTrimming="CharacterEllipsis"/>
-
                                     <TextBlock Text="{Binding FullName}" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
@@ -223,7 +218,7 @@
                                                TextTrimming="CharacterEllipsis"
                                                Grid.Column="3"/>
 
-                                    <TextBlock Text="{Binding IsAdmin, Converter={StaticResource BoolToRoleConverter}}" 
+                                    <TextBlock Text="{Binding Role, Converter={StaticResource RoleToTextConverter}}" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"

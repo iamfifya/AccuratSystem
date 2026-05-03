@@ -54,6 +54,7 @@ namespace AccuratPanelCarWashing
             if (_allEmployees == null) return;
             var filtered = _allEmployees.AsEnumerable();
 
+            // 1. Сначала фильтруем по поиску (если есть)
             if (!string.IsNullOrWhiteSpace(_searchFilter))
             {
                 filtered = filtered.Where(e =>
@@ -61,6 +62,22 @@ namespace AccuratPanelCarWashing
                     e.Login.IndexOf(_searchFilter, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
+            // 2. КАСТОМНАЯ СОРТИРОВКА
+            // Порядок: Директоры (1), Админы (2), Мойщики (4), Автосервис (3)
+            filtered = filtered.OrderBy(e =>
+            {
+                switch (e.Role)
+                {
+                    case 1: return 1; // Директор - первый
+                    case 2: return 2; // Админ - второй
+                    case 4: return 3; // Мойщик - третий
+                    case 3: return 4; // Сервис - четвертый
+                    default: return 5; // Все остальные (если появятся) - в конец
+                }
+            })
+            .ThenBy(e => e.FullName); // Если должности одинаковые, сортируем по алфавиту
+
+            // 3. Обновляем UI
             EmployeesList = filtered.ToList();
             EmployeesListView.ItemsSource = EmployeesList;
         }
@@ -83,17 +100,6 @@ namespace AccuratPanelCarWashing
             // 3. Убрали _SqliteDataService из вызова
             var editWin = new AddEditEmployeeWindow(employee);
             if (editWin.ShowDialog() == true) _ = LoadEmployeesAsync();
-        }
-
-        private async void ActivateEmployee(User employee)
-        {
-            try
-            {
-                employee.IsActive = true;
-                await _apiService.UpdateUserAsync(employee);
-                await LoadEmployeesAsync();
-            }
-            catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
 
         private void EmployeesListView_SelectionChanged(object sender, SelectionChangedEventArgs e) => _selectedEmployee = EmployeesListView.SelectedItem as User;

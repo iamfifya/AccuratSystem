@@ -247,7 +247,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="#BDC3C7"
                             BorderThickness="1,1,1,0"
-                            CornerRadius="4,4,0,0"
+                            CornerRadius="4"
                             Margin="0,0,2,0">
                         <ContentPresenter x:Name="ContentSite"
                                           VerticalAlignment="Center"

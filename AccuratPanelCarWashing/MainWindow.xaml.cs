@@ -27,7 +27,7 @@ namespace AccuratPanelCarWashing
         private User _currentUser;
         private string _searchFilter = "";
 
-        // 🔹 Свойства для видимости
+        //  Свойства для видимости
         public bool IsDirector => _currentUser?.Role == 1;
         public bool IsSingleBranch => _currentUser?.Role != 1;
 
@@ -51,8 +51,17 @@ namespace AccuratPanelCarWashing
         public BranchTabItem SelectedBranchTab
         {
             get => _selectedBranchTab;
-            set { _selectedBranchTab = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab))); }
+            set
+            {
+                _selectedBranchTab = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
+                //  Уведомляем интерфейс, что текст филиала тоже изменился
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentBranchDisplay)));
+            }
         }
+
+        //  Формируем красивую строку прямо здесь
+        public string CurrentBranchDisplay => SelectedBranchTab != null ? $"{SelectedBranchTab.BranchName}" : "";
 
         public string ActiveUserInfo
         {
@@ -66,10 +75,6 @@ namespace AccuratPanelCarWashing
 
         public string CurrentShiftInfo { get; private set; }
         public string TotalOrdersInfo { get; private set; }
-
-        // Добавляем свойства для XAML:
-        public string CurrentBranchInfo => !string.IsNullOrEmpty(AppSettings.CurrentBranchName) ? $"📍 Филиал: {AppSettings.CurrentBranchName}" : "";
-        public int CurrentBranchId => AppSettings.CurrentBranchId;
 
         private OrderDisplayItem _selectedItem;
         public OrderDisplayItem SelectedItem
@@ -287,7 +292,7 @@ namespace AccuratPanelCarWashing
 
             var allDisplayItems = orderItems.Concat(appointmentItems).OrderBy(i => i.Time).ToList();
 
-            // ⚡ САМОЕ ГЛАВНОЕ: Раскидываем заказы по нужным вкладкам и боксам
+            //  САМОЕ ГЛАВНОЕ: Раскидываем заказы по нужным вкладкам и боксам
             foreach (var tab in BranchTabs)
             {
                 foreach (var zone in tab.BranchWorkZones)
@@ -556,7 +561,7 @@ namespace AccuratPanelCarWashing
                 return;
             }
 
-            // ⚡ ДОБАВЛЯЕМ ПРОВЕРКУ НА АКТИВНЫЕ ЗАКАЗЫ ⚡
+            //  ДОБАВЛЯЕМ ПРОВЕРКУ НА АКТИВНЫЕ ЗАКАЗЫ 
             bool hasActiveOrders = _allOrders.Any(o => o.Status == "Выполняется" || o.Status == "В работе");
             if (hasActiveOrders)
             {

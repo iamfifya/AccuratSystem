@@ -60,7 +60,7 @@ namespace AccuratPanelCarWashing
 
                     Logger.SetUserContext(user.FullName, user.Id);
 
-                    // 🔹 НОВАЯ ЛОГИКА МАРШРУТИЗАЦИИ
+                    //  НОВАЯ ЛОГИКА МАРШРУТИЗАЦИИ
                     if (user.Role == 1) // Директор
                     {
                         var directorWin = new MainWindow(user);

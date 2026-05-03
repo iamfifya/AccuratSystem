@@ -1,6 +1,7 @@
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,9 +20,19 @@ namespace AccuratPanelCarWashing
             InitializeComponent();
             _apiService = new ApiService();
 
+            //  Заполняем кастомный ComboBox ролями
+            RoleComboBox.ItemsSource = new Dictionary<int, string>
+            {
+                { 1, "👑 Директор" },
+                { 2, "👨‍💼 Администратор" },
+                { 3, "🔧 Сотрудник сервиса" },
+                { 4, "🧽 Мойщик" }
+            };
+
             if (employee == null)
             {
-                CurrentEmployee = new User { IsActive = true };
+                // По умолчанию ставим роль Мойщика (4)
+                CurrentEmployee = new User { IsActive = true, Role = 4 };
                 Title = "➕ Добавление сотрудника (API)";
             }
             else
@@ -32,11 +43,10 @@ namespace AccuratPanelCarWashing
                     FullName = employee.FullName,
                     Login = employee.Login,
                     PasswordHash = employee.PasswordHash,
-                    Role = employee.Role,       // Добавь это!
+                    Role = employee.Role,
                     IsActive = employee.IsActive,
                     Phone = employee.Phone
                 };
-                // IsAdmin подтянется автоматически на основе Role
                 Title = "✏ Редактирование сотрудника (API)";
             }
             DataContext = this;

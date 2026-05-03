@@ -322,25 +322,7 @@ namespace AccuratPanelCarWashing.Controls
         {
             if (item == null) return string.Empty;
 
-            // Если это KeyValuePair (как у нас в коде)
-            var type = item.GetType();
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            {
-                var keyProp = type.GetProperty("Key");
-                if (keyProp != null)
-                {
-                    var value = keyProp.GetValue(item);
-                    return value?.ToString() ?? string.Empty;
-                }
-            }
-
-            // Если это ComboBoxItem
-            if (item is ComboBoxItem comboBoxItem)
-            {
-                return comboBoxItem.Content?.ToString() ?? string.Empty;
-            }
-
-            // Если задан DisplayMemberPath
+            // 1. СНАЧАЛА проверяем, задан ли DisplayMemberPath (мы задали "Value")
             if (!string.IsNullOrEmpty(DisplayMemberPath))
             {
                 var prop = item.GetType().GetProperty(DisplayMemberPath);
@@ -351,6 +333,25 @@ namespace AccuratPanelCarWashing.Controls
                 }
             }
 
+            // 2. Если это KeyValuePair (Словарь), по умолчанию показываем текст (Value), а не цифру (Key)
+            var type = item.GetType();
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                var valueProp = type.GetProperty("Value"); // Было "Key", стало "Value"!
+                if (valueProp != null)
+                {
+                    var val = valueProp.GetValue(item);
+                    return val?.ToString() ?? string.Empty;
+                }
+            }
+
+            // 3. Если это ComboBoxItem (для ручной верстки в XAML)
+            if (item is ComboBoxItem comboBoxItem)
+            {
+                return comboBoxItem.Content?.ToString() ?? string.Empty;
+            }
+
+            // 4. Запасной вариант
             return item.ToString();
         }
 

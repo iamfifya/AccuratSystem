@@ -4,11 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AccuratPanelCarWashing"
+        xmlns:controls="clr-namespace:AccuratPanelCarWashing.Controls"
         mc:Ignorable="d"
         Title="Редактирование сотрудника"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="500" Height="650"
+        Width="500" Height="700"
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"
@@ -17,6 +18,11 @@
 
     <Grid Margin="15">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -54,13 +60,22 @@
         <Label Content="Пароль:" Grid.Row="8" Margin="0,5" FontWeight="SemiBold"/>
         <PasswordBox x:Name="PasswordBox" Grid.Row="9" Margin="0,5" Height="50" Padding="5" Foreground="Black" VerticalContentAlignment="Center"/>
 
-        <CheckBox Content="Администратор" IsChecked="{Binding CurrentEmployee.IsAdmin}" 
-                  Grid.Row="10" Margin="0,10" HorizontalAlignment="Left" Foreground="Black"/>
+        <!--  НОВЫЙ БЛОК: Выбор должности через CustomComboBox  -->
+        <Label Content="Должность:" Grid.Row="10" Margin="0,5,0,0" FontWeight="SemiBold"/>
+        <controls:CustomComboBox x:Name="RoleComboBox" 
+                                 Grid.Row="11" 
+                                 Margin="0,5" 
+                                 Height="40" 
+                                 Placeholder="Выберите должность"
+                                 DisplayMemberPath="Value" 
+                                 SelectedValuePath="Key"
+                                 SelectedValue="{Binding CurrentEmployee.Role, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <!-- Добавляем CheckBox для статуса активности -->
+        <!-- Галочка Трудоустроен сдвигается ниже (поэтому я объединил Grid.Row) -->
         <CheckBox Content="Трудоустроен" IsChecked="{Binding CurrentEmployee.IsActive}" 
-                  Grid.Row="11" Margin="0,10" HorizontalAlignment="Left" Foreground="Black"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="12" Margin="0,15">
+                  Grid.Row="12" Margin="0,10" HorizontalAlignment="Left" Foreground="Black"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="13" Margin="0,15">
             <Button Content="✓ Сохранить" Click="SaveButton_Click" Width="100" Height="35" 
                     Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
             <Button Content="✗ Отмена" Click="CloseButton_Click" Width="100" Height="35" 

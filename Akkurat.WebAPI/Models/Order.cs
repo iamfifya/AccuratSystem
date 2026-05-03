@@ -35,7 +35,7 @@ namespace Accurat.WebAPI.Models
         public int? WasherId { get; set; }
         public int? ClientId { get; set; }
 
-        // ⚡ ДОБАВЛЕНЫ СВОЙСТВА ФИЛИАЛА ⚡
+        //  ДОБАВЛЕНЫ СВОЙСТВА ФИЛИАЛА 
         public int BranchId { get; set; }
         public Branch? Branch { get; set; }
     }

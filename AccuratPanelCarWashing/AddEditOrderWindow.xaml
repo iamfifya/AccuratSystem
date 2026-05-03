@@ -195,7 +195,7 @@
                         <Setter Property="MinHeight" Value="40"/>
                         <Setter Property="VerticalContentAlignment" Value="Center"/>
 
-                        <!-- ⚡ ВОТ ЭТА СТРОКА РЕШИТ ПРОБЛЕМУ ВАЛИДАЦИИ ⚡ -->
+                        <!--  ВОТ ЭТА СТРОКА РЕШИТ ПРОБЛЕМУ ВАЛИДАЦИИ  -->
                         <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
 
                         <Style.Triggers>

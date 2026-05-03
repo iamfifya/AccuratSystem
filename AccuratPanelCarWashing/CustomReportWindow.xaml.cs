@@ -258,7 +258,7 @@ namespace AccuratPanelCarWashing
             }
             finally
             {
-                // ⚡ СНИМАЕМ БЛОКИРОВКУ ОКНА ДАЖЕ ПРИ ОШИБКАХ ⚡
+                //  СНИМАЕМ БЛОКИРОВКУ ОКНА ДАЖЕ ПРИ ОШИБКАХ 
                 this.IsEnabled = true;
             }
         }
