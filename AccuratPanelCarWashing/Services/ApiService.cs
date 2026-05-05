@@ -15,7 +15,10 @@ namespace AccuratPanelCarWashing.Services
         public ApiService()
         {
             // Убедись, что порт совпадает с твоим API
-            _http = new HttpClient { BaseAddress = new Uri("https://localhost:7165/api/") };
+            _http = new HttpClient { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
+
+            // ДОБАВИМ ЭТУ СТРОКУ: Она говорит Microsoft "Я программа, не показывай мне HTML-предупреждение"
+            _http.DefaultRequestHeaders.Add("X-Tunnel-Skip-AntiPhishing-Page", "true");
         }
 
         #region СМЕНЫ (SHIFTS)

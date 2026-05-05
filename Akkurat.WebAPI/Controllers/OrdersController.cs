@@ -76,10 +76,16 @@ namespace Accurat.WebAPI.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound();
 
-            order.Status = "Завершен";
+            //  СТАВИМ ПРАВИЛЬНЫЙ СТАТУС, ЧТОБЫ РАБОТАЛА БУХГАЛТЕРИЯ 
+            order.Status = "Выполнен";
+
+            // Если нужно, чтобы по умолчанию ставилась безналичная оплата или что-то еще,
+            // это тоже можно сделать здесь, но пока просто фиксируем статус.
+
             await _context.SaveChangesAsync();
 
-            // Спойлер: здесь позже мы добавим логику начисления денег и визитов клиенту
+            // Сигнал для WPF
+            await _hubContext.Clients.All.SendAsync("UpdateData");
 
             return Ok(order);
         }

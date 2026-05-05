@@ -2,18 +2,17 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AccuratPanelCWM.Views.OrdersPage"
-             Title="Работа"
-             BackgroundColor="#F5F6FA">
+             Title="Работа">
 
     <Grid RowDefinitions="Auto, *">
 
         <!-- Выбор филиала наверху экрана -->
-        <Border Grid.Row="0" BackgroundColor="White" Padding="10,0,10,0" StrokeThickness="0" Margin="0,0,0,5">
+        <Border Grid.Row="0" Padding="10,0,10,0" StrokeThickness="0" Margin="0,0,0,5">
             <Picker x:Name="BranchPicker" 
                     Title="Выберите филиал..." 
                     ItemDisplayBinding="{Binding BranchName}"
                     SelectedIndexChanged="BranchPicker_SelectedIndexChanged"
-                    FontSize="16" FontAttributes="Bold" TextColor="#2C3E50" />
+                    FontSize="16" FontAttributes="Bold"/>
         </Border>
 
         <!-- Основной контент со свайпом для обновления -->
@@ -23,10 +22,10 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <!-- Карточка бокса -->
-                        <Border Stroke="#DCDDE1" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" Padding="15" Margin="0,0,0,12">
+                        <Border Stroke="#DCDDE1" StrokeThickness="1" StrokeShape="RoundRectangle 8" Padding="15" Margin="0,0,0,12">
                             <VerticalStackLayout Spacing="8">
 
-                                <Label Text="{Binding BoxName}" FontSize="18" FontAttributes="Bold" TextColor="#2C3E50" />
+                                <Label Text="{Binding BoxName}" FontSize="18" FontAttributes="Bold" />
 
                                 <!-- ================= СВОБОДНЫЙ БОКС ================= -->
                                 <VerticalStackLayout IsVisible="{Binding IsFree}" Spacing="10">

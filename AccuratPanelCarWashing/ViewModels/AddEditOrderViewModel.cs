@@ -390,7 +390,7 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             if (!IsAppointment)  // Только для обычных заказов
             {
-                // ⚡ ИСПРАВЛЕНИЕ: Жестко проверяем, что мойщик выбран
+                //  ИСПРАВЛЕНИЕ: Жестко проверяем, что мойщик выбран
                 if (CurrentOrder.WasherId <= 0)
                 {
                     MessageBox.Show("Выберите сотрудника (мойщика), который выполнял заказ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);

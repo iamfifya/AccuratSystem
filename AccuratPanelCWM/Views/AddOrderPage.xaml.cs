@@ -126,53 +126,68 @@ namespace AccuratPanelCWM.Views
                 return;
             }
 
-            // ИСПРАВЛЕНИЕ: Проверка на null перед проверкой Count
             if (ServicesCollectionView.SelectedItems == null || ServicesCollectionView.SelectedItems.Count == 0)
             {
                 await DisplayAlert("Ошибка", "Выберите хотя бы одну услугу", "ОК");
                 return;
             }
 
-            // 2. Формируем заказ
-            var selectedWasher = (User)WasherPicker.SelectedItem;
-            decimal total = ServicesCollectionView.SelectedItems.Cast<ServiceUiWrapper>().Sum(s => s.DisplayPrice);
-            var selectedServiceIds = ServicesCollectionView.SelectedItems.Cast<ServiceUiWrapper>().Select(s => s.Id).ToList();
+            // Блокируем кнопку от двойного нажатия
+            var btn = (Button)sender;
+            btn.IsEnabled = false;
 
-            var newOrder = new CarWashOrder
-            {
-                CarNumber = CarNumberEntry.Text.Trim(),
-                CarModel = CarModelEntry.Text?.Trim() ?? "Не указана",
-                BodyTypeCategory = BodyTypePicker.SelectedIndex + 1,
-                CarBodyType = BodyTypePicker.SelectedItem.ToString(),
-                WasherId = selectedWasher.Id,
-                ServiceIds = selectedServiceIds,
-                TotalPrice = total,
-                OriginalTotalPrice = total,
-                FinalPrice = total,
-                Status = "В работе",
-                PaymentMethod = "Наличные",
-                Time = DateTime.UtcNow,
-                BranchId = _branchId,
-                BoxNumber = _boxNumber,
-                Department = _department,
-                ShiftId = 0
-            };
-
-            // 3. Отправка на сервер
             try
             {
-                ((Button)sender).IsEnabled = false;
+                // --- ИЩЕМ АКТИВНУЮ СМЕНУ ---
+                var shifts = await _apiService.GetShiftsAsync();
+                var activeShift = shifts.FirstOrDefault(s => !s.IsClosed && s.BranchId == _branchId);
 
+                if (activeShift == null)
+                {
+                    await DisplayAlert("Внимание", "В этом филиале нет открытой смены! Сначала откройте смену.", "ОК");
+                    btn.IsEnabled = true;
+                    return;
+                }
+
+                // 2. Формируем заказ
+                var selectedWasher = (User)WasherPicker.SelectedItem;
+                decimal total = ServicesCollectionView.SelectedItems.Cast<ServiceUiWrapper>().Sum(s => s.DisplayPrice);
+                var selectedServiceIds = ServicesCollectionView.SelectedItems.Cast<ServiceUiWrapper>().Select(s => s.Id).ToList();
+
+                var newOrder = new CarWashOrder
+                {
+                    CarNumber = CarNumberEntry.Text.Trim(),
+                    CarModel = CarModelEntry.Text?.Trim() ?? "Не указана",
+                    BodyTypeCategory = BodyTypePicker.SelectedIndex + 1,
+                    CarBodyType = BodyTypePicker.SelectedItem.ToString(),
+                    WasherId = selectedWasher.Id,
+                    ServiceIds = selectedServiceIds,
+                    TotalPrice = total,
+                    OriginalTotalPrice = total,
+                    FinalPrice = total,
+                    Status = "В работе",
+                    PaymentMethod = "Наличные",
+                    Time = DateTime.UtcNow,
+                    BranchId = _branchId,
+                    BoxNumber = _boxNumber,
+                    Department = _department,
+
+                    // ПРИСВАИВАЕМ ID СМЕНЫ (Без этого WPF его не покажет!)
+                    ShiftId = activeShift.Id
+                };
+
+                // 3. Отправка на сервер
                 await _apiService.CreateOrderAsync(newOrder);
 
                 await DisplayAlert("Успех", "Заказ успешно создан!", "ОК");
 
+                // Возвращаемся на главную
                 await Navigation.PopAsync();
             }
             catch (Exception ex)
             {
                 await DisplayAlert("Ошибка сохранения", ex.Message, "ОК");
-                ((Button)sender).IsEnabled = true;
+                btn.IsEnabled = true;
             }
         }
     }
