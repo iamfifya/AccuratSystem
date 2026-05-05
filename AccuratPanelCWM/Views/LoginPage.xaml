@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AccuratPanelCWM.Views.LoginPage"
+             Title="Авторизация"
+             NavigationPage.HasNavigationBar="False">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="30,50,30,30" VerticalOptions="Center">
+
+            <Label Text="ACCURAT" FontSize="42" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,30" />
+
+            <Label Text="Логин:" FontAttributes="Bold" Margin="0,0,0,-10"/>
+            <Entry x:Name="LoginEntry" Placeholder="Введите логин" TextColor="Black" />
+
+            <Label Text="Пароль:" FontAttributes="Bold" Margin="0,0,0,-10"/>
+            <Entry x:Name="PasswordEntry" Placeholder="Введите пароль" IsPassword="True" TextColor="Black" />
+
+            <Label Text="Рабочая точка (Филиал):" FontAttributes="Bold" Margin="0,0,0,-10"/>
+            <Picker x:Name="BranchPicker" Title="Выберите место работы" ItemDisplayBinding="{Binding Name}"/>
+
+            <Button x:Name="LoginButton" Text="Войти" BackgroundColor="#27AE60" TextColor="White" FontAttributes="Bold" FontSize="18" CornerRadius="8" HeightRequest="50" Margin="0,20,0,0" Clicked="LoginButton_Clicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
