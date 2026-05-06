@@ -46,7 +46,7 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+		<!-- <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk> -->
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -87,6 +87,9 @@
 	  <MauiXaml Update="Views\ManagementPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Views\CashboxPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\OrdersPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
@@ -100,6 +103,12 @@
 
 	<ItemGroup>
 		<AndroidResource Include="Platforms\Android\Resources\xml\network_security_config.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\CashboxPage.xaml.cs">
+	    <DependentUpon>CashboxPage.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 

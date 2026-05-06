@@ -1,6 +1,4 @@
-﻿using AccuratPanelCWM.Views;
-
-namespace AccuratPanelCWM
+﻿namespace AccuratPanelCWM
 {
     public partial class App : Application
     {
@@ -8,8 +6,8 @@ namespace AccuratPanelCWM
         {
             InitializeComponent();
 
-            // При запуске показываем окно авторизации, а не Shell
-            MainPage = new LoginPage();
+            // Приложение всегда должно начинаться с экрана логина!
+            MainPage = new Views.LoginPage();
         }
     }
 }

@@ -23,6 +23,13 @@ namespace AccuratPanelCWM.Models
             set { _fullName = value; OnPropertyChanged(); }
         }
 
+        private int? _branchId;
+        public int? BranchId
+        {
+            get => _branchId;
+            set { _branchId = value; OnPropertyChanged(); }
+        }
+
         public string Login { get; set; }
         public string PasswordHash { get; set; }
 

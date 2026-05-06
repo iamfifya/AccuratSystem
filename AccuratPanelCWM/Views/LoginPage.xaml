@@ -3,21 +3,32 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AccuratPanelCWM.Views.LoginPage"
              Title="Авторизация"
-             NavigationPage.HasNavigationBar="False">
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="{AppThemeBinding Light=#F5F6FA, Dark=#121212}">
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="30,50,30,30" VerticalOptions="Center">
 
-            <Label Text="ACCURAT" FontSize="42" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,30" />
+            <Label Text="ACCURAT" FontSize="42" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,30" 
+                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#E0E0E0}" />
 
-            <Label Text="Логин:" FontAttributes="Bold" Margin="0,0,0,-10"/>
-            <Entry x:Name="LoginEntry" Placeholder="Введите логин" TextColor="Black" />
+            <Label Text="Логин:" FontAttributes="Bold" Margin="0,0,0,-10"
+                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
+            <Entry x:Name="LoginEntry" Placeholder="Введите логин" 
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" 
+                   TextColor="{AppThemeBinding Light=Black, Dark=White}" />
 
-            <Label Text="Пароль:" FontAttributes="Bold" Margin="0,0,0,-10"/>
-            <Entry x:Name="PasswordEntry" Placeholder="Введите пароль" IsPassword="True" TextColor="Black" />
+            <Label Text="Пароль:" FontAttributes="Bold" Margin="0,0,0,-10"
+                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
+            <Entry x:Name="PasswordEntry" Placeholder="Введите пароль" IsPassword="True" 
+                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" 
+                   TextColor="{AppThemeBinding Light=Black, Dark=White}" />
 
-            <Label Text="Рабочая точка (Филиал):" FontAttributes="Bold" Margin="0,0,0,-10"/>
-            <Picker x:Name="BranchPicker" Title="Выберите место работы" ItemDisplayBinding="{Binding Name}"/>
+            <Label Text="Рабочая точка (Филиал):" FontAttributes="Bold" Margin="0,0,0,-10"
+                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
+            <Picker x:Name="BranchPicker" Title="Выберите место работы" ItemDisplayBinding="{Binding Name}"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" 
+                    TextColor="{AppThemeBinding Light=Black, Dark=White}"/>
 
             <Button x:Name="LoginButton" Text="Войти" BackgroundColor="#27AE60" TextColor="White" FontAttributes="Bold" FontSize="18" CornerRadius="8" HeightRequest="50" Margin="0,20,0,0" Clicked="LoginButton_Clicked" />
 

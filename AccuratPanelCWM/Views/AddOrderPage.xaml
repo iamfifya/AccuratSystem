@@ -35,13 +35,12 @@
             <CollectionView x:Name="ServicesCollectionView" SelectionMode="Multiple" SelectionChanged="ServicesCollectionView_SelectionChanged" HeightRequest="250">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
+                        <Border> 
+                            <!-- Тут сделаем нейтральную тонкую рамочку для списка услуг -->
                         <Grid Padding="10" ColumnDefinitions="*, Auto">
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup Name="CommonStates">
                                     <VisualState Name="Normal">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="White" />
-                                        </VisualState.Setters>
                                     </VisualState>
                                     <VisualState Name="Selected">
                                         <VisualState.Setters>
@@ -54,6 +53,7 @@
                             <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center"/>
                             <Label Grid.Column="1" Text="{Binding DisplayPrice, StringFormat='{0} ₽'}" TextColor="#27AE60" FontAttributes="Bold" VerticalOptions="Center" />
                         </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

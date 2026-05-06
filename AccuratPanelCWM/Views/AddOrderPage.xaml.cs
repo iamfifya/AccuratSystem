@@ -24,6 +24,9 @@ namespace AccuratPanelCWM.Views
             public decimal DisplayPrice { get; set; }
         }
 
+        private int? _detectedClientId = null;
+        private decimal _clientDiscountPercent = 0;
+
         public AddOrderPage(int branchId, int boxNumber, string department, string boxName)
         {
             InitializeComponent();
@@ -38,15 +41,48 @@ namespace AccuratPanelCWM.Views
             _ = LoadDataAsync();
         }
 
+        private async void OnCarNumberChanged(object sender, TextChangedEventArgs e)
+        {
+            string number = e.NewTextValue?.Trim().ToUpper();
+
+            // Проверяем, что введено достаточно символов для поиска (минимум 6)
+            if (number?.Length >= 6)
+            {
+                var client = await _apiService.GetClientByNumberAsync(number);
+                if (client != null)
+                {
+                    // Нашли! Автозаполняем поля
+                    _detectedClientId = client.Id;
+                    _clientDiscountPercent = client.DefaultDiscountPercent;
+
+                    CarModelEntry.Text = client.CarModel;
+
+                    // Можно подсветить пользователю, что клиент найден
+                    await DisplayAlert("Клиент найден", $"{client.FullName}\nСкидка: {client.DefaultDiscountPercent}%", "OK");
+
+                    // Если есть скидка, пересчитываем итог
+                    CalculateTotal();
+                }
+            }
+            else
+            {
+                _detectedClientId = null;
+                _clientDiscountPercent = 0;
+            }
+        }
+
         private async Task LoadDataAsync()
         {
             try
             {
-                // Загружаем мойщиков
+                // 1. Загружаем ВООБЩЕ ВСЕХ пользователей
                 var allUsers = await _apiService.GetUsersAsync();
-                WasherPicker.ItemsSource = allUsers; // Можно добавить фильтр по роли, если нужно
 
-                // Загружаем услуги
+                // 2. Оставляем только активных (Всех, кто может мыть)
+                var activeStaff = allUsers.Where(u => u.IsActive).ToList();
+                WasherPicker.ItemsSource = activeStaff;
+
+                // 3. Загружаем услуги
                 _allServices = await _apiService.GetServicesAsync();
                 UpdateServicesList();
             }
@@ -108,7 +144,17 @@ namespace AccuratPanelCWM.Views
                     total += selectedService.DisplayPrice;
                 }
             }
-            TotalPriceLabel.Text = $"{total} ₽";
+
+            // Применяем скидку, если она есть
+            if (_clientDiscountPercent > 0)
+            {
+                decimal discountAmount = total * (_clientDiscountPercent / 100m);
+                total -= discountAmount;
+            }
+
+            TotalPriceLabel.Text = _clientDiscountPercent > 0
+                ? $"{total:N0} ₽ (со скидкой {_clientDiscountPercent}%)"
+                : $"{total:N0} ₽";
         }
 
         // Сохранение заказа
@@ -156,7 +202,8 @@ namespace AccuratPanelCWM.Views
 
                 var newOrder = new CarWashOrder
                 {
-                    CarNumber = CarNumberEntry.Text.Trim(),
+                    CarNumber = CarNumberEntry.Text.Trim().ToUpper(),
+                    ClientId = _detectedClientId,
                     CarModel = CarModelEntry.Text?.Trim() ?? "Не указана",
                     BodyTypeCategory = BodyTypePicker.SelectedIndex + 1,
                     CarBodyType = BodyTypePicker.SelectedItem.ToString(),

@@ -47,6 +47,15 @@ namespace AccuratPanelCWM.Services
             var shifts = await GetShiftsAsync();
             return shifts.FirstOrDefault(s => !s.IsClosed);
         }
+
+        public class LoginRequest
+        {
+            public string Login { get; set; }
+            public string Password { get; set; }
+        }
+
+        
+
         #endregion
 
         #region УСЛУГИ (SERVICES)
@@ -143,6 +152,22 @@ namespace AccuratPanelCWM.Services
             var response = await _http.PutAsJsonAsync($"Orders/{order.Id}", order);
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task<Client> GetClientByNumberAsync(string carNumber)
+        {
+            try
+            {
+                // Используем твой эндпоинт из ClientsController
+                var response = await _http.GetAsync($"Clients/number/{carNumber}");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<Client>();
+                }
+            }
+            catch { } // Если не нашли или ошибка — просто возвращаем null
+            return null;
+        }
+
         #endregion
 
         #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА
@@ -178,10 +203,27 @@ namespace AccuratPanelCWM.Services
 
         public async Task<User> AuthenticateAsync(string login, string password)
         {
-            var response = await _http.PostAsJsonAsync("Users/login", new { Login = login, Password = password });
-            if (response.IsSuccessStatusCode)
-                return await response.Content.ReadFromJsonAsync<User>();
-            return null;
+            try
+            {
+                var request = new LoginRequest { Login = login, Password = password };
+                var response = await _http.PostAsJsonAsync("Users/login", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<User>();
+                }
+                else
+                {
+                    // Читаем текст ошибки от сервера, чтобы понять причину 400 Bad Request
+                    string errorText = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Ошибка сервера ({response.StatusCode}): {errorText}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Перехватываем HttpRequestException (например, если нет связи)
+                throw new Exception($"Сбой подключения: {ex.Message}");
+            }
         }
         #endregion
 
