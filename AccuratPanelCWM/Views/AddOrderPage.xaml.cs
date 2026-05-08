@@ -45,29 +45,26 @@ namespace AccuratPanelCWM.Views
         {
             string number = e.NewTextValue?.Trim().ToUpper();
 
-            // Проверяем, что введено достаточно символов для поиска (минимум 6)
-            if (number?.Length >= 6)
+            // Снижаем порог до 3-х символов для быстрого поиска
+            if (!string.IsNullOrEmpty(number) && number.Length >= 3)
             {
+                // Вызываем поиск (он должен уметь искать подстроку)
                 var client = await _apiService.GetClientByNumberAsync(number);
+
                 if (client != null)
                 {
-                    // Нашли! Автозаполняем поля
                     _detectedClientId = client.Id;
                     _clientDiscountPercent = client.DefaultDiscountPercent;
-
                     CarModelEntry.Text = client.CarModel;
 
-                    // Можно подсветить пользователю, что клиент найден
-                    await DisplayAlert("Клиент найден", $"{client.FullName}\nСкидка: {client.DefaultDiscountPercent}%", "OK");
+                    // Если это точное совпадение — можно и номер "добить" в поле ввода
+                    if (number.Length >= 6)
+                    {
+                        CarNumberEntry.Text = client.CarNumber;
+                    }
 
-                    // Если есть скидка, пересчитываем итог
                     CalculateTotal();
                 }
-            }
-            else
-            {
-                _detectedClientId = null;
-                _clientDiscountPercent = 0;
             }
         }
 

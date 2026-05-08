@@ -22,11 +22,22 @@ namespace AccuratPanelCarWashing
 
         private async System.Threading.Tasks.Task LoadBranchesAsync()
         {
+            // Ждем 2 секунды, чтобы Web API успел запустить свои службы
+            await System.Threading.Tasks.Task.Delay(2000);
+
             try
             {
                 var branches = await _apiService.GetBranchesAsync();
+
+                // 🔥 НОВАЯ ПРОВЕРКА: Если сервер вернул пустоту, мы об этом узнаем!
+                if (branches == null || !branches.Any())
+                {
+                    MessageBox.Show("Список филиалов пуст! Проверьте подключение к API и наличие филиалов в базе.", "Отладка");
+                    return;
+                }
+
                 BranchComboBox.ItemsSource = branches;
-                if (branches.Any()) BranchComboBox.SelectedItem = branches.FirstOrDefault();
+                BranchComboBox.SelectedItem = branches.FirstOrDefault();
             }
             catch (Exception ex)
             {

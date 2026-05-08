@@ -115,5 +115,17 @@ namespace Accurat.WebAPI.Controllers
 
             return Ok(!isBusy);
         }
+
+        // GET: api/Orders/active/{branchId}
+        [HttpGet("active/{branchId}")]
+        public async Task<ActionResult<IEnumerable<Order>>> GetActiveOrders(int branchId)
+        {
+            // Фильтруем прямо в базе данных! Сервер не будет тянуть лишнее в память.
+            var activeOrders = await _context.Orders
+                .Where(o => o.BranchId == branchId && o.Status == "В работе")
+                .ToListAsync();
+
+            return Ok(activeOrders);
+        }
     }
 }

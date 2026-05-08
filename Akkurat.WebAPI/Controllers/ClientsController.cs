@@ -23,13 +23,13 @@ namespace Accurat.WebAPI.Controllers
             return await _context.Clients.ToListAsync();
         }
 
-        // 2. СУПЕР-ФИЧА: Найти клиента по номеру машины
-        [HttpGet("by-carnumber/{carNumber}")]
-        public async Task<ActionResult<Client>> GetClientByCarNumber(string carNumber)
+        // 2. СУПЕР-ФИЧА: Найти клиента по части номера
+        [HttpGet("number/{carNumber}")] // 🔥 ИСПРАВЛЕНО: Теперь маршрут совпадает с ApiService
+        public async Task<ActionResult<Client>> GetByNumber(string carNumber)
         {
-            // Ищем без учета регистра (чтобы А111АА и а111аа считались одним номером)
+            // 🔥 ИСПРАВЛЕНО: Используем Contains для поиска подстроки
             var client = await _context.Clients
-                .FirstOrDefaultAsync(c => c.CarNumber.ToLower() == carNumber.ToLower());
+                .FirstOrDefaultAsync(c => c.CarNumber.ToLower().Contains(carNumber.ToLower()));
 
             if (client == null)
             {

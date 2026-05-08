@@ -171,26 +171,23 @@ namespace AccuratPanelCWM.Services
         #endregion
 
         #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА
-        public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int box, DateTime startTime, int durationMinutes, int excludeOrderId = 0)
+        // Добавили branchId в параметры метода
+        public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int branchId, int box, DateTime startTime, int durationMinutes, int excludeOrderId = 0)
         {
             try
             {
-                var allOrders = await GetOrdersAsync();
-                var endTime = startTime.AddMinutes(durationMinutes);
+                // Имена параметров в URL теперь ТОЧНО совпадают с параметрами метода Check в контроллере
+                var url = $"Orders/check-availability?branchId={branchId}&box={box}&start={startTime:O}&duration={durationMinutes}&excludeOrderId={excludeOrderId}";
 
-                var conflicts = allOrders.Where(o =>
-                    o.IsAppointment &&
-                    o.Id != excludeOrderId && // Игнорируем саму себя при проверке
-                    o.BoxNumber == box &&
-                    o.Status != "Отменен" &&
-                    o.Status != "Выполнен" &&
-                    o.Time < endTime &&
-                    o.Time.AddMinutes(o.DurationMinutes > 0 ? o.DurationMinutes : 60) > startTime
-                ).ToList();
-
-                return !conflicts.Any();
+                var isAvailable = await _http.GetFromJsonAsync<bool>(url);
+                return isAvailable;
             }
-            catch { return true; }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка проверки доступности: {ex.Message}");
+                // Если сервер недоступен, возвращаем true, чтобы не блокировать работу (или false, если строгая логика)
+                return true;
+            }
         }
         #endregion
 
@@ -302,19 +299,21 @@ namespace AccuratPanelCWM.Services
         }
         #endregion
 
-        // 1. Получить активные заказы для филиала
+        // 1. Получить активные заказы для филиала (ИСПРАВЛЕНО: без Over-fetching)
         public async Task<List<CarWashOrder>> GetActiveOrdersAsync(int branchId)
         {
-            // Скачиваем все заказы
-            var response = await _http.GetAsync("orders");
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var allOrders = await response.Content.ReadFromJsonAsync<List<CarWashOrder>>() ?? new List<CarWashOrder>();
-
-                // Оставляем только "В работе" для нужного филиала
-                return allOrders.Where(o => o.BranchId == branchId && o.Status == "В работе").ToList();
+                // Скачиваем ТОЛЬКО активные заказы, трафик минимален!
+                var activeOrders = await _http.GetFromJsonAsync<List<CarWashOrder>>($"orders/active/{branchId}");
+                return activeOrders ?? new List<CarWashOrder>();
             }
-            return new List<CarWashOrder>();
+            catch (Exception ex)
+            {
+                // Логируем или выводим ошибку при необходимости, чтобы не молчало, если что-то упадет
+                Console.WriteLine($"Ошибка при получении активных заказов: {ex.Message}");
+                return new List<CarWashOrder>();
+            }
         }
 
         // 2. Завершить заказ

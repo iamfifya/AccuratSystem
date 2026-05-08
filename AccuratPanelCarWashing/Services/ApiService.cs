@@ -14,11 +14,12 @@ namespace AccuratPanelCarWashing.Services
 
         public ApiService()
         {
-            // Убедись, что порт совпадает с твоим API
-            _http = new HttpClient { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
+            // 🔥 ВЗЛОМ СИСТЕМЫ: Говорим HttpClient'у игнорировать ошибки SSL-сертификата (только для localhost!)
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
 
-            // ДОБАВИМ ЭТУ СТРОКУ: Она говорит Microsoft "Я программа, не показывай мне HTML-предупреждение"
-            _http.DefaultRequestHeaders.Add("X-Tunnel-Skip-AntiPhishing-Page", "true");
+            // Передаем наш хитрый обработчик в HttpClient
+            _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
         }
 
         #region СМЕНЫ (SHIFTS)
@@ -143,37 +144,73 @@ namespace AccuratPanelCarWashing.Services
             var response = await _http.PutAsJsonAsync($"Orders/{order.Id}", order);
             response.EnsureSuccessStatusCode();
         }
-        #endregion
 
-        #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА
-        public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int box, DateTime startTime, int durationMinutes, int excludeOrderId = 0)
+        //  ДОБАВЛЕНО: Быстрое получение только активных заказов
+        public async Task<List<CarWashOrder>> GetActiveOrdersAsync(int branchId)
         {
             try
             {
-                var allOrders = await GetOrdersAsync();
-                var endTime = startTime.AddMinutes(durationMinutes);
-
-                var conflicts = allOrders.Where(o =>
-                    o.IsAppointment &&
-                    o.Id != excludeOrderId && // Игнорируем саму себя при проверке
-                    o.BoxNumber == box &&
-                    o.Status != "Отменен" &&
-                    o.Status != "Выполнен" &&
-                    o.Time < endTime &&
-                    o.Time.AddMinutes(o.DurationMinutes > 0 ? o.DurationMinutes : 60) > startTime
-                ).ToList();
-
-                return !conflicts.Any();
+                var activeOrders = await _http.GetFromJsonAsync<List<CarWashOrder>>($"Orders/active/{branchId}");
+                return activeOrders ?? new List<CarWashOrder>();
             }
-            catch { return true; }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при получении активных заказов: {ex.Message}");
+                return new List<CarWashOrder>();
+            }
+        }
+
+        //  ДОБАВЛЕНО: Быстрое завершение заказа
+        public async Task<bool> CompleteOrderAsync(int orderId)
+        {
+            try
+            {
+                var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"Orders/{orderId}/complete");
+                var response = await _http.SendAsync(request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при завершении заказа: {ex.Message}");
+                return false;
+            }
+        }
+        #endregion
+
+        #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА
+        //  ИСПРАВЛЕНО: Добавлен параметр branchId и убран Over-fetching
+        public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int branchId, int box, DateTime startTime, int durationMinutes, int excludeOrderId = 0)
+        {
+            try
+            {
+                // Имена параметров строго совпадают с контроллером API
+                var url = $"Orders/check-availability?branchId={branchId}&box={box}&start={startTime:O}&duration={durationMinutes}&excludeOrderId={excludeOrderId}";
+
+                var isAvailable = await _http.GetFromJsonAsync<bool>(url);
+                return isAvailable;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка проверки доступности: {ex.Message}");
+                // В случае ошибки связи возвращаем true, чтобы не блокировать админа
+                return true;
+            }
         }
         #endregion
 
         #region АВТОРИЗАЦИЯ И ФИЛИАЛЫ
         public async Task<List<Branch>> GetBranchesAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<Branch>>("Branches") ?? new List<Branch>(); }
-            catch { return new List<Branch>(); }
+            try
+            {
+                var branches = await _http.GetFromJsonAsync<List<Branch>>("Branches");
+                return branches ?? new List<Branch>();
+            }
+            catch (Exception ex)
+            {
+                // ВРЕМЕННО ВЫВОДИМ РЕАЛЬНУЮ ОШИБКУ, вместо возврата пустого списка
+                throw new Exception($"Скрытая ошибка API: {ex.Message}");
+            }
         }
 
         public async Task<User> AuthenticateAsync(string login, string password)

@@ -80,7 +80,7 @@ namespace AccuratPanelCWM.Views
                     // Загружаем сотрудников для выбора
                     var allUsers = await _apiService.GetUsersAsync();
 
-                    // 🔥 БЕРЕМ ВООБЩЕ ВСЕХ АКТИВНЫХ (без фильтра по филиалу) 🔥
+                    //  БЕРЕМ ВООБЩЕ ВСЕХ АКТИВНЫХ (без фильтра по филиалу) 
                     _selectableEmployees = allUsers
                         .Where(u => u.IsActive)
                         .Select(u => new EmployeeSelectionModel { Id = u.Id, FullName = u.FullName, IsSelected = false })

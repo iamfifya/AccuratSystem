@@ -14,7 +14,7 @@
 
             <!-- АВТОМОБИЛЬ -->
             <Label Text="🚘 Автомобиль" FontAttributes="Bold" FontSize="16" />
-            <Entry x:Name="CarNumberEntry" Placeholder="Госномер (например: А123АА)" TextTransform="Uppercase" />
+            <Entry x:Name="CarNumberEntry" Placeholder="Госномер (например: А123АА)" TextTransform="Uppercase" TextChanged="OnCarNumberChanged" />
             <Entry x:Name="CarModelEntry" Placeholder="Марка и модель (например: Kia Rio)" />
 
             <Picker x:Name="BodyTypePicker" Title="Выберите тип кузова" SelectedIndexChanged="BodyTypePicker_SelectedIndexChanged">

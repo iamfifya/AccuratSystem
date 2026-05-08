@@ -180,6 +180,12 @@ namespace AccuratPanelCarWashing
                     _viewModel.CurrentOrder.Department = selectedZone.Department; // Автоматически "Wash" или "Service"!
                 }
 
+                // 🔥 ПЕРЕНЕСЛИ ВЫШЕ: Подстраховка: если BranchId почему-то остался нулем, берем текущий филиал
+                if (_viewModel.CurrentOrder.BranchId <= 0)
+                {
+                    _viewModel.CurrentOrder.BranchId = AppSettings.CurrentBranchId;
+                }
+
                 // ПРОВЕРКА ДОСТУПНОСТИ ДЛЯ ЗАПИСЕЙ 
                 if (_viewModel.CurrentOrder.IsAppointment)
                 {
@@ -188,23 +194,19 @@ namespace AccuratPanelCarWashing
                     else
                         _viewModel.CurrentOrder.DurationMinutes = 60; // По умолчанию
 
+                    // 🔥 ИСПРАВЛЕНО: Теперь передаем BranchId первым параметром!
                     bool isAvailable = await _apiService.CheckBoxAvailabilityForAppointmentAsync(
-                        _viewModel.CurrentOrder.BoxNumber,
-                        _viewModel.CurrentOrder.Time,
-                        _viewModel.CurrentOrder.DurationMinutes,
-                        _viewModel.CurrentOrder.Id); // Передаем ID, чтобы игнорировать саму себя
+                        _viewModel.CurrentOrder.BranchId,       // 1. Филиал
+                        _viewModel.CurrentOrder.BoxNumber,      // 2. Номер бокса
+                        _viewModel.CurrentOrder.Time,           // 3. Время начала
+                        _viewModel.CurrentOrder.DurationMinutes,// 4. Длительность
+                        _viewModel.CurrentOrder.Id);            // 5. Игнорируем сам заказ при редактировании
 
                     if (!isAvailable)
                     {
                         MessageBox.Show($"Время {_viewModel.CurrentOrder.Time:HH:mm} в выбранной зоне уже занято!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return; // Останавливаем сохранение
                     }
-                }
-
-                // Подстраховка: если BranchId почему-то остался нулем, берем текущий филиал
-                if (_viewModel.CurrentOrder.BranchId <= 0)
-                {
-                    _viewModel.CurrentOrder.BranchId = AppSettings.CurrentBranchId;
                 }
 
                 this.IsEnabled = false; // Блокируем UI на время запроса
