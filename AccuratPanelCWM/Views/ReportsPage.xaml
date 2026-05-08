@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
              x:Class="AccuratPanelCWM.Views.ReportsPage"
              Title="Аналитика">
 
@@ -20,7 +21,6 @@
             <VerticalStackLayout Spacing="20">
 
                 <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="10" RowSpacing="10">
-
                     <Border Grid.Column="0" Grid.Row="0" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
                         <VerticalStackLayout>
                             <Label Text="Выручка" FontSize="12" TextColor="#7F8C8D" />
@@ -43,8 +43,17 @@
                     </Border>
                 </Grid>
 
-                <Label Text="📋 Детализация по сменам" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
+                <Label Text="📊 Динамика выручки" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
+                <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" HeightRequest="250" Padding="10">
+                    <lvc:CartesianChart Series="{Binding RevenueSeries}" XAxes="{Binding XAxes}" />
+                </Border>
 
+                <Label Text="🍕 Доля направлений" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
+                <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" HeightRequest="250" Padding="10">
+                    <lvc:PieChart Series="{Binding ShareSeries}" LegendPosition="Bottom" />
+                </Border>
+
+                <Label Text="📋 Детализация по сменам" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
                 <CollectionView x:Name="ReportsCollectionView" EmptyView="Нет данных за выбранный период">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>

@@ -23,7 +23,7 @@ namespace AccuratPanelCarWashing
         private async System.Threading.Tasks.Task LoadBranchesAsync()
         {
             // Ждем 2 секунды, чтобы Web API успел запустить свои службы
-            await System.Threading.Tasks.Task.Delay(2000);
+            await System.Threading.Tasks.Task.Delay(5000);
 
             try
             {
