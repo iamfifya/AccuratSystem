@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace AccuratPanelCWM.Models
@@ -32,7 +33,32 @@ namespace AccuratPanelCWM.Models
         public string Notes { get; set; }
         public List<int> ServiceIds { get; set; } = new List<int>();
         public int BoxNumber { get; set; }
-        public int WasherId { get; set; }
+        // 🔥 ДОБАВЛЕНО: Объявление коллекции для новой связи многие-ко-многим
+        public virtual ICollection<OrderWasher> OrderWashers { get; set; }
+
+        private int? _washerId;
+
+        public CarWashOrder()
+        {
+            // 🔥 ДОБАВЛЕНО: Инициализация коллекции в конструкторе
+            OrderWashers = new List<OrderWasher>();
+        }
+
+        // 🔥 НАШ УМНЫЙ МОСТ (теперь он видит коллекцию OrderWashers)
+        [NotMapped]
+        public int? WasherId
+        {
+            get
+            {
+                if (OrderWashers != null && OrderWashers.Any())
+                    return OrderWashers.FirstOrDefault()?.UserId;
+                return _washerId;
+            }
+            set
+            {
+                _washerId = value;
+            }
+        }
 
         [Range(0, 100000, ErrorMessage = "Дополнительная стоимость должна быть от 0 до 100 000")]
         public decimal ExtraCost { get; set; }

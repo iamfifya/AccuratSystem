@@ -29,7 +29,7 @@ namespace AccuratPanelCarWashing
             {
                 var branches = await _apiService.GetBranchesAsync();
 
-                // 🔥 НОВАЯ ПРОВЕРКА: Если сервер вернул пустоту, мы об этом узнаем!
+                // НОВАЯ ПРОВЕРКА: Если сервер вернул пустоту, мы об этом узнаем!
                 if (branches == null || !branches.Any())
                 {
                     MessageBox.Show("Список филиалов пуст! Проверьте подключение к API и наличие филиалов в базе.", "Отладка");

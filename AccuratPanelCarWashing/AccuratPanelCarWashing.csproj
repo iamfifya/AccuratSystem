@@ -363,6 +363,7 @@
     <Compile Include="Models\Client.cs" />
     <Compile Include="Models\EmployeeShiftReport.cs" />
     <Compile Include="Models\OrderDisplayItem.cs" />
+    <Compile Include="Models\OrderWasher.cs" />
     <Compile Include="Models\ReportModels.cs" />
     <Compile Include="Models\Schedule.cs" />
     <Compile Include="Models\Transaction.cs" />

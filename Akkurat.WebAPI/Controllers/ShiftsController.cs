@@ -87,15 +87,14 @@ namespace Accurat.WebAPI.Controllers
             var shift = await _context.Shifts.FindAsync(id);
             if (shift == null) return NotFound();
 
-            // 1. Грузим всё необходимое из базы
+            // 1. Грузим всё необходимое из базы (🔥 Добавили ThenInclude)
             var orders = await _context.Orders
+                .Include(o => o.OrderWashers)
+                    .ThenInclude(ow => ow.Washer)
                 .Where(o => o.ShiftId == id && o.Status == "Выполнен" && o.PaymentMethod == "Наличные")
                 .ToListAsync();
 
-            var transactions = await _context.Transactions
-                .Where(t => t.ShiftId == id)
-                .ToListAsync();
-
+            var transactions = await _context.Transactions.Where(t => t.ShiftId == id).ToListAsync();
             var allServices = await _context.Services.ToListAsync();
 
             // 2. Считаем выручку
@@ -107,37 +106,18 @@ namespace Accurat.WebAPI.Controllers
             decimal expenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
             decimal withdrawals = transactions.Where(t => t.Type == "Инкассация").Sum(t => t.Amount);
 
-            // 4. Считаем доплату до минималки
+            // 4. Считаем ЗП через наш новый сервис
             decimal totalTopUp = 0;
-            var groupedByWasher = orders.GroupBy(o => o.WasherId);
-            foreach (var group in groupedByWasher)
+            var orderWasherPairs = orders
+                .SelectMany(o => o.OrderWashers ?? new List<OrderWasher>(),
+                           (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId })
+                .ToList();
+
+            foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
             {
-                // Базовая ЗП мойщика (35%)
-                decimal basePay = 0;
-                foreach (var order in group)
-                {
-                    decimal servicesTotal = (order.ServiceIds ?? new List<int>())
-                        .Sum(sid =>
-                        {
-                            var svc = allServices.FirstOrDefault(s => s.Id == sid);
-
-                            // Если услуга найдена, у неё есть прайс-лист и в нём есть цена для кузова этого заказа:
-                            if (svc != null && svc.PriceByBodyType != null && svc.PriceByBodyType.TryGetValue(order.BodyTypeCategory, out decimal price))
-                            {
-                                return price;
-                            }
-                            return 0m; // Если цены нет, возвращаем 0
-                        });
-
-                    decimal baseAmount = servicesTotal + order.ExtraCost;
-                    basePay += baseAmount * 0.35m; // WASHER_PERCENT
-                }
-
-                // Если не заработал 1000, докидываем
-                // if (basePay > 0 && basePay < 1000m)
-                // {
-                //     totalTopUp += (1000m - basePay);
-                // }
+                // Вызываем ядро!
+                decimal basePay = group.Sum(x =>
+                    Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
             }
 
             // 5. Итоговые цифры

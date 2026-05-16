@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Accurat.WebAPI.Models
 {
@@ -32,11 +33,20 @@ namespace Accurat.WebAPI.Models
         public List<int> ServiceIds { get; set; } = new();
 
         public int ShiftId { get; set; }
+
+        [NotMapped]
         public int? WasherId { get; set; }
         public int? ClientId { get; set; }
 
         //  ДОБАВЛЕНЫ СВОЙСТВА ФИЛИАЛА 
         public int BranchId { get; set; }
         public Branch? Branch { get; set; }
+
+        public virtual ICollection<OrderWasher> OrderWashers { get; set; }
+
+        public Order()
+        {
+            OrderWashers = new List<OrderWasher>();
+        }
     }
 }

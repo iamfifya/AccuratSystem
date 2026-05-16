@@ -19,9 +19,27 @@ namespace Accurat.WebAPI.Data
         public DbSet<Shift> Shifts => Set<Shift>();
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<EmployeeScheduleEntry> EmployeeSchedules => Set<EmployeeScheduleEntry>();
+        public DbSet<OutboxMessage> OutboxMessages { get; set; }
+        public DbSet<OrderWasher> OrderWashers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            base.OnModelCreating(modelBuilder);
+
+            // Настройка композитного ключа для связи Заказ-Мойщик
+            modelBuilder.Entity<OrderWasher>()
+                .HasKey(ow => new { ow.OrderId, ow.UserId });
+
+            modelBuilder.Entity<OrderWasher>()
+                .HasOne(ow => ow.Order)
+                .WithMany(o => o.OrderWashers)
+                .HasForeignKey(ow => ow.OrderId);
+
+            modelBuilder.Entity<OrderWasher>()
+                .HasOne(ow => ow.Washer)
+                .WithMany() // Предполагаем, что в User нет коллекции OrderWashers
+                .HasForeignKey(ow => ow.UserId);
 
             // 1. Создаем правило сравнения для словаря (Value Comparer)
             var dictionaryComparer = new ValueComparer<Dictionary<int, decimal>>(

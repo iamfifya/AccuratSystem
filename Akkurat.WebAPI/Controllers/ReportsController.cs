@@ -36,9 +36,15 @@ namespace Accurat.WebAPI.Controllers
             var reports = new List<ShiftReport>();
             var allUsers = await _context.Users.ToListAsync();
 
+            // 🔥 ИСПРАВЛЕНО: Загружаем все услуги из базы данных один раз перед циклами
+            var allServices = await _context.Services.ToListAsync();
+
             foreach (var shift in shifts)
             {
-                var orders = await _context.Orders.Where(o => o.ShiftId == shift.Id && o.Status == "Выполнен").ToListAsync();
+                var orders = await _context.Orders
+                    .Include(o => o.OrderWashers)
+                        .ThenInclude(ow => ow.Washer) // Загружаем мойщиков
+                    .Where(o => o.ShiftId == shift.Id && o.Status == "Выполнен").ToListAsync();
                 var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
 
                 // Разделяем заказы по департаментам
@@ -85,29 +91,39 @@ namespace Accurat.WebAPI.Controllers
                 decimal totalWashCompanyEarnings = 0;
                 decimal totalServiceCompanyEarnings = 0;
 
-                foreach (var group in orders.GroupBy(o => o.WasherId))
+                // РАЗВОРАЧИВАЕМ ЗАКАЗЫ ПО МОЙЩИКАМ (SOFT SPLIT)
+                var orderWasherPairs = orders
+                    .SelectMany(o => o.OrderWashers ?? new List<OrderWasher>(),
+                               (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId, SplitShare = ow.SplitShare })
+                    .ToList();
+
+                foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
                 {
-                    if (group.Key == null || group.Key == 0) continue;
+                    if (group.Key == 0) continue;
 
                     var emp = allUsers.FirstOrDefault(u => u.Id == group.Key);
-                    decimal empRevenue = group.Sum(o => o.FinalPrice);
+                    decimal empRevenue = group.Sum(x => x.Order.FinalPrice * x.SplitShare);
 
-                    // Доходы сотрудника (только база 35%)
-                    decimal empBaseEarnings = group.Sum(o => (o.TotalPrice + o.ExtraCost) * 0.35m);
-                    decimal empTotalEarnings = empBaseEarnings; // Доплата убрана
+                    // ВЫЗЫВАЕМ ЯДРО РАСЧЕТА
+                    decimal empBaseEarnings = group.Sum(x =>
+                        Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
 
+                    decimal empTotalEarnings = empBaseEarnings;
                     decimal empAdvances = transactions.Where(t => t.EmployeeId == emp?.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
 
                     totalWasherEarnings += empTotalEarnings;
                     totalCompanyEarnings += (empRevenue - empTotalEarnings);
 
-                    // Пропорциональное разделение доли компании между Мойкой и Сервисом
-                    var empWashRevenue = group.Where(o => o.Department == "Wash").Sum(o => o.FinalPrice);
-                    var empServiceRevenue = group.Where(o => o.Department == "Service").Sum(o => o.FinalPrice);
-                    var empWashBase = group.Where(o => o.Department == "Wash").Sum(o => (o.TotalPrice + o.ExtraCost) * 0.35m);
-                    var empServiceBase = group.Where(o => o.Department == "Service").Sum(o => (o.TotalPrice + o.ExtraCost) * 0.35m);
+                    // Разделение доли компании
+                    var washItems = group.Where(x => x.Order.Department == "Wash");
+                    var serviceItems = group.Where(x => x.Order.Department == "Service");
 
-                    // Вычитаем только базовую ЗП из доли компании (добавочные коэффициенты topUp удалены)
+                    var empWashRevenue = washItems.Sum(x => x.Order.FinalPrice * x.SplitShare);
+                    var empServiceRevenue = serviceItems.Sum(x => x.Order.FinalPrice * x.SplitShare);
+
+                    var empWashBase = washItems.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+                    var empServiceBase = serviceItems.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+
                     totalWashCompanyEarnings += (empWashRevenue - empWashBase);
                     totalServiceCompanyEarnings += (empServiceRevenue - empServiceBase);
 
@@ -115,7 +131,7 @@ namespace Accurat.WebAPI.Controllers
                     {
                         EmployeeId = emp?.Id ?? 0,
                         EmployeeName = emp?.FullName ?? "Неизвестно",
-                        CarsWashed = group.Count(),
+                        CarsWashed = group.Count(), // Считаем количество участий в заказах
                         TotalAmount = empRevenue,
                         Earnings = empTotalEarnings,
                         Advances = empAdvances

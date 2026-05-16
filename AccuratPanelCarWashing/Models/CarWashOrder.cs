@@ -32,7 +32,15 @@ namespace AccuratPanelCarWashing.Models
         public string Notes { get; set; }
         public List<int> ServiceIds { get; set; } = new List<int>();
         public int BoxNumber { get; set; }
-        public int WasherId { get; set; }
+        public virtual ICollection<OrderWasher> OrderWashers { get; set; }
+
+        // 🔥 ВОЗВРАЩАЕМ ДЛЯ СТАРОГО UI (пока не перепишем окна):
+        public int? WasherId { get; set; }
+
+        public CarWashOrder()
+        {
+            OrderWashers = new List<OrderWasher>();
+        }
 
         [Range(0, 100000, ErrorMessage = "Дополнительная стоимость должна быть от 0 до 100 000")]
         public decimal ExtraCost { get; set; }

@@ -33,6 +33,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddSignalR();
 
+// Подключаем наш фоновый обработчик
+builder.Services.AddHostedService<Accurat.WebAPI.Services.OutboxProcessorBackgroundService>();
+
 var app = builder.Build();
 
 // 4. Настраиваем визуальный интерфейс

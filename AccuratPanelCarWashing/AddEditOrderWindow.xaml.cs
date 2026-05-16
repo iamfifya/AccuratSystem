@@ -180,7 +180,7 @@ namespace AccuratPanelCarWashing
                     _viewModel.CurrentOrder.Department = selectedZone.Department; // Автоматически "Wash" или "Service"!
                 }
 
-                // 🔥 ПЕРЕНЕСЛИ ВЫШЕ: Подстраховка: если BranchId почему-то остался нулем, берем текущий филиал
+                // ПЕРЕНЕСЛИ ВЫШЕ: Подстраховка: если BranchId почему-то остался нулем, берем текущий филиал
                 if (_viewModel.CurrentOrder.BranchId <= 0)
                 {
                     _viewModel.CurrentOrder.BranchId = AppSettings.CurrentBranchId;
@@ -194,7 +194,7 @@ namespace AccuratPanelCarWashing
                     else
                         _viewModel.CurrentOrder.DurationMinutes = 60; // По умолчанию
 
-                    // 🔥 ИСПРАВЛЕНО: Теперь передаем BranchId первым параметром!
+                    // ИСПРАВЛЕНО: Теперь передаем BranchId первым параметром!
                     bool isAvailable = await _apiService.CheckBoxAvailabilityForAppointmentAsync(
                         _viewModel.CurrentOrder.BranchId,       // 1. Филиал
                         _viewModel.CurrentOrder.BoxNumber,      // 2. Номер бокса

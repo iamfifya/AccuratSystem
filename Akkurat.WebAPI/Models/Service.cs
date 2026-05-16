@@ -10,5 +10,6 @@ namespace Accurat.WebAPI.Models
         public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
         public Dictionary<int, decimal> PriceByBodyType { get; set; } = new Dictionary<int, decimal>();
+        public decimal? CustomWagePercentage { get; set; } // Например, 40.0m или null
     }
 }

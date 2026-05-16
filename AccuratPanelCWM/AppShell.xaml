@@ -6,45 +6,44 @@
     xmlns:views="clr-namespace:AccuratPanelCWM.Views"
     Shell.FlyoutBehavior="Disabled">
 
-    <!-- Стили для красивого нижнего меню и верхней плашки -->
     <Shell.Resources>
         <ResourceDictionary>
             <Style x:Key="BaseStyle" TargetType="Element">
-                <!-- Верхняя панель (где написано название страницы) 
-                <Setter Property="Shell.BackgroundColor" Value="#2C3E50" />
-                <Setter Property="Shell.ForegroundColor" Value="White" />
-                <Setter Property="Shell.TitleColor" Value="White" />
-                <Setter Property="Shell.DisabledColor" Value="#95A5A6" />
-                <Setter Property="Shell.UnselectedColor" Value="#95A5A6" /> -->
-
-                <!-- Нижнее меню (TabBar) 
-                <Setter Property="Shell.TabBarBackgroundColor" Value="White" />
-                <Setter Property="Shell.TabBarForegroundColor" Value="#27AE60"/> -->
-                <!-- Зеленый цвет для активной вкладки 
+                <Setter Property="Shell.TabBarForegroundColor" Value="#27AE60"/>
                 <Setter Property="Shell.TabBarUnselectedColor" Value="#BDC3C7"/>
-                <Setter Property="Shell.TabBarTitleColor" Value="#2C3E50"/> -->
+                <Setter Property="Shell.TabBarTitleColor" Value="#2C3E50"/>
             </Style>
             <Style TargetType="TabBar" BasedOn="{StaticResource BaseStyle}" />
         </ResourceDictionary>
     </Shell.Resources>
 
-    <!-- Само нижнее меню -->
     <TabBar>
-        <Tab Title="🚘 Работа">
+        <Tab Title="Работа">
+            <Tab.Icon>
+                <FontImageSource Glyph="🚘" Size="20"/>
+            </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate views:OrdersPage}" />
         </Tab>
 
-        <Tab Title="📋 Смена">
+        <Tab Title="Смена">
+            <Tab.Icon>
+                <FontImageSource Glyph="📋" Size="20"/>
+            </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate views:ManagementPage}" />
         </Tab>
 
-        <Tab Title="📊 Отчеты">
+        <Tab Title="Отчеты">
+            <Tab.Icon>
+                <FontImageSource Glyph="📊" Size="20"/>
+            </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate views:ReportsPage}" />
         </Tab>
 
-        <Tab Title="⚙️ Настройки">
+        <Tab Title="Настройки">
+            <Tab.Icon>
+                <FontImageSource Glyph="⚙️" Size="20"/>
+            </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" />
         </Tab>
     </TabBar>
-
 </Shell>

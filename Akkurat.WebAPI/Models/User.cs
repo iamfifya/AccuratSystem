@@ -13,5 +13,7 @@
         // Привязка к филиалу (У директора будет null)
         public int? BranchId { get; set; }
         public Branch? Branch { get; set; }
+
+        public decimal BaseWagePercentage { get; set; } // Например, 35.0m
     }
 }

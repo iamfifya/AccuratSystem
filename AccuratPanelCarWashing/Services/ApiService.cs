@@ -14,7 +14,7 @@ namespace AccuratPanelCarWashing.Services
 
         public ApiService()
         {
-            // 🔥 ВЗЛОМ СИСТЕМЫ: Говорим HttpClient'у игнорировать ошибки SSL-сертификата (только для localhost!)
+            // ВЗЛОМ СИСТЕМЫ: Говорим HttpClient'у игнорировать ошибки SSL-сертификата (только для localhost!)
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
 

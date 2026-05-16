@@ -24,28 +24,73 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            return await _context.Orders.ToListAsync();
+            // 🔥 ДОБАВЛЕН INCLUDE
+            return await _context.Orders.Include(o => o.OrderWashers).ToListAsync();
         }
 
-        // 2. Создать новый заказ
+        // 2. Создать новый заказ (С ЗАЩИТОЙ ОТ ДВОЙНОГО БРОНИРОВАНИЯ)
         [HttpPost]
-        public async Task<ActionResult<Order>> CreateOrder(Order order)
+        public async Task<ActionResult<Order>> CreateOrder(Order order) // ИСПРАВЛЕНО: было CarWashOrder
         {
             if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
             {
                 return BadRequest("Для выполненного заказа требуется указать способ оплаты.");
             }
 
-            // Уважаем время клиента, но жестко приводим к UTC
-            order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
-            order.Status = "В работе";
+            // Открываем строгую транзакцию
+            using (var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable))
+            {
+                try
+                {
+                    // 1. Проверяем пересечения по времени для данного бокса
+                    var endTime = order.Time.AddMinutes(order.DurationMinutes > 0 ? order.DurationMinutes : 60);
 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+                    bool hasConflict = await _context.Orders.AnyAsync(o =>
+                        o.BoxNumber == order.BoxNumber &&
+                        o.BranchId == order.BranchId &&
+                        o.Status != "Отменен" &&
+                        o.Status != "Выполнен" &&
+                        o.Time < endTime &&
+                        // Если у заказа в БД DurationMinutes 0, считаем как 60
+                        o.Time.AddMinutes(o.DurationMinutes > 0 ? o.DurationMinutes : 60) > order.Time);
 
-            await _hubContext.Clients.All.SendAsync("UpdateData");
+                    if (hasConflict)
+                    {
+                        return BadRequest(new { message = "Выбранное время в данном боксе уже занято" });
+                    }
 
-            return Ok(order);
+                    // 2. Инициализируем Soft Split
+                    if (order.OrderWashers == null || !order.OrderWashers.Any())
+                    {
+                        // Пока клиенты шлют старый формат, можем временно подстраховаться (если нужно)
+                        // Но если клиенты уже обновлены, этот блок можно оставить пустым
+                    }
+
+                    order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
+                    order.Status = "В работе";
+
+                    _context.Orders.Add(order);
+                    await _context.SaveChangesAsync(); // Сохраняем в БД
+
+                    transaction.Commit(); // Фиксируем транзакцию
+
+                    // Уведомляем клиентов (WPF) об обновлении
+                    await _hubContext.Clients.All.SendAsync("UpdateData");
+
+                    return Ok(order);
+                }
+                catch (DbUpdateException)
+                {
+                    // Перехват конфликтов БД
+                    transaction.Rollback();
+                    return BadRequest(new { message = "Произошел конфликт при сохранении. Выбранное время в данном боксе уже занято." });
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return StatusCode(500, "Внутренняя ошибка сервера");
+                }
+            }
         }
 
         [HttpPut("{id}")]
@@ -69,31 +114,64 @@ namespace Accurat.WebAPI.Controllers
             return NoContent();
         }
 
-        // 3. Завершить заказ (меняем статус)
+        // 3. Завершить заказ (с публикацией события в Outbox и сохранением оплаты)
         [HttpPatch("{id}/complete")]
-        public async Task<IActionResult> CompleteOrder(int id)
+        public async Task<IActionResult> CompleteOrder(int id, [FromQuery] string paymentMethod)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null) return NotFound();
+            // Открываем транзакцию
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var order = await _context.Orders.FindAsync(id);
+                    if (order == null) return NotFound();
 
-            //  СТАВИМ ПРАВИЛЬНЫЙ СТАТУС, ЧТОБЫ РАБОТАЛА БУХГАЛТЕРИЯ 
-            order.Status = "Выполнен";
+                    // Меняем статус заказа
+                    order.Status = "Выполнен";
 
-            // Если нужно, чтобы по умолчанию ставилась безналичная оплата или что-то еще,
-            // это тоже можно сделать здесь, но пока просто фиксируем статус.
+                    // 🔥 ПРИМЕНЯЕМ СПОСОБ ОПЛАТЫ ОТ КЛИЕНТА
+                    if (!string.IsNullOrWhiteSpace(paymentMethod))
+                    {
+                        order.PaymentMethod = paymentMethod;
+                    }
 
-            await _context.SaveChangesAsync();
+                    // ФОРМИРУЕМ ЗАДАЧУ ДЛЯ ФОНОВОГО ПРОЦЕССА (Outbox)
+                    var payload = new { OrderId = order.Id, ClientId = order.ClientId, Total = order.FinalPrice };
 
-            // Сигнал для WPF
-            await _hubContext.Clients.All.SendAsync("UpdateData");
+                    var outboxMsg = new OutboxMessage
+                    {
+                        EventType = "OrderCompleted",
+                        PayloadJson = System.Text.Json.JsonSerializer.Serialize(payload),
+                        CreatedAtUtc = DateTime.UtcNow,
+                        ErrorMessage = "" // 🔥 ИСПРАВЛЕНО: Явно передаем пустую строку, чтобы успокоить PostgreSQL
+                    };
 
-            return Ok(order);
+                    _context.OutboxMessages.Add(outboxMsg);
+
+                    _context.OutboxMessages.Add(outboxMsg);
+
+                    await _context.SaveChangesAsync();
+                    transaction.Commit(); // Подтверждаем транзакцию
+
+                    // Сигнал для UI (чтобы WPF обновился мгновенно)
+                    await _hubContext.Clients.All.SendAsync("UpdateData");
+
+                    return Ok(order);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return StatusCode(500, "Ошибка при завершении заказа: " + ex.Message);
+                }
+            }
         }
 
         [HttpGet("client/{clientId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetByClient(int clientId)
         {
+            // 🔥 ДОБАВЛЕН INCLUDE
             return await _context.Orders
+                .Include(o => o.OrderWashers)
                 .Where(o => o.ClientId == clientId)
                 .ToListAsync();
         }
@@ -120,8 +198,9 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("active/{branchId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetActiveOrders(int branchId)
         {
-            // Фильтруем прямо в базе данных! Сервер не будет тянуть лишнее в память.
+            // 🔥 ДОБАВЛЕН INCLUDE
             var activeOrders = await _context.Orders
+                .Include(o => o.OrderWashers)
                 .Where(o => o.BranchId == branchId && o.Status == "В работе")
                 .ToListAsync();
 

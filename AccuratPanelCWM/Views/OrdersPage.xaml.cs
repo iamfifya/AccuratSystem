@@ -172,7 +172,7 @@ namespace AccuratPanelCWM.Views
             }
         }
 
-        // ЗАВЕРШИТЬ ЗАКАЗ
+        // ЗАВЕРШИТЬ ЗАКАЗ (С ВЫБОРОМ ОПЛАТЫ)
         private async void FinishOrderButton_Clicked(object sender, EventArgs e)
         {
             var btn = (Button)sender;
@@ -180,18 +180,30 @@ namespace AccuratPanelCWM.Views
 
             if (box.CurrentOrder == null) return;
 
-            bool confirm = await DisplayAlert("Подтверждение", $"Завершить заказ для машины {box.CurrentOrder.CarNumber}?", "Да", "Отмена");
-            if (confirm)
+            // 🔥 1. Спрашиваем способ оплаты с помощью красивого меню
+            string paymentMethod = await DisplayActionSheet(
+                $"Оплата: {box.CurrentOrder.CarNumber}",
+                "Отмена",
+                null,
+                "💵 Наличные", "💳 Карта", "📱 Перевод", "📱 QR-код");
+
+            // Если нажали отмену или мимо меню
+            if (paymentMethod == "Отмена" || string.IsNullOrEmpty(paymentMethod)) return;
+
+            // Очищаем смайлики из строки для базы данных
+            string cleanPaymentMethod = paymentMethod.Replace("💵 ", "").Replace("💳 ", "").Replace("📱 ", "");
+
+            // 🔥 2. Отправляем запрос с выбранным способом
+            bool success = await _apiService.CompleteOrderAsync(box.CurrentOrder.Id, cleanPaymentMethod);
+
+            if (success)
             {
-                bool success = await _apiService.CompleteOrderAsync(box.CurrentOrder.Id);
-                if (success)
-                {
-                    await LoadBoxesAsync(box.CurrentOrder.BranchId); // Перезагружаем боксы
-                }
-                else
-                {
-                    await DisplayAlert("Ошибка", "Не удалось завершить заказ", "ОК");
-                }
+                await LoadBoxesAsync(box.CurrentOrder.BranchId); // Перезагружаем боксы
+            }
+            else
+            {
+                // Если всё равно ошибка, значит проблема с сетью
+                await DisplayAlert("Ошибка", "Не удалось завершить заказ. Проверьте подключение к серверу.", "ОК");
             }
         }
     }

@@ -21,6 +21,16 @@ namespace AccuratPanelCWM.Services
             _http.DefaultRequestHeaders.Add("X-Tunnel-Skip-AntiPhishing-Page", "true");
         }
 
+        // 🔥 ДОБАВЛЯЕМ МЕТОД ДЛЯ СМЕНЫ АДРЕСА НА ЛЕТУ
+        public void UpdateBaseUrl(string newUrl)
+        {
+            // Обязательно проверяем, чтобы адрес заканчивался на слэш, иначе HttpClient сломает пути
+            if (!newUrl.EndsWith("/")) newUrl += "/";
+
+            _http.BaseAddress = new Uri(newUrl);
+            Microsoft.Maui.Storage.Preferences.Default.Set("ServerUrl", newUrl); // Сохраняем навсегда
+        }
+
         #region СМЕНЫ (SHIFTS)
         public async Task<List<Shift>> GetShiftsAsync()
         {
@@ -317,12 +327,32 @@ namespace AccuratPanelCWM.Services
         }
 
         // 2. Завершить заказ
-        public async Task<bool> CompleteOrderAsync(int orderId)
+        public async Task<bool> CompleteOrderAsync(int orderId, string paymentMethod)
         {
-            var response = await _http.PatchAsync($"orders/{orderId}/complete", null);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                // Формируем URL. Добавил (paymentMethod ?? "") для страховки от краша Uri.EscapeDataString
+                string url = $"Orders/{orderId}/complete?paymentMethod={Uri.EscapeDataString(paymentMethod ?? "")}";
+
+                // 🔥 ИСПРАВЛЕНО: Никаких StringContent и PatchAsync! Отправляем чистый запрос через SendAsync
+                var request = new HttpRequestMessage(new HttpMethod("PATCH"), url);
+                var response = await _http.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    // Теперь, если будет ошибка, ты точно увидишь её в окне Вывод (Output) в Visual Studio
+                    string error = await response.Content.ReadAsStringAsync();
+                    System.Diagnostics.Debug.WriteLine($"[API ERROR] CompleteOrder (Status: {response.StatusCode}): {error}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[API EXCEPTION]: {ex.Message}");
+                return false;
+            }
         }
-
-
     }
 }
