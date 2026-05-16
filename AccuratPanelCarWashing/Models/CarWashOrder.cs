@@ -35,11 +35,41 @@ namespace AccuratPanelCarWashing.Models
         public virtual ICollection<OrderWasher> OrderWashers { get; set; }
 
         // 🔥 ВОЗВРАЩАЕМ ДЛЯ СТАРОГО UI (пока не перепишем окна):
-        public int? WasherId { get; set; }
+        private int? _washerId;
 
-        public CarWashOrder()
+        // 🔥 УМНЫЙ МОСТ НА КЛИЕНТЕ: Работает со старым UI, но под капотом заполняет коллекцию OrderWashers
+        public int? WasherId
         {
-            OrderWashers = new List<OrderWasher>();
+            get
+            {
+                if (OrderWashers != null && OrderWashers.Count > 0)
+                {
+                    // Возвращаем ID первого мойщика из коллекции
+                    return OrderWashers.First().UserId;
+                }
+                return _washerId;
+            }
+            set
+            {
+                _washerId = value;
+
+                if (OrderWashers == null)
+                {
+                    OrderWashers = new List<OrderWasher>();
+                }
+
+                OrderWashers.Clear();
+
+                if (value.HasValue && value.Value > 0)
+                {
+                    // Автоматически создаем запись для Soft Split с долей 1.0
+                    OrderWashers.Add(new OrderWasher
+                    {
+                        UserId = value.Value,
+                        SplitShare = 1.0m
+                    });
+                }
+            }
         }
 
         [Range(0, 100000, ErrorMessage = "Дополнительная стоимость должна быть от 0 до 100 000")]

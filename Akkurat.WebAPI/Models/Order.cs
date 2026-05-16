@@ -33,9 +33,6 @@ namespace Accurat.WebAPI.Models
         public List<int> ServiceIds { get; set; } = new();
 
         public int ShiftId { get; set; }
-
-        [NotMapped]
-        public int? WasherId { get; set; }
         public int? ClientId { get; set; }
 
         //  ДОБАВЛЕНЫ СВОЙСТВА ФИЛИАЛА 

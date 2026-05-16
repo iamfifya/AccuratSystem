@@ -390,14 +390,14 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             if (!IsAppointment)  // Только для обычных заказов
             {
-                // 🔥 ИСПРАВЛЕНО: Добавлена проверка на null
-                if (CurrentOrder.WasherId == null || CurrentOrder.WasherId <= 0)
+                // Проверяем, выбран ли исполнитель
+                if (!CurrentOrder.WasherId.HasValue || CurrentOrder.WasherId.Value <= 0)
                 {
-                    MessageBox.Show("Выберите сотрудника (мойщика), который выполнял заказ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Выберите сотрудника (мойщика), который выполнял заказ!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }
 
-                if (CurrentOrder.ShiftId <= 0)
+            if (CurrentOrder.ShiftId <= 0)
                 {
                     MessageBox.Show("Нет активной смены для привязки заказа!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;

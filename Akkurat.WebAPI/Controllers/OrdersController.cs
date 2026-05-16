@@ -59,11 +59,10 @@ namespace Accurat.WebAPI.Controllers
                         return BadRequest(new { message = "Выбранное время в данном боксе уже занято" });
                     }
 
-                    // 2. Инициализируем Soft Split
-                    if (order.OrderWashers == null || !order.OrderWashers.Any())
+                    // 2. Инициализируем Soft Split. Чистая инициализация: если вдруг прилетела пустышка, создаем пустой список
+                    if (order.OrderWashers == null)
                     {
-                        // Пока клиенты шлют старый формат, можем временно подстраховаться (если нужно)
-                        // Но если клиенты уже обновлены, этот блок можно оставить пустым
+                        order.OrderWashers = new List<OrderWasher>();
                     }
 
                     order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
