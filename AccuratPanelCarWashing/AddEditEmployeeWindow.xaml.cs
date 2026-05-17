@@ -45,7 +45,8 @@ namespace AccuratPanelCarWashing
                     PasswordHash = employee.PasswordHash,
                     Role = employee.Role,
                     IsActive = employee.IsActive,
-                    Phone = employee.Phone
+                    Phone = employee.Phone,
+                    BaseWagePercentage = employee.BaseWagePercentage // 🔥 ДОБАВИЛИ ЭТУ СТРОКУ
                 };
                 Title = "✏ Редактирование сотрудника (API)";
             }

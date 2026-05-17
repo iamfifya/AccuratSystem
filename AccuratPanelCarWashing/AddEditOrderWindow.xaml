@@ -168,7 +168,7 @@
                    Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
             <controls:CustomComboBox x:Name="WasherComboBox" Grid.Row="15" Margin="0,5,0,10" Height="50"
                                      ItemsSource="{Binding Washers}"
-                                     SelectedValue="{Binding CurrentOrder.WasherId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     SelectedValue="{Binding SelectedWasherId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      DisplayMemberPath="FullName"
                                      SelectedValuePath="Id"
                                      Placeholder="Выберите из списка"

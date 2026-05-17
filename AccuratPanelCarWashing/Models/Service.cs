@@ -13,6 +13,9 @@ namespace AccuratPanelCarWashing.Models
         public string Description { get; set; }
         public bool IsActive { get; set; } = true;
 
+        // 🔥 Кастомный процент за услугу (если null - берется базовый процент сотрудника)
+        public decimal? CustomWagePercentage { get; set; }
+
         // Новая структура цен по категориям кузова
         public Dictionary<int, decimal> PriceByBodyType { get; set; } = new Dictionary<int, decimal>();
 

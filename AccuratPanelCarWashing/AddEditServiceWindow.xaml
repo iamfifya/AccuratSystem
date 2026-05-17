@@ -26,6 +26,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -75,9 +79,15 @@
         <TextBox x:Name="DescriptionTextBox" Text="{Binding CurrentService.Description, UpdateSourceTrigger=PropertyChanged}" 
                  Grid.Row="8" Margin="0,5" Height="80" Padding="5" TextWrapping="Wrap" AcceptsReturn="True"/>
 
-        <!-- <CheckBox Content="Услуга активна" IsChecked="{Binding CurrentService.IsActive}" Grid.Row="9" Margin="0,10" HorizontalAlignment="Left"/> -->
+        <Label Content="Индивидуальный % зарплаты за услугу:" Grid.Row="9" Margin="0,5,0,0" FontWeight="SemiBold"/>
+        <TextBox x:Name="CustomWageTextBox" 
+                 Text="{Binding CurrentService.CustomWagePercentage, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}" 
+                 Grid.Row="10" Margin="0,5" Height="40" Padding="5" 
+                 ToolTip="Оставьте пустым, чтобы использовать базовую ставку сотрудника"/>
+        <TextBlock Text="Если указать здесь процент, он перекроет базовую ставку мойщика для этой услуги." 
+                   Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10" Grid.Row="11"/>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="10" Margin="0,15">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="12" Margin="0,15">
             <Button Content="✅ Сохранить" Click="SaveButton_Click" Width="120" Height="35" 
                     Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
             <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 

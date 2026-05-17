@@ -1,4 +1,3 @@
-// CarWashOrder.cs
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -40,23 +39,43 @@ namespace AccuratPanelCWM.Models
 
         public CarWashOrder()
         {
-            // 🔥 ДОБАВЛЕНО: Инициализация коллекции в конструкторе
+            // Надежная инициализация коллекции при создании объекта
             OrderWashers = new List<OrderWasher>();
         }
 
-        // 🔥 НАШ УМНЫЙ МОСТ (теперь он видит коллекцию OrderWashers)
+        // 🔥 ИСПРАВЛЕНО: Теперь MAUI тоже правильно упаковывает мойщика для сервера
         [NotMapped]
         public int? WasherId
         {
             get
             {
-                if (OrderWashers != null && OrderWashers.Any())
-                    return OrderWashers.FirstOrDefault()?.UserId;
+                if (OrderWashers != null && OrderWashers.Count > 0)
+                {
+                    // Возвращаем ID первого мойщика из коллекции
+                    return OrderWashers.First().UserId;
+                }
                 return _washerId;
             }
             set
             {
                 _washerId = value;
+
+                if (OrderWashers == null)
+                {
+                    OrderWashers = new List<OrderWasher>();
+                }
+
+                OrderWashers.Clear();
+
+                if (value.HasValue && value.Value > 0)
+                {
+                    // Автоматически создаем запись для Soft Split с долей 1.0
+                    OrderWashers.Add(new OrderWasher
+                    {
+                        UserId = value.Value,
+                        SplitShare = 1.0m
+                    });
+                }
             }
         }
 

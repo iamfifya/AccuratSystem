@@ -12,47 +12,82 @@ namespace AccuratPanelCarWashing.Services
         // === НАСТРОЙКИ (меняй только здесь) ===
         public const decimal WASHER_PERCENT = 0.35m;          // 35% мойщику
         public const decimal MIN_WASHER_PAY_PER_SHIFT = 1000m; // Мин. ЗП за смену
-
         /// <summary>
         /// Рассчитывает ВСЕ значения для одного заказа.
         /// </summary>
-        public static OrderCalculation Calculate(CarWashOrder order, List<Service> allServices)
+        // 🔥 ИСПРАВЛЕНО: Сделали washers необязательным параметром (по умолчанию null)
+        public static OrderCalculation Calculate(CarWashOrder order, List<Service> allServices, List<User> washers = null)
         {
-            // 1. Сумма услуг по актуальным ценам
-            decimal servicesTotal = (order.ServiceIds ?? new List<int>())
-                .Sum(sid => allServices?.FirstOrDefault(s => s.Id == sid)?.GetPrice(order.BodyTypeCategory) ?? 0);
+            var calc = new OrderCalculation();
+            if (order == null) return calc;
 
-            // 2. База: услуги + доп. расходы
-            decimal baseAmount = servicesTotal + order.ExtraCost;
+            // 1. Находим выбранного мойщика и его базовую ставку (по умолчанию 35%)
+            var washer = washers?.FirstOrDefault(w => w.Id == order.WasherId);
+            decimal basePercentage = washer?.BaseWagePercentage ?? 35m;
 
-            // 3. Скидка (применяется ко ВСЕЙ базе)
-            decimal actualDiscount = order.DiscountPercent > 0
-                ? baseAmount * (order.DiscountPercent / 100m)
-                : order.DiscountAmount;
+            decimal servicesTotal = 0;
+            decimal washerEarnings = 0;
 
-            // 4. Результаты
-            return new OrderCalculation
+            // 2. Считаем услуги
+            if (order.ServiceIds != null && allServices != null)
             {
-                ServicesTotal = servicesTotal,
-                BaseAmount = baseAmount,
-                ActualDiscount = actualDiscount,
-                FinalPrice = baseAmount - actualDiscount,
-                WasherEarnings = baseAmount * WASHER_PERCENT, // Скидка НЕ влияет
-                CompanyEarnings = (baseAmount - actualDiscount) - (baseAmount * WASHER_PERCENT)
-            };
+                foreach (var sid in order.ServiceIds)
+                {
+                    var svc = allServices.FirstOrDefault(s => s.Id == sid);
+                    if (svc != null)
+                    {
+                        decimal price = svc.GetPrice(order.BodyTypeCategory);
+                        servicesTotal += price;
+
+                        // МАГИЯ: Берем кастомный % услуги или (если его нет) базовый % мойщика
+                        decimal activePercentage = svc.CustomWagePercentage ?? basePercentage;
+                        washerEarnings += price * (activePercentage / 100m);
+                    }
+                }
+            }
+
+            calc.ServicesTotal = servicesTotal;
+
+            // 3. Добавляем ExtraCost (доп. услуги всегда считаются по базовой ставке мойщика)
+            decimal baseAmount = servicesTotal + order.ExtraCost;
+            if (order.ExtraCost > 0)
+            {
+                washerEarnings += order.ExtraCost * (basePercentage / 100m);
+            }
+
+            // 4. Применяем скидки к итоговой цене клиента
+            decimal actualDiscount = 0;
+            if (order.DiscountPercent > 0)
+            {
+                actualDiscount = baseAmount * (order.DiscountPercent / 100m);
+            }
+            else if (order.DiscountAmount > 0)
+            {
+                actualDiscount = order.DiscountAmount;
+            }
+
+            calc.FinalPrice = baseAmount - actualDiscount;
+
+            // 5. Формируем итоговые заработки
+            calc.WasherEarnings = washerEarnings;
+            calc.CompanyEarnings = calc.FinalPrice - calc.WasherEarnings;
+
+            return calc;
         }
 
         /// <summary>
         /// Формирует полный расчет зарплаты мойщика за смену (с учетом авансов и минималки).
         /// </summary>
+        // 🔥 ИСПРАВЛЕНО: Добавили проброс параметра washers
         public static WasherShiftStats CalculateShiftStats(
                       IEnumerable<CarWashOrder> completedOrders,
                       List<Service> allServices,
+                      List<User> washers = null,
                       decimal advancesTaken = 0m,
                       bool isWasherAdmin = false)
         {
-            // 1. Считаем чистые заработанные 35%
-            decimal basePay = completedOrders.Sum(o => Calculate(o, allServices).WasherEarnings);
+            // 1. Считаем чистые заработанные проценты
+            decimal basePay = completedOrders.Sum(o => Calculate(o, allServices, washers).WasherEarnings);
 
             return new WasherShiftStats
             {
@@ -66,9 +101,10 @@ namespace AccuratPanelCarWashing.Services
         public static decimal CalculateWasherShiftPay(
             IEnumerable<CarWashOrder> completedOrders,
             List<Service> allServices,
+            List<User> washers = null,
             bool isWasherAdmin = false)
         {
-            var stats = CalculateShiftStats(completedOrders, allServices, 0, isWasherAdmin);
+            var stats = CalculateShiftStats(completedOrders, allServices, washers, 0, isWasherAdmin);
             return stats.TotalEarned;
         }
     }

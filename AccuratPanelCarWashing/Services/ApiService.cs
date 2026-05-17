@@ -135,14 +135,23 @@ namespace AccuratPanelCarWashing.Services
         public async Task<CarWashOrder> CreateOrderAsync(CarWashOrder order)
         {
             var response = await _http.PostAsJsonAsync("Orders", order);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                // 🔥 Теперь мы увидим реальную причину отказа (например, какое поле не заполнено)
+                string errorText = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Отказ сервера ({response.StatusCode}): {errorText}");
+            }
             return await response.Content.ReadFromJsonAsync<CarWashOrder>();
         }
 
         public async Task UpdateOrderAsync(CarWashOrder order)
         {
             var response = await _http.PutAsJsonAsync($"Orders/{order.Id}", order);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorText = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Отказ сервера ({response.StatusCode}): {errorText}");
+            }
         }
 
         //  ДОБАВЛЕНО: Быстрое получение только активных заказов

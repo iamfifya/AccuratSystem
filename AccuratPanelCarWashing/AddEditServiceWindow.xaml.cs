@@ -29,13 +29,13 @@ namespace AccuratPanelCarWashing
                     DurationMinutes = 30,
                     Description = "",
                     IsActive = true,
-                    PriceByBodyType = new Dictionary<int, decimal>()
+                    PriceByBodyType = new Dictionary<int, decimal>(),
+                    CustomWagePercentage = null // 🔥 Явно ставим null для новой услуги
                 };
                 WindowTitle = "➕ Добавление услуги (API)";
             }
             else
             {
-                // Клонируем объект, чтобы не менять оригинал до нажатия кнопки "Сохранить"
                 CurrentService = new Service
                 {
                     Id = service.Id,
@@ -43,7 +43,8 @@ namespace AccuratPanelCarWashing
                     DurationMinutes = service.DurationMinutes,
                     Description = service.Description,
                     IsActive = service.IsActive,
-                    PriceByBodyType = new Dictionary<int, decimal>(service.PriceByBodyType)
+                    PriceByBodyType = new Dictionary<int, decimal>(service.PriceByBodyType),
+                    CustomWagePercentage = service.CustomWagePercentage // 🔥 ПОДХВАТЫВАЕМ ПРОЦЕНТ
                 };
                 WindowTitle = "✏ Редактирование услуги (API)";
             }

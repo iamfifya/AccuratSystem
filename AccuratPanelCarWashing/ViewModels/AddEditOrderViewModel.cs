@@ -153,7 +153,8 @@ namespace AccuratPanelCarWashing.ViewModels
             {
                 if (_currentCalc == null)
                 {
-                    _currentCalc = OrderMath.Calculate(CurrentOrder, _allServicesCache);
+                    // 🔥 Передаем список Washers в калькулятор
+                    _currentCalc = OrderMath.Calculate(CurrentOrder, _allServicesCache, Washers);
                 }
                 return _currentCalc;
             }
@@ -397,7 +398,7 @@ namespace AccuratPanelCarWashing.ViewModels
                     return false;
                 }
 
-            if (CurrentOrder.ShiftId <= 0)
+                if (CurrentOrder.ShiftId <= 0)
                 {
                     MessageBox.Show("Нет активной смены для привязки заказа!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
@@ -500,6 +501,21 @@ namespace AccuratPanelCarWashing.ViewModels
                     CurrentOrder.CarNumber = value;
                     OnPropertyChanged(nameof(CarNumber));
                     OnPropertyChanged(nameof(CurrentOrder));
+                }
+            }
+        }
+
+        public int? SelectedWasherId
+        {
+            get => CurrentOrder?.WasherId;
+            set
+            {
+                if (CurrentOrder != null && CurrentOrder.WasherId != value)
+                {
+                    CurrentOrder.WasherId = value;
+                    OnPropertyChanged(nameof(SelectedWasherId));
+                    // 🔥 Пересчитываем деньги на экране сразу при выборе другого мойщика!
+                    Recalculate();
                 }
             }
         }
