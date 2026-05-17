@@ -12,7 +12,6 @@ jobs:
       matrix:
         configuration: [Release]
 
-    # Используем Windows, так как у нас WPF проект (.NET Framework 4.8)
     runs-on: windows-latest 
 
     steps:
@@ -21,37 +20,37 @@ jobs:
       with:
         fetch-depth: 0
 
-    # 1. Устанавливаем .NET 10 для сервера (Web API)
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x' 
 
-    # 2. Устанавливаем MSBuild для сборки десктопного клиента (WPF)
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    # 3. Устанавливаем NuGet (нужен для восстановления пакетов старого формата)
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2
 
-    # 4. Восстанавливаем пакеты для WPF проекта (ИСПРАВЛЕН ПУТЬ)
+    # 4. Скачиваем пакеты в корневую папку (для тех библиотек, что ищут путь "..\packages")
     - name: Restore NuGet Packages (WPF)
       run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
 
-    # 5. Восстанавливаем пакеты для Web API
+    # 🔥 4.1 ВОТ НАШ ФИКС: Копируем скачанные пакеты внутрь проекта
+    # (для тех библиотек, что ищут путь "packages\" внутри проекта, например MaterialDesign)
+    - name: Fix broken CSPROJ paths
+      run: |
+        New-Item -ItemType Directory -Force -Path AccuratPanelCarWashing\packages
+        Copy-Item -Path packages\* -Destination AccuratPanelCarWashing\packages -Recurse -Force
+
     - name: Restore .NET Packages (API)
       run: dotnet restore Akkurat.WebAPI\Accurat.WebAPI.csproj
 
-    # 6. Собираем Web API (Backend)
     - name: Build Web API
       run: dotnet build Akkurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
 
-    # 7. Собираем WPF клиент (Frontend)
     - name: Build WPF Client
       run: msbuild AccuratPanelCarWashing\AccuratPanelCarWashing.csproj /p:Configuration=${{ matrix.configuration }}
 
-    # 8. (Опционально) Сохраняем собранный WPF клиент как артефакт, чтобы его можно было скачать с GitHub
     - name: Upload WPF Build Artifact
       uses: actions/upload-artifact@v4
       with:
