@@ -35,9 +35,9 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2
 
-    # 4. Восстанавливаем пакеты для WPF проекта
+    # 4. Восстанавливаем пакеты для WPF проекта (ИСПРАВЛЕН ПУТЬ)
     - name: Restore NuGet Packages (WPF)
-      run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory AccuratPanelCarWashing\packages
+      run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
 
     # 5. Восстанавливаем пакеты для Web API
     - name: Restore .NET Packages (API)
