@@ -34,10 +34,10 @@ namespace AccuratPanelCarWashing.Models
         public int BoxNumber { get; set; }
         public virtual ICollection<OrderWasher> OrderWashers { get; set; }
 
-        // 🔥 ВОЗВРАЩАЕМ ДЛЯ СТАРОГО UI (пока не перепишем окна):
+        // ВОЗВРАЩАЕМ ДЛЯ СТАРОГО UI (пока не перепишем окна):
         private int? _washerId;
 
-        // 🔥 УМНЫЙ МОСТ НА КЛИЕНТЕ: Работает со старым UI, но под капотом заполняет коллекцию OrderWashers
+        // УМНЫЙ МОСТ НА КЛИЕНТЕ: Работает со старым UI, но под капотом заполняет коллекцию OrderWashers
         public int? WasherId
         {
             get

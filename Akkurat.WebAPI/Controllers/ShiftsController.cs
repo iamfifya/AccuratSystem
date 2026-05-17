@@ -87,7 +87,7 @@ namespace Accurat.WebAPI.Controllers
             var shift = await _context.Shifts.FindAsync(id);
             if (shift == null) return NotFound();
 
-            // 1. Грузим всё необходимое из базы (🔥 Добавили ThenInclude)
+            // 1. Грузим всё необходимое из базы ( Добавили ThenInclude)
             var orders = await _context.Orders
                 .Include(o => o.OrderWashers)
                     .ThenInclude(ow => ow.Washer)

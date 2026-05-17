@@ -20,7 +20,7 @@ namespace Accurat.WebAPI.Services
                     var service = allServices.FirstOrDefault(s => s.Id == serviceId);
                     if (service != null && service.PriceByBodyType != null && service.PriceByBodyType.TryGetValue(order.BodyTypeCategory, out decimal servicePrice))
                     {
-                        // 🔥 МАГИЯ: Берем кастомный процент услуги, а если его нет — базовый процент сотрудника
+                        // МАГИЯ: Берем кастомный процент услуги, а если его нет — базовый процент сотрудника
                         decimal activePercentage = service.CustomWagePercentage ?? orderWasher.Washer.BaseWagePercentage;
 
                         totalIncome += (servicePrice * (activePercentage / 100m)) * orderWasher.SplitShare;

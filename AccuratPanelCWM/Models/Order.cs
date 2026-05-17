@@ -32,7 +32,7 @@ namespace AccuratPanelCWM.Models
         public string Notes { get; set; }
         public List<int> ServiceIds { get; set; } = new List<int>();
         public int BoxNumber { get; set; }
-        // 🔥 ДОБАВЛЕНО: Объявление коллекции для новой связи многие-ко-многим
+        // ДОБАВЛЕНО: Объявление коллекции для новой связи многие-ко-многим
         public virtual ICollection<OrderWasher> OrderWashers { get; set; }
 
         private int? _washerId;
@@ -43,7 +43,7 @@ namespace AccuratPanelCWM.Models
             OrderWashers = new List<OrderWasher>();
         }
 
-        // 🔥 ИСПРАВЛЕНО: Теперь MAUI тоже правильно упаковывает мойщика для сервера
+        // ИСПРАВЛЕНО: Теперь MAUI тоже правильно упаковывает мойщика для сервера
         [NotMapped]
         public int? WasherId
         {

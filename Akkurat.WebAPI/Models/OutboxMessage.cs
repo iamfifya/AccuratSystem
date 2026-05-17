@@ -10,7 +10,7 @@ namespace Accurat.WebAPI.Models
         public DateTime CreatedAtUtc { get; set; }
         public DateTime? ProcessedAtUtc { get; set; }
 
-        // 🔥 ИСПРАВЛЕНО: Ставим пустую строку по умолчанию вместо null
+        // ИСПРАВЛЕНО: Ставим пустую строку по умолчанию вместо null
         public string ErrorMessage { get; set; } = string.Empty;
     }
 }

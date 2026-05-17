@@ -5,7 +5,7 @@ namespace AccuratPanelCWM.Views;
 public partial class SettingsPage : ContentPage
 {
     private readonly ApiService _apiService;
-    private bool _isInitializing; // 🔥 Предохранитель от ложных срабатываний
+    private bool _isInitializing; // Предохранитель от ложных срабатываний
 
     public SettingsPage()
     {

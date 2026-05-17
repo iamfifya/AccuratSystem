@@ -153,7 +153,7 @@ namespace AccuratPanelCarWashing.ViewModels
             {
                 if (_currentCalc == null)
                 {
-                    // 🔥 Передаем список Washers в калькулятор
+                    // Передаем список Washers в калькулятор
                     _currentCalc = OrderMath.Calculate(CurrentOrder, _allServicesCache, Washers);
                 }
                 return _currentCalc;
@@ -514,7 +514,7 @@ namespace AccuratPanelCarWashing.ViewModels
                 {
                     CurrentOrder.WasherId = value;
                     OnPropertyChanged(nameof(SelectedWasherId));
-                    // 🔥 Пересчитываем деньги на экране сразу при выборе другого мойщика!
+                    // Пересчитываем деньги на экране сразу при выборе другого мойщика!
                     Recalculate();
                 }
             }

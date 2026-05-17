@@ -15,7 +15,7 @@ namespace AccuratPanelCarWashing.Services
         /// <summary>
         /// Рассчитывает ВСЕ значения для одного заказа.
         /// </summary>
-        // 🔥 ИСПРАВЛЕНО: Сделали washers необязательным параметром (по умолчанию null)
+        // ИСПРАВЛЕНО: Сделали washers необязательным параметром (по умолчанию null)
         public static OrderCalculation Calculate(CarWashOrder order, List<Service> allServices, List<User> washers = null)
         {
             var calc = new OrderCalculation();
@@ -78,7 +78,7 @@ namespace AccuratPanelCarWashing.Services
         /// <summary>
         /// Формирует полный расчет зарплаты мойщика за смену (с учетом авансов и минималки).
         /// </summary>
-        // 🔥 ИСПРАВЛЕНО: Добавили проброс параметра washers
+        // ИСПРАВЛЕНО: Добавили проброс параметра washers
         public static WasherShiftStats CalculateShiftStats(
                       IEnumerable<CarWashOrder> completedOrders,
                       List<Service> allServices,

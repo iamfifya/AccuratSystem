@@ -36,7 +36,7 @@ namespace Accurat.WebAPI.Controllers
             var reports = new List<ShiftReport>();
             var allUsers = await _context.Users.ToListAsync();
 
-            // 🔥 ИСПРАВЛЕНО: Загружаем все услуги из базы данных один раз перед циклами
+            // ИСПРАВЛЕНО: Загружаем все услуги из базы данных один раз перед циклами
             var allServices = await _context.Services.ToListAsync();
 
             foreach (var shift in shifts)

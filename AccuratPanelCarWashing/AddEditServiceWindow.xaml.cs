@@ -30,7 +30,7 @@ namespace AccuratPanelCarWashing
                     Description = "",
                     IsActive = true,
                     PriceByBodyType = new Dictionary<int, decimal>(),
-                    CustomWagePercentage = null // 🔥 Явно ставим null для новой услуги
+                    CustomWagePercentage = null // Явно ставим null для новой услуги
                 };
                 WindowTitle = "➕ Добавление услуги (API)";
             }
@@ -44,7 +44,7 @@ namespace AccuratPanelCarWashing
                     Description = service.Description,
                     IsActive = service.IsActive,
                     PriceByBodyType = new Dictionary<int, decimal>(service.PriceByBodyType),
-                    CustomWagePercentage = service.CustomWagePercentage // 🔥 ПОДХВАТЫВАЕМ ПРОЦЕНТ
+                    CustomWagePercentage = service.CustomWagePercentage // ПОДХВАТЫВАЕМ ПРОЦЕНТ
                 };
                 WindowTitle = "✏ Редактирование услуги (API)";
             }

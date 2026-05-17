@@ -14,6 +14,11 @@ namespace AccuratPanelCarWashing.Services
 
         public ApiService()
         {
+
+            // Оборачиваем стандартный обработчик в наш "умный" Polly-перехватчик
+            var innerHandler = new HttpClientHandler();
+            var retryHandler = new HttpRetryHandler(innerHandler);
+
             // ВЗЛОМ СИСТЕМЫ: Говорим HttpClient'у игнорировать ошибки SSL-сертификата (только для localhost!)
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
@@ -137,7 +142,7 @@ namespace AccuratPanelCarWashing.Services
             var response = await _http.PostAsJsonAsync("Orders", order);
             if (!response.IsSuccessStatusCode)
             {
-                // 🔥 Теперь мы увидим реальную причину отказа (например, какое поле не заполнено)
+                // Теперь мы увидим реальную причину отказа (например, какое поле не заполнено)
                 string errorText = await response.Content.ReadAsStringAsync();
                 throw new Exception($"Отказ сервера ({response.StatusCode}): {errorText}");
             }

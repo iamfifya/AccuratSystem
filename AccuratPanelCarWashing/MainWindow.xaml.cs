@@ -603,6 +603,44 @@ namespace AccuratPanelCarWashing
 
             try
             {
+
+                // 1. Сеть пропала, пытаемся восстановить
+                _hubConnection.Reconnecting += error =>
+                {
+                    // Здесь можно показать плашку в UI: "🔴 Потеряно соединение с сервером. Переподключение..."
+                    System.Diagnostics.Debug.WriteLine($"[SignalR] Потеряно соединение: {error?.Message}. Пытаемся восстановить...");
+
+                    // Если у тебя во ViewModel есть свойство ConnectionStatus, обнови его тут
+                    return Task.CompletedTask;
+                };
+
+                // 2. Сеть появилась, связь восстановлена!
+                _hubConnection.Reconnected += connectionId =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"[SignalR] Успешно переподключились! Новый ID: {connectionId}");
+                    // Можно скрыть плашку ошибки: "🟢 Соединение восстановлено"
+
+                    // КРИТИЧЕСКИ ВАЖНО: Пока мы были оффлайн, на сервере могли закрыть заказ. 
+                    // Заставляем программу дернуть API и обновить экран.
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        // Вызови здесь свой метод обновления данных на экране
+                        // Например: _viewModel.LoadOrdersAsync(); 
+                        // ТЕПЕРЬ ПРОГРАММА САМА ПОДТЯНЕТ ПРОПУЩЕННЫЕ ЗАКАЗЫ
+                        RefreshData();
+                    });
+
+                    return Task.CompletedTask;
+                };
+
+                // 3. Сеть пропала окончательно (прошло больше 30 секунд)
+                _hubConnection.Closed += error =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"[SignalR] Соединение закрыто окончательно: {error?.Message}");
+                    // Тут выводим красную кнопку "Переподключиться вручную"
+                    return Task.CompletedTask;
+                };
+
                 // Запускаем слушателя
                 await _hubConnection.StartAsync();
                 System.Diagnostics.Debug.WriteLine("SignalR Connected!");

@@ -9,7 +9,7 @@
             // Приложение всегда должно начинаться с экрана логина!
             MainPage = new Views.LoginPage();
 
-            // 🔥 Проверяем настройки темы при старте
+            // Проверяем настройки темы при старте
             string savedTheme = Microsoft.Maui.Storage.Preferences.Default.Get("AppTheme", "System");
 
             switch (savedTheme)

@@ -14,6 +14,11 @@ namespace AccuratPanelCWM.Services
 
         public ApiService()
         {
+
+            // Оборачиваем стандартный обработчик в наш "умный" Polly-перехватчик
+            var innerHandler = new HttpClientHandler();
+            var retryHandler = new HttpRetryHandler(innerHandler);
+
             // Убедись, что порт совпадает с твоим API
             _http = new HttpClient { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
 
@@ -21,7 +26,7 @@ namespace AccuratPanelCWM.Services
             _http.DefaultRequestHeaders.Add("X-Tunnel-Skip-AntiPhishing-Page", "true");
         }
 
-        // 🔥 ДОБАВЛЯЕМ МЕТОД ДЛЯ СМЕНЫ АДРЕСА НА ЛЕТУ
+        // ДОБАВЛЯЕМ МЕТОД ДЛЯ СМЕНЫ АДРЕСА НА ЛЕТУ
         public void UpdateBaseUrl(string newUrl)
         {
             // Обязательно проверяем, чтобы адрес заканчивался на слэш, иначе HttpClient сломает пути
@@ -334,7 +339,7 @@ namespace AccuratPanelCWM.Services
                 // Формируем URL. Добавил (paymentMethod ?? "") для страховки от краша Uri.EscapeDataString
                 string url = $"Orders/{orderId}/complete?paymentMethod={Uri.EscapeDataString(paymentMethod ?? "")}";
 
-                // 🔥 ИСПРАВЛЕНО: Никаких StringContent и PatchAsync! Отправляем чистый запрос через SendAsync
+                // ИСПРАВЛЕНО: Никаких StringContent и PatchAsync! Отправляем чистый запрос через SendAsync
                 var request = new HttpRequestMessage(new HttpMethod("PATCH"), url);
                 var response = await _http.SendAsync(request);
 

@@ -24,7 +24,7 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            // 🔥 ДОБАВЛЕН INCLUDE
+            // ДОБАВЛЕН INCLUDE
             return await _context.Orders.Include(o => o.OrderWashers).ToListAsync();
         }
 
@@ -128,7 +128,7 @@ namespace Accurat.WebAPI.Controllers
                     // Меняем статус заказа
                     order.Status = "Выполнен";
 
-                    // 🔥 ПРИМЕНЯЕМ СПОСОБ ОПЛАТЫ ОТ КЛИЕНТА
+                    // ПРИМЕНЯЕМ СПОСОБ ОПЛАТЫ ОТ КЛИЕНТА
                     if (!string.IsNullOrWhiteSpace(paymentMethod))
                     {
                         order.PaymentMethod = paymentMethod;
@@ -142,7 +142,7 @@ namespace Accurat.WebAPI.Controllers
                         EventType = "OrderCompleted",
                         PayloadJson = System.Text.Json.JsonSerializer.Serialize(payload),
                         CreatedAtUtc = DateTime.UtcNow,
-                        ErrorMessage = "" // 🔥 ИСПРАВЛЕНО: Явно передаем пустую строку, чтобы успокоить PostgreSQL
+                        ErrorMessage = "" // ИСПРАВЛЕНО: Явно передаем пустую строку, чтобы успокоить PostgreSQL
                     };
 
                     _context.OutboxMessages.Add(outboxMsg);
@@ -168,7 +168,7 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("client/{clientId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetByClient(int clientId)
         {
-            // 🔥 ДОБАВЛЕН INCLUDE
+            // ДОБАВЛЕН INCLUDE
             return await _context.Orders
                 .Include(o => o.OrderWashers)
                 .Where(o => o.ClientId == clientId)
@@ -197,7 +197,7 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("active/{branchId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetActiveOrders(int branchId)
         {
-            // 🔥 ДОБАВЛЕН INCLUDE
+            // ДОБАВЛЕН INCLUDE
             var activeOrders = await _context.Orders
                 .Include(o => o.OrderWashers)
                 .Where(o => o.BranchId == branchId && o.Status == "В работе")

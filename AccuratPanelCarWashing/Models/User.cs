@@ -41,7 +41,7 @@ namespace AccuratPanelCarWashing.Models
             }
         }
 
-        // 🔥 Базовый процент зарплаты сотрудника (по умолчанию 35%)
+        // Базовый процент зарплаты сотрудника (по умолчанию 35%)
         public decimal BaseWagePercentage { get; set; } = 35m;
 
         [JsonIgnore]

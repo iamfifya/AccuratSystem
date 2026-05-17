@@ -180,7 +180,7 @@ namespace AccuratPanelCWM.Views
 
             if (box.CurrentOrder == null) return;
 
-            // 🔥 1. Спрашиваем способ оплаты с помощью красивого меню
+            // 1. Спрашиваем способ оплаты с помощью красивого меню
             string paymentMethod = await DisplayActionSheet(
                 $"Оплата: {box.CurrentOrder.CarNumber}",
                 "Отмена",
@@ -193,7 +193,7 @@ namespace AccuratPanelCWM.Views
             // Очищаем смайлики из строки для базы данных
             string cleanPaymentMethod = paymentMethod.Replace("💵 ", "").Replace("💳 ", "").Replace("📱 ", "");
 
-            // 🔥 2. Отправляем запрос с выбранным способом
+            // 2. Отправляем запрос с выбранным способом
             bool success = await _apiService.CompleteOrderAsync(box.CurrentOrder.Id, cleanPaymentMethod);
 
             if (success)
