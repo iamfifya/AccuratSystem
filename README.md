@@ -1,5 +1,7 @@
 # Accurat System — Комплексная система управления автомойкой
 
+[![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
+
 ## Описание проекта
 
 **Accurat** — это клиент-серверный программный комплекс для автоматизации бизнес-процессов сети автомоек. Проект построен по принципу монорепозитория (monorepo) и включает в себя:
