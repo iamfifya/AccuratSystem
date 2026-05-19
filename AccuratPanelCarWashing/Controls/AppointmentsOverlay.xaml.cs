@@ -3,6 +3,7 @@ using AccuratPanelCarWashing.Services;
 using AccuratPanelCarWashing.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,9 +37,13 @@ namespace AccuratPanelCarWashing.Controls
             }
         }
 
-        public List<OrderDisplayItem> Box1Items { get => _box1Items; set { _box1Items = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box1Items))); } }
-        public List<OrderDisplayItem> Box2Items { get => _box2Items; set { _box2Items = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box2Items))); } }
-        public List<OrderDisplayItem> Box3Items { get => _box3Items; set { _box3Items = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Box3Items))); } }
+        public ObservableCollection<BranchTabItem> BranchTabs { get; set; } = new ObservableCollection<BranchTabItem>();
+        private BranchTabItem _selectedBranchTab;
+        public BranchTabItem SelectedBranchTab
+        {
+            get => _selectedBranchTab;
+            set { _selectedBranchTab = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab))); }
+        }
 
         public OrderDisplayItem SelectedItem
         {
@@ -76,10 +81,57 @@ namespace AccuratPanelCarWashing.Controls
             OverlayBackground.Visibility = Visibility.Visible;
             PopupPanel.Visibility = Visibility.Visible;
 
-            _ = LoadAppointmentsAsync();
+            if (BranchTabs.Count == 0)
+                _ = LoadBranchesAndAppointmentsAsync();
+            else
+                _ = LoadAppointmentsAsync();
 
             var showAnimation = Resources["ShowAnimation"] as Storyboard;
             showAnimation?.Begin();
+        }
+
+        private async Task LoadBranchesAndAppointmentsAsync()
+        {
+            try
+            {
+                var allBranches = await _apiService.GetBranchesAsync();
+                var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                bool isAdminOrDirector = mainWindow?.IsAdminOrDirector ?? false;
+
+                BranchTabs.Clear();
+                if (isAdminOrDirector)
+                {
+                    foreach (var b in allBranches)
+                    {
+                        var tab = new BranchTabItem { BranchId = b.Id, BranchName = b.Name };
+                        PopulateZones(tab, b);
+                        BranchTabs.Add(tab);
+                    }
+                }
+                else
+                {
+                    var myBranch = allBranches.FirstOrDefault(b => b.Id == AppSettings.CurrentBranchId);
+                    if (myBranch != null)
+                    {
+                        var tab = new BranchTabItem { BranchId = myBranch.Id, BranchName = myBranch.Name };
+                        PopulateZones(tab, myBranch);
+                        BranchTabs.Add(tab);
+                    }
+                }
+
+                if (BranchTabs.Any()) SelectedBranchTab = BranchTabs.First();
+
+                await LoadAppointmentsAsync();
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка загрузки филиалов: " + ex.Message); }
+        }
+
+        private void PopulateZones(BranchTabItem tab, Branch branch)
+        {
+            for (int i = 1; i <= branch.WashBaysCount; i++)
+                tab.WashZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🚘 БОКС {i}", Department = "Wash" });
+            for (int i = 1; i <= branch.ServiceLiftsCount; i++)
+                tab.ServiceZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🔧 ПОДЪЕМНИК {i}", Department = "Service" });
         }
 
         public void Hide()
@@ -112,44 +164,46 @@ namespace AccuratPanelCarWashing.Controls
                 var allOrders = await _apiService.GetOrdersAsync();
                 var allServices = await _apiService.GetServicesAsync();
 
-                // ✅ ПОКАЗЫВАЕМ ВСЕ записи (без фильтра по статусу!)
                 var appointments = allOrders
-                    .Where(o => o.IsAppointment &&
-                                o.Time.Date == filterDate.Value.Date)  // Только по дате
+                    .Where(o => o.IsAppointment && o.Time.Date == filterDate.Value.Date)
                     .OrderBy(o => o.Time)
                     .ToList();
 
                 var displayItems = appointments.Select(a => new OrderDisplayItem
                 {
                     Id = a.Id,
+                    BranchId = a.BranchId,
+                    Department = a.Department,
                     CarModel = a.CarModel,
                     CarNumber = a.CarNumber,
                     Time = TimeHelper.ToMsk(a.Time),
-                    ServicesList = string.Join(", ", (a.ServiceIds ?? new List<int>())
-        .Select(id =>
-        {
-            var service = allServices.FirstOrDefault(s => s.Id == id);
-            return service != null ? service.Name : "Unknown";
-        })),
+                    ServicesList = string.Join(", ", (a.ServiceIds ?? new List<int>()).Select(id => allServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
                     FinalPrice = a.FinalPrice,
                     ExtraCost = a.ExtraCost,
                     ExtraCostReason = a.ExtraCostReason,
                     BoxNumber = a.BoxNumber,
-
-                    // ✅ Умный статус с иконками
                     Status = GetAppointmentStatusDisplay(a),
-
                     IsCompleted = a.Status == "Выполнен" || a.Status == "Отменен",
                     IsAppointment = true,
                     PaymentMethod = a.PaymentMethod,
-
-                    // ✅ Исправлено: DurationMinutes — int, а не int?
                     DurationMinutes = a.DurationMinutes > 0 ? a.DurationMinutes : 60,
                 }).ToList();
 
-                Box1Items = displayItems.Where(i => i.BoxNumber == 1).ToList();
-                Box2Items = displayItems.Where(i => i.BoxNumber == 2).ToList();
-                Box3Items = displayItems.Where(i => i.BoxNumber == 3).ToList();
+                // Распределяем записи по динамическим вкладкам и боксам
+                foreach (var tab in BranchTabs)
+                {
+                    // Объединяем зоны только для цикла распределения
+                    foreach (var zone in tab.WashZones.Concat(tab.ServiceZones))
+                    {
+                        var ordersForZone = displayItems.Where(i =>
+                            i.BranchId == tab.BranchId &&
+                            i.BoxNumber == zone.ZoneNumber &&
+                            i.Department == zone.Department).ToList();
+
+                        zone.Orders.Clear();
+                        foreach (var o in ordersForZone) zone.Orders.Add(o);
+                    }
+                }
             }
             catch (Exception ex)
             {

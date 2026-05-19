@@ -146,31 +146,23 @@ namespace AccuratPanelCarWashing
 
                 BranchTabs.Clear();
 
-                if (IsDirector)
+                if (IsAdminOrDirector)
                 {
-                    // Директор видит все филиалы
                     foreach (var b in allBranches)
                     {
-                        BranchTabs.Add(new BranchTabItem
-                        {
-                            BranchId = b.Id,
-                            BranchName = b.Name,
-                            BranchWorkZones = GenerateZonesForBranch(b)
-                        });
+                        var tab = new BranchTabItem { BranchId = b.Id, BranchName = b.Name };
+                        PopulateZones(tab, b);
+                        BranchTabs.Add(tab);
                     }
                 }
                 else
                 {
-                    // Остальные видят только свой рабочий филиал
                     var myBranch = allBranches.FirstOrDefault(b => b.Id == AppSettings.CurrentBranchId);
                     if (myBranch != null)
                     {
-                        BranchTabs.Add(new BranchTabItem
-                        {
-                            BranchId = myBranch.Id,
-                            BranchName = myBranch.Name,
-                            BranchWorkZones = GenerateZonesForBranch(myBranch)
-                        });
+                        var tab = new BranchTabItem { BranchId = myBranch.Id, BranchName = myBranch.Name };
+                        PopulateZones(tab, myBranch);
+                        BranchTabs.Add(tab);
                     }
                 }
 
@@ -206,19 +198,15 @@ namespace AccuratPanelCarWashing
         }
 
         // Вспомогательный метод: собирает боксы и подъемники в один список для конкретного филиала
-        private ObservableCollection<WorkZone> GenerateZonesForBranch(Branch branch)
+        private void PopulateZones(BranchTabItem tab, Branch branch)
         {
-            var zones = new ObservableCollection<WorkZone>();
-
             // Генерируем боксы мойки
             for (int i = 1; i <= branch.WashBaysCount; i++)
-                zones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"БОКС {i}", Department = "Wash" });
+                tab.WashZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🚿 БОКС {i}", Department = "Wash" });
 
             // Генерируем подъемники сервиса
             for (int i = 1; i <= branch.ServiceLiftsCount; i++)
-                zones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"ПОДЪЕМНИК {i}", Department = "Service" });
-
-            return zones;
+                tab.ServiceZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🔧 ПОДЪЕМНИК {i}", Department = "Service" });
         }
 
         // ==========================================
@@ -293,19 +281,16 @@ namespace AccuratPanelCarWashing
             //  САМОЕ ГЛАВНОЕ: Раскидываем заказы по нужным вкладкам и боксам
             foreach (var tab in BranchTabs)
             {
-                foreach (var zone in tab.BranchWorkZones)
+                // 🔥 Объединяем коллекции только для прохода циклом
+                foreach (var zone in tab.WashZones.Concat(tab.ServiceZones))
                 {
-                    // Ищем заказ, который совпадает по филиалу, номеру бокса и департаменту (Мойка/Сервис)
                     var ordersForZone = allDisplayItems.Where(i =>
                         i.BranchId == tab.BranchId &&
                         i.BoxNumber == zone.ZoneNumber &&
                         i.Department == zone.Department).ToList();
 
                     zone.Orders.Clear();
-                    foreach (var o in ordersForZone)
-                    {
-                        zone.Orders.Add(o);
-                    }
+                    foreach (var o in ordersForZone) zone.Orders.Add(o);
                 }
             }
         }

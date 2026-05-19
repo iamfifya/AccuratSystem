@@ -40,22 +40,72 @@ namespace AccuratPanelCarWashing
             SetupStaticLists();
         }
 
+        private List<Branch> _allBranches; // Добавляем кэш филиалов на уровне класса
+
         private async Task LoadDictionariesAsync(CarWashOrder order)
         {
             try
             {
-                // 1. Загружаем мойщиков, клиентов И ФИЛИАЛЫ с сервера
                 var allUsers = await _apiService.GetUsersAsync();
                 var allClients = await _apiService.GetClientsAsync();
-                var allBranches = await _apiService.GetBranchesAsync();
+                _allBranches = await _apiService.GetBranchesAsync(); // Загружаем филиалы
 
                 WasherComboBox.ItemsSource = allUsers;
                 _viewModel.Washers = allUsers;
                 ClientComboBox.ItemsSource = allClients;
+                BranchComboBox.ItemsSource = _allBranches; // Привязываем список филиалов
 
-                //  ГЕНЕРИРУЕМ ДИНАМИЧЕСКИЕ ЗОНЫ ДЛЯ ТЕКУЩЕГО ФИЛИАЛА
-                int branchId = _currentShift?.BranchId ?? AppSettings.CurrentBranchId;
-                var currentBranch = allBranches.FirstOrDefault(b => b.Id == branchId);
+                if (order != null)
+                {
+                    if (order.IsAppointment)
+                        DurationTextBox.Text = order.DurationMinutes > 0 ? order.DurationMinutes.ToString() : "60";
+
+                    if (order.WasherId > 0) WasherComboBox.SelectedValue = order.WasherId;
+                    if (order.ClientId.HasValue) ClientComboBox.SelectedValue = order.ClientId.Value;
+                    if (order.BodyTypeCategory > 0) BodyTypeComboBox.SelectedValue = order.BodyTypeCategory.ToString();
+                    if (!string.IsNullOrEmpty(order.Status)) StatusComboBox.SelectedValue = order.Status;
+                    if (!string.IsNullOrEmpty(order.PaymentMethod)) PaymentMethodComboBox.SelectedValue = order.PaymentMethod;
+
+                    OrderDatePicker.SelectedDate = order.Time;
+                    OrderTimeTextBox.Text = order.Time.ToString("HH:mm");
+
+                    // Устанавливаем текущий филиал и генерируем зоны
+                    BranchComboBox.SelectedValue = order.BranchId > 0 ? order.BranchId : (_currentShift?.BranchId ?? AppSettings.CurrentBranchId);
+                    UpdateZones(order);
+                }
+                else
+                {
+                    OrderDatePicker.SelectedDate = DateTime.Now;
+                    OrderTimeTextBox.Text = DateTime.Now.ToString("HH:mm");
+                    if (allUsers.Any()) WasherComboBox.SelectedItem = allUsers.FirstOrDefault();
+
+                    // Для новой записи ставим текущий филиал и генерируем зоны
+                    BranchComboBox.SelectedValue = _currentShift?.BranchId ?? AppSettings.CurrentBranchId;
+                    UpdateZones(null);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки данных с сервера: {ex.Message}", "Ошибка API");
+            }
+        }
+
+        // Событие: если администратор переключил филиал ручками
+        private void BranchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Защита от вызова метода до того, как окно полностью загрузилось
+            if (this.IsLoaded)
+            {
+                UpdateZones(null);
+            }
+        }
+
+        // Метод генерации боксов для выбранного филиала
+        private void UpdateZones(CarWashOrder order)
+        {
+            if (BranchComboBox.SelectedValue is int branchId)
+            {
+                var currentBranch = _allBranches?.FirstOrDefault(b => b.Id == branchId);
                 var availableZones = new List<ZoneItem>();
 
                 if (currentBranch != null)
@@ -69,51 +119,16 @@ namespace AccuratPanelCarWashing
 
                 ZoneComboBox.ItemsSource = availableZones;
 
-                // Если это редактирование — выставляем текущие значения
+                // Пытаемся выбрать зону
                 if (order != null)
                 {
-                    if (order.IsAppointment)
-                    {
-                        DurationTextBox.Text = order.DurationMinutes > 0 ? order.DurationMinutes.ToString() : "60";
-                    }
-
-                    if (order.WasherId > 0)
-                        WasherComboBox.SelectedValue = order.WasherId;
-
-                    if (order.ClientId.HasValue)
-                        ClientComboBox.SelectedValue = order.ClientId.Value;
-
-                    if (order.BodyTypeCategory > 0)
-                        BodyTypeComboBox.SelectedValue = order.BodyTypeCategory.ToString();
-
-                    if (!string.IsNullOrEmpty(order.Status))
-                        StatusComboBox.SelectedValue = order.Status;
-
-                    if (!string.IsNullOrEmpty(order.PaymentMethod))
-                        PaymentMethodComboBox.SelectedValue = order.PaymentMethod;
-
-                    //  Выбираем нужную зону из списка
                     var selectedZone = availableZones.FirstOrDefault(z => z.BoxNumber == order.BoxNumber && z.Department == order.Department);
-                    if (selectedZone != null)
-                        ZoneComboBox.SelectedItem = selectedZone;
-
-                    OrderDatePicker.SelectedDate = order.Time;
-                    OrderTimeTextBox.Text = order.Time.ToString("HH:mm");
+                    if (selectedZone != null) ZoneComboBox.SelectedItem = selectedZone;
                 }
                 else
                 {
-                    // Для нового заказа
-                    OrderDatePicker.SelectedDate = DateTime.Now;
-                    OrderTimeTextBox.Text = DateTime.Now.ToString("HH:mm");
-                    if (allUsers.Any()) WasherComboBox.SelectedItem = allUsers.FirstOrDefault();
-
-                    // Выбираем первый свободный бокс по умолчанию
                     if (availableZones.Any()) ZoneComboBox.SelectedItem = availableZones.First();
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки данных с сервера: {ex.Message}", "Ошибка API");
             }
         }
 

@@ -10,6 +10,14 @@ namespace AccuratPanelCarWashing.Models
         public string BranchName { get; set; }
         public string Address { get; set; }
 
+        // 🔥 Разделяем боксы на две коллекции
+        public ObservableCollection<WorkZone> WashZones { get; set; } = new ObservableCollection<WorkZone>();
+        public ObservableCollection<WorkZone> ServiceZones { get; set; } = new ObservableCollection<WorkZone>();
+
+        // Свойства для XAML (чтобы скрывать заголовки "Сервис", если в филиале нет подъемников)
+        public bool HasWashZones => WashZones.Count > 0;
+        public bool HasServiceZones => ServiceZones.Count > 0;
+
         // Зоны именно этого филиала
         public ObservableCollection<WorkZone> BranchWorkZones { get; set; } = new ObservableCollection<WorkZone>();
 
