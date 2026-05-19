@@ -21,4 +21,8 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AccuratSystem.Contracts\AccuratSystem.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>
