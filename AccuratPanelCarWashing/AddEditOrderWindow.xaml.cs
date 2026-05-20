@@ -46,8 +46,53 @@ namespace AccuratPanelCarWashing
             // 2. Загружаем справочники (мойщики, клиенты) асинхронно
             _ = LoadDictionariesAsync(order);
 
+            // Инициализируем выбранный департамент
+            if (!string.IsNullOrEmpty(_viewModel.CurrentOrder?.Department))
+            {
+                // Устанавливаем через свойство ViewModel, чтобы сработала фильтрация
+                _viewModel.CurrentDepartment = _viewModel.CurrentOrder.Department;
+                DepartmentComboBox.SelectedValue = _viewModel.CurrentDepartment;
+            }
+            else
+            {
+                // По умолчанию — Мойка (это вызовет FilterServicesByDepartment())
+                DepartmentComboBox.SelectedValue = "Wash";
+                _viewModel.CurrentDepartment = "Wash";
+            }
+
+            // Подписка на смену департамента и филиала для обновления зон
+            DepartmentComboBox.SelectionChanged += DepartmentComboBox_SelectionChanged;
+            BranchComboBox.SelectionChanged += BranchComboBox_SelectionChanged; // Добавили подписку здесь!
+
             // 3. Заполняем статические списки в UI (категории, оплаты)
             SetupStaticLists();
+        }
+
+        // Обработчик: при смене департамента обновляем список зон
+        private void DepartmentComboBox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (this.IsLoaded && DataContext is AddEditOrderViewModel vm)
+            {
+                // Обновляем департамент в заказе
+                vm.CurrentOrder.Department = DepartmentComboBox.SelectedValue?.ToString() ?? "Wash";
+
+                // Пересчитываем доступные зоны для нового департамента
+                // Для этого нужно заново сгенерировать список всех зон филиала
+                if (BranchComboBox.SelectedValue is int branchId)
+                {
+                    var currentBranch = _allBranches?.FirstOrDefault(b => b.Id == branchId);
+                    if (currentBranch != null)
+                    {
+                        var allZones = new List<ZoneItem>();
+                        for (int i = 1; i <= currentBranch.WashBaysCount; i++)
+                            allZones.Add(new ZoneItem { Name = $"🧽 Бокс {i} (Мойка)", BoxNumber = i, Department = "Wash" });
+                        for (int i = 1; i <= currentBranch.ServiceLiftsCount; i++)
+                            allZones.Add(new ZoneItem { Name = $"🔧 Подъемник {i} (Сервис)", BoxNumber = i, Department = "Service" });
+
+                        vm.UpdateAvailableZones(allZones);
+                    }
+                }
+            }
         }
 
         private List<ContractsBranch> _allBranches; // Добавляем кэш филиалов на уровне класса
@@ -117,28 +162,35 @@ namespace AccuratPanelCarWashing
             if (BranchComboBox.SelectedValue is int branchId)
             {
                 var currentBranch = _allBranches?.FirstOrDefault(b => b.Id == branchId);
-                var availableZones = new List<ZoneItem>();
+                var allZones = new List<ZoneItem>();
 
                 if (currentBranch != null)
                 {
+                    // Генерируем ВСЕ зоны филиала из БД
                     for (int i = 1; i <= currentBranch.WashBaysCount; i++)
-                        availableZones.Add(new ZoneItem { Name = $"🧽 Бокс {i} (Мойка)", BoxNumber = i, Department = "Wash" });
+                        allZones.Add(new ZoneItem { Name = $"🧽 Бокс {i} (Мойка)", BoxNumber = i, Department = "Wash" });
 
                     for (int i = 1; i <= currentBranch.ServiceLiftsCount; i++)
-                        availableZones.Add(new ZoneItem { Name = $"🔧 Подъемник {i} (Сервис)", BoxNumber = i, Department = "Service" });
+                        allZones.Add(new ZoneItem { Name = $"🔧 Подъемник {i} (Сервис)", BoxNumber = i, Department = "Service" });
                 }
 
-                ZoneComboBox.ItemsSource = availableZones;
+                // ПЕРЕДАЕМ все зоны в ViewModel для фильтрации
+                _viewModel.UpdateAvailableZones(allZones);
 
                 // Пытаемся выбрать зону
-                if (order != null)
+                if (order != null && _viewModel.AvailableZones.Any(z => z.BoxNumber == order.BoxNumber && z.Department == order.Department))
                 {
-                    var selectedZone = availableZones.FirstOrDefault(z => z.BoxNumber == order.BoxNumber && z.Department == order.Department);
-                    if (selectedZone != null) ZoneComboBox.SelectedItem = selectedZone;
+                    ZoneComboBox.SelectedValue = order.BoxNumber;
+                }
+                else if (_viewModel.AvailableZones.Any())
+                {
+                    // 🔥 Если заказ новый или старая зона не подходит - выбираем ПЕРВУЮ доступную
+                    ZoneComboBox.SelectedValue = _viewModel.AvailableZones.First().BoxNumber;
+                    _viewModel.CurrentOrder.BoxNumber = _viewModel.AvailableZones.First().BoxNumber;
                 }
                 else
                 {
-                    if (availableZones.Any()) ZoneComboBox.SelectedItem = availableZones.First();
+                    ZoneComboBox.SelectedValue = null;
                 }
             }
         }
@@ -300,6 +352,15 @@ namespace AccuratPanelCarWashing
                 _viewModel.CurrentOrder.IsAppointment = false;
                 _viewModel.CurrentOrder.Status = "В работе";
                 SaveButton_Click(sender, e);
+            }
+        }
+
+        // Обработчик поиска по услугам
+        private void ServiceSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DataContext is AddEditOrderViewModel vm)
+            {
+                vm.ServiceSearchText = ServiceSearchTextBox.Text;
             }
         }
     }

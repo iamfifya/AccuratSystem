@@ -30,6 +30,8 @@
             <local:CurrencyConverter x:Key="CurrencyConverter"/>
             <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <local:DecimalToEmptyZeroConverter x:Key="DecimalToEmptyZeroConverter"/>
+            <local:DepartmentDisplayConverter x:Key="DepartmentDisplayConverter"/>
+            <local:DepartmentToZoneLabelConverter x:Key="DepartmentToZoneLabelConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

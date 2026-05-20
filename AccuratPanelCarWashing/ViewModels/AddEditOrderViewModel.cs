@@ -32,6 +32,49 @@ namespace AccuratPanelCarWashing.ViewModels
         private OrderCalculation _currentCalc;
         private readonly ApiService _apiService;
         private List<ContractsService> _allServicesCache = new List<ContractsService>(); // Контрактный тип
+        private string _currentDepartment = "Wash";
+        public string CurrentDepartment
+        {
+            get => _currentDepartment;
+            set
+            {
+                if (_currentDepartment != value)
+                {
+                    _currentDepartment = value;
+                    OnPropertyChanged(nameof(CurrentDepartment));
+
+                    // При смене департамента — фильтруем услуги
+                    FilterServicesByDepartment();
+                }
+            }
+        }
+
+        // Метод фильтрации услуг по департаменту
+        private void FilterServicesByDepartment()
+        {
+            if (_allServicesCache == null) return;
+
+            var selectedIds = CurrentOrder?.ServiceIds?.ToList() ?? new List<int>();
+
+            // Фильтруем по категории услуги
+            var filtered = _currentDepartment == "Service"
+                ? _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Service).ToList()
+                : _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Wash).ToList();
+
+            // Обновляем коллекцию услуг в UI
+            Services = new ObservableCollection<ServiceViewModel>(
+                filtered.Select(s => new ServiceViewModel
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Price = s.PriceByBodyType.TryGetValue(SelectedBodyTypeCategory, out var p) ? p :
+                           (s.PriceByBodyType.TryGetValue(1, out var def) ? def : 0),
+                    IsSelected = selectedIds.Contains(s.Id)
+                }));
+
+            // Пересчитываем итог
+            Recalculate();
+        }
 
         public AddEditOrderViewModel()
         {
@@ -289,6 +332,8 @@ namespace AccuratPanelCarWashing.ViewModels
                 _discountPercent = CurrentOrder.DiscountPercent;
                 _discountAmount = CurrentOrder.DiscountAmount;
                 SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory;
+                _currentDepartment = CurrentOrder.Department ?? "Wash";
+                OnPropertyChanged(nameof(CurrentDepartment));
                 _windowTitle = "✏ Редактирование заказа";
             }
             else if (_existingOrder != null && _isAppointment)
@@ -321,6 +366,8 @@ namespace AccuratPanelCarWashing.ViewModels
                         : new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
                 SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory;
+                _currentDepartment = CurrentOrder.Department ?? "Wash";
+                OnPropertyChanged(nameof(CurrentDepartment));
                 _windowTitle = "✏ Редактирование записи";
             }
             else
@@ -344,9 +391,14 @@ namespace AccuratPanelCarWashing.ViewModels
                     Notes = "",
                     BranchId = AppSettings.CurrentBranchId,
 
+
                     // Для пустого заказа просто создаем новый список
                     OrderWashers = new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
+
+                _currentDepartment = CurrentOrder.Department ?? "Wash";
+                OnPropertyChanged(nameof(CurrentDepartment));
+
                 _windowTitle = "➕ Добавление заказа";
             }
         }
@@ -408,6 +460,7 @@ namespace AccuratPanelCarWashing.ViewModels
             {
                 // Обновляем коллекцию в потоке UI
                 Recalculate();
+                FilterServices();
             });
         }
 
@@ -415,6 +468,11 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             if (Services != null && _allServicesCache.Any())
             {
+                // Сначала фильтруем по департаменту
+                var availableServices = _currentDepartment == "Service"
+                    ? _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Service).ToList()
+                    : _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Wash).ToList();
+
                 // Запоминаем, какие услуги уже были отмечены галочками
                 var selectedIds = Services.Where(s => s.IsSelected).Select(s => s.Id).ToList();
 
@@ -436,6 +494,7 @@ namespace AccuratPanelCarWashing.ViewModels
 
                 Services = newServices; // Обновляем свойство, UI перерисовывает список с новыми ценами
                 Recalculate();
+                FilterServices();
             }
         }
 
@@ -569,6 +628,99 @@ namespace AccuratPanelCarWashing.ViewModels
                     Recalculate();
                 }
             }
+        }
+
+        // Добавь поле для поиска
+        private string _serviceSearchText = "";
+
+        // Свойство для привязки (опционально, если хочешь TwoWay)
+        public string ServiceSearchText
+        {
+            get => _serviceSearchText;
+            set
+            {
+                if (_serviceSearchText != value)
+                {
+                    _serviceSearchText = value;
+                    OnPropertyChanged(nameof(ServiceSearchText));
+                    FilterServices(); // Фильтруем при изменении
+                }
+            }
+        }
+
+        // Обновлённый метод фильтрации: департамент + поиск
+        private void FilterServices()
+        {
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] FilterServices: Department={_currentDepartment}, Search='{_serviceSearchText}'");
+
+            if (_allServicesCache == null) return;
+
+            var selectedIds = CurrentOrder?.ServiceIds?.ToList() ?? new List<int>();
+
+            // 1. Фильтр по департаменту
+            var filtered = _currentDepartment == "Service"
+                ? _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Service)
+                : _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Wash);
+
+            // 2. Фильтр по поиску (если есть текст)
+            if (!string.IsNullOrWhiteSpace(_serviceSearchText))
+            {
+                string search = _serviceSearchText.ToLower();
+                filtered = filtered.Where(s =>
+                    s.Name.ToLower().Contains(search) ||
+                    (s.Description != null && s.Description.ToLower().Contains(search)));
+            }
+
+            // Обновляем коллекцию услуг в UI
+            Services = new ObservableCollection<ServiceViewModel>(
+                filtered.Select(s => new ServiceViewModel
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Price = s.PriceByBodyType.TryGetValue(SelectedBodyTypeCategory, out var p) ? p :
+                           (s.PriceByBodyType.TryGetValue(1, out var def) ? def : 0),
+                    IsSelected = selectedIds.Contains(s.Id)
+                }));
+
+            Recalculate();
+
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Filtered services count: {Services.Count}");
+            foreach (var s in Services)
+            {
+                System.Diagnostics.Debug.WriteLine($"  - {s.Name}");
+            }
+        }
+
+        // Список доступных зон для текущего филиала и департамента
+        private ObservableCollection<ZoneItem> _availableZones = new ObservableCollection<ZoneItem>();
+        public ObservableCollection<ZoneItem> AvailableZones
+        {
+            get => _availableZones;
+            set { _availableZones = value; OnPropertyChanged(nameof(AvailableZones)); }
+        }
+
+        // Метод обновления списка зон (вызывается из окна)
+        public void UpdateAvailableZones(List<ZoneItem> allZones)
+        {
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] UpdateAvailableZones: Total={allZones.Count}, Department={_currentDepartment}");
+
+            // Фильтруем зоны по текущему департаменту
+            var filtered = allZones.Where(z => z.Department == _currentDepartment).ToList();
+
+            AvailableZones = new ObservableCollection<ZoneItem>(filtered);
+
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Filtered to {AvailableZones.Count} zones for {_currentDepartment}");
+            foreach (var z in AvailableZones)
+                System.Diagnostics.Debug.WriteLine($"  ✓ {z.Name}");
+
+            // Если текущая зона не входит в отфильтрованный список — сбрасываем выбор
+            if (CurrentOrder?.BoxNumber > 0 && !filtered.Any(z => z.BoxNumber == CurrentOrder.BoxNumber))
+            {
+                CurrentOrder.BoxNumber = filtered.FirstOrDefault()?.BoxNumber ?? 0;
+                CurrentOrder.Department = _currentDepartment;
+            }
+
+            OnPropertyChanged(nameof(AvailableZones));
         }
     }
 }
