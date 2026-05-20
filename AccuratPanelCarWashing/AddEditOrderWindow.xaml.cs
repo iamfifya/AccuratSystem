@@ -102,7 +102,7 @@ namespace AccuratPanelCarWashing
         }
 
         // Событие: если администратор переключил филиал ручками
-        private void BranchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void BranchComboBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
             // Защита от вызова метода до того, как окно полностью загрузилось
             if (this.IsLoaded)

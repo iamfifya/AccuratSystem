@@ -1,4 +1,10 @@
 // === ЯВНЫЕ АЛИАСЫ ТОЛЬКО ДЛЯ КОНФЛИКТНЫХ ИМЁН ===
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+using ContractsClient = AccuratSystem.Contracts.Models.Client;
+using WpfUser = AccuratPanelCarWashing.Models.User;
 // UI-модель пользователя (с IsAdmin, DisplayString) — используем для _currentUser
 using AccuratPanelCarWashing.Models;
 // Остальные using
@@ -10,13 +16,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using ContractsClient = AccuratSystem.Contracts.Models.Client;
-// Контрактные модели из API — используем для всех данных с сервера
-using ContractsOrder = AccuratSystem.Contracts.Models.Order;
-using ContractsService = AccuratSystem.Contracts.Models.Service;
-using ContractsShift = AccuratSystem.Contracts.Models.Shift;
-using ContractsUser = AccuratSystem.Contracts.Models.User;
-using WpfUser = AccuratPanelCarWashing.Models.User;
+
 
 namespace AccuratPanelCarWashing.ViewModels
 {

@@ -230,6 +230,7 @@ namespace AccuratPanelCarWashing.Controls
             if (border?.DataContext != null)
             {
                 SelectedItem = border.DataContext;
+                UpdateSelectedValue(); // ← ДОБАВИТЬ ЭТУ СТРОКУ!
                 IsDropDownOpen = false;
                 UpdateDisplay();
                 RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
@@ -279,19 +280,18 @@ namespace AccuratPanelCarWashing.Controls
             }
             else if (SelectedValue != null && ItemsSource != null)
             {
-                // Пытаемся найти элемент по SelectedValue
                 var source = ItemsSource as IEnumerable;
                 if (source != null)
                 {
                     foreach (var item in source)
                     {
                         var value = GetItemValue(item);
-                        if (value?.ToString() == SelectedValue?.ToString())
+                        // Сравниваем значения правильно, с учётом типов
+                        if (Equals(value, SelectedValue))
                         {
                             SelectedItem = item;
                             _textBox.Text = GetDisplayText(item);
                             _textBox.Foreground = new SolidColorBrush(Colors.Black);
-                            System.Diagnostics.Debug.WriteLine($"UpdateDisplay: найден элемент по SelectedValue");
                             return;
                         }
                     }
@@ -334,13 +334,36 @@ namespace AccuratPanelCarWashing.Controls
             }
 
             // 2. Если это KeyValuePair (Словарь), по умолчанию показываем текст (Value), а не цифру (Key)
+            // var type = item.GetType();
+            // if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            // {
+            //    var valueProp = type.GetProperty("Value"); // Было "Key", стало "Value"!
+            //     if (valueProp != null)
+            //     {
+            //         var val = valueProp.GetValue(item);
+            //         return val?.ToString() ?? string.Empty;
+            //     }
+            // }
+
+            // Если это KeyValuePair (Словарь), показываем Key (текст), а Value используем для SelectedValuePath
             var type = item.GetType();
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
             {
-                var valueProp = type.GetProperty("Value"); // Было "Key", стало "Value"!
-                if (valueProp != null)
+                // Сначала проверяем, задан ли DisplayMemberPath
+                if (!string.IsNullOrEmpty(DisplayMemberPath))
                 {
-                    var val = valueProp.GetValue(item);
+                    var prop = type.GetProperty(DisplayMemberPath);
+                    if (prop != null)
+                    {
+                        var value = prop.GetValue(item);
+                        return value?.ToString() ?? string.Empty;
+                    }
+                }
+                // По умолчанию для KeyValuePair показываем Key (текст)
+                var keyProp = type.GetProperty("Key");
+                if (keyProp != null)
+                {
+                    var val = keyProp.GetValue(item);
                     return val?.ToString() ?? string.Empty;
                 }
             }
