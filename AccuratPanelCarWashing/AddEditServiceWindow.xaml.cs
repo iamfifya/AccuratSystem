@@ -51,6 +51,9 @@ namespace AccuratPanelCarWashing
 
             DataContext = this;
             LoadPricesToUI();
+
+            // Инициализируем выбранную категорию
+            CategoryComboBox.SelectedValue = (int)CurrentService.ServiceCategory;
         }
 
         private void LoadPricesToUI()

@@ -51,17 +51,21 @@ namespace AccuratPanelCarWashing
             if (_allServices == null) return;
 
             string searchText = SearchTextBox.Text.Trim().ToLower();
-            IEnumerable<Service> filtered;
 
-            if (string.IsNullOrEmpty(searchText))
+            IEnumerable<Service> filtered = _allServices;
+
+            // Фильтр по тексту
+            if (!string.IsNullOrEmpty(searchText))
             {
-                filtered = _allServices;
+                filtered = filtered.Where(s =>
+                    s.Name.ToLower().Contains(searchText) ||
+                    (s.Description != null && s.Description.ToLower().Contains(searchText)));
             }
-            else
+
+            // Фильтр по категории
+            if (_selectedCategoryFilter.HasValue)
             {
-                filtered = _allServices
-                    .Where(s => s.Name.ToLower().Contains(searchText) ||
-                                (s.Description != null && s.Description.ToLower().Contains(searchText)));
+                filtered = filtered.Where(s => s.ServiceCategory == _selectedCategoryFilter.Value);
             }
 
             ServicesListBox.ItemsSource = filtered;
@@ -151,6 +155,20 @@ namespace AccuratPanelCarWashing
                     this.IsEnabled = true;
                 }
             }
+        }
+
+        private AccuratSystem.Contracts.Enums.ServiceCategory? _selectedCategoryFilter;
+
+        private void CategoryFilterCombo_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (CategoryFilterCombo.SelectedItem is ComboBoxItem item)
+            {
+                if (item.Tag == null)
+                    _selectedCategoryFilter = null;
+                else if (int.TryParse(item.Tag.ToString(), out int cat))
+                    _selectedCategoryFilter = (AccuratSystem.Contracts.Enums.ServiceCategory)cat;
+            }
+            ApplyFilter();
         }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
