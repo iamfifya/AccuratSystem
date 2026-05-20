@@ -23,6 +23,10 @@ namespace Accurat.WebAPI.Data
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<EmployeeScheduleEntry> EmployeeSchedules => Set<EmployeeScheduleEntry>();
 
+        public DbSet<OrderExpense> OrderExpenses { get; set; }
+        public DbSet<OrderTimelineEntry> OrderTimelineEntries { get; set; }
+        public DbSet<OrderServiceItem> OrderServiceItems { get; set; }
+
         // OutboxMessage — API-only, поэтому DbSet остаётся с явным get/set
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
         public DbSet<OrderWasher> OrderWashers { get; set; }
@@ -48,12 +52,98 @@ namespace Accurat.WebAPI.Data
                 .HasForeignKey(ow => ow.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // === НОВЫЕ СУЩНОСТИ ДЛЯ СЕРВИСА ===
+
+            // 1. OrderExpense - внутренние затраты по заказу
+            modelBuilder.Entity<OrderExpense>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // 🔥 Индексы для быстрого поиска
+                entity.HasIndex(e => e.OrderId);
+                entity.HasIndex(e => new { e.OrderId, e.Category });
+
+                // 🔥 Конвертер для enum -> string в БД (совместимо с PostgreSQL jsonb)
+                entity.Property(e => e.Category)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+
+                // Связь с Order
+                entity.HasOne<Order>()
+                    .WithMany() // В Order нет навигационной коллекции для C# 7.3 совместимости
+                    .HasForeignKey(e => e.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // 2. OrderTimelineEntry - лента событий заказа
+            modelBuilder.Entity<OrderTimelineEntry>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // 🔥 Индексы для быстрой загрузки ленты
+                entity.HasIndex(e => e.OrderId);
+                entity.HasIndex(e => new { e.OrderId, e.Timestamp }); // составной для сортировки
+
+                // 🔥 Конвертер для enum -> string
+                entity.Property(e => e.EntryType)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+
+                // Связь с Order
+                entity.HasOne<Order>()
+                    .WithMany()
+                    .HasForeignKey(e => e.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // 3. OrderServiceItem - связь заказа с услугами (для истории изменения цен)
+            modelBuilder.Entity<OrderServiceItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // 🔥 Индексы
+                entity.HasIndex(e => e.OrderId);
+                entity.HasIndex(e => e.ServiceId);
+                entity.HasIndex(e => new { e.OrderId, e.ServiceId });
+
+                // Связи
+                entity.HasOne<Order>()
+                    .WithMany()
+                    .HasForeignKey(e => e.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne<Service>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ServiceId)
+                    .OnDelete(DeleteBehavior.Restrict); // Не удалять услугу, если она используется в истории
+            });
+
+            // 4. Order - новые поля для сервиса
+            modelBuilder.Entity<Order>(entity =>
+            {
+                // Индекс для быстрого поиска по статусу + дате (для отчётов)
+                entity.HasIndex(o => new { o.Status, o.Time });
+                entity.HasIndex(o => new { o.BranchId, o.Department, o.Time });
+
+                // Конвертер для строковых статусов (если захочешь перевести на enum позже)
+                // entity.Property(o => o.Status).HasMaxLength(50);
+            });
+
+            // 5. ServiceCategory enum -> string конвертер
+            modelBuilder.Entity<Service>()
+                .Property(s => s.ServiceCategory)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+
             // Конвертер для Dictionary<int, decimal> -> jsonb
             var dictionaryComparer = new ValueComparer<Dictionary<int, decimal>>(
                 (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 c => c.ToDictionary(kv => kv.Key, kv => kv.Value)
             );
+
+
 
             modelBuilder.Entity<Service>()
                 .Property(s => s.PriceByBodyType)
@@ -63,6 +153,8 @@ namespace Accurat.WebAPI.Data
                 )
                 .HasColumnType("jsonb")
                 .Metadata.SetValueComparer(dictionaryComparer);
+
+
 
             // Seed-данные (филиалы, клиенты, услуги) — оставляем как есть
             modelBuilder.Entity<Branch>().HasData(
