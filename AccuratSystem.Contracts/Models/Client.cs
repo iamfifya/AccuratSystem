@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Accurat.WebAPI.Models
+namespace AccuratSystem.Contracts.Models
 {
     public class Client
     {

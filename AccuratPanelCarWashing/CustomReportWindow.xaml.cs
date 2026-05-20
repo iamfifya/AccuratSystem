@@ -1,3 +1,13 @@
+// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
+// UI-модель пользователя (с IsAdmin, DisplayString) — используем в окне
+using WpfUser = AccuratPanelCarWashing.Models.User;
+// Контрактные модели из API — используем для данных с сервера
+using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
+using ContractsCustomPeriodReport = AccuratSystem.Contracts.Models.CustomPeriodReport;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+using ContractsEmployeeReport = AccuratSystem.Contracts.Models.EmployeeReport;
+
+// Остальные using без конфликтов
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using LiveCharts;
@@ -16,8 +26,8 @@ namespace AccuratPanelCarWashing
     {
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
-        private readonly User _currentUser;
-        private CustomPeriodReport _currentReport;
+        private readonly WpfUser _currentUser; // Используем алиас для UI-пользователя
+        private ContractsCustomPeriodReport _currentReport; // Используем алиас для контрактного отчёта
 
         public bool IsDirector => _currentUser?.Role == 1;
 
@@ -32,7 +42,7 @@ namespace AccuratPanelCarWashing
         private BranchTabItem _selectedBranchTab;
         public BranchTabItem SelectedBranchTab { get => _selectedBranchTab; set { _selectedBranchTab = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab))); } }
 
-        public CustomReportWindow(User user)
+        public CustomReportWindow(WpfUser user) // Конструктор принимает UI-пользователя
         {
             InitializeComponent();
             _apiService = new ApiService();
@@ -62,7 +72,7 @@ namespace AccuratPanelCarWashing
                 DateTime start = StartDatePicker.SelectedDate ?? DateTime.Now.AddDays(-7);
                 DateTime end = EndDatePicker.SelectedDate ?? DateTime.Now;
 
-                // Загружаем данные через API с учетом выбранного branchId[cite: 3]
+                // Загружаем данные через API с учетом выбранного branchId
                 int branchId = SelectedBranchTab?.BranchId ?? 0;
                 var periodReports = await _apiService.GetShiftReportsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
                 var clientStats = await _apiService.GetClientsStatsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
@@ -119,7 +129,7 @@ namespace AccuratPanelCarWashing
 
                 EmployeesSalaryList.ItemsSource = periodReports.SelectMany(r => r.EmployeesWork)
                     .GroupBy(e => e.EmployeeId)
-                    .Select(g => new EmployeeReport
+                    .Select(g => new ContractsEmployeeReport // Используем алиас для контрактного EmployeeReport
                     {
                         EmployeeName = g.First().EmployeeName,
                         CarsWashed = g.Sum(x => x.CarsWashed),

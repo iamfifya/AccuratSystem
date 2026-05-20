@@ -1,4 +1,12 @@
-using AccuratPanelCarWashing.Models;
+// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
+// UI-модели (с INotifyPropertyChanged) — используем в коллекции ActiveEmployees
+using WpfUser = AccuratPanelCarWashing.Models.User;
+// Контрактные модели из API — используем для данных с сервера
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using ContractsTransaction = AccuratSystem.Contracts.Models.Transaction;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+
+// Остальные using
 using AccuratPanelCarWashing.Services;
 using System;
 using System.Collections.Generic;
@@ -9,6 +17,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using AccuratPanelCarWashing.Models;
 
 namespace AccuratPanelCarWashing.Controls
 {
@@ -16,10 +25,10 @@ namespace AccuratPanelCarWashing.Controls
     {
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService = new ApiService();
-        private Shift _currentShift;
+        private ContractsShift _currentShift;
 
-        public ObservableCollection<Transaction> Transactions { get; set; } = new ObservableCollection<Transaction>();
-        public ObservableCollection<User> ActiveEmployees { get; set; } = new ObservableCollection<User>();
+        public ObservableCollection<ContractsTransaction> Transactions { get; set; } = new ObservableCollection<ContractsTransaction>();
+        public ObservableCollection<WpfUser> ActiveEmployees { get; set; } = new ObservableCollection<WpfUser>();
 
         private decimal _cashInHand, _totalExpenses, _netCashProfit;
         public decimal CashInHand { get => _cashInHand; set { _cashInHand = value; OnPropertyChanged(nameof(CashInHand)); } }
@@ -32,7 +41,7 @@ namespace AccuratPanelCarWashing.Controls
             DataContext = this;
         }
 
-        public void Show(Shift shift)
+        public void Show(ContractsShift shift)
         {
             if (shift == null) { MessageBox.Show("Смена не открыта!"); return; }
             _currentShift = shift;
@@ -49,11 +58,26 @@ namespace AccuratPanelCarWashing.Controls
         {
             // 1. Загружаем сотрудников смены (просто для выпадающего списка "Кому аванс")
             ActiveEmployees.Clear();
-            var allUsers = await _apiService.GetUsersAsync();
+            var allUsers = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
             foreach (var empId in _currentShift.EmployeeIds)
             {
                 var user = allUsers.FirstOrDefault(u => u.Id == empId);
-                if (user != null) ActiveEmployees.Add(user);
+                if (user != null)
+                {
+                    // Создаём UI-обёртку на основе контрактного пользователя
+                    ActiveEmployees.Add(new WpfUser
+                    {
+                        Id = user.Id,
+                        FullName = user.FullName,
+                        Phone = user.Phone,
+                        Login = user.Login,
+                        PasswordHash = user.PasswordHash,
+                        Role = user.Role,
+                        IsActive = user.IsActive,
+                        BranchId = user.BranchId,
+                        BaseWagePercentage = user.BaseWagePercentage
+                    });
+                }
             }
 
             // 2. Получаем ленту операций из API
@@ -89,7 +113,7 @@ namespace AccuratPanelCarWashing.Controls
             }
 
             // СБОРКА ОБЪЕКТА ДЛЯ СЕРВЕРА
-            var newTransaction = new Transaction
+            var newTransaction = new ContractsTransaction
             {
                 BranchId = AppSettings.CurrentBranchId, // Важно!
                 ShiftId = _currentShift.Id,
@@ -127,8 +151,8 @@ namespace AccuratPanelCarWashing.Controls
             set { _selectedOpType = value; OnPropertyChanged(nameof(SelectedOperationType)); OnPropertyChanged(nameof(EmployeeComboVisibility)); }
         }
 
-        private User _selectedEmployee;
-        public User SelectedEmployee { get => _selectedEmployee; set { _selectedEmployee = value; OnPropertyChanged(nameof(SelectedEmployee)); } }
+        private WpfUser _selectedEmployee;
+        public WpfUser SelectedEmployee { get => _selectedEmployee; set { _selectedEmployee = value; OnPropertyChanged(nameof(SelectedEmployee)); } }
 
         public Visibility EmployeeComboVisibility => SelectedOperationType == "Аванс мойщику" ? Visibility.Visible : Visibility.Collapsed;
 

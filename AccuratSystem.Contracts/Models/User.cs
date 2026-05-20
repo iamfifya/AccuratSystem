@@ -1,4 +1,4 @@
-﻿namespace Accurat.WebAPI.Models
+﻿namespace AccuratSystem.Contracts.Models
 {
     public class User
     {
@@ -7,13 +7,12 @@
         public string Phone { get; set; } = string.Empty;
         public string Login { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
-        public int Role { get; set; } // 1: Директор, 2: Админ, 3: Мойщик, 4: Механик
+        public int Role { get; set; }
         public bool IsActive { get; set; } = true;
-
-        // Привязка к филиалу (У директора будет null)
         public int? BranchId { get; set; }
-        public Branch? Branch { get; set; }
+        public decimal BaseWagePercentage { get; set; }
 
-        public decimal BaseWagePercentage { get; set; } // Например, 35.0m
+        // Навигационное свойство (без ? для C# 7.3)
+        public Branch Branch { get; set; }
     }
 }

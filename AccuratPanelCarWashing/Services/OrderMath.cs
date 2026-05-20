@@ -1,6 +1,7 @@
-using AccuratPanelCarWashing.Models;
+using AccuratSystem.Contracts.Models;
 using System.Collections.Generic;
 using System.Linq;
+using AccuratPanelCarWashing.Services; // <-- ВАЖНО: для метода расширения GetWasherId()
 
 namespace AccuratPanelCarWashing.Services
 {
@@ -12,17 +13,19 @@ namespace AccuratPanelCarWashing.Services
         // === НАСТРОЙКИ (меняй только здесь) ===
         public const decimal WASHER_PERCENT = 0.35m;          // 35% мойщику
         public const decimal MIN_WASHER_PAY_PER_SHIFT = 1000m; // Мин. ЗП за смену
+
         /// <summary>
         /// Рассчитывает ВСЕ значения для одного заказа.
         /// </summary>
         // ИСПРАВЛЕНО: Сделали washers необязательным параметром (по умолчанию null)
-        public static OrderCalculation Calculate(CarWashOrder order, List<Service> allServices, List<User> washers = null)
+        public static OrderCalculation Calculate(Order order, List<Service> allServices, List<User> washers = null)
         {
             var calc = new OrderCalculation();
             if (order == null) return calc;
 
             // 1. Находим выбранного мойщика и его базовую ставку (по умолчанию 35%)
-            var washer = washers?.FirstOrDefault(w => w.Id == order.WasherId);
+            // ИСПРАВЛЕНО: Используем метод расширения GetWasherId() вместо order.WasherId
+            var washer = washers?.FirstOrDefault(w => w.Id == order.GetWasherId());
             decimal basePercentage = washer?.BaseWagePercentage ?? 35m;
 
             decimal servicesTotal = 0;
@@ -36,7 +39,11 @@ namespace AccuratPanelCarWashing.Services
                     var svc = allServices.FirstOrDefault(s => s.Id == sid);
                     if (svc != null)
                     {
-                        decimal price = svc.GetPrice(order.BodyTypeCategory);
+                        // ИСПРАВЛЕНО: Вычисляем цену вручную через PriceByBodyType вместо svc.GetPrice()
+                        decimal price = svc.PriceByBodyType.TryGetValue(order.BodyTypeCategory, out var p)
+                            ? p
+                            : (svc.PriceByBodyType.TryGetValue(1, out var def) ? def : 0);
+
                         servicesTotal += price;
 
                         // МАГИЯ: Берем кастомный % услуги или (если его нет) базовый % мойщика
@@ -80,7 +87,7 @@ namespace AccuratPanelCarWashing.Services
         /// </summary>
         // ИСПРАВЛЕНО: Добавили проброс параметра washers
         public static WasherShiftStats CalculateShiftStats(
-                      IEnumerable<CarWashOrder> completedOrders,
+                      IEnumerable<Order> completedOrders,
                       List<Service> allServices,
                       List<User> washers = null,
                       decimal advancesTaken = 0m,
@@ -99,7 +106,7 @@ namespace AccuratPanelCarWashing.Services
 
         // Оставили для обратной совместимости старых методов (если где-то еще вызывается)
         public static decimal CalculateWasherShiftPay(
-            IEnumerable<CarWashOrder> completedOrders,
+            IEnumerable<Order> completedOrders,
             List<Service> allServices,
             List<User> washers = null,
             bool isWasherAdmin = false)

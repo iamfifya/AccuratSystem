@@ -1,3 +1,11 @@
+// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
+// UI-модель пользователя (с IsAdmin, DisplayString) — используем в окне
+using WpfUser = AccuratPanelCarWashing.Models.User;
+// Контрактные модели из API — используем для данных с сервера
+using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+
+// Остальные using без конфликтов
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
@@ -14,20 +22,20 @@ namespace AccuratPanelCarWashing
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private List<ShiftReport> _reports;
-        private ShiftReport _selectedReport;
+        private List<ContractsShiftReport> _reports;
+        private ContractsShiftReport _selectedReport;
         private readonly ApiService _apiService;
-        private readonly User _currentUser;
+        private readonly WpfUser _currentUser;
 
         public bool IsDirector => _currentUser?.Role == 1;
 
-        public List<ShiftReport> Reports
+        public List<ContractsShiftReport> Reports
         {
             get { return _reports; }
             set { _reports = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Reports))); }
         }
 
-        public ShiftReport SelectedReport
+        public ContractsShiftReport SelectedReport
         {
             get { return _selectedReport; }
             set { _selectedReport = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedReport))); }
@@ -57,7 +65,7 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        public ReportsWindow(User currentUser)
+        public ReportsWindow(WpfUser currentUser)
         {
             InitializeComponent();
             _apiService = new ApiService();
@@ -142,7 +150,7 @@ namespace AccuratPanelCarWashing
 
         private void ReportSelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            SelectedReport = ReportsListBox.SelectedItem as ShiftReport;
+            SelectedReport = ReportsListBox.SelectedItem as ContractsShiftReport;
         }
 
         private void CustomReportButton_Click(object sender, RoutedEventArgs e)
@@ -192,7 +200,7 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        private void ExportToCsv(ShiftReport report, string filePath)
+        private void ExportToCsv(ContractsShiftReport report, string filePath)
         {
             var lines = new List<string>();
 

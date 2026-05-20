@@ -1,5 +1,16 @@
-using AccuratPanelCarWashing.Models;
+// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
+// UI-модель пользователя (с IsAdmin, DisplayString) — используем для _currentUser
+using WpfUser = AccuratPanelCarWashing.Models.User;
+// Контрактные модели из API — используем для данных с сервера
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+
+// Остальные using без конфликтов
 using AccuratPanelCarWashing.Services;
+using AccuratPanelCarWashing.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,7 +26,7 @@ namespace AccuratPanelCarWashing
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly ApiService _apiService;
-        private User _currentUser;
+        private readonly WpfUser _currentUser; // UI-пользователь с IsAdmin
 
         // Свойства для вкладок
         public bool IsDirector => _currentUser?.Role == 1;
@@ -41,8 +52,8 @@ namespace AccuratPanelCarWashing
             set { _shiftSummary = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShiftSummary))); }
         }
 
-        // Конструктор теперь принимает User
-        public HistoryWindow(User currentUser)
+        // Конструктор принимает UI-пользователя
+        public HistoryWindow(WpfUser currentUser)
         {
             InitializeComponent();
             _apiService = new ApiService();
@@ -111,7 +122,7 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        private ObservableCollection<WorkZone> GenerateZonesForBranch(Branch branch)
+        private ObservableCollection<WorkZone> GenerateZonesForBranch(ContractsBranch branch) // Принимаем контрактный филиал
         {
             var zones = new ObservableCollection<WorkZone>();
             for (int i = 1; i <= branch.WashBaysCount; i++)
@@ -136,13 +147,14 @@ namespace AccuratPanelCarWashing
                 var allShifts = await _apiService.GetShiftsAsync();
                 var allOrders = await _apiService.GetOrdersAsync();
                 var allServices = await _apiService.GetServicesAsync();
-                var allUsers = await _apiService.GetUsersAsync();
+                var allUsers = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
 
                 var closedShiftsOnDate = allShifts.Where(s => s.Date.Date == date.Date && s.IsClosed).ToList();
                 var shiftIdsOnDate = closedShiftsOnDate.Select(s => s.Id).ToList();
 
+                // ИСПРАВЛЕНО: Проверяем ShiftId != 0 вместо .HasValue, так как в контракте это int, а не int?
                 var ordersOnDate = allOrders.Where(o =>
-                    (o.ShiftId.HasValue && shiftIdsOnDate.Contains(o.ShiftId.Value)) ||
+                    (o.ShiftId != 0 && shiftIdsOnDate.Contains(o.ShiftId)) ||
                     (o.IsAppointment && o.Time.Date == date.Date)
                 ).ToList();
 
@@ -166,7 +178,8 @@ namespace AccuratPanelCarWashing
                     CarModel = o.CarModel,
                     CarNumber = o.CarNumber,
                     Time = TimeHelper.ToMsk(o.Time),
-                    WasherName = allUsers.FirstOrDefault(u => u.Id == o.WasherId)?.FullName ?? (o.IsAppointment ? "📅 Запись" : "Не назначен"),
+                    // ИСПРАВЛЕНО: Используем метод расширения GetWasherId() и контрактный список пользователей
+                    WasherName = allUsers.FirstOrDefault(u => u.Id == o.GetWasherId())?.FullName ?? (o.IsAppointment ? "📅 Запись" : "Не назначен"),
                     ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id =>
                     {
                         var svc = allServices.FirstOrDefault(s => s.Id == id);

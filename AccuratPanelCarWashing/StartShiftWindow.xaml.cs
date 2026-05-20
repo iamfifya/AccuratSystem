@@ -1,5 +1,6 @@
-using AccuratPanelCarWashing.Models;
+using AccuratSystem.Contracts.Models;
 using AccuratPanelCarWashing.Services;
+using AccuratPanelCarWashing.Models; // <-- ВАЖНО: для AppSettings
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -43,11 +44,12 @@ namespace AccuratPanelCarWashing
             try
             {
                 var allEmployees = await _apiService.GetUsersAsync();
+                // ИСПРАВЛЕНО: Проверяем Role напрямую, так как ContractsUser не имеет IsAdmin
                 Employees = allEmployees.Where(e => e.IsActive).Select(e => new EmployeeSelection
                 {
                     Id = e.Id,
                     FullName = e.FullName,
-                    IsAdmin = e.IsAdmin,
+                    IsAdmin = e.Role == 1 || e.Role == 2, // <-- ПРОВЕРКА ПО ROLE
                     IsSelected = false
                 }).ToList();
             }

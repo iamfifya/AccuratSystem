@@ -1,7 +1,9 @@
-﻿using Accurat.WebAPI.Data;
-using Accurat.WebAPI.Models;
+﻿using AccuratSystem.Contracts.Models;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Accurat.WebAPI.Data;
 
 namespace Accurat.WebAPI.Controllers
 {

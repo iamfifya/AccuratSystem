@@ -1,5 +1,4 @@
-﻿// Akkurat.WebAPI/Models/CashboxSummary.cs
-namespace Akkurat.WebAPI.Models
+﻿namespace AccuratSystem.Contracts.Models
 {
     public class CashboxSummary
     {

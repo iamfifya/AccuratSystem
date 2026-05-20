@@ -1,7 +1,9 @@
-﻿using Accurat.WebAPI.Data;
-using Accurat.WebAPI.Models;
+﻿using AccuratSystem.Contracts.Models;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Accurat.WebAPI.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,8 +44,7 @@ namespace Accurat.WebAPI.Controllers
             foreach (var shift in shifts)
             {
                 var orders = await _context.Orders
-                    .Include(o => o.OrderWashers)
-                        .ThenInclude(ow => ow.Washer) // Загружаем мойщиков
+                    .Include(o => o.OrderWashers) // Загружаем коллекцию
                     .Where(o => o.ShiftId == shift.Id && o.Status == "Выполнен").ToListAsync();
                 var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
 

@@ -1,4 +1,4 @@
-using AccuratPanelCarWashing.Models;
+using AccuratSystem.Contracts.Models;
 using AccuratPanelCarWashing.Services;
 using System;
 using System.Collections.Generic;

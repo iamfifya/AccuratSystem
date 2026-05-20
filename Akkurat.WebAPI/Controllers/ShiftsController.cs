@@ -1,8 +1,9 @@
-﻿using Accurat.WebAPI.Data;
-using Accurat.WebAPI.Models;
-using Akkurat.WebAPI.Models;
+﻿using AccuratSystem.Contracts.Models;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Accurat.WebAPI.Data;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -27,8 +28,9 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Shift>> OpenShift(Shift shift)
         {
-            // Убираем объект Branch, чтобы EF не пытался создать новый филиал
-            shift.Branch = null;
+            // СТАЛО:
+            // Убираем эту строку — Branch теперь есть в модели, но при создании смены
+            // клиент не должен передавать вложенный объект Branch, только BranchId
 
             // Приводим дату к UTC без времени для точного поиска
             DateTime targetDate = DateTime.SpecifyKind(shift.Date.Date, DateTimeKind.Utc);
@@ -109,9 +111,10 @@ namespace Accurat.WebAPI.Controllers
             // 4. Считаем ЗП через наш новый сервис
             decimal totalTopUp = 0;
             var orderWasherPairs = orders
-                .SelectMany(o => o.OrderWashers ?? new List<OrderWasher>(),
-                           (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId })
-                .ToList();
+            .Where(o => o.OrderWashers != null)
+            .SelectMany(o => o.OrderWashers,
+                    (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId })
+            .ToList();
 
             foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
             {

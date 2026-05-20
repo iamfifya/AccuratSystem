@@ -1,3 +1,4 @@
+using AccuratSystem.Contracts.Models;
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
@@ -8,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using EmployeeSchedule = AccuratSystem.Contracts.Models.EmployeeSchedule;
 
 namespace AccuratPanelCarWashing
 {
@@ -129,14 +131,15 @@ namespace AccuratPanelCarWashing
 
         private async Task CreateDefaultScheduleAsync()
         {
-            var employees = await _apiService.GetUsersAsync();
+            var employees = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
             var daysInMonth = DateTime.DaysInMonth(_currentDate.Year, _currentDate.Month);
 
             var prevMonthDate = _currentDate.AddMonths(-1);
             var prevMonthSchedule = await _apiService.GetScheduleAsync(prevMonthDate.Year, prevMonthDate.Month);
 
-            var admins = employees.Where(e => e.IsAdmin).OrderBy(e => e.Id).ToList();
-            var workers = employees.Where(e => !e.IsAdmin).OrderBy(e => e.Id).ToList();
+            // ИСПРАВЛЕНО: Проверяем Role напрямую, так как ContractsUser не имеет IsAdmin
+            var admins = employees.Where(e => e.Role == 1 || e.Role == 2).OrderBy(e => e.Id).ToList();
+            var workers = employees.Where(e => e.Role != 1 && e.Role != 2).OrderBy(e => e.Id).ToList();
 
             _scheduleData = new List<EmployeeSchedule>();
 
@@ -144,7 +147,13 @@ namespace AccuratPanelCarWashing
             for (int i = 0; i < admins.Count; i++)
             {
                 var admin = admins[i];
-                var empSchedule = new EmployeeSchedule { EmployeeId = admin.Id, EmployeeName = admin.FullName, Position = "Администратор", Days = new Dictionary<int, string>() };
+                var empSchedule = new EmployeeSchedule
+                {
+                    EmployeeId = admin.Id,
+                    EmployeeName = admin.FullName,
+                    Position = "Администратор",
+                    Days = new Dictionary<int, string>()
+                };
 
                 int phaseShift = i * 2;
                 var prevSchedule = prevMonthSchedule?.FirstOrDefault(s => s.EmployeeId == admin.Id);
@@ -177,7 +186,13 @@ namespace AccuratPanelCarWashing
             for (int i = 0; i < workers.Count; i++)
             {
                 var worker = workers[i];
-                var empSchedule = new EmployeeSchedule { EmployeeId = worker.Id, EmployeeName = worker.FullName, Position = "Мойщик", Days = new Dictionary<int, string>() };
+                var empSchedule = new EmployeeSchedule
+                {
+                    EmployeeId = worker.Id,
+                    EmployeeName = worker.FullName,
+                    Position = "Мойщик",
+                    Days = new Dictionary<int, string>()
+                };
 
                 int shift = i % 6;
                 var prevSchedule = prevMonthSchedule?.FirstOrDefault(s => s.EmployeeId == worker.Id);

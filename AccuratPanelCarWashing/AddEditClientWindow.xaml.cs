@@ -1,3 +1,4 @@
+using AccuratSystem.Contracts.Models;
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
@@ -11,7 +12,7 @@ namespace AccuratPanelCarWashing
     {
         // Добавили readonly
         private readonly ApiService _apiService;
-        private List<CarWashOrder> _allOrders = new List<CarWashOrder>();
+        private List<Order> _allOrders = new List<Order>();
         // Если _todayAppointments тоже просит, сделай так:
         private readonly List<Appointment> _todayAppointments = new List<Appointment>();
         public Client CurrentClient { get; set; }

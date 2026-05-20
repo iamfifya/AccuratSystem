@@ -14,10 +14,9 @@ namespace AccuratPanelCarWashing.Models
         public decimal DefaultWasherPercent { get; set; } = 35;
         public bool RequireConfirmationForDelete { get; set; } = true;
         public DateTime LastSettingsChange { get; set; }
+
         public static int CurrentBranchId { get; set; }
         public static string CurrentBranchName { get; set; }
-
-        // Добавь эти две строки:
         public static int CurrentBranchWashBaysCount { get; set; }
         public static int CurrentBranchServiceLiftsCount { get; set; }
 

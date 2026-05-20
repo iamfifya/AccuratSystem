@@ -3,45 +3,46 @@ using System.Collections.Generic;
 
 namespace AccuratSystem.Contracts.Models
 {
-    /// <summary>
-    /// Основная сущность заказа. Обновлена для поддержки детализации услуг и затрат.
-    /// </summary>
     public class Order
     {
         public int Id { get; set; }
         public string CarNumber { get; set; } = string.Empty;
-        public string CustomerName { get; set; } = string.Empty;
-        public string CustomerPhone { get; set; } = string.Empty;
-        public int? BodyTypeId { get; set; }
-        public int? BoxId { get; set; }
-        public int? LiftId { get; set; }
+        public string CarModel { get; set; } = string.Empty;
+        public int BodyTypeCategory { get; set; } = 1;
+        public string CarBodyType { get; set; } = string.Empty;
+        public string Department { get; set; } = "Wash";
 
-        // Старое поле оставляем для обратной совместимости, но помечаем как устаревшее
-        [Obsolete("Используйте ServiceItems для работы с услугами")]
+        public DateTime Time { get; set; } = DateTime.UtcNow;
+        public string Status { get; set; } = "В работе";
+        public string PaymentMethod { get; set; } = "Наличные";
+        public string Notes { get; set; } = string.Empty;
+
+        public int BoxNumber { get; set; }
+        public bool IsAppointment { get; set; }
+        public int DurationMinutes { get; set; } = 60;
+
+        public decimal TotalPrice { get; set; }
+        public decimal OriginalTotalPrice { get; set; }
+        public decimal ExtraCost { get; set; }
+        public string ExtraCostReason { get; set; } = string.Empty;
+        public decimal DiscountPercent { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal FinalPrice { get; set; }
+
         public List<int> ServiceIds { get; set; } = new List<int>();
 
-        /// <summary>
-        /// Детализированный список услуг с индивидуальными ценами.
-        /// </summary>
-        public virtual ICollection<OrderServiceItem> ServiceItems { get; set; } = new List<OrderServiceItem>();
+        public int ShiftId { get; set; }
+        public int? ClientId { get; set; }
+        public int BranchId { get; set; }
+        // В конец класса Order в Contracts/Models/Order.cs добавь:
+        public Branch Branch { get; set; }
 
-        /// <summary>
-        /// Список внутренних затрат по заказу.
-        /// </summary>
-        public virtual ICollection<OrderExpense> Expenses { get; set; } = new List<OrderExpense>();
+        public List<OrderWasher> OrderWashers { get; set; } = new List<OrderWasher>();
 
-        /// <summary>
-        /// Лента комментариев и изменений статуса.
-        /// </summary>
-        public virtual ICollection<OrderTimelineEntry> Timeline { get; set; } = new List<OrderTimelineEntry>();
-
-        /// <summary>
-        /// Общее поле для статических заметок (не дублируется в ленту событий).
-        /// </summary>
-        public string? GeneralNotes { get; set; }
-
-        public Enums.OrderStatus Status { get; set; } = Enums.OrderStatus.InProgress;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        // НОВЫЕ ПОЛЯ ДЛЯ СЕРВИСА
+        public string GeneralNotes { get; set; } = string.Empty;
         public DateTime? FinishedAt { get; set; }
+
+        // Навигационные коллекции убраны из Contracts
     }
 }

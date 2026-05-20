@@ -1,3 +1,19 @@
+// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
+// Контрактные модели из API — используем для данных с сервера
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+using ContractsTransaction = AccuratSystem.Contracts.Models.Transaction;
+using ContractsClient = AccuratSystem.Contracts.Models.Client;
+using ContractsOrderWasher = AccuratSystem.Contracts.Models.OrderWasher;
+
+// UI-модели (с INotifyPropertyChanged, DisplayString, IsAdmin) — используем в окне
+using WpfUser = AccuratPanelCarWashing.Models.User;
+using WpfAppointment = AccuratPanelCarWashing.Models.Appointment;
+
+// Остальные using без конфликтов
 using AccuratPanelCarWashing.Controls;
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
@@ -22,10 +38,10 @@ namespace AccuratPanelCarWashing
         public event PropertyChangedEventHandler PropertyChanged;
 
         private ApiService _apiService;
-        private List<CarWashOrder> _allOrders = new List<CarWashOrder>();
-        private List<Appointment> _todayAppointments = new List<Appointment>();
-        private Shift _currentShift;
-        private User _currentUser;
+        private List<ContractsOrder> _allOrders = new List<ContractsOrder>();
+        private List<WpfAppointment> _todayAppointments = new List<WpfAppointment>();
+        private ContractsShift _currentShift;
+        private WpfUser _currentUser; // UI-пользователь с IsAdmin
         private string _searchFilter = "";
 
         private HubConnection _hubConnection;
@@ -36,8 +52,8 @@ namespace AccuratPanelCarWashing
         public bool IsAdminOrDirector => _currentUser?.Role == 1 || _currentUser?.Role == 2;
 
         // Кэши для быстрого UI без постоянных запросов к серверу
-        private List<Service> _cachedServices = new List<Service>();
-        private List<User> _cachedUsers = new List<User>();
+        private List<ContractsService> _cachedServices = new List<ContractsService>(); // Кэш из API — контрактный тип
+        private List<ContractsUser> _cachedUsers = new List<ContractsUser>(); // Кэш из API — контрактный тип
         private List<WasherStat> _washersStats;
 
         private decimal _companyEarnings;
@@ -113,7 +129,7 @@ namespace AccuratPanelCarWashing
         public decimal CompanyEarnings { get => _companyEarnings; set { _companyEarnings = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CompanyEarnings))); } }
         public decimal TotalRevenue { get => _totalRevenue; set { _totalRevenue = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalRevenue))); } }
 
-        public MainWindow(User user)
+        public MainWindow(WpfUser user) // Конструктор принимает UI-пользователя
         {
             InitializeComponent();
             _apiService = new ApiService();
@@ -125,7 +141,7 @@ namespace AccuratPanelCarWashing
             InitializeSignalR();
         }
 
-        public void SetUser(User user)
+        public void SetUser(WpfUser user)
         {
             _currentUser = user;
             _ = LoadDataAsync();
@@ -172,9 +188,9 @@ namespace AccuratPanelCarWashing
 
                 // 2. ЗАГРУЖАЕМ ОСТАЛЬНЫЕ ДАННЫЕ
                 var allShifts = await _apiService.GetShiftsAsync();
-                _cachedUsers = await _apiService.GetUsersAsync();
-                _cachedServices = await _apiService.GetServicesAsync();
-                var allOrdersFromApi = await _apiService.GetOrdersAsync();
+                _cachedUsers = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
+                _cachedServices = await _apiService.GetServicesAsync(); // Возвращает List<ContractsService>
+                var allOrdersFromApi = await _apiService.GetOrdersAsync(); // Возвращает List<ContractsOrder>
 
                 // Пока берем просто открытую смену
                 _currentShift = allShifts.FirstOrDefault(s => !s.IsClosed);
@@ -198,7 +214,7 @@ namespace AccuratPanelCarWashing
         }
 
         // Вспомогательный метод: собирает боксы и подъемники в один список для конкретного филиала
-        private void PopulateZones(BranchTabItem tab, Branch branch)
+        private void PopulateZones(BranchTabItem tab, ContractsBranch branch) // Принимаем контрактный филиал
         {
             // Генерируем боксы мойки
             for (int i = 1; i <= branch.WashBaysCount; i++)
@@ -238,7 +254,7 @@ namespace AccuratPanelCarWashing
                 CarModel = o.CarModel,
                 CarNumber = o.CarNumber,
                 Time = o.Time,
-                WasherName = GetWasherName(o.WasherId),
+                WasherName = GetWasherName(o.GetWasherId()),
                 ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id => _cachedServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
                 FinalPrice = o.FinalPrice,
                 OriginalTotalPrice = o.OriginalTotalPrice,
@@ -263,7 +279,7 @@ namespace AccuratPanelCarWashing
                     CarModel = o.CarModel,
                     CarNumber = o.CarNumber,
                     Time = o.Time,
-                    WasherName = o.WasherId > 0 ? GetWasherName(o.WasherId) : "📅 Запись",
+                    WasherName = o.GetWasherId() > 0 ? GetWasherName(o.GetWasherId()) : "📅 Запись",
                     ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id => _cachedServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
                     FinalPrice = o.FinalPrice,
                     ExtraCost = o.ExtraCost,
@@ -371,7 +387,7 @@ namespace AccuratPanelCarWashing
             var completedOrders = _allOrders.Where(o => o.Status == "Выполнен").ToList();
             var totalShiftRevenue = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).FinalPrice);
 
-            WashersStats = completedOrders.Where(o => o.WasherId > 0).GroupBy(o => o.WasherId).Select(g =>
+            WashersStats = completedOrders.Where(o => o.GetWasherId() > 0).GroupBy(o => o.GetWasherId()).Select(g =>
             {
                 var washerRevenue = g.Sum(o => OrderMath.Calculate(o, _cachedServices).FinalPrice);
                 return new WasherStat

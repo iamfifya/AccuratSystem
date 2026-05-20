@@ -1,5 +1,5 @@
 using ClosedXML.Excel;
-using AccuratPanelCarWashing.Models;
+using AccuratSystem.Contracts.Models;
 using System;
 using System.Linq;
 

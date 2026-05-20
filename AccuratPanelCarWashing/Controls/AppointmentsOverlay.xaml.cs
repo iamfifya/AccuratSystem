@@ -1,5 +1,19 @@
+// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
+// Контрактные модели из API
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+
+// UI-модели
+using WpfUser = AccuratPanelCarWashing.Models.User;
+using WpfAppointment = AccuratPanelCarWashing.Models.Appointment;
+
+// Остальные using
+using AccuratPanelCarWashing.Controls;
 using AccuratPanelCarWashing.Models;
-using AccuratPanelCarWashing.Services;
+using AccuratPanelCarWashing.Services; // <-- ВАЖНО: для методов расширения (GetWasherId)
 using AccuratPanelCarWashing.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -20,14 +34,11 @@ namespace AccuratPanelCarWashing.Controls
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly ApiService _apiService = new ApiService();
-        private Shift _currentShift;
-        private List<OrderDisplayItem> _box1Items;
-        private List<OrderDisplayItem> _box2Items;
-        private List<OrderDisplayItem> _box3Items;
+        private ContractsShift _currentShift; // Используем контрактный тип для смен
         private OrderDisplayItem _selectedItem;
         public event Action<OrderDisplayItem> OnEditRequested;
 
-        public Shift CurrentShift
+        public ContractsShift CurrentShift
         {
             get => _currentShift;
             set
@@ -96,7 +107,24 @@ namespace AccuratPanelCarWashing.Controls
             {
                 var allBranches = await _apiService.GetBranchesAsync();
                 var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
-                bool isAdminOrDirector = mainWindow?.IsAdminOrDirector ?? false;
+
+                // ИСПРАВЛЕНО: Проверяем Role напрямую, так как _currentUser может быть контрактным типом
+                bool isAdminOrDirector = false;
+                if (mainWindow != null)
+                {
+                    // Если в MainWindow _currentUser типа WpfUser — используем IsAdmin
+                    // Если контрактный — проверяем Role
+                    var currentUserField = typeof(MainWindow).GetField("_currentUser",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (currentUserField != null)
+                    {
+                        var currentUser = currentUserField.GetValue(mainWindow);
+                        if (currentUser is WpfUser wpfUser)
+                            isAdminOrDirector = wpfUser.IsAdmin;
+                        else if (currentUser is ContractsUser contractsUser)
+                            isAdminOrDirector = contractsUser.Role == 1 || contractsUser.Role == 2;
+                    }
+                }
 
                 BranchTabs.Clear();
                 if (isAdminOrDirector)
@@ -126,7 +154,7 @@ namespace AccuratPanelCarWashing.Controls
             catch (Exception ex) { MessageBox.Show("Ошибка загрузки филиалов: " + ex.Message); }
         }
 
-        private void PopulateZones(BranchTabItem tab, Branch branch)
+        private void PopulateZones(BranchTabItem tab, ContractsBranch branch) // Принимаем контрактный филиал
         {
             for (int i = 1; i <= branch.WashBaysCount; i++)
                 tab.WashZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🚘 БОКС {i}", Department = "Wash" });
@@ -212,7 +240,7 @@ namespace AccuratPanelCarWashing.Controls
         }
 
         // === ФОРМАТИРОВАНИЕ СТАТУСА ЗАПИСИ ===
-        private string GetAppointmentStatusDisplay(CarWashOrder order)
+        private string GetAppointmentStatusDisplay(ContractsOrder order) // Принимаем контрактный тип
         {
             // Прошлое время + активный статус = просрочена
             if (order.Time < DateTime.Now &&
@@ -256,7 +284,9 @@ namespace AccuratPanelCarWashing.Controls
             {
                 // 1. Загружаем список мойщиков для диалога выбора
                 var allUsers = await _apiService.GetUsersAsync();
-                var washers = allUsers.Where(u => !u.IsAdmin).ToList(); // Только мойщики, не админы
+
+                // ИСПРАВЛЕНО: Проверяем Role напрямую, так как User из API — контрактный тип
+                var washers = allUsers.Where(u => u.Role != 1 && u.Role != 2).ToList(); // Только мойщики (не админы)
 
                 if (!washers.Any())
                 {
@@ -292,7 +322,8 @@ namespace AccuratPanelCarWashing.Controls
                 }
 
                 // 4. ПРЕДВАРИТЕЛЬНО НАЗНАЧАЕМ МОЙЩИКА в заказ
-                originalOrder.WasherId = selectedWasher.Id;
+                // ИСПРАВЛЕНО: Используем метод расширения вместо прямого доступа к WasherId
+                originalOrder.SetWasherId(selectedWasher.Id);
 
                 // Если смена активна — тоже подставляем (опционально)
                 if (_currentShift != null && originalOrder.ShiftId == 0)
@@ -371,7 +402,7 @@ namespace AccuratPanelCarWashing.Controls
             int currentBranchId = mainWindow?.SelectedBranchTab?.BranchId ?? AppSettings.CurrentBranchId;
 
             // Создаем заготовку для новой записи
-            var newAppointment = new CarWashOrder
+            var newAppointment = new ContractsOrder
             {
                 Id = 0,
                 IsAppointment = true,

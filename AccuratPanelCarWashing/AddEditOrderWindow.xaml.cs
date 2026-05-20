@@ -1,7 +1,17 @@
 using DocumentFormat.OpenXml.Bibliography;
-using AccuratPanelCarWashing.Models;
-using AccuratPanelCarWashing.Services;
+
+// === ЯВНЫЕ АЛИАСЫ ДЛЯ КОНТРАКТНЫХ МОДЕЛЕЙ ===
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+using ContractsClient = AccuratSystem.Contracts.Models.Client;
+
+// Остальные using
+using AccuratPanelCarWashing.Services; // <-- ВАЖНО: для методов расширения (GetWasherId/SetWasherId)
 using AccuratPanelCarWashing.ViewModels;
+using AccuratPanelCarWashing.Models;   // <-- ВАЖНО: для AppSettings
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +25,13 @@ namespace AccuratPanelCarWashing
     public partial class AddEditOrderWindow : Window
     {
         private readonly ApiService _apiService;              // Для работы с сервером
-        private readonly Shift _currentShift;
+        private readonly ContractsShift _currentShift;
         private readonly AddEditOrderViewModel _viewModel;
 
         public AddEditOrderWindow(
             AddEditOrderViewModel viewModel,
-            Shift currentShift = null,
-            CarWashOrder order = null)
+            ContractsShift currentShift = null,
+            ContractsOrder order = null)
         {
             InitializeComponent();
 
@@ -40,9 +50,9 @@ namespace AccuratPanelCarWashing
             SetupStaticLists();
         }
 
-        private List<Branch> _allBranches; // Добавляем кэш филиалов на уровне класса
+        private List<ContractsBranch> _allBranches; // Добавляем кэш филиалов на уровне класса
 
-        private async Task LoadDictionariesAsync(CarWashOrder order)
+        private async Task LoadDictionariesAsync(ContractsOrder order)
         {
             try
             {
@@ -60,7 +70,8 @@ namespace AccuratPanelCarWashing
                     if (order.IsAppointment)
                         DurationTextBox.Text = order.DurationMinutes > 0 ? order.DurationMinutes.ToString() : "60";
 
-                    if (order.WasherId > 0) WasherComboBox.SelectedValue = order.WasherId;
+                    // ИСПРАВЛЕНО: Используем метод расширения GetWasherId()
+                    if (order.GetWasherId() > 0) WasherComboBox.SelectedValue = order.GetWasherId();
                     if (order.ClientId.HasValue) ClientComboBox.SelectedValue = order.ClientId.Value;
                     if (order.BodyTypeCategory > 0) BodyTypeComboBox.SelectedValue = order.BodyTypeCategory.ToString();
                     if (!string.IsNullOrEmpty(order.Status)) StatusComboBox.SelectedValue = order.Status;
@@ -101,7 +112,7 @@ namespace AccuratPanelCarWashing
         }
 
         // Метод генерации боксов для выбранного филиала
-        private void UpdateZones(CarWashOrder order)
+        private void UpdateZones(ContractsOrder order)
         {
             if (BranchComboBox.SelectedValue is int branchId)
             {
@@ -132,34 +143,32 @@ namespace AccuratPanelCarWashing
             }
         }
 
-
-
         private void SetupStaticLists()
         {
             BodyTypeComboBox.ItemsSource = new List<KeyValuePair<string, int>> {
-        new KeyValuePair<string, int>("Категория 1 (Легковая)", 1),
-        new KeyValuePair<string, int>("Категория 2 (Универсал)", 2),
-        new KeyValuePair<string, int>("Категория 3 (Кроссовер)", 3),
-        new KeyValuePair<string, int>("Категория 4 (Внедорожник)", 4)
-    };
+                new KeyValuePair<string, int>("Категория 1 (Легковая)", 1),
+                new KeyValuePair<string, int>("Категория 2 (Универсал)", 2),
+                new KeyValuePair<string, int>("Категория 3 (Кроссовер)", 3),
+                new KeyValuePair<string, int>("Категория 4 (Внедорожник)", 4)
+            };
             BodyTypeComboBox.DisplayMemberPath = "Key";
             BodyTypeComboBox.SelectedValuePath = "Value";
 
             StatusComboBox.ItemsSource = new List<KeyValuePair<string, string>> {
-        new KeyValuePair<string, string>("🟢 В работе", "В работе"),
-        new KeyValuePair<string, string>("✅ Выполнен", "Выполнен"),
-        new KeyValuePair<string, string>("❌ Отменен", "Отменен")
-    };
+                new KeyValuePair<string, string>("🟢 В работе", "В работе"),
+                new KeyValuePair<string, string>("✅ Выполнен", "Выполнен"),
+                new KeyValuePair<string, string>("❌ Отменен", "Отменен")
+            };
             StatusComboBox.DisplayMemberPath = "Key";
             StatusComboBox.SelectedValuePath = "Value";
 
             PaymentMethodComboBox.ItemsSource = new List<KeyValuePair<string, string>> {
-        new KeyValuePair<string, string>("❓ Не указано", "Не указано"),
-        new KeyValuePair<string, string>("💵 Наличные", "Наличные"),
-        new KeyValuePair<string, string>("💳 Карта", "Карта"),
-        new KeyValuePair<string, string>("📱 Перевод", "Перевод"),
-        new KeyValuePair<string, string>("📱 QR-код", "QR-код")
-    };
+                new KeyValuePair<string, string>("❓ Не указано", "Не указано"),
+                new KeyValuePair<string, string>("💵 Наличные", "Наличные"),
+                new KeyValuePair<string, string>("💳 Карта", "Карта"),
+                new KeyValuePair<string, string>("📱 Перевод", "Перевод"),
+                new KeyValuePair<string, string>("📱 QR-код", "QR-код")
+            };
             PaymentMethodComboBox.DisplayMemberPath = "Key";
             PaymentMethodComboBox.SelectedValuePath = "Value";
         }
@@ -183,7 +192,11 @@ namespace AccuratPanelCarWashing
                 }
 
                 // 2. Собираем данные из комбобоксов
-                if (WasherComboBox.SelectedValue is int wid) _viewModel.CurrentOrder.WasherId = wid;
+                if (WasherComboBox.SelectedValue is int wid)
+                {
+                    // ИСПРАВЛЕНО: Используем метод расширения SetWasherId()
+                    _viewModel.CurrentOrder.SetWasherId(wid);
+                }
                 if (ClientComboBox.SelectedValue is int cid) _viewModel.CurrentOrder.ClientId = cid;
                 if (StatusComboBox.SelectedValue is string st) _viewModel.CurrentOrder.Status = st;
                 if (PaymentMethodComboBox.SelectedValue is string pm) _viewModel.CurrentOrder.PaymentMethod = pm;

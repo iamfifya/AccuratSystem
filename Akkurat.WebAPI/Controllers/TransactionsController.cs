@@ -1,7 +1,9 @@
-﻿using Accurat.WebAPI.Data;
-using Accurat.WebAPI.Models;
+﻿using AccuratSystem.Contracts.Models;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Accurat.WebAPI.Data;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -30,10 +32,10 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Transaction>> CreateTransaction(Transaction transaction)
         {
-            // Очищаем навигационные свойства, чтобы EF Core не пытался создать новые сущности
-            transaction.Branch = null;
-            transaction.Shift = null;
-            transaction.Employee = null;
+            // СТАЛО (C# 7.3 совместимо):
+            // Навигационные свойства теперь есть в Contracts, но их не нужно обнулять
+            // Если пришла новая транзакция от клиента — она не будет содержать эти объекты
+            // Просто убедись, что в JSON не приходит вложенный Branch/Shift/User
 
             transaction.DateTime = DateTime.UtcNow; // Принудительно ставим серверное UTC-время
 

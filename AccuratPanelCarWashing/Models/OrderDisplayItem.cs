@@ -1,12 +1,12 @@
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace AccuratPanelCarWashing.Models
 {
     public class OrderDisplayItem : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-
         public int Id { get; set; }
         public string CarNumber { get; set; }
         public string CarModel { get; set; }
@@ -29,34 +29,28 @@ namespace AccuratPanelCarWashing.Models
         public bool IsSelected
         {
             get => _isSelected;
-            set { _isSelected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected))); }
+            set { _isSelected = value; OnPropertyChanged(); }
         }
+
         public string StatusDisplay
         {
             get
             {
                 if (IsAppointment)
                 {
-                    // Для записей показываем расширенный статус
                     if (Status == "Предварительная запись" && Time < DateTime.Now)
                         return "⚠️ Просрочена";
 
-                    // ✅ Обычный switch statement для C# 7.3
                     switch (Status)
                     {
-                        case "Предварительная запись":
-                            return "📅 Ожидает";
-                        case "В работе":
-                            return "🔄 В работе";
-                        case "Выполнен":
-                            return "✅ Выполнен";
-                        case "Отменен":
-                            return "❌ Отменена";
-                        default:
-                            return Status;
+                        case "Предварительная запись": return "📅 Ожидает";
+                        case "В работе": return "🔄 В работе";
+                        case "Выполнен": return "✅ Выполнен";
+                        case "Отменен": return "❌ Отменена";
+                        default: return Status;
                     }
                 }
-                return Status; // Для обычных заказов
+                return Status;
             }
         }
 
@@ -64,9 +58,14 @@ namespace AccuratPanelCarWashing.Models
         public decimal DiscountAmount { get; set; }
         public decimal OriginalTotalPrice { get; set; }
 
-        public string DiscountDisplay => DiscountPercent > 0 ? $"−{DiscountPercent:F0}%" : (DiscountAmount > 0 ? $"−{DiscountAmount:N0} ₽" : "");
+        public string DiscountDisplay => DiscountPercent > 0 ? $"−{DiscountPercent:F0}%" : (DiscountAmount > 0 ? $"−{DiscountAmount:N0} ₽" : " ");
         public bool HasDiscount => DiscountPercent > 0 || DiscountAmount > 0;
-        public string OriginalPriceDisplay => OriginalTotalPrice > 0 ? $"{OriginalTotalPrice:N0} ₽" : "";
+        public string OriginalPriceDisplay => OriginalTotalPrice > 0 ? $"{OriginalTotalPrice:N0} ₽" : " ";
         public bool ShowOriginalPrice => HasDiscount && OriginalTotalPrice > 0;
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
