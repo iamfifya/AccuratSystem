@@ -20,5 +20,29 @@ namespace AccuratSystem.Contracts.Models
         public Branch Branch { get; set; }
         public Shift Shift { get; set; }
         public User Employee { get; set; }
+
+        // === ПОМОЩНИКИ ДЛЯ UI (только для WPF) ===
+        [Newtonsoft.Json.JsonIgnore]
+        public string FormattedAmount => (Type == "Приход" || Type == "Размен") ? $"+{Amount:N0} ₽" : $"-{Amount:N0} ₽";
+
+        [Newtonsoft.Json.JsonIgnore]
+        public string ColorHex => (Type == "Приход" || Type == "Размен") ? "#27AE60" : "#E74C3C";
+
+        [Newtonsoft.Json.JsonIgnore]
+        public string Icon
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case "Приход": return "💵";
+                    case "Расход": return "🛒";
+                    case "Аванс мойщику": return "👤";
+                    case "Инкассация": return "🏦";
+                    case "Размен": return "🪙";
+                    default: return "📄";
+                }
+            }
+        }
     }
 }
