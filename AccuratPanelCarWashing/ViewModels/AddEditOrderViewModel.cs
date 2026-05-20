@@ -219,7 +219,20 @@ namespace AccuratPanelCarWashing.ViewModels
             CurrentOrder.TotalPrice = ServicesTotal;
             CurrentOrder.OriginalTotalPrice = ServicesTotal;
             CurrentOrder.BodyTypeCategory = SelectedBodyTypeCategory;
-            CurrentOrder.FinalPrice = FinalTotal; // Обязательно считаем итог для БД
+            CurrentOrder.FinalPrice = FinalTotal;
+
+            // ВАЖНО: Принудительно синхронизируем WasherId в коллекцию OrderWashers перед отправкой
+            if (CurrentOrder.GetWasherId().HasValue)
+            {
+                CurrentOrder.OrderWashers = new List<AccuratSystem.Contracts.Models.OrderWasher>
+        {
+            new AccuratSystem.Contracts.Models.OrderWasher
+            {
+                UserId = CurrentOrder.GetWasherId().Value,
+                SplitShare = 1.0m // Полная доля
+            }
+        };
+            }
 
             try
             {
@@ -266,7 +279,12 @@ namespace AccuratPanelCarWashing.ViewModels
                     DiscountAmount = _existingOrder.DiscountAmount,
                     OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
                     BranchId = _existingOrder.BranchId,
-                    Department = _existingOrder.Department
+                    Department = _existingOrder.Department,
+
+                    // ИСПРАВЛЕНИЕ: Клонируем список мойщиков!
+                    OrderWashers = _existingOrder.OrderWashers != null
+                        ? _existingOrder.OrderWashers.ToList()
+                        : new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
                 _discountPercent = CurrentOrder.DiscountPercent;
                 _discountAmount = CurrentOrder.DiscountAmount;
@@ -295,7 +313,12 @@ namespace AccuratPanelCarWashing.ViewModels
                     DiscountAmount = _existingOrder.DiscountAmount,
                     OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
                     BranchId = _existingOrder.BranchId,
-                    Department = _existingOrder.Department
+                    Department = _existingOrder.Department,
+
+                    // ИСПРАВЛЕНИЕ: Клонируем список мойщиков для конвертированной записи!
+                    OrderWashers = _existingOrder.OrderWashers != null
+                        ? _existingOrder.OrderWashers.ToList()
+                        : new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
                 SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory;
                 _windowTitle = "✏ Редактирование записи";
@@ -319,7 +342,10 @@ namespace AccuratPanelCarWashing.ViewModels
                     IsAppointment = false,
                     ClientId = null,
                     Notes = "",
-                    BranchId = AppSettings.CurrentBranchId
+                    BranchId = AppSettings.CurrentBranchId,
+
+                    // Для пустого заказа просто создаем новый список
+                    OrderWashers = new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
                 _windowTitle = "➕ Добавление заказа";
             }

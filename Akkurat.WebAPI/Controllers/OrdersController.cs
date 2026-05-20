@@ -45,6 +45,17 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
+
+                    // 1. Инициализируем коллекцию, если она пуста
+                    if (order.OrderWashers == null) order.OrderWashers = new List<OrderWasher>();
+
+                    // 2. Явно проверяем, передан ли WasherId (для обратной совместимости с клиентами)
+                    // Если клиент прислал WasherId через OrderWasher, но мы хотим убедиться в связи:
+                    foreach (var ow in order.OrderWashers)
+                    {
+                        ow.OrderId = order.Id; // EF Core сам подставит Id после SaveChanges, но лучше перестраховаться
+                    }
+
                     // 1. Проверяем пересечения по времени для данного бокса
                     var endTime = order.Time.AddMinutes(order.DurationMinutes > 0 ? order.DurationMinutes : 60);
 

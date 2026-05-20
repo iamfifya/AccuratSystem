@@ -136,6 +136,9 @@ namespace AccuratPanelCarWashing
             _currentUser = user;
             DataContext = this;
 
+            // ГОВОРИМ ГЛАВНОМУ ОКНУ СЛУШАТЬ ОВЕРЛЕЙ ЗАПИСЕЙ
+            AppointmentsOverlay.OnEditRequested += OpenEditOrder;
+
             _ = LoadDataAsync();
 
             InitializeSignalR();
@@ -297,7 +300,7 @@ namespace AccuratPanelCarWashing
             //  САМОЕ ГЛАВНОЕ: Раскидываем заказы по нужным вкладкам и боксам
             foreach (var tab in BranchTabs)
             {
-                // 🔥 Объединяем коллекции только для прохода циклом
+                // Объединяем коллекции только для прохода циклом
                 foreach (var zone in tab.WashZones.Concat(tab.ServiceZones))
                 {
                     var ordersForZone = allDisplayItems.Where(i =>
