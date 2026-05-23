@@ -71,6 +71,21 @@
 * MVVM (собственная реализация)
 * `Microsoft.Maui.Storage.Preferences` для локального хранения настроек
 
+## 📄 Лицензия
+
+Распространяется под лицензией MIT. См. файл [LICENSE](LICENSE) для подробностей.
+
+## 👤 Автор
+
+**Dmitry Kuraedov** ([@iamfifya](https://github.com/iamfifya))
+- TG: @iamfifya
+- Email: dimakuraedov@gmail.com
+- Проект разработан с использованием рекомендаций от: DeepSeek, Qwen, Google Gemini 🙏
+
+---
+
+> 💡 **Совет**: Для быстрого старта используйте `docker-compose up` (файл в разработке)
+
 ## Требования к окружению и Запуск
 
 ### 1. Подготовка базы данных и сервера
