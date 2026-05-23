@@ -1,6 +1,9 @@
 # Accurat System — Комплексная система управления автомойкой
 
 [![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
+[![Code Size](https://img.shields.io/github/languages/code-size/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem)
 
 ## Описание проекта
 
@@ -80,7 +83,24 @@ cd Akkurat.WebAPI
 ```
 
 
-3. Откройте `appsettings.json` и настройте строку подключения `DefaultConnection` к вашей БД PostgreSQL.
+3. 📦 Переменные окружения (Akkurat.WebAPI/appsettings.json)
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=accurat_db;Username=postgres;Password=your_password"
+  },
+  "ApiSettings": {
+    "BaseUrl": "https://localhost:7001",
+    "SignalRHub": "/hubs/updates"
+  },
+  "JwtSettings": {
+    "SecretKey": "your-secret-key-here",
+    "Issuer": "AccuratSystem",
+    "ExpiryMinutes": 60
+  }
+}
+```
 4. Примените миграции Entity Framework для создания таблиц:
 ```bash
 dotnet ef database update
