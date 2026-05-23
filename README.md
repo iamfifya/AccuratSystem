@@ -1,6 +1,9 @@
 # Accurat System — Комплексная система управления автомойкой
 
 [![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
+[![Code Size](https://img.shields.io/github/languages/code-size/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem)
 
 ## Описание проекта
 
@@ -68,6 +71,21 @@
 * MVVM (собственная реализация)
 * `Microsoft.Maui.Storage.Preferences` для локального хранения настроек
 
+## 📄 Лицензия
+
+Распространяется под лицензией MIT. См. файл [LICENSE](LICENSE) для подробностей.
+
+## 👤 Автор
+
+**Dmitry Kuraedov** ([@iamfifya](https://github.com/iamfifya))
+- TG: @iamfifya
+- Email: dimakuraedov@gmail.com
+- Проект разработан с использованием рекомендаций от: DeepSeek, Qwen, Google Gemini 🙏
+
+---
+
+> 💡 **Совет**: Для быстрого старта используйте `docker-compose up` (файл в разработке)
+
 ## Требования к окружению и Запуск
 
 ### 1. Подготовка базы данных и сервера
@@ -80,7 +98,24 @@ cd Akkurat.WebAPI
 ```
 
 
-3. Откройте `appsettings.json` и настройте строку подключения `DefaultConnection` к вашей БД PostgreSQL.
+3. 📦 Переменные окружения (Akkurat.WebAPI/appsettings.json)
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=accurat_db;Username=postgres;Password=your_password"
+  },
+  "ApiSettings": {
+    "BaseUrl": "https://localhost:7001",
+    "SignalRHub": "/hubs/updates"
+  },
+  "JwtSettings": {
+    "SecretKey": "your-secret-key-here",
+    "Issuer": "AccuratSystem",
+    "ExpiryMinutes": 60
+  }
+}
+```
 4. Примените миграции Entity Framework для создания таблиц:
 ```bash
 dotnet ef database update
