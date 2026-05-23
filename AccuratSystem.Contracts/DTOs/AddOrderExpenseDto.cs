@@ -14,5 +14,7 @@ namespace AccuratSystem.Contracts.DTOs
         public decimal ClientPrice { get; set; }
         public int Quantity { get; set; } = 1;
         public string Note { get; set; } = string.Empty;
+
+        public string CreatedByUser { get; set; }
     }
 }

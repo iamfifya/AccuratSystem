@@ -4,11 +4,13 @@ using AccuratPanelCarWashing.Services;
 using AccuratPanelCarWashing.ViewModels;
 using System;
 using System.Windows;
+using AccuratPanelCarWashing.Models;
 
 namespace AccuratPanelCarWashing
 {
     public partial class App : Application
     {
+        public static User CurrentUser { get; set; }
         private ServiceProvider _serviceProvider;
 
         protected override void OnStartup(StartupEventArgs e)

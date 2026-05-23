@@ -786,7 +786,9 @@ namespace AccuratPanelCarWashing.ViewModels
                 CostPrice = costPrice,
                 ClientPrice = clientPrice,
                 Quantity = quantity,
-                Note = note
+                Note = note,
+
+                CreatedByUser = App.CurrentUser?.DisplayString
             };
 
             try

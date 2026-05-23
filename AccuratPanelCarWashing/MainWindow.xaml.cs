@@ -139,6 +139,8 @@ namespace AccuratPanelCarWashing
             InitializeComponent();
             _apiService = new ApiService();
             _currentUser = user;
+
+            App.CurrentUser = user;
             DataContext = this;
 
             _currentBranchId = AppSettings.CurrentBranchId;

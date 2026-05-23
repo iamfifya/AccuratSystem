@@ -248,7 +248,7 @@ namespace Accurat.WebAPI.Controllers
                 OrderId = id,
                 EntryType = TimelineEntryType.ExpenseAdded,
                 Message = $"Добавлен расход: {expense.Name} ({expense.ClientPrice * expense.Quantity:N0} ₽)",
-                CreatedBy = User.Identity?.Name ?? "System",
+                CreatedBy = dto.CreatedByUser ?? "Система",
                 Timestamp = DateTime.UtcNow,
                 RelatedEntityId = expense.Id
             };
