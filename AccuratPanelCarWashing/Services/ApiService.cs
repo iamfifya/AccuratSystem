@@ -1,26 +1,26 @@
 // === ЯВНЫЕ АЛИАСЫ ДЛЯ КОНТРАКТНЫХ МОДЕЛЕЙ (чтобы избежать конфликтов с UI-моделями) ===
-using ContractsOrder = AccuratSystem.Contracts.Models.Order;
-using ContractsService = AccuratSystem.Contracts.Models.Service;
-using ContractsUser = AccuratSystem.Contracts.Models.User;
-using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
-using ContractsClient = AccuratSystem.Contracts.Models.Client;
-using ContractsShift = AccuratSystem.Contracts.Models.Shift;
-using ContractsTransaction = AccuratSystem.Contracts.Models.Transaction;
-using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
-using ContractsEmployeeSchedule = AccuratSystem.Contracts.Models.EmployeeSchedule;
-using ContractsOrderWasher = AccuratSystem.Contracts.Models.OrderWasher;
-using ContractsCashboxSummary = AccuratSystem.Contracts.Models.CashboxSummary;
-
 // === UI-МОДЕЛИ (без алиасов, так как они в том же неймспейсе) ===
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
-
+using AccuratSystem.Contracts.DTOs;
+using AccuratSystem.Contracts.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+using ContractsCashboxSummary = AccuratSystem.Contracts.Models.CashboxSummary;
+using ContractsClient = AccuratSystem.Contracts.Models.Client;
+using ContractsEmployeeSchedule = AccuratSystem.Contracts.Models.EmployeeSchedule;
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsOrderWasher = AccuratSystem.Contracts.Models.OrderWasher;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
+using ContractsTransaction = AccuratSystem.Contracts.Models.Transaction;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
 
 namespace AccuratPanelCarWashing.Services
 {
@@ -302,6 +302,70 @@ namespace AccuratPanelCarWashing.Services
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ContractsOrder>();
         }
+        #endregion
+
+        // === ДОБАВИТЬ В КОНЕЦ КЛАССА ===
+
+        #region РАСХОДЫ И ЛЕНТА (СЕРВИС)
+
+        // 🔹 Добавить расход к заказу
+        public async Task<OrderExpense> AddOrderExpenseAsync(int orderId, AddOrderExpenseDto dto)
+        {
+            try
+            {
+                var response = await _http.PostAsJsonAsync($"Orders/{orderId}/expenses", dto);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<OrderExpense>();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Ошибка добавления расхода: {ex.Message}");
+            }
+        }
+
+        // 🔹 Получить расходы по заказу
+        public async Task<List<OrderExpense>> GetOrderExpensesAsync(int orderId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<OrderExpense>>($"Orders/{orderId}/expenses")
+                    ?? new List<OrderExpense>();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Ошибка получения расходов: {ex.Message}");
+            }
+        }
+
+        // 🔹 Получить ленту событий заказа
+        public async Task<List<OrderTimelineEntry>> GetOrderTimelineAsync(int orderId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<OrderTimelineEntry>>($"Orders/{orderId}/timeline")
+                    ?? new List<OrderTimelineEntry>();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Ошибка получения ленты: {ex.Message}");
+            }
+        }
+
+        // 🔹 Обновить цену услуги в заказе
+        public async Task<OrderServiceItem> UpdateServicePriceAsync(int orderServiceItemId, UpdateServicePriceDto dto)
+        {
+            try
+            {
+                var response = await _http.PutAsJsonAsync($"Orders/services/{orderServiceItemId}/price", dto);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<OrderServiceItem>();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Ошибка обновления цены: {ex.Message}");
+            }
+        }
+
         #endregion
 
         public class ClientStatsResponse

@@ -161,8 +161,6 @@ namespace Accurat.WebAPI.Controllers
 
                     _context.OutboxMessages.Add(outboxMsg);
 
-                    _context.OutboxMessages.Add(outboxMsg);
-
                     await _context.SaveChangesAsync();
                     transaction.Commit(); // Подтверждаем транзакцию
 
@@ -218,6 +216,98 @@ namespace Accurat.WebAPI.Controllers
                 .ToListAsync();
 
             return Ok(activeOrders);
+        }
+
+        // === ДОБАВИТЬ В КОНЕЦ КЛАССА ===
+
+        // 🔹 1. Добавить расход к заказу
+        [HttpPost("{id}/expenses")]
+        public async Task<IActionResult> AddExpense(int id, [FromBody] AddOrderExpenseDto dto)
+        {
+            if (dto.CostPrice < 0 || dto.ClientPrice < 0)
+                return BadRequest("Цены не могут быть отрицательными");
+
+            var expense = new OrderExpense
+            {
+                OrderId = id,
+                Name = dto.Name,
+                Category = dto.Category,
+                CostPrice = dto.CostPrice,
+                ClientPrice = dto.ClientPrice,
+                Quantity = dto.Quantity,
+                Note = dto.Note,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.OrderExpenses.Add(expense);
+            await _context.SaveChangesAsync();
+
+            // 📝 Записываем в ленту событий
+            var timelineEntry = new OrderTimelineEntry
+            {
+                OrderId = id,
+                EntryType = TimelineEntryType.ExpenseAdded,
+                Message = $"Добавлен расход: {expense.Name} ({expense.ClientPrice * expense.Quantity:N0} ₽)",
+                CreatedBy = User.Identity?.Name ?? "System",
+                Timestamp = DateTime.UtcNow,
+                RelatedEntityId = expense.Id
+            };
+            _context.OrderTimelineEntries.Add(timelineEntry);
+            await _context.SaveChangesAsync();
+
+            return Ok(expense);
+        }
+
+        // 🔹 2. Получить ленту событий заказа
+        [HttpGet("{id}/timeline")]
+        public async Task<IActionResult> GetTimeline(int id)
+        {
+            var entries = await _context.OrderTimelineEntries
+                .Where(e => e.OrderId == id)
+                .OrderByDescending(e => e.Timestamp)
+                .ToListAsync();
+
+            return Ok(entries);
+        }
+
+        // 🔹 3. Обновить цену услуги в заказе (с записью в историю)
+        [HttpPut("services/{id}/price")]
+        public async Task<IActionResult> UpdateServicePrice(int id, [FromBody] UpdateServicePriceDto dto)
+        {
+            var serviceItem = await _context.OrderServiceItems.FindAsync(id);
+            if (serviceItem == null) return NotFound();
+
+            var oldPrice = serviceItem.ActualPrice;
+            serviceItem.ActualPrice = dto.NewPrice;
+            serviceItem.PriceNote = dto.Note;
+
+            _context.OrderServiceItems.Update(serviceItem);
+
+            // 📝 Записываем изменение цены в ленту
+            var timelineEntry = new OrderTimelineEntry
+            {
+                OrderId = serviceItem.OrderId,
+                EntryType = TimelineEntryType.PriceChanged,
+                Message = $"Цена изменена: {oldPrice:N0} ₽ → {dto.NewPrice:N0} ₽. {dto.Note}",
+                CreatedBy = dto.UpdatedByUser ?? "System",
+                Timestamp = DateTime.UtcNow,
+                RelatedEntityId = serviceItem.Id
+            };
+            _context.OrderTimelineEntries.Add(timelineEntry);
+
+            await _context.SaveChangesAsync();
+            return Ok(serviceItem);
+        }
+
+        // 🔹 4. Получить расходы по заказу (для отображения в акте)
+        [HttpGet("{id}/expenses")]
+        public async Task<IActionResult> GetExpenses(int id)
+        {
+            var expenses = await _context.OrderExpenses
+                .Where(e => e.OrderId == id)
+                .ToListAsync();
+
+            return Ok(expenses);
         }
     }
 }

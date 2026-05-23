@@ -160,10 +160,10 @@
                         Background="#f0f0f2" 
                         BorderThickness="0">
 
-                <!--  ВОТ ИСПРАВЛЕНИЕ: Наследуем твой красивый дизайн из словаря через BasedOn  -->
+                <!-- Наследуем твой красивый дизайн из словаря через BasedOn  -->
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
-                        <Setter Property="Visibility" Value="{Binding DataContext.IsAdminOrDirector, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Setter Property="Padding" Value="10,5"/>
                     </Style>
                 </TabControl.ItemContainerStyle>
 

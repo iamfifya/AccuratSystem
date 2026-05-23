@@ -59,11 +59,11 @@ namespace Accurat.WebAPI.Data
             {
                 entity.HasKey(e => e.Id);
 
-                // 🔥 Индексы для быстрого поиска
+                // Индексы для быстрого поиска
                 entity.HasIndex(e => e.OrderId);
                 entity.HasIndex(e => new { e.OrderId, e.Category });
 
-                // 🔥 Конвертер для enum -> string в БД (совместимо с PostgreSQL jsonb)
+                // Конвертер для enum -> string в БД (совместимо с PostgreSQL jsonb)
                 entity.Property(e => e.Category)
                     .HasConversion<string>()
                     .HasMaxLength(50);
@@ -80,11 +80,11 @@ namespace Accurat.WebAPI.Data
             {
                 entity.HasKey(e => e.Id);
 
-                // 🔥 Индексы для быстрой загрузки ленты
+                // Индексы для быстрой загрузки ленты
                 entity.HasIndex(e => e.OrderId);
                 entity.HasIndex(e => new { e.OrderId, e.Timestamp }); // составной для сортировки
 
-                // 🔥 Конвертер для enum -> string
+                // Конвертер для enum -> string
                 entity.Property(e => e.EntryType)
                     .HasConversion<string>()
                     .HasMaxLength(50);
@@ -101,7 +101,7 @@ namespace Accurat.WebAPI.Data
             {
                 entity.HasKey(e => e.Id);
 
-                // 🔥 Индексы
+                // Индексы
                 entity.HasIndex(e => e.OrderId);
                 entity.HasIndex(e => e.ServiceId);
                 entity.HasIndex(e => new { e.OrderId, e.ServiceId });

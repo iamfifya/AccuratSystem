@@ -110,6 +110,13 @@ namespace AccuratPanelCarWashing
                 ClientComboBox.ItemsSource = allClients;
                 BranchComboBox.ItemsSource = _allBranches; // Привязываем список филиалов
 
+                // Загружаем расходы и ленту, если заказ уже создан (не новый)
+                if (order != null && order.Id > 0)
+                {
+                    _ = _viewModel.LoadOrderExpensesAsync(order.Id);
+                    _ = _viewModel.LoadOrderTimelineAsync(order.Id);
+                }
+
                 if (order != null)
                 {
                     if (order.IsAppointment)
@@ -135,8 +142,8 @@ namespace AccuratPanelCarWashing
                     OrderTimeTextBox.Text = DateTime.Now.ToString("HH:mm");
                     if (allUsers.Any()) WasherComboBox.SelectedItem = allUsers.FirstOrDefault();
 
-                    // Для новой записи ставим текущий филиал и генерируем зоны
-                    BranchComboBox.SelectedValue = _currentShift?.BranchId ?? AppSettings.CurrentBranchId;
+                    // ИСПРАВЛЕНИЕ: Берем филиал строго из модели (которую мы пробросили с главной вкладки!)
+                    BranchComboBox.SelectedValue = _viewModel.CurrentOrder.BranchId;
                     UpdateZones(null);
                 }
             }
@@ -184,7 +191,7 @@ namespace AccuratPanelCarWashing
                 }
                 else if (_viewModel.AvailableZones.Any())
                 {
-                    // 🔥 Если заказ новый или старая зона не подходит - выбираем ПЕРВУЮ доступную
+                    // Если заказ новый или старая зона не подходит - выбираем ПЕРВУЮ доступную
                     ZoneComboBox.SelectedValue = _viewModel.AvailableZones.First().BoxNumber;
                     _viewModel.CurrentOrder.BoxNumber = _viewModel.AvailableZones.First().BoxNumber;
                 }
@@ -297,6 +304,22 @@ namespace AccuratPanelCarWashing
                     _viewModel.CurrentOrder.BranchId = _currentShift.BranchId;
                 }
 
+                // ПРОВЕРКА: нельзя создать заказ сервиса для филиала без сервисных зон
+                if (_viewModel.CurrentOrder.Department == "Service")
+                {
+                    var branch = _allBranches?.FirstOrDefault(b => b.Id == _viewModel.CurrentOrder.BranchId);
+                    if (branch != null && branch.ServiceLiftsCount == 0)
+                    {
+                        MessageBox.Show(
+                            $"В выбранном филиале \"{branch.Name}\" нет сервисных зон (подъемников).\n\n" +
+                            $"Выберите филиал с сервисом или смените департамент на \"Мойка\".",
+                            "Ошибка валидации",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+
                 // 4. Вызываем асинхронное сохранение во ViewModel
                 var result = await _viewModel.SaveOrderAsync();
 
@@ -362,6 +385,90 @@ namespace AccuratPanelCarWashing
             {
                 vm.ServiceSearchText = ServiceSearchTextBox.Text;
             }
+        }
+
+        // === ОБРАБОТЧИК ДОБАВЛЕНИЯ РАСХОДА ===
+        private async void AddExpenseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(ExpenseNameTextBox.Text))
+            {
+                MessageBox.Show("Введите название расхода", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(ExpenseCostPriceTextBox.Text.Replace(",", "."), out decimal costPrice) || costPrice < 0)
+            {
+                MessageBox.Show("Введите корректную себестоимость", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(ExpenseClientPriceTextBox.Text.Replace(",", "."), out decimal clientPrice) || clientPrice < 0)
+            {
+                MessageBox.Show("Введите корректную цену для клиента", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!int.TryParse(ExpenseQuantityTextBox.Text, out int quantity) || quantity <= 0)
+            {
+                quantity = 1;
+            }
+
+            var categoryItem = ExpenseCategoryComboBox.SelectedItem as ComboBoxItem;
+            if (categoryItem == null)
+            {
+                MessageBox.Show("Выберите категорию", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            string category = categoryItem.Tag?.ToString() ?? "Consumables";
+
+            string note = string.IsNullOrWhiteSpace(ExpenseNoteTextBox.Text) ? "" : ExpenseNoteTextBox.Text;
+
+            this.IsEnabled = false;
+            bool success = await _viewModel.AddExpenseAsync(
+                ExpenseNameTextBox.Text,
+                category,
+                costPrice,
+                clientPrice,
+                quantity,
+                note);
+            this.IsEnabled = true;
+
+            if (success)
+            {
+                MessageBox.Show("Расход добавлен!", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Очищаем поля
+                ExpenseNameTextBox.Clear();
+                ExpenseCostPriceTextBox.Clear();
+                ExpenseClientPriceTextBox.Clear();
+                ExpenseQuantityTextBox.Text = "1";
+                ExpenseNoteTextBox.Clear();
+                ExpenseCategoryComboBox.SelectedItem = -1;
+            }
+            else
+            {
+                MessageBox.Show("Не удалось добавить расход", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void PrintActButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.CurrentOrder?.Id <= 0)
+            {
+                MessageBox.Show("Сохраните заказ перед печатью акта", "Предупреждение");
+                return;
+            }
+
+            // TODO: Здесь будет логика генерации акта
+            // 1. Собрать данные: заказ, услуги, расходы, клиент
+            // 2. Сформировать документ (ClosedXML для Excel или PDF)
+            // 3. Открыть для печати
+
+            MessageBox.Show("Функция печати акта в разработке!\n\nДанные для акта:\n" +
+                           $"Заказ #{_viewModel.CurrentOrder.Id}\n" +
+                           $"Клиент: {_viewModel.CurrentOrder.ClientId}\n" +
+                           $"Услуги: {_viewModel.Services?.Count(s => s.IsSelected)} шт.\n" +
+                           $"Расходы: {_viewModel.OrderExpenses?.Count} шт.\n" +
+                           $"Итого: {_viewModel.FinalTotalWithExpenses:N0} ₽",
+                           "Печать акта", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
     public class ZoneItem

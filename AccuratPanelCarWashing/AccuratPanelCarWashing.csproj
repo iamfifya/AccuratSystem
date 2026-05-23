@@ -414,6 +414,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ViewModels\TimelineEntryViewModel.cs" />
     <Compile Include="WasherSelectionDialog.xaml.cs">
       <DependentUpon>WasherSelectionDialog.xaml</DependentUpon>
     </Compile>

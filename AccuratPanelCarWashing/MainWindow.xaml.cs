@@ -1,23 +1,9 @@
 // === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
-// Контрактные модели из API — используем для данных с сервера
-using ContractsOrder = AccuratSystem.Contracts.Models.Order;
-using ContractsService = AccuratSystem.Contracts.Models.Service;
-using ContractsUser = AccuratSystem.Contracts.Models.User;
-using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
-using ContractsShift = AccuratSystem.Contracts.Models.Shift;
-using ContractsTransaction = AccuratSystem.Contracts.Models.Transaction;
-using ContractsClient = AccuratSystem.Contracts.Models.Client;
-using ContractsOrderWasher = AccuratSystem.Contracts.Models.OrderWasher;
-
-// UI-модели (с INotifyPropertyChanged, DisplayString, IsAdmin) — используем в окне
-using WpfUser = AccuratPanelCarWashing.Models.User;
-using WpfAppointment = AccuratPanelCarWashing.Models.Appointment;
-
-// Остальные using без конфликтов
 using AccuratPanelCarWashing.Controls;
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using AccuratPanelCarWashing.ViewModels;
+using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,7 +15,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Microsoft.AspNetCore.SignalR.Client;
+using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
+using ContractsClient = AccuratSystem.Contracts.Models.Client;
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsOrderWasher = AccuratSystem.Contracts.Models.OrderWasher;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+using ContractsTransaction = AccuratSystem.Contracts.Models.Transaction;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using WpfAppointment = AccuratPanelCarWashing.Models.Appointment;
+using WpfUser = AccuratPanelCarWashing.Models.User;
 
 namespace AccuratPanelCarWashing
 {
@@ -41,25 +36,27 @@ namespace AccuratPanelCarWashing
         private List<ContractsOrder> _allOrders = new List<ContractsOrder>();
         private List<WpfAppointment> _todayAppointments = new List<WpfAppointment>();
         private ContractsShift _currentShift;
-        private WpfUser _currentUser; // UI-пользователь с IsAdmin
+        private int _currentBranchId;
+        private WpfUser _currentUser;
         private string _searchFilter = "";
 
         private HubConnection _hubConnection;
 
-        //  Свойства для видимости
+        // Добавляем кэш смен и флаг загрузки
+        private List<ContractsShift> _allShiftsCache = new List<ContractsShift>();
+        private bool _isDataLoading = false;
+
         public bool IsDirector => _currentUser?.Role == 1;
         public bool IsSingleBranch => _currentUser?.Role != 1;
         public bool IsAdminOrDirector => _currentUser?.Role == 1 || _currentUser?.Role == 2;
 
-        // Кэши для быстрого UI без постоянных запросов к серверу
-        private List<ContractsService> _cachedServices = new List<ContractsService>(); // Кэш из API — контрактный тип
-        private List<ContractsUser> _cachedUsers = new List<ContractsUser>(); // Кэш из API — контрактный тип
+        private List<ContractsService> _cachedServices = new List<ContractsService>();
+        private List<ContractsUser> _cachedUsers = new List<ContractsUser>();
         private List<WasherStat> _washersStats;
 
         private decimal _companyEarnings;
         private decimal _totalRevenue;
 
-        // Наша главная коллекция вкладок
         private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
         public ObservableCollection<BranchTabItem> BranchTabs
         {
@@ -73,14 +70,29 @@ namespace AccuratPanelCarWashing
             get => _selectedBranchTab;
             set
             {
-                _selectedBranchTab = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
-                //  Уведомляем интерфейс, что текст филиала тоже изменился
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentBranchDisplay)));
+                if (_selectedBranchTab != value)
+                {
+                    _selectedBranchTab = value;
+
+                    // Если переключили вкладку и сейчас НЕ идет загрузка данных из БД:
+                    if (_selectedBranchTab != null && !_isDataLoading)
+                    {
+                        _currentBranchId = _selectedBranchTab.BranchId;
+                        AppSettings.CurrentBranchId = _currentBranchId; // Синхронизируем с AppSettings
+
+                        // Берем смену из кэша мгновенно, без запроса к серверу
+                        _currentShift = _allShiftsCache.FirstOrDefault(s => !s.IsClosed && s.BranchId == _currentBranchId);
+
+                        ApplyFilterAndDisplay();
+                        UpdateInfo();
+                    }
+
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentBranchDisplay)));
+                }
             }
         }
 
-        //  Формируем красивую строку прямо здесь
         public string CurrentBranchDisplay => SelectedBranchTab != null ? $"{SelectedBranchTab.BranchName}" : "";
 
         public string ActiveUserInfo
@@ -105,42 +117,34 @@ namespace AccuratPanelCarWashing
                 if (_selectedItem != null) _selectedItem.IsSelected = false;
                 _selectedItem = value;
                 if (_selectedItem != null) _selectedItem.IsSelected = true;
-
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItem)));
             }
         }
 
-        // === СТАТИСТИКА ПО ТИПАМ ОПЛАТЫ ===
-        private int _cashCount; private decimal _cashAmount;
-        private int _cardCount; private decimal _cardAmount;
-        private int _transferCount; private decimal _transferAmount;
-        private int _qrCount; private decimal _qrAmount;
-
-        public int QrCount { get => _qrCount; set { _qrCount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QrCount))); } }
-        public decimal QrAmount { get => _qrAmount; set { _qrAmount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QrAmount))); } }
-        public int CashCount { get => _cashCount; set { _cashCount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CashCount))); } }
-        public decimal CashAmount { get => _cashAmount; set { _cashAmount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CashAmount))); } }
-        public int CardCount { get => _cardCount; set { _cardCount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CardCount))); } }
-        public decimal CardAmount { get => _cardAmount; set { _cardAmount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CardAmount))); } }
-        public int TransferCount { get => _transferCount; set { _transferCount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TransferCount))); } }
-        public decimal TransferAmount { get => _transferAmount; set { _transferAmount = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TransferAmount))); } }
+        public int QrCount { get; set; }
+        public decimal QrAmount { get; set; }
+        public int CashCount { get; set; }
+        public decimal CashAmount { get; set; }
+        public int CardCount { get; set; }
+        public decimal CardAmount { get; set; }
+        public int TransferCount { get; set; }
+        public decimal TransferAmount { get; set; }
 
         public List<WasherStat> WashersStats { get => _washersStats; set { _washersStats = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WashersStats))); } }
         public decimal CompanyEarnings { get => _companyEarnings; set { _companyEarnings = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CompanyEarnings))); } }
         public decimal TotalRevenue { get => _totalRevenue; set { _totalRevenue = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalRevenue))); } }
 
-        public MainWindow(WpfUser user) // Конструктор принимает UI-пользователя
+        public MainWindow(WpfUser user)
         {
             InitializeComponent();
             _apiService = new ApiService();
             _currentUser = user;
             DataContext = this;
 
-            // ГОВОРИМ ГЛАВНОМУ ОКНУ СЛУШАТЬ ОВЕРЛЕЙ ЗАПИСЕЙ
+            _currentBranchId = AppSettings.CurrentBranchId;
             AppointmentsOverlay.OnEditRequested += OpenEditOrder;
 
             _ = LoadDataAsync();
-
             InitializeSignalR();
         }
 
@@ -152,18 +156,23 @@ namespace AccuratPanelCarWashing
 
         public void RefreshData() => _ = LoadDataAsync();
 
-
-        // ==========================================
-        // ЗАГРУЗКА ДАННЫХ ИЗ API (ВЫЗЫВАЕТСЯ РЕДКО)
-        // ==========================================
         private async Task LoadDataAsync()
         {
+            if (_isDataLoading) return; // Защита от бесконечного цикла
+            _isDataLoading = true;
+
             try
             {
-                // 1. ЗАГРУЖАЕМ ФИЛИАЛЫ
-                var allBranches = await _apiService.GetBranchesAsync();
+                // Запоминаем филиал ДО обновления
+                int savedBranchId = _currentBranchId > 0 ? _currentBranchId : AppSettings.CurrentBranchId;
 
-                BranchTabs.Clear();
+                var allBranches = await _apiService.GetBranchesAsync();
+                _allShiftsCache = await _apiService.GetShiftsAsync();
+                _cachedUsers = await _apiService.GetUsersAsync();
+                _cachedServices = await _apiService.GetServicesAsync();
+                _allOrders = await _apiService.GetOrdersAsync();
+
+                var newTabs = new ObservableCollection<BranchTabItem>();
 
                 if (IsAdminOrDirector)
                 {
@@ -171,41 +180,36 @@ namespace AccuratPanelCarWashing
                     {
                         var tab = new BranchTabItem { BranchId = b.Id, BranchName = b.Name };
                         PopulateZones(tab, b);
-                        BranchTabs.Add(tab);
+                        newTabs.Add(tab);
                     }
                 }
                 else
                 {
-                    var myBranch = allBranches.FirstOrDefault(b => b.Id == AppSettings.CurrentBranchId);
+                    var myBranch = allBranches.FirstOrDefault(b => b.Id == savedBranchId);
                     if (myBranch != null)
                     {
                         var tab = new BranchTabItem { BranchId = myBranch.Id, BranchName = myBranch.Name };
                         PopulateZones(tab, myBranch);
-                        BranchTabs.Add(tab);
+                        newTabs.Add(tab);
                     }
                 }
 
-                // Выбираем первую вкладку по умолчанию
+                BranchTabs = newTabs;
+
+                // ВОССТАНАВЛИВАЕМ вкладку (а не просто берем первую)
                 if (BranchTabs.Any())
-                    SelectedBranchTab = BranchTabs.First();
-
-                // 2. ЗАГРУЖАЕМ ОСТАЛЬНЫЕ ДАННЫЕ
-                var allShifts = await _apiService.GetShiftsAsync();
-                _cachedUsers = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
-                _cachedServices = await _apiService.GetServicesAsync(); // Возвращает List<ContractsService>
-                var allOrdersFromApi = await _apiService.GetOrdersAsync(); // Возвращает List<ContractsOrder>
-
-                // Пока берем просто открытую смену
-                _currentShift = allShifts.FirstOrDefault(s => !s.IsClosed);
-
-                if (_currentShift != null)
                 {
-                    _allOrders = allOrdersFromApi.Where(o => o.ShiftId == _currentShift.Id || o.IsAppointment).ToList();
+                    var tabToSelect = BranchTabs.FirstOrDefault(t => t.BranchId == savedBranchId) ?? BranchTabs.First();
+                    _selectedBranchTab = tabToSelect;
+                    _currentBranchId = tabToSelect.BranchId;
+                    AppSettings.CurrentBranchId = _currentBranchId;
+
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentBranchDisplay)));
                 }
-                else
-                {
-                    _allOrders = allOrdersFromApi.Where(o => o.IsAppointment).ToList();
-                }
+
+                // Выбираем смену для ТЕКУЩЕГО филиала
+                _currentShift = _allShiftsCache.FirstOrDefault(s => !s.IsClosed && s.BranchId == _currentBranchId);
 
                 ApplyFilterAndDisplay();
                 UpdateInfo();
@@ -214,42 +218,47 @@ namespace AccuratPanelCarWashing
             {
                 MessageBox.Show("Ошибка загрузки данных: " + ex.Message);
             }
+            finally
+            {
+                _isDataLoading = false; // Снимаем блокировку
+            }
         }
 
-        // Вспомогательный метод: собирает боксы и подъемники в один список для конкретного филиала
-        private void PopulateZones(BranchTabItem tab, ContractsBranch branch) // Принимаем контрактный филиал
+        private void PopulateZones(BranchTabItem tab, ContractsBranch branch)
         {
-            // Генерируем боксы мойки
             for (int i = 1; i <= branch.WashBaysCount; i++)
                 tab.WashZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🚿 БОКС {i}", Department = "Wash" });
 
-            // Генерируем подъемники сервиса
             for (int i = 1; i <= branch.ServiceLiftsCount; i++)
                 tab.ServiceZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🔧 ПОДЪЕМНИК {i}", Department = "Service" });
         }
 
-        // ==========================================
-        // ЛОКАЛЬНАЯ ФИЛЬТРАЦИЯ (МГНОВЕННАЯ)
-        // ==========================================
-
         private void ApplyFilterAndDisplay()
         {
-            var filteredOrders = _allOrders.AsEnumerable();
-            var filteredApts = _todayAppointments.Where(a => !a.IsCompleted).AsEnumerable();
+            int currentShiftId = _currentShift?.Id ?? -1;
 
+            // 1. ЖЕСТКИЙ ФИЛЬТР: 
+            // - Обычные заказы: только для ТЕКУЩЕЙ смены выбранного филиала
+            // - Записи (IsAppointment): только активные на СЕГОДНЯ для выбранного филиала
+            var filteredOrders = _allOrders.Where(o =>
+                o.BranchId == _currentBranchId &&
+                (
+                    (!o.IsAppointment && o.ShiftId == currentShiftId) ||
+                    (o.IsAppointment && o.Time.Date == DateTime.Now.Date && (o.Status == "Предварительная запись" || o.Status == "Запись" || o.Status == "Ожидает"))
+                )
+            ).AsEnumerable();
+
+            // 2. Локальный поиск по номеру/модели
             if (!string.IsNullOrWhiteSpace(_searchFilter))
             {
                 string filter = _searchFilter.ToLower();
                 filteredOrders = filteredOrders.Where(o =>
                     (o.CarNumber != null && o.CarNumber.ToLower().Contains(filter)) ||
                     (o.CarModel != null && o.CarModel.ToLower().Contains(filter)));
-
-                filteredApts = filteredApts.Where(a =>
-                    (a.CarNumber != null && a.CarNumber.ToLower().Contains(filter)) ||
-                    (a.CarModel != null && a.CarModel.ToLower().Contains(filter)));
             }
 
-            var orderItems = filteredOrders.Select(o => new OrderDisplayItem
+            // 3. Формируем элементы для отрисовки (разделяя заказы и записи)
+            var orderItems = filteredOrders.Where(o => !o.IsAppointment).Select(o => new OrderDisplayItem
             {
                 Id = o.Id,
                 BranchId = o.BranchId,
@@ -272,35 +281,31 @@ namespace AccuratPanelCarWashing
                 IsCompleted = o.Status == "Завершен" || o.Status == "Выполнен",
             });
 
-            var appointmentItems = filteredOrders
-                .Where(o => o.IsAppointment && (o.Status == "Предварительная запись" || o.Status == "Запись" || o.Status == "Ожидает"))
-                .Select(o => new OrderDisplayItem
-                {
-                    Id = o.Id,
-                    BranchId = o.BranchId,
-                    Department = o.Department,
-                    CarModel = o.CarModel,
-                    CarNumber = o.CarNumber,
-                    Time = o.Time,
-                    WasherName = o.GetWasherId() > 0 ? GetWasherName(o.GetWasherId()) : "📅 Запись",
-                    ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id => _cachedServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
-                    FinalPrice = o.FinalPrice,
-                    ExtraCost = o.ExtraCost,
-                    ExtraCostReason = o.ExtraCostReason,
-                    BoxNumber = o.BoxNumber,
-                    Status = o.Status,
-                    IsAppointment = true,
-                    IsCompleted = o.Status == "Выполнен" || o.Status == "Отменен",
-                    PaymentMethod = o.PaymentMethod,
-                    DurationMinutes = o.DurationMinutes,
-                });
+            var appointmentItems = filteredOrders.Where(o => o.IsAppointment).Select(o => new OrderDisplayItem
+            {
+                Id = o.Id,
+                BranchId = o.BranchId,
+                Department = o.Department,
+                CarModel = o.CarModel,
+                CarNumber = o.CarNumber,
+                Time = o.Time,
+                WasherName = o.GetWasherId() > 0 ? GetWasherName(o.GetWasherId()) : "📅 Запись",
+                ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id => _cachedServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
+                FinalPrice = o.FinalPrice,
+                ExtraCost = o.ExtraCost,
+                ExtraCostReason = o.ExtraCostReason,
+                BoxNumber = o.BoxNumber,
+                Status = o.Status,
+                IsAppointment = true,
+                IsCompleted = false,
+                PaymentMethod = o.PaymentMethod,
+            });
 
             var allDisplayItems = orderItems.Concat(appointmentItems).OrderBy(i => i.Time).ToList();
 
-            //  САМОЕ ГЛАВНОЕ: Раскидываем заказы по нужным вкладкам и боксам
+            // 4. Раскидываем по боксам
             foreach (var tab in BranchTabs)
             {
-                // Объединяем коллекции только для прохода циклом
                 foreach (var zone in tab.WashZones.Concat(tab.ServiceZones))
                 {
                     var ordersForZone = allDisplayItems.Where(i =>
@@ -323,25 +328,33 @@ namespace AccuratPanelCarWashing
 
         private void UpdateInfo()
         {
+            int currentShiftId = _currentShift?.Id ?? -1;
+
+            // Фильтруем заказы ТОЛЬКО для текущего филиала И ТЕКУЩЕЙ СМЕНЫ
+            var branchOrders = _allOrders.Where(o =>
+                o.BranchId == _currentBranchId &&
+                !o.IsAppointment &&
+                o.ShiftId == currentShiftId).ToList();
+
             if (_currentShift != null && !_currentShift.IsClosed)
             {
                 CurrentShiftInfo = $"📅 Смена: {_currentShift.Date:dd.MM.yyyy} | Начало: {_currentShift.StartTime:HH:mm}";
 
-                var completedOrders = _allOrders.Where(o => o.Status == "Выполнен").ToList();
+                var completedOrders = branchOrders.Where(o => o.Status == "Выполнен" || o.Status == "Завершен").ToList();
                 TotalRevenue = completedOrders.Sum(o => o.FinalPrice);
 
                 var totalWasherEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).WasherEarnings);
                 CompanyEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).CompanyEarnings);
 
-                var inProgressCount = _allOrders.Count(o => o.Status == "В работе");
-                var cancelledCount = _allOrders.Count(o => o.Status == "Отменен");
+                var inProgressCount = branchOrders.Count(o => o.Status == "В работе");
+                var cancelledCount = branchOrders.Count(o => o.Status == "Отменен");
 
                 TotalOrdersInfo = $"🚗 Выполнено: {completedOrders.Count} | 🟢 В работе: {inProgressCount} | ❌ Отменено: {cancelledCount} | 👤 Мойщикам: {totalWasherEarnings:N0} ₽";
             }
             else if (_currentShift != null && _currentShift.IsClosed)
             {
                 CurrentShiftInfo = $"📅 Смена закрыта: {_currentShift.Date:dd.MM.yyyy}";
-                var completedOrders = _allOrders.Where(o => o.Status == "Выполнен").ToList();
+                var completedOrders = branchOrders.Where(o => o.Status == "Выполнен" || o.Status == "Завершен").ToList();
                 TotalRevenue = completedOrders.Sum(o => o.FinalPrice);
                 TotalOrdersInfo = $"🚗 Итого за смену: {completedOrders.Count} машин | 💰 {TotalRevenue:N0} ₽";
                 CompanyEarnings = 0;
@@ -354,40 +367,49 @@ namespace AccuratPanelCarWashing
                 CompanyEarnings = 0;
             }
 
-            UpdateWashersStats();
-            UpdatePaymentStats();
+            UpdateWashersStats(branchOrders);
+            UpdatePaymentStats(branchOrders);
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentShiftInfo)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalOrdersInfo)));
         }
 
-        private void UpdatePaymentStats()
+        private void UpdatePaymentStats(List<ContractsOrder> branchOrders)
         {
-            if (_allOrders == null || !_allOrders.Any())
+            if (!branchOrders.Any())
             {
                 CashCount = 0; CashAmount = 0; CardCount = 0; CardAmount = 0;
                 TransferCount = 0; TransferAmount = 0; QrCount = 0; QrAmount = 0; return;
             }
 
-            CashCount = _allOrders.Count(o => o.PaymentMethod == "Наличные");
-            CashAmount = _allOrders.Where(o => o.PaymentMethod == "Наличные").Sum(o => o.FinalPrice);
-            CardCount = _allOrders.Count(o => o.PaymentMethod == "Карта");
-            CardAmount = _allOrders.Where(o => o.PaymentMethod == "Карта").Sum(o => o.FinalPrice);
-            TransferCount = _allOrders.Count(o => o.PaymentMethod == "Перевод");
-            TransferAmount = _allOrders.Where(o => o.PaymentMethod == "Перевод").Sum(o => o.FinalPrice);
-            QrCount = _allOrders.Count(o => o.PaymentMethod == "QR-код");
-            QrAmount = _allOrders.Where(o => o.PaymentMethod == "QR-код").Sum(o => o.FinalPrice);
+            CashCount = branchOrders.Count(o => o.PaymentMethod == "Наличные");
+            CashAmount = branchOrders.Where(o => o.PaymentMethod == "Наличные").Sum(o => o.FinalPrice);
+            CardCount = branchOrders.Count(o => o.PaymentMethod == "Карта");
+            CardAmount = branchOrders.Where(o => o.PaymentMethod == "Карта").Sum(o => o.FinalPrice);
+            TransferCount = branchOrders.Count(o => o.PaymentMethod == "Перевод");
+            TransferAmount = branchOrders.Where(o => o.PaymentMethod == "Перевод").Sum(o => o.FinalPrice);
+            QrCount = branchOrders.Count(o => o.PaymentMethod == "QR-код");
+            QrAmount = branchOrders.Where(o => o.PaymentMethod == "QR-код").Sum(o => o.FinalPrice);
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CashCount)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CashAmount)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CardCount)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CardAmount)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TransferCount)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TransferAmount)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QrCount)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QrAmount)));
         }
 
-        private void UpdateWashersStats()
+        private void UpdateWashersStats(List<ContractsOrder> branchOrders)
         {
-            if (_currentShift == null || _currentShift.IsClosed || !_allOrders.Any())
+            if (_currentShift == null || _currentShift.IsClosed || !branchOrders.Any())
             {
                 WashersStats = new List<WasherStat>();
                 return;
             }
 
-            var completedOrders = _allOrders.Where(o => o.Status == "Выполнен").ToList();
+            var completedOrders = branchOrders.Where(o => o.Status == "Выполнен").ToList();
             var totalShiftRevenue = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).FinalPrice);
 
             WashersStats = completedOrders.Where(o => o.GetWasherId() > 0).GroupBy(o => o.GetWasherId()).Select(g =>
@@ -404,9 +426,6 @@ namespace AccuratPanelCarWashing
             }).OrderByDescending(s => s.Earnings).ToList();
         }
 
-        // ==========================================
-        // ПОИСК (БЕЗ СПАМА НА СЕРВЕР)
-        // ==========================================
         private void SearchFilterTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
             if (SearchFilterTextBox.Text == "🔍 Поиск по гос. номеру или модели...")
@@ -431,14 +450,9 @@ namespace AccuratPanelCarWashing
         {
             _searchFilter = SearchFilterTextBox.Text.Trim();
             if (_searchFilter == "🔍 Поиск по гос. номеру или модели...") _searchFilter = "";
-
-            // Вызываем локальную фильтрацию!
             ApplyFilterAndDisplay();
         }
 
-        // ==========================================
-        // ОБРАБОТЧИКИ КНОПОК
-        // ==========================================
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             if (_currentShift == null || _currentShift.IsClosed)
@@ -449,22 +463,18 @@ namespace AccuratPanelCarWashing
 
             var orderViewModel = App.GetService<AddEditOrderViewModel>();
             var addWin = new AddEditOrderWindow(orderViewModel, _currentShift);
+
+            // ВАЖНО: передаем выбранный филиал принудительно, чтобы отрисовались правильные боксы
+            orderViewModel.CurrentOrder.BranchId = _currentBranchId;
+
             if (addWin.ShowDialog() == true) _ = LoadDataAsync();
         }
 
         private void OpenEditOrder(OrderDisplayItem orderDisplay)
         {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] OpenEditOrder: Id={orderDisplay.Id}, CarNumber={orderDisplay.CarNumber}");
-
-            // Ищем в кэше
             var originalOrder = _allOrders.FirstOrDefault(o => o.Id == orderDisplay.Id);
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Найдено в кэше: {originalOrder != null}");
-
-            // Если не нашли — пробуем загрузить с сервера
             if (originalOrder == null && orderDisplay.Id > 0)
             {
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] Пытаемся загрузить с сервера...");
-                // Можно добавить асинхронную загрузку, но для простоты пока предупреждение
                 MessageBox.Show($"Заказ #{orderDisplay.Id} не найден в кэше.\nПопробуйте обновить данные (кнопка 🔄).", "Предупреждение");
                 return;
             }
@@ -501,24 +511,10 @@ namespace AccuratPanelCarWashing
         private void ExitButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
         private void ClientsButton_Click(object sender, RoutedEventArgs e) => App.GetService<ClientsWindow>().ShowDialog();
         private void HistoryButton_Click(object sender, RoutedEventArgs e) => new HistoryWindow(_currentUser).ShowDialog();
-        private void ViewAppointmentsButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (AppointmentsOverlay != null)
-            {
-                // Отписываемся от старых подписок (чтобы не дублировать)
-                AppointmentsOverlay.OnEditRequested -= OpenEditOrder;
-
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] ✅ Подписка OnEditRequested установлена");
-
-                AppointmentsOverlay.Show();
-            }
-        }
         private void AppointmentsBoardButton_Click(object sender, RoutedEventArgs e) => AppointmentsOverlay?.Show();
         private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = LoadDataAsync();
 
         private void EditOrderMenuItem_Click(object sender, RoutedEventArgs e) { if (SelectedItem != null) OpenEditOrder(SelectedItem); else MessageBox.Show("Выберите заказ"); }
-
-
 
         private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
@@ -539,7 +535,7 @@ namespace AccuratPanelCarWashing
                 Directory.CreateDirectory(folder);
 
                 string file = Path.Combine(folder, $"export_api_{DateTime.Now:yyyyMMdd_HHmmss}.json");
-                File.WriteAllText(file, Newtonsoft.Json.JsonConvert.SerializeObject(exportData, Newtonsoft.Json.Formatting.Indented));
+                System.IO.File.WriteAllText(file, Newtonsoft.Json.JsonConvert.SerializeObject(exportData, Newtonsoft.Json.Formatting.Indented));
 
                 MessageBox.Show($"Данные экспортированы!\n\n📁 Файл сохранен в:\n{file}", "Успешно");
             }
@@ -549,7 +545,10 @@ namespace AccuratPanelCarWashing
         private async void StartShiftButton_Click(object sender, RoutedEventArgs e)
         {
             var startShiftWin = new StartShiftWindow();
-            if (startShiftWin.ShowDialog() == true) await LoadDataAsync();
+            startShiftWin.PreselectedBranchId = _currentBranchId;
+
+            if (startShiftWin.ShowDialog() == true)
+                await LoadDataAsync();
         }
 
         private async void CloseShiftButton_Click(object sender, RoutedEventArgs e)
@@ -560,12 +559,10 @@ namespace AccuratPanelCarWashing
                 return;
             }
 
-            //  ДОБАВЛЯЕМ ПРОВЕРКУ НА АКТИВНЫЕ ЗАКАЗЫ 
-            bool hasActiveOrders = _allOrders.Any(o => o.Status == "В работе" || o.Status == "В работе");
+            bool hasActiveOrders = _allOrders.Where(o => o.BranchId == _currentBranchId).Any(o => o.Status == "В работе");
             if (hasActiveOrders)
             {
-                MessageBox.Show("Нельзя закрыть смену! Завершите или отмените все активные заказы.",
-                                "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Нельзя закрыть смену! Завершите или отмените все активные заказы.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -588,77 +585,31 @@ namespace AccuratPanelCarWashing
 
         private async void InitializeSignalR()
         {
-            // Строим подключение (порт берем из твоих логов API)
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl("https://localhost:7165/hubs/app")
-                .WithAutomaticReconnect() // Автоматически переподключаться при обрыве сети
+                .WithAutomaticReconnect()
                 .Build();
 
-            // Подписываемся на событие "UpdateData", которое мы отправляем с сервера
             _hubConnection.On("UpdateData", () =>
             {
-                // ВАЖНО: SignalR работает в фоновом потоке. 
-                // Чтобы обновить UI (WPF), нужно перебросить вызов в главный поток интерфейса.
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    RefreshData(); // Вызываем твой метод перезагрузки данных
-                });
+                Application.Current.Dispatcher.Invoke(() => { RefreshData(); });
             });
 
             try
             {
-
-                // 1. Сеть пропала, пытаемся восстановить
-                _hubConnection.Reconnecting += error =>
-                {
-                    // Здесь можно показать плашку в UI: "🔴 Потеряно соединение с сервером. Переподключение..."
-                    System.Diagnostics.Debug.WriteLine($"[SignalR] Потеряно соединение: {error?.Message}. Пытаемся восстановить...");
-
-                    // Если у тебя во ViewModel есть свойство ConnectionStatus, обнови его тут
-                    return Task.CompletedTask;
-                };
-
-                // 2. Сеть появилась, связь восстановлена!
+                _hubConnection.Reconnecting += error => { return Task.CompletedTask; };
                 _hubConnection.Reconnected += connectionId =>
                 {
-                    System.Diagnostics.Debug.WriteLine($"[SignalR] Успешно переподключились! Новый ID: {connectionId}");
-                    // Можно скрыть плашку ошибки: "🟢 Соединение восстановлено"
-
-                    // КРИТИЧЕСКИ ВАЖНО: Пока мы были оффлайн, на сервере могли закрыть заказ. 
-                    // Заставляем программу дернуть API и обновить экран.
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        // Вызови здесь свой метод обновления данных на экране
-                        // Например: _viewModel.LoadOrdersAsync(); 
-                        // ТЕПЕРЬ ПРОГРАММА САМА ПОДТЯНЕТ ПРОПУЩЕННЫЕ ЗАКАЗЫ
-                        RefreshData();
-                    });
-
+                    Application.Current.Dispatcher.Invoke(() => { RefreshData(); });
                     return Task.CompletedTask;
                 };
+                _hubConnection.Closed += error => { return Task.CompletedTask; };
 
-                // 3. Сеть пропала окончательно (прошло больше 30 секунд)
-                _hubConnection.Closed += error =>
-                {
-                    System.Diagnostics.Debug.WriteLine($"[SignalR] Соединение закрыто окончательно: {error?.Message}");
-                    // Тут выводим красную кнопку "Переподключиться вручную"
-                    return Task.CompletedTask;
-                };
-
-                // Запускаем слушателя
                 await _hubConnection.StartAsync();
-                System.Diagnostics.Debug.WriteLine("SignalR Connected!");
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"SignalR Connection Error: {ex.Message}");
-            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"SignalR Connection Error: {ex.Message}"); }
         }
     }
-
-    // ==========================================
-    // ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ (ОБЯЗАТЕЛЬНО НУЖНЫ)
-    // ==========================================
 
     public class WasherStat
     {

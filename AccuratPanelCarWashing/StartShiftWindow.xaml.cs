@@ -17,6 +17,9 @@ namespace AccuratPanelCarWashing
         private DateTime _selectedDate;
         private List<EmployeeSelection> _employees;
 
+        // Сюда MainWindow передает ID филиала из активной вкладки
+        public int? PreselectedBranchId { get; set; }
+
         public DateTime SelectedDate
         {
             get => _selectedDate;
@@ -44,12 +47,12 @@ namespace AccuratPanelCarWashing
             try
             {
                 var allEmployees = await _apiService.GetUsersAsync();
-                // ИСПРАВЛЕНО: Проверяем Role напрямую, так как ContractsUser не имеет IsAdmin
+
                 Employees = allEmployees.Where(e => e.IsActive).Select(e => new EmployeeSelection
                 {
                     Id = e.Id,
                     FullName = e.FullName,
-                    IsAdmin = e.Role == 1 || e.Role == 2, // <-- ПРОВЕРКА ПО ROLE
+                    IsAdmin = e.Role == 1 || e.Role == 2,
                     IsSelected = false
                 }).ToList();
             }
@@ -73,44 +76,47 @@ namespace AccuratPanelCarWashing
 
                 this.IsEnabled = false;
 
-                // 1. Проверяем открытые смены через API
-                var openShift = await _apiService.GetCurrentOpenShiftAsync();
+                // 🔥 1. Определяем целевой филиал (приоритет у того, что выбран во вкладке)
+                int targetBranchId = PreselectedBranchId ?? AppSettings.CurrentBranchId;
+
+                // 🔥 2. Проверяем открытые смены ТОЛЬКО для этого филиала
+                var allShifts = await _apiService.GetShiftsAsync();
+                var openShift = allShifts.FirstOrDefault(s => !s.IsClosed && s.BranchId == targetBranchId);
+
                 if (openShift != null)
                 {
-                    var result = MessageBox.Show($"Уже есть открытая смена. Закрыть её?",
+                    var result = MessageBox.Show($"На выбранном филиале уже есть открытая смена. Закрыть её?",
                         "Внимание", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                     if (result == MessageBoxResult.Yes)
                         await _apiService.CloseShiftAsync(openShift.Id);
-                    else return;
+                    else return; // Отмена создания, если пользователь передумал
                 }
 
-                // 2. Создаем новую смену для ВЫБРАННОГО филиала
+                // 3. Создаем новую смену для целевого филиала
                 var newShift = new Shift
                 {
-                    // Берем ID филиала из настроек сессии, которые поставили в LoginWindow
-                    BranchId = AppSettings.CurrentBranchId,
-
-                    // Дата в формате UTC для Postgres
-                    Date = DateTime.SpecifyKind(SelectedDate.Date, DateTimeKind.Utc),
-
+                    BranchId = targetBranchId, // Привязываем к правильному филиалу
+                    Date = DateTime.SpecifyKind(SelectedDate.Date, DateTimeKind.Utc), // UTC для Postgres
                     EmployeeIds = selectedIds,
                     IsClosed = false,
-                    Notes = "" // Не шлем null, шлем пустую строку
+                    Notes = ""
                 };
 
                 await _apiService.OpenShiftAsync(newShift);
 
-                MessageBox.Show($"Смена открыта на филиале: {AppSettings.CurrentBranchName}");
+                MessageBox.Show($"Смена успешно открыта!", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                // Выводим детали, если сервер прислал описание ошибки
-                MessageBox.Show($"Ошибка сервера (400): {ex.Message}");
+                MessageBox.Show($"Ошибка сервера: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { this.IsEnabled = true; }
+            finally
+            {
+                this.IsEnabled = true;
+            }
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

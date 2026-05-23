@@ -1,14 +1,11 @@
 // === ЯВНЫЕ АЛИАСЫ ТОЛЬКО ДЛЯ КОНФЛИКТНЫХ ИМЁН ===
-using ContractsOrder = AccuratSystem.Contracts.Models.Order;
-using ContractsService = AccuratSystem.Contracts.Models.Service;
-using ContractsUser = AccuratSystem.Contracts.Models.User;
-using ContractsShift = AccuratSystem.Contracts.Models.Shift;
-using ContractsClient = AccuratSystem.Contracts.Models.Client;
-using WpfUser = AccuratPanelCarWashing.Models.User;
 // UI-модель пользователя (с IsAdmin, DisplayString) — используем для _currentUser
 using AccuratPanelCarWashing.Models;
 // Остальные using
 using AccuratPanelCarWashing.Services; // Для методов расширения (GetWasherId/SetWasherId)
+using AccuratSystem.Contracts.DTOs;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,6 +13,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using ContractsClient = AccuratSystem.Contracts.Models.Client;
+using ContractsOrder = AccuratSystem.Contracts.Models.Order;
+using ContractsService = AccuratSystem.Contracts.Models.Service;
+using ContractsShift = AccuratSystem.Contracts.Models.Shift;
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using WpfUser = AccuratPanelCarWashing.Models.User;
 
 
 namespace AccuratPanelCarWashing.ViewModels
@@ -722,5 +725,89 @@ namespace AccuratPanelCarWashing.ViewModels
 
             OnPropertyChanged(nameof(AvailableZones));
         }
+
+        // === ПОЛЯ ДЛЯ РАСХОДОВ И ЛЕНТЫ ===
+        private ObservableCollection<OrderExpense> _orderExpenses = new ObservableCollection<OrderExpense>();
+        public ObservableCollection<OrderExpense> OrderExpenses
+        {
+            get => _orderExpenses;
+            set { _orderExpenses = value; OnPropertyChanged(nameof(OrderExpenses)); }
+        }
+
+        private ObservableCollection<TimelineEntryViewModel> _orderTimeline = new ObservableCollection<TimelineEntryViewModel>();
+        public ObservableCollection<TimelineEntryViewModel> OrderTimeline
+        {
+            get => _orderTimeline;
+            set { _orderTimeline = value; OnPropertyChanged(nameof(OrderTimeline)); }
+        }
+
+        // Итого по расходам (для отображения)
+        public decimal TotalExpensesAmount => OrderExpenses?.Sum(e => e.ClientPrice * e.Quantity) ?? 0;
+
+        // === МЕТОДЫ ЗАГРУЗКИ ===
+        public async Task LoadOrderExpensesAsync(int orderId)
+        {
+            try
+            {
+                var expenses = await _apiService.GetOrderExpensesAsync(orderId);
+                OrderExpenses = new ObservableCollection<OrderExpense>(expenses);
+                OnPropertyChanged(nameof(TotalExpensesAmount));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки расходов: {ex.Message}");
+            }
+        }
+
+        public async Task LoadOrderTimelineAsync(int orderId)
+        {
+            try
+            {
+                var entries = await _apiService.GetOrderTimelineAsync(orderId);
+                OrderTimeline = new ObservableCollection<TimelineEntryViewModel>(
+                    entries.Select(e => new TimelineEntryViewModel(e)));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки ленты: {ex.Message}");
+            }
+        }
+
+        // === ДОБАВЛЕНИЕ РАСХОДА ===
+        public async Task<bool> AddExpenseAsync(string name, string category, decimal costPrice, decimal clientPrice, int quantity, string note)
+        {
+            if (CurrentOrder?.Id <= 0) return false;
+
+            var dto = new AddOrderExpenseDto
+            {
+                OrderId = CurrentOrder.Id,
+                Name = name,
+                Category = (ExpenseCategory)Enum.Parse(typeof(ExpenseCategory), category),
+                CostPrice = costPrice,
+                ClientPrice = clientPrice,
+                Quantity = quantity,
+                Note = note
+            };
+
+            try
+            {
+                var newExpense = await _apiService.AddOrderExpenseAsync(CurrentOrder.Id, dto);
+                OrderExpenses.Add(newExpense);
+                OnPropertyChanged(nameof(TotalExpensesAmount));
+
+                // Добавляем запись в ленту
+                await LoadOrderTimelineAsync(CurrentOrder.Id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка добавления расхода: {ex.Message}");
+                return false;
+            }
+        }
+
+        // === ОБНОВЛЕНИЕ ИТОГОВОЙ СУММЫ С УЧЁТОМ РАСХОДОВ ===
+        public decimal FinalTotalWithExpenses => FinalTotal + TotalExpensesAmount;
     }
 }
