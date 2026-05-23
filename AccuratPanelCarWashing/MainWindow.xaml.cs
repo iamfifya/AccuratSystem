@@ -338,6 +338,15 @@ namespace AccuratPanelCarWashing
                 !o.IsAppointment &&
                 o.ShiftId == currentShiftId).ToList();
 
+            var activeServiceCount = branchOrders
+                .Count(o => o.Department == "Service" && o.Status == "В работе");
+
+            if (activeServiceCount > 0)
+            {
+                TotalOrdersInfo += $" | 🔧 Сервис в работе: {activeServiceCount}";
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalOrdersInfo)));
+            }
+
             if (_currentShift != null && !_currentShift.IsClosed)
             {
                 CurrentShiftInfo = $"📅 Смена: {_currentShift.Date:dd.MM.yyyy} | Начало: {_currentShift.StartTime:HH:mm}";
@@ -561,11 +570,44 @@ namespace AccuratPanelCarWashing
                 return;
             }
 
-            bool hasActiveOrders = _allOrders.Where(o => o.BranchId == _currentBranchId).Any(o => o.Status == "В работе");
-            if (hasActiveOrders)
+            // НОВАЯ ЛОГИКА: разделяем проверку по департаментам
+            var branchOrders = _allOrders.Where(o => o.BranchId == _currentBranchId).ToList();
+
+            // ❌ Мойка: блокируем, если есть активные заказы
+            var activeWashOrders = branchOrders
+                .Where(o => o.Department == "Wash" && o.Status == "В работе")
+                .ToList();
+
+            if (activeWashOrders.Any())
             {
-                MessageBox.Show("Нельзя закрыть смену! Завершите или отмените все активные заказы.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    $"Нельзя закрыть смену! В мойке есть активные заказы:\n" +
+                    $"{string.Join(", ", activeWashOrders.Select(o => o.CarNumber))}\n\n" +
+                    $"Завершите или отмените их перед закрытием.",
+                    "Внимание",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
+            }
+
+            // ⚠️ Сервис: только предупреждаем, но не блокируем
+            var activeServiceOrders = branchOrders
+                .Where(o => o.Department == "Service" && o.Status == "В работе")
+                .ToList();
+
+            if (activeServiceOrders.Any())
+            {
+                var result = MessageBox.Show(
+                    $"В сервисе остались активные заказы:\n" +
+                    $"{string.Join(", ", activeServiceOrders.Select(o => $"{o.CarNumber} ({o.CarModel})"))}\n\n" +
+                    $"Они автоматически перейдут в следующую смену этого филиала.\n" +
+                    $"Продолжить закрытие смены?",
+                    "Подтверждение",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (result != MessageBoxResult.Yes)
+                    return;
             }
 
             if (MessageBox.Show("Закрыть смену?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)

@@ -9,6 +9,7 @@
         Comment,
         StatusChanged,
         PriceChanged,
-        ExpenseAdded
+        ExpenseAdded,
+        ShiftTransferred = 100
     }
 }

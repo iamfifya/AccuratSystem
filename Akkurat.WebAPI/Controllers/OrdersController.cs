@@ -220,7 +220,7 @@ namespace Accurat.WebAPI.Controllers
 
         // === ДОБАВИТЬ В КОНЕЦ КЛАССА ===
 
-        // 🔹 1. Добавить расход к заказу
+        // 1. Добавить расход к заказу
         [HttpPost("{id}/expenses")]
         public async Task<IActionResult> AddExpense(int id, [FromBody] AddOrderExpenseDto dto)
         {
@@ -258,7 +258,7 @@ namespace Accurat.WebAPI.Controllers
             return Ok(expense);
         }
 
-        // 🔹 2. Получить ленту событий заказа
+        // 2. Получить ленту событий заказа
         [HttpGet("{id}/timeline")]
         public async Task<IActionResult> GetTimeline(int id)
         {
@@ -270,7 +270,7 @@ namespace Accurat.WebAPI.Controllers
             return Ok(entries);
         }
 
-        // 🔹 3. Обновить цену услуги в заказе (с записью в историю)
+        // 3. Обновить цену услуги в заказе (с записью в историю)
         [HttpPut("services/{id}/price")]
         public async Task<IActionResult> UpdateServicePrice(int id, [FromBody] UpdateServicePriceDto dto)
         {
@@ -299,7 +299,7 @@ namespace Accurat.WebAPI.Controllers
             return Ok(serviceItem);
         }
 
-        // 🔹 4. Получить расходы по заказу (для отображения в акте)
+        // 4. Получить расходы по заказу (для отображения в акте)
         [HttpGet("{id}/expenses")]
         public async Task<IActionResult> GetExpenses(int id)
         {

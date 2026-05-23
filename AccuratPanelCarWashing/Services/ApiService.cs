@@ -308,7 +308,7 @@ namespace AccuratPanelCarWashing.Services
 
         #region РАСХОДЫ И ЛЕНТА (СЕРВИС)
 
-        // 🔹 Добавить расход к заказу
+        // Добавить расход к заказу
         public async Task<OrderExpense> AddOrderExpenseAsync(int orderId, AddOrderExpenseDto dto)
         {
             try
@@ -323,7 +323,7 @@ namespace AccuratPanelCarWashing.Services
             }
         }
 
-        // 🔹 Получить расходы по заказу
+        // Получить расходы по заказу
         public async Task<List<OrderExpense>> GetOrderExpensesAsync(int orderId)
         {
             try
@@ -337,7 +337,7 @@ namespace AccuratPanelCarWashing.Services
             }
         }
 
-        // 🔹 Получить ленту событий заказа
+        // Получить ленту событий заказа
         public async Task<List<OrderTimelineEntry>> GetOrderTimelineAsync(int orderId)
         {
             try
@@ -351,7 +351,7 @@ namespace AccuratPanelCarWashing.Services
             }
         }
 
-        // 🔹 Обновить цену услуги в заказе
+        // Обновить цену услуги в заказе
         public async Task<OrderServiceItem> UpdateServicePriceAsync(int orderServiceItemId, UpdateServicePriceDto dto)
         {
             try

@@ -148,7 +148,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 🔹 1. ТАБЫ ДЛЯ ФИЛИАЛОВ (САМЫЙ ВЕРХ) -->
+        <!-- 1. ТАБЫ ДЛЯ ФИЛИАЛОВ (САМЫЙ ВЕРХ) -->
         <TabControl Grid.Row="0" 
                     ItemsSource="{Binding BranchTabs}" 
                     SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
@@ -176,14 +176,14 @@
             </TabControl.ContentTemplate>
         </TabControl>
 
-        <!-- 🔹 2. ЗАГОЛОВОК ОКНА -->
+        <!-- 2. ЗАГОЛОВОК ОКНА -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15,0,15,15">
             <TextBlock Text="📁 История смен" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
             <TextBlock Text=" | " FontSize="20" Foreground="#95A5A6" VerticalAlignment="Center"/>
             <TextBlock Text="Просмотр закрытых заказов" FontSize="16" Foreground="#7F8C8D" VerticalAlignment="Center"/>
         </StackPanel>
 
-        <!-- 🔹 3. ПАНЕЛЬ ВЫБОРА ДАТЫ -->
+        <!-- 3. ПАНЕЛЬ ВЫБОРА ДАТЫ -->
         <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="15" Margin="15,0,15,15" BorderBrush="#BDC3C7" BorderThickness="1">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="📅 Выберите дату смены:" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="#2C3E50" Margin="0,0,15,0"/>
@@ -192,7 +192,7 @@
             </StackPanel>
         </Border>
 
-        <!-- 🔹 4. РАБОЧАЯ ОБЛАСТЬ (БОКСЫ ДЛЯ ВЫБРАННОЙ ВКЛАДКИ) -->
+        <!-- 4. РАБОЧАЯ ОБЛАСТЬ (БОКСЫ ДЛЯ ВЫБРАННОЙ ВКЛАДКИ) -->
         <Grid Grid.Row="3" Margin="10,0,10,0">
             <ItemsControl ItemsSource="{Binding SelectedBranchTab.BranchWorkZones}">
                 <ItemsControl.ItemsPanel>
@@ -213,7 +213,7 @@
             </ItemsControl>
         </Grid>
 
-        <!-- 🔹 5. КНОПКА ЗАКРЫТИЯ -->
+        <!-- 5. КНОПКА ЗАКРЫТИЯ -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,15,15">
             <Button Content="✖ Закрыть" Click="CloseButton_Click" Width="120" Height="40" Background="#E74C3C" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold"/>
         </StackPanel>

@@ -27,6 +27,7 @@ namespace AccuratPanelCarWashing.ViewModels
                     case "StatusChanged": return "🔄";
                     case "PriceChanged": return "💰";
                     case "ExpenseAdded": return "🛒";
+                    case "ShiftTransferred": return "🔄";
                     default: return "📝";
                 }
             }

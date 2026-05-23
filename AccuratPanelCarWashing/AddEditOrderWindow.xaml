@@ -313,7 +313,7 @@
                     </Style>
                 </TabControl.ItemContainerStyle>
 
-                <!-- 🔹 Вкладка: Расходы -->
+                <!-- Вкладка: Расходы -->
                 <TabItem Header="💰 Расходы">
                     <Border Background="White" CornerRadius="8" Padding="10" Margin="5">
                         <Grid>
@@ -391,7 +391,7 @@
                     </Border>
                 </TabItem>
 
-                <!-- 🔹 Вкладка: Лента событий -->
+                <!-- Вкладка: Лента событий -->
                 <TabItem Header="📋 Лента">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" 
                                   HorizontalScrollBarVisibility="Disabled"

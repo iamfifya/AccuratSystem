@@ -1,9 +1,11 @@
-﻿using AccuratSystem.Contracts.Models;
-using AccuratSystem.Contracts.Enums;
+﻿using Accurat.WebAPI.Data;
+using Accurat.WebAPI.Hubs;
 using AccuratSystem.Contracts.DTOs;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Accurat.WebAPI.Data;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -12,10 +14,12 @@ namespace Accurat.WebAPI.Controllers
     public class ShiftsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<AppHub> _hubContext;
 
-        public ShiftsController(AppDbContext context)
+        public ShiftsController(AppDbContext context, IHubContext<AppHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         [HttpGet]
@@ -74,13 +78,82 @@ namespace Accurat.WebAPI.Controllers
         public async Task<IActionResult> CloseShift(int id)
         {
             var shift = await _context.Shifts.FindAsync(id);
-            if (shift == null) return NotFound();
+            if (shift == null) return NotFound("Смена не найдена");
+            if (shift.IsClosed) return BadRequest("Смена уже закрыта");
 
-            shift.EndTime = DateTime.UtcNow;
+            // 1. ПРОВЕРКА: блокируем, если есть активные заказы в мойке
+            var activeWashOrders = await _context.Orders
+                .Where(o => o.ShiftId == id && o.Department == "Wash" && o.Status == "В работе")
+                .Select(o => new { o.Id, o.CarNumber })
+                .ToListAsync();
+
+            if (activeWashOrders.Any())
+            {
+                return BadRequest(new
+                {
+                    message = "Нельзя закрыть смену: есть активные заказы в мойке",
+                    orders = activeWashOrders
+                });
+            }
+
+            // 2. Ищем следующую открытую смену в этом филиале
+            var nextShift = await _context.Shifts
+                .FirstOrDefaultAsync(s =>
+                    s.BranchId == shift.BranchId &&
+                    s.Id != id &&
+                    !s.IsClosed);
+
+            // 3. Находим сервисные заказы "В работе", привязанные к закрываемой смене
+            var serviceOrdersToTransfer = await _context.Orders
+                .Where(o =>
+                    o.ShiftId == id &&
+                    o.Department == "Service" &&
+                    o.Status == "В работе")
+                .ToListAsync();
+
+            var transferredCount = 0;
+
+            if (nextShift != null && serviceOrdersToTransfer.Any())
+            {
+                // Переносим заказы в новую смену
+                foreach (var order in serviceOrdersToTransfer)
+                {
+                    order.ShiftId = nextShift.Id;
+
+                    // Добавляем запись в ленту о переносе
+                    _context.OrderTimelineEntries.Add(new OrderTimelineEntry
+                    {
+                        OrderId = order.Id,
+                        EntryType = TimelineEntryType.ShiftTransferred,
+                        Message = $"Заказ автоматически перенесён в смену от {nextShift.Date:dd.MM.yyyy} в связи с закрытием предыдущей смены",
+                        CreatedBy = "Система",
+                        Timestamp = DateTime.UtcNow,
+                        RelatedEntityId = nextShift.Id
+                    });
+
+                    transferredCount++;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            // 4. Закрываем текущую смену
             shift.IsClosed = true;
+            shift.EndTime = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
 
-            return Ok(shift);
+            // 5. SignalR: уведомляем клиентов
+            await _hubContext.Clients.Group($"branch_{shift.BranchId}")
+                .SendAsync("UpdateData");
+
+            return Ok(new
+            {
+                shift.Id,
+                shift.EndTime,
+                transferredCount,
+                nextShiftId = nextShift?.Id
+            });
         }
 
         [HttpGet("{id}/cashbox")]
