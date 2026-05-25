@@ -194,6 +194,46 @@ namespace AccuratPanelCarWashing.Services
                 return false;
             }
         }
+
+
+
+        // 1. Смена статуса заказа (профессиональный переход)
+        public async Task<bool> ChangeStatusAsync(int orderId, string newStatus, int? userId, string userName)
+        {
+            try
+            {
+                var dto = new AccuratSystem.Contracts.DTOs.ChangeStatusDto
+                {
+                    NewStatus = newStatus,
+                    UserId = userId,
+                    UserName = userName
+                };
+
+                var response = await _http.PatchAsJsonAsync($"Orders/{orderId}/status", dto);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка смены статуса: {ex.Message}");
+                return false;
+            }
+        }
+
+        // 2. Получение анализа времени (для графиков и отчетов)
+        public async Task<List<dynamic>> GetTimeAnalysisAsync(int orderId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<dynamic>>($"Orders/{orderId}/time-analysis")
+                       ?? new List<dynamic>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка анализа времени: {ex.Message}");
+                return new List<dynamic>();
+            }
+        }
+
         #endregion
 
         #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА

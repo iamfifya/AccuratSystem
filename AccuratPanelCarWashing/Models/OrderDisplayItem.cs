@@ -7,6 +7,7 @@ namespace AccuratPanelCarWashing.Models
     public class OrderDisplayItem : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
         public int Id { get; set; }
         public string CarNumber { get; set; }
         public string CarModel { get; set; }
@@ -24,6 +25,22 @@ namespace AccuratPanelCarWashing.Models
         public bool IsCompleted { get; set; }
         public int DurationMinutes { get; set; } = 60;
         public string PaymentMethod { get; set; }
+
+        // === НОВОЕ: Время начала текущего статуса ===
+        public DateTime? StatusStartTime { get; set; }
+
+        // Свойство для отображения таймера (например: "00:15:30")
+        public string TimeInStatus
+        {
+            get
+            {
+                if (IsCompleted || StatusStartTime == null) return "";
+
+                // 🔥 ИСПРАВЛЕНИЕ: Переводим время сервера (UTC) в локальное время компьютера
+                var elapsed = DateTime.Now - StatusStartTime.Value.ToLocalTime();
+                return elapsed.ToString(@"hh\:mm\:ss");
+            }
+        }
 
         private bool _isSelected;
         public bool IsSelected
@@ -47,6 +64,7 @@ namespace AccuratPanelCarWashing.Models
                         case "В работе": return "🔄 В работе";
                         case "Выполнен": return "✅ Выполнен";
                         case "Отменен": return "❌ Отменена";
+                        case "Завершен": return "✅ Завершена";
                         default: return Status;
                     }
                 }
@@ -63,9 +81,11 @@ namespace AccuratPanelCarWashing.Models
         public string OriginalPriceDisplay => OriginalTotalPrice > 0 ? $"{OriginalTotalPrice:N0} ₽" : " ";
         public bool ShowOriginalPrice => HasDiscount && OriginalTotalPrice > 0;
 
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+
     }
 }

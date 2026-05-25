@@ -27,36 +27,40 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            // ДОБАВЛЕН INCLUDE
-            return await _context.Orders.Include(o => o.OrderWashers).ToListAsync();
+            // 1. Загружаем заказы. Благодаря .Ignore() в DbContext, EF не будет искать CurrentStatusStartTime в БД
+            var orders = await _context.Orders.Include(o => o.OrderWashers).ToListAsync();
+
+            foreach (var order in orders)
+            {
+                // 2. Теперь мы вручную идем в таблицу истории и берем дату начала текущего статуса
+                var latestHistory = await _context.OrderStatusHistories
+                    .FirstOrDefaultAsync(h => h.OrderId == order.Id && h.EndTime == null);
+
+                // Записываем дату в свойство, которое теперь "невидимо" для БД, но доступно для нас
+                order.CurrentStatusStartTime = latestHistory?.StartTime;
+            }
+
+            return orders;
         }
 
-        // 2. Создать новый заказ (С ЗАЩИТОЙ ОТ ДВОЙНОГО БРОНИРОВАНИЯ)
+
+
+        // 2. Создать новый заказ (С АВТОМАТИЧЕСКИМ СТАРТОМ ВРЕМЕНИ)
         [HttpPost]
-        public async Task<ActionResult<Order>> CreateOrder(Order order) // ИСПРАВЛЕНО: было CarWashOrder
+        public async Task<ActionResult<Order>> CreateOrder(Order order)
         {
             if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
             {
                 return BadRequest("Для выполненного заказа требуется указать способ оплаты.");
             }
 
-            // Открываем строгую транзакцию
             using (var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable))
             {
                 try
                 {
-
-                    // 1. Инициализируем коллекцию, если она пуста
                     if (order.OrderWashers == null) order.OrderWashers = new List<OrderWasher>();
+                    foreach (var ow in order.OrderWashers) { ow.OrderId = order.Id; }
 
-                    // 2. Явно проверяем, передан ли WasherId (для обратной совместимости с клиентами)
-                    // Если клиент прислал WasherId через OrderWasher, но мы хотим убедиться в связи:
-                    foreach (var ow in order.OrderWashers)
-                    {
-                        ow.OrderId = order.Id; // EF Core сам подставит Id после SaveChanges, но лучше перестраховаться
-                    }
-
-                    // 1. Проверяем пересечения по времени для данного бокса
                     var endTime = order.Time.AddMinutes(order.DurationMinutes > 0 ? order.DurationMinutes : 60);
 
                     bool hasConflict = await _context.Orders.AnyAsync(o =>
@@ -65,43 +69,38 @@ namespace Accurat.WebAPI.Controllers
                         o.Status != "Отменен" &&
                         o.Status != "Выполнен" &&
                         o.Time < endTime &&
-                        // Если у заказа в БД DurationMinutes 0, считаем как 60
                         o.Time.AddMinutes(o.DurationMinutes > 0 ? o.DurationMinutes : 60) > order.Time);
 
-                    if (hasConflict)
-                    {
-                        return BadRequest(new { message = "Выбранное время в данном боксе уже занято" });
-                    }
-
-                    // 2. Инициализируем Soft Split. Чистая инициализация: если вдруг прилетела пустышка, создаем пустой список
-                    if (order.OrderWashers == null)
-                    {
-                        order.OrderWashers = new List<OrderWasher>();
-                    }
+                    if (hasConflict) return BadRequest(new { message = "Выбранное время в данном боксе уже занято" });
 
                     order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
-                    order.Status = "В работе";
+
+                    // Если статус не указан, ставим "В работе"
+                    if (string.IsNullOrEmpty(order.Status)) order.Status = "В работе";
 
                     _context.Orders.Add(order);
-                    await _context.SaveChangesAsync(); // Сохраняем в БД
+                    await _context.SaveChangesAsync(); // Сначала сохраняем заказ, чтобы получить его Id
 
-                    transaction.Commit(); // Фиксируем транзакцию
+                    // 🔥 НОВОЕ: Создаем первую запись в истории времени
+                    var firstHistory = new AccuratSystem.Contracts.Models.OrderStatusHistory
+                    {
+                        OrderId = order.Id,
+                        Status = order.Status,
+                        StartTime = DateTime.UtcNow,
+                        UserId = order.OrderWashers.FirstOrDefault()?.UserId
+                    };
+                    _context.OrderStatusHistories.Add(firstHistory);
+                    await _context.SaveChangesAsync();
 
-                    // Уведомляем клиентов (WPF) об обновлении
+                    transaction.Commit();
                     await _hubContext.Clients.All.SendAsync("UpdateData");
 
                     return Ok(order);
                 }
-                catch (DbUpdateException)
-                {
-                    // Перехват конфликтов БД
-                    transaction.Rollback();
-                    return BadRequest(new { message = "Произошел конфликт при сохранении. Выбранное время в данном боксе уже занято." });
-                }
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    return StatusCode(500, "Внутренняя ошибка сервера");
+                    return StatusCode(500, "Внутренняя ошибка сервера: " + ex.Message);
                 }
             }
         }
@@ -116,22 +115,53 @@ namespace Accurat.WebAPI.Controllers
                 return BadRequest("Для выполненного заказа требуется указать способ оплаты.");
             }
 
-            // Обязательно спасаем время от ошибки PostgreSQL
             order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
 
-            _context.Entry(order).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // 🔥 ИСПРАВЛЕНИЕ: Добавлено .AsNoTracking(). 
+                    // EF просто считает данные для проверки статуса, но не заблокирует ID в памяти.
+                    var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
+                    if (existingOrder == null) return NotFound();
 
-            await _hubContext.Clients.All.SendAsync("UpdateData");
+                    // Если статус изменился, фиксируем это в истории времени
+                    if (existingOrder.Status != order.Status)
+                    {
+                        var currentHistory = await _context.OrderStatusHistories
+                            .FirstOrDefaultAsync(h => h.OrderId == id && h.EndTime == null);
+                        if (currentHistory != null) currentHistory.EndTime = DateTime.UtcNow;
 
-            return NoContent();
+                        var newHistory = new AccuratSystem.Contracts.Models.OrderStatusHistory
+                        {
+                            OrderId = id,
+                            Status = order.Status,
+                            StartTime = DateTime.UtcNow
+                        };
+                        _context.OrderStatusHistories.Add(newHistory);
+                    }
+
+                    // Теперь EF без проблем примет обновленный заказ от WPF
+                    _context.Entry(order).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    await _hubContext.Clients.All.SendAsync("UpdateData");
+                    return NoContent();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return StatusCode(500, "Ошибка обновления: " + ex.Message);
+                }
+            }
         }
 
-        // 3. Завершить заказ (с публикацией события в Outbox и сохранением оплаты)
+
         [HttpPatch("{id}/complete")]
         public async Task<IActionResult> CompleteOrder(int id, [FromQuery] string paymentMethod)
         {
-            // Открываем транзакцию
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
@@ -139,16 +169,13 @@ namespace Accurat.WebAPI.Controllers
                     var order = await _context.Orders.FindAsync(id);
                     if (order == null) return NotFound();
 
-                    // Меняем статус заказа
                     order.Status = "Выполнен";
 
-                    // ПРИМЕНЯЕМ СПОСОБ ОПЛАТЫ ОТ КЛИЕНТА
                     if (!string.IsNullOrWhiteSpace(paymentMethod))
                     {
                         order.PaymentMethod = paymentMethod;
                     }
 
-                    // ФОРМИРУЕМ ЗАДАЧУ ДЛЯ ФОНОВОГО ПРОЦЕССА (Outbox)
                     var payload = new { OrderId = order.Id, ClientId = order.ClientId, Total = order.FinalPrice };
 
                     var outboxMsg = new OutboxMessage
@@ -156,15 +183,13 @@ namespace Accurat.WebAPI.Controllers
                         EventType = "OrderCompleted",
                         PayloadJson = System.Text.Json.JsonSerializer.Serialize(payload),
                         CreatedAtUtc = DateTime.UtcNow,
-                        ErrorMessage = "" // ИСПРАВЛЕНО: Явно передаем пустую строку, чтобы успокоить PostgreSQL
+                        ErrorMessage = ""
                     };
 
                     _context.OutboxMessages.Add(outboxMsg);
-
                     await _context.SaveChangesAsync();
-                    transaction.Commit(); // Подтверждаем транзакцию
+                    transaction.Commit();
 
-                    // Сигнал для UI (чтобы WPF обновился мгновенно)
                     await _hubContext.Clients.All.SendAsync("UpdateData");
 
                     return Ok(order);
@@ -180,7 +205,6 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("client/{clientId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetByClient(int clientId)
         {
-            // ДОБАВЛЕН INCLUDE
             return await _context.Orders
                 .Include(o => o.OrderWashers)
                 .Where(o => o.ClientId == clientId)
@@ -193,11 +217,10 @@ namespace Accurat.WebAPI.Controllers
             var utcStart = DateTime.SpecifyKind(start, DateTimeKind.Utc);
             var end = utcStart.AddMinutes(duration);
 
-            // Ищем пересечения. Формула пересечения интервалов: (StartA < EndB) и (EndA > StartB)
             var isBusy = await _context.Orders.AnyAsync(o =>
                 o.BranchId == branchId &&
                 o.BoxNumber == box &&
-                o.Status != "Отменен" && // Отмененные записи/заказы не занимают бокс
+                o.Status != "Отменен" &&
                 o.Id != excludeOrderId &&
                 utcStart < o.Time.AddMinutes(o.DurationMinutes) &&
                 end > o.Time);
@@ -205,11 +228,9 @@ namespace Accurat.WebAPI.Controllers
             return Ok(!isBusy);
         }
 
-        // GET: api/Orders/active/{branchId}
         [HttpGet("active/{branchId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetActiveOrders(int branchId)
         {
-            // ДОБАВЛЕН INCLUDE
             var activeOrders = await _context.Orders
                 .Include(o => o.OrderWashers)
                 .Where(o => o.BranchId == branchId && o.Status == "В работе")
@@ -218,9 +239,6 @@ namespace Accurat.WebAPI.Controllers
             return Ok(activeOrders);
         }
 
-        // === ДОБАВИТЬ В КОНЕЦ КЛАССА ===
-
-        // 1. Добавить расход к заказу
         [HttpPost("{id}/expenses")]
         public async Task<IActionResult> AddExpense(int id, [FromBody] AddOrderExpenseDto dto)
         {
@@ -242,8 +260,7 @@ namespace Accurat.WebAPI.Controllers
             _context.OrderExpenses.Add(expense);
             await _context.SaveChangesAsync();
 
-            // 📝 Записываем в ленту событий
-            var timelineEntry = new OrderTimelineEntry
+            var timelineEntry = new AccuratSystem.Contracts.Models.OrderTimelineEntry
             {
                 OrderId = id,
                 EntryType = TimelineEntryType.ExpenseAdded,
@@ -258,7 +275,6 @@ namespace Accurat.WebAPI.Controllers
             return Ok(expense);
         }
 
-        // 2. Получить ленту событий заказа
         [HttpGet("{id}/timeline")]
         public async Task<IActionResult> GetTimeline(int id)
         {
@@ -270,36 +286,32 @@ namespace Accurat.WebAPI.Controllers
             return Ok(entries);
         }
 
-        // 3. Обновить цену услуги в заказе (с записью в историю)
         [HttpPut("services/{id}/price")]
-        public async Task<IActionResult> UpdateServicePrice(int id, [FromBody] UpdateServicePriceDto dto)
+        public async Task<IActionResult> UpdateServicePrice(int id, [FromBody] UpdateServicePriceDto laPriceDto)
         {
             var serviceItem = await _context.OrderServiceItems.FindAsync(id);
             if (serviceItem == null) return NotFound();
 
             var oldPrice = serviceItem.ActualPrice;
-            serviceItem.ActualPrice = dto.NewPrice;
-            serviceItem.PriceNote = dto.Note;
+            serviceItem.ActualPrice = laPriceDto.NewPrice;
+            serviceItem.PriceNote = laPriceDto.Note;
 
             _context.OrderServiceItems.Update(serviceItem);
 
-            // 📝 Записываем изменение цены в ленту
-            var timelineEntry = new OrderTimelineEntry
+            var timelineEntry = new AccuratSystem.Contracts.Models.OrderTimelineEntry
             {
                 OrderId = serviceItem.OrderId,
                 EntryType = TimelineEntryType.PriceChanged,
-                Message = $"Цена изменена: {oldPrice:N0} ₽ → {dto.NewPrice:N0} ₽. {dto.Note}",
-                CreatedBy = dto.UpdatedByUser ?? "System",
+                Message = $"Цена изменена: {oldPrice:N0} ₽ → {laPriceDto.NewPrice:N0} ₽. {laPriceDto.Note}",
+                CreatedBy = laPriceDto.UpdatedByUser ?? "System",
                 Timestamp = DateTime.UtcNow,
                 RelatedEntityId = serviceItem.Id
             };
             _context.OrderTimelineEntries.Add(timelineEntry);
-
             await _context.SaveChangesAsync();
             return Ok(serviceItem);
         }
 
-        // 4. Получить расходы по заказу (для отображения в акте)
         [HttpGet("{id}/expenses")]
         public async Task<IActionResult> GetExpenses(int id)
         {
@@ -308,6 +320,91 @@ namespace Accurat.WebAPI.Controllers
                 .ToListAsync();
 
             return Ok(expenses);
+        }
+
+        // === ПРОФЕССИОНАЛЬНЫЙ УЧЕТ ВРЕМЕНИ ===
+
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> ChangeStatus(int id, [FromBody] AccuratSystem.Contracts.DTOs.ChangeStatusDto dto)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var order = await _context.Orders.FindAsync(id);
+                    if (order == null) return NotFound(new { message = "Заказ не найден" });
+
+                    var currentHistory = await _context.OrderStatusHistories
+                        .FirstOrDefaultAsync(h => h.OrderId == id && h.EndTime == null);
+
+                    if (currentHistory != null)
+                    {
+                        currentHistory.EndTime = DateTime.UtcNow;
+                    }
+
+                    order.Status = dto.NewStatus;
+                    _context.Orders.Update(order);
+
+                    var newHistory = new AccuratSystem.Contracts.Models.OrderStatusHistory
+                    {
+                        OrderId = id,
+                        Status = dto.NewStatus,
+                        StartTime = DateTime.UtcNow,
+                        UserId = dto.UserId
+                    };
+                    _context.OrderStatusHistories.Add(newHistory);
+
+                    var timelineEntry = new AccuratSystem.Contracts.Models.OrderTimelineEntry
+                    {
+                        OrderId = id,
+                        EntryType = TimelineEntryType.StatusChanged,
+                        Message = $"Статус изменен на: {dto.NewStatus}",
+                        CreatedBy = !string.IsNullOrEmpty(dto.UserName) ? dto.UserName : "Система",
+                        Timestamp = DateTime.UtcNow
+                    };
+                    _context.OrderTimelineEntries.Add(timelineEntry);
+
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    await _hubContext.Clients.All.SendAsync("UpdateData");
+                    return Ok(new { message = "Статус успешно изменен", status = dto.NewStatus });
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return StatusCode(500, new { message = "Ошибка сервера", error = ex.Message });
+                }
+            }
+        }
+
+        [HttpGet("{id}/time-analysis")]
+        public async Task<IActionResult> GetTimeAnalysis(int id)
+        {
+            var history = await _context.OrderStatusHistories
+                .Where(h => h.OrderId == id)
+                .OrderBy(h => h.StartTime)
+                .ToListAsync();
+
+            if (history == null || !history.Any())
+                return NotFound(new { message = "История времени для этого заказа не найдена" });
+
+            var analysis = history.Select(h => new
+            {
+                h.Status,
+                DurationTicks = (h.EndTime ?? DateTime.UtcNow) - h.StartTime
+            }).ToList();
+
+            var summary = analysis.GroupBy(a => a.Status)
+                .Select(g => new
+                {
+                    Status = g.Key,
+                    // Считаем сумму тиков (long), а затем переводим обратно в TimeSpan
+                    TotalDuration = TimeSpan.FromTicks(g.Sum(x => x.DurationTicks.Ticks)),
+                    Occurrences = g.Count()
+                }).ToList();
+
+            return Ok(summary);
         }
     }
 }

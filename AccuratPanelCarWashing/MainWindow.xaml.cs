@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -39,6 +40,9 @@ namespace AccuratPanelCarWashing
         private int _currentBranchId;
         private WpfUser _currentUser;
         private string _searchFilter = "";
+
+        private System.Windows.Threading.DispatcherTimer _uiTimer;
+
 
         private HubConnection _hubConnection;
 
@@ -148,6 +152,8 @@ namespace AccuratPanelCarWashing
 
             _ = LoadDataAsync();
             InitializeSignalR();
+            InitializeTimer();
+
         }
 
         public void SetUser(WpfUser user)
@@ -281,6 +287,7 @@ namespace AccuratPanelCarWashing
                 PaymentMethod = o.PaymentMethod,
                 IsAppointment = false,
                 IsCompleted = o.Status == "Завершен" || o.Status == "Выполнен",
+                StatusStartTime = o.CurrentStatusStartTime, // Передаем время из API в UI-модель
             });
 
             var appointmentItems = filteredOrders.Where(o => o.IsAppointment).Select(o => new OrderDisplayItem
@@ -653,6 +660,36 @@ namespace AccuratPanelCarWashing
             }
             catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"SignalR Connection Error: {ex.Message}"); }
         }
+
+        private void InitializeTimer()
+        {
+            _uiTimer = new System.Windows.Threading.DispatcherTimer();
+            _uiTimer.Interval = TimeSpan.FromSeconds(1); // Обновлять каждую секунду
+            _uiTimer.Tick += (s, e) =>
+            {
+                // Проходим по всем вкладкам филиалов
+                foreach (var tab in BranchTabs)
+                {
+                    // Проходим по всем зонам (и мойка, и сервис)
+                    foreach (var zone in tab.WashZones.Concat(tab.ServiceZones))
+            {
+                        foreach (var order in zone.Orders)
+                        {
+                            // Обновляем таймер только если заказ еще не завершен
+                            if (!order.IsCompleted)
+                            {
+                                // ВАЖНО: вызываем обновление свойства TimeInStatus.
+                                // Теперь WPF увидит, что время изменилось, и обновит текст на экране.
+                                order.OnPropertyChanged(nameof(order.TimeInStatus));
+                            }
+                        }
+                    }
+                }
+            };
+            _uiTimer.Start();
+        }
+
+
     }
 
     public class WasherStat

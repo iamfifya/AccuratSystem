@@ -30,6 +30,8 @@ namespace Accurat.WebAPI.Data
         // OutboxMessage — API-only, поэтому DbSet остаётся с явным get/set
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
         public DbSet<OrderWasher> OrderWashers { get; set; }
+        public DbSet<AccuratSystem.Contracts.Models.OrderStatusHistory> OrderStatusHistories { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -182,6 +184,13 @@ namespace Accurat.WebAPI.Data
                 new Service { Id = 5, Name = "Влажная уборка", Description = "Уборка пластика", DurationMinutes = 15, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } } },
                 new Service { Id = 6, Name = "Кварцевое покрытие", Description = "SHINE SYSTEM", DurationMinutes = 20, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 1000m }, { 2, 1000m }, { 3, 1000m }, { 4, 1000m } } }
             );
+
+            // Создаем индекс для быстрой выборки текущего статуса заказа
+            modelBuilder.Entity<AccuratSystem.Contracts.Models.OrderStatusHistory>()
+                .HasIndex(osh => new { osh.OrderId, osh.EndTime });
+            // Говорим Entity Framework игнорировать это поле, чтобы он не искал его в таблице Orders
+            modelBuilder.Entity<AccuratSystem.Contracts.Models.Order>().Ignore(o => o.CurrentStatusStartTime);
+
         }
     }
 }

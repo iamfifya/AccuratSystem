@@ -28,6 +28,8 @@ namespace AccuratSystem.Contracts.Models
         public decimal DiscountPercent { get; set; }
         public decimal DiscountAmount { get; set; }
         public decimal FinalPrice { get; set; }
+        public DateTime? CurrentStatusStartTime { get; set; }
+
 
         public List<int> ServiceIds { get; set; } = new List<int>();
 
