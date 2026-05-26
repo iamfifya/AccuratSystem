@@ -672,7 +672,7 @@ namespace AccuratPanelCarWashing
                 {
                     // Проходим по всем зонам (и мойка, и сервис)
                     foreach (var zone in tab.WashZones.Concat(tab.ServiceZones))
-            {
+                    {
                         foreach (var order in zone.Orders)
                         {
                             // Обновляем таймер только если заказ еще не завершен
@@ -687,6 +687,87 @@ namespace AccuratPanelCarWashing
                 }
             };
             _uiTimer.Start();
+        }
+
+        // 1. Инициация перетаскивания
+        private void OrderCard_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe)
+            {
+                var order = fe.DataContext as OrderDisplayItem;
+                if (order != null)
+                {
+                    DataObject data = new DataObject("OrderItem", order);
+                    DragDrop.DoDragDrop(this, data, DragDropEffects.Move);
+                }
+            }
+        }
+
+        // 2. Обработка сброса в новый бокс
+        private async void Order_Drop(object sender, DragEventArgs e)
+        {
+            var droppedOrder = e.Data.GetData("OrderItem") as OrderDisplayItem;
+            if (droppedOrder == null) return;
+
+            // Определяем, в какой бокс бросили (DataContext ListBox - это WorkZone)
+            if (sender is ListBox lb && lb.DataContext is WorkZone targetZone)
+            {
+                // Визуальный перенос (мгновенный отклик)
+                foreach (var tab in BranchTabs)
+                {
+                    foreach (var zone in tab.WashZones.Concat(tab.ServiceZones))
+                    {
+                        if (zone.Orders.Contains(droppedOrder))
+                        {
+                            zone.Orders.Remove(droppedOrder);
+                            break;
+                        }
+                    }
+                }
+                targetZone.Orders.Add(droppedOrder);
+
+                // Синхронизация с БД
+                var originalOrder = _allOrders.FirstOrDefault(o => o.Id == droppedOrder.Id);
+                if (originalOrder != null)
+                {
+                    originalOrder.BoxNumber = targetZone.ZoneNumber;
+                    originalOrder.Department = targetZone.Department;
+                    await _apiService.UpdateOrderAsync(originalOrder);
+                }
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            // Ctrl + N -> Добавить заказ
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.N)
+            {
+                AddButton_Click(this, null);
+                e.Handled = true;
+            }
+
+            // F5 -> Обновить данные
+            if (e.Key == Key.F5)
+            {
+                RefreshButton_Click(this, null);
+                e.Handled = true;
+            }
+
+            // Ctrl + F -> Поиск (фокус в текстовое поле)
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+            {
+                SearchFilterTextBox.Focus();
+                e.Handled = true;
+            }
+
+            // Del -> Удалить выбранный заказ
+            if (e.Key == Key.Delete && SelectedItem != null)
+            {
+                DeleteOrderMenuItem_Click(this, null);
+                e.Handled = true;
+            }
         }
 
 

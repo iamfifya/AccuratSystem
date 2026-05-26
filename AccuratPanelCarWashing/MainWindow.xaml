@@ -15,14 +15,15 @@
         BorderBrush="Black"
         BorderThickness="1"
         WindowStyle="None"
-        Foreground="Black">
+        Foreground="Black"
+        Focusable="True">
 
-    <!-- Resources remain the same -->
     <Window.Resources>
         <local:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
+        <!-- СТИЛЬ КАРТОЧКИ ЗАКАЗА -->
         <Style x:Key="OrderCardBorderStyle" TargetType="Border">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="12"/>
@@ -30,6 +31,7 @@
             <Setter Property="Margin" Value="0,0,0,10"/>
             <Setter Property="BorderBrush" Value="#DCDDE1"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1"/>
@@ -44,8 +46,9 @@
             </Style.Triggers>
         </Style>
 
+        <!-- ШАБЛОН КАРТОЧКИ ЗАКАЗА (Здесь добавлено событие MouseMove для Drag-and-Drop) -->
         <DataTemplate x:Key="OrderTemplate" DataType="{x:Type models:OrderDisplayItem}">
-            <Border Style="{StaticResource OrderCardBorderStyle}">
+            <Border Style="{StaticResource OrderCardBorderStyle}" MouseMove="OrderCard_MouseMove">
                 <StackPanel>
                     <DockPanel LastChildFill="False" Margin="0,0,0,8">
                         <TextBlock Text="{Binding CarNumber}" FontSize="16" FontWeight="Bold" Foreground="#2C3E50" DockPanel.Dock="Left"/>
@@ -77,50 +80,33 @@
 
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="{Binding OriginalPriceDisplay}" 
-                   FontSize="11" 
-                   Foreground="#95A5A6" 
-                   HorizontalAlignment="Left"
-                   TextDecorations="Strikethrough"
-                   Visibility="{Binding ShowOriginalPrice, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                       FontSize="11" Foreground="#95A5A6" HorizontalAlignment="Left"
+                                       TextDecorations="Strikethrough"
+                                       Visibility="{Binding ShowOriginalPrice, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                             <TextBlock Text="{Binding FinalPrice, StringFormat={}{0:N0} ₽}" 
-                   FontSize="14" 
-                   FontWeight="Bold" 
-                   Foreground="#27AE60" 
-                   HorizontalAlignment="Left"/>
+                                       FontSize="14" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Left"/>
 
                             <TextBlock Text="{Binding DiscountDisplay}" 
-                   FontSize="10" 
-                   Foreground="#E74C3C" 
-                   FontWeight="Bold"
-                   Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibilityConverter}}"
-                   Margin="0,1,0,0"/>
+                                       FontSize="10" Foreground="#E74C3C" FontWeight="Bold"
+                                       Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibilityConverter}}"
+                                       Margin="0,1,0,0"/>
 
                             <TextBlock Text="{Binding PaymentMethod, StringFormat=💳 {0}}" 
-                   FontSize="9" 
-                   Foreground="#3498DB" 
-                   Margin="0,1,0,0"/>
+                                       FontSize="9" Foreground="#3498DB" Margin="0,1,0,0"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                            <!-- Цветной блок статуса -->
                             <Border Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}" 
-            CornerRadius="4" Padding="6,2">
+                                    CornerRadius="4" Padding="6,2">
                                 <TextBlock Text="{Binding Status}" Foreground="White" FontSize="9" FontWeight="Bold"/>
                             </Border>
 
-                            <!-- ЖИВОЙ ТАЙМЕР -->
-                            <!-- ВНИМАНИЕ: здесь обязательно StaticResource! -->
                             <TextBlock Text="{Binding TimeInStatus}" 
-               FontSize="10" 
-               Foreground="#7F8C8D" 
-               FontWeight="SemiBold" 
-               HorizontalAlignment="Right" 
-               Margin="0,2,0,0"
-               Visibility="{Binding TimeInStatus, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                                       FontSize="10" Foreground="#7F8C8D" FontWeight="SemiBold" 
+                                       HorizontalAlignment="Right" Margin="0,2,0,0"
+                                       Visibility="{Binding TimeInStatus, Converter={StaticResource ZeroToVisibilityConverter}}"/>
                         </StackPanel>
-
-
                     </Grid>
 
                     <StackPanel Visibility="{Binding ExtraCost, Converter={StaticResource ZeroToVisibilityConverter}}">
@@ -139,7 +125,6 @@
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
                     <Style TargetType="ListBoxItem">
-                        <!-- СВЯЗЫВАЕМ СИСТЕМНОЕ ВЫДЕЛЕНИЕ С МОДЕЛЬЮ -->
                         <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
                         <Setter Property="Template">
                             <Setter.Value>
@@ -157,52 +142,42 @@
     <Grid>
         <Grid Margin="10">
             <Grid.RowDefinitions>
-                <!-- 1. Ряд для вкладок филиалов -->
                 <RowDefinition Height="Auto"/>
-                <!-- 2. Ряд для верхней панели с кнопками -->
                 <RowDefinition Height="Auto"/>
-                <!-- 3. Ряд для рабочей области (Боксы + Статистика) -->
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!--  1. ТАБЫ ДЛЯ ФИЛИАЛОВ (САМЫЙ ВЕРХ) -->
+            <!-- 1. ТАБЫ ФИЛИАЛОВ -->
             <TabControl Grid.Row="0" 
                         ItemsSource="{Binding BranchTabs}" 
                         SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
                         Margin="0,0,0,10" 
                         Background="#f0f0f2" 
                         BorderThickness="0">
-
-                <!-- Наследуем твой красивый дизайн из словаря через BasedOn  -->
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                         <Setter Property="Padding" Value="10,5"/>
                     </Style>
                 </TabControl.ItemContainerStyle>
-
-                <!-- Как выглядит заголовок вкладки -->
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding BranchName}" FontSize="11" FontWeight="Bold"/>
                     </DataTemplate>
                 </TabControl.ItemTemplate>
-
-                <!--  ИСПРАВЛЕНИЕ ТЕКСТА: Пустой шаблон, чтобы убрать серую надпись названия класса  -->
                 <TabControl.ContentTemplate>
                     <DataTemplate>
-                        <!-- Ничего не выводим, контент ниже -->
+                        <!-- Пусто -->
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>
 
-            <!--  2. ВЕРХНЯЯ ПАНЕЛЬ С КНОПКАМИ (ТЕПЕРЬ ПОД ВКЛАДКАМИ) -->
+            <!-- 2. ВЕРХНЯЯ ПАНЕЛЬ -->
             <Grid Grid.Row="1" Margin="15,0,15,15">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Блок с названием и профилем -->
                 <Grid Grid.Row="0" Margin="0,0,0,15">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="0.5*"/>
@@ -223,14 +198,13 @@
                             <StackPanel>
                                 <TextBlock Text="{Binding ActiveUserInfo}" FontSize="13" FontWeight="SemiBold" Foreground="#2C3E50"/>
                                 <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="11" Foreground="#7F8C8D" 
-                   Visibility="{Binding CurrentShiftInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                                           Visibility="{Binding CurrentShiftInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
                             </StackPanel>
                             <TextBlock Text="{Binding CurrentBranchDisplay}" FontSize="11" Foreground="#7F8C8D"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
 
-                <!-- Блок с кнопками -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Button x:Name="AddButton" Content="➕ Добавить заказ" Click="AddButton_Click" Padding="15,8" Margin="0,0,10,0" Background="#3498DB" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
                     <Button x:Name="EmployeesButton" Content="👥 Сотрудники" Click="EmployeesButton_Click" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" Padding="15,8" Margin="0,0,5,0" Background="#9B59B6" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
@@ -242,30 +216,23 @@
                     <Button x:Name="ReportsButton" Content="📊 Отчёты" Click="ReportsButton_Click" Padding="15,8" Margin="10,0,5,0" Background="#F39C12" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
                     <Button x:Name="AppointmentsBoardButton" Content="📋 Доска записей" Click="AppointmentsBoardButton_Click" Padding="15,8" Margin="0,0,5,0" Background="#F39C12" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
                     <Button x:Name="HistoryButton" Content="📊 История" Click="HistoryButton_Click" Padding="15,8" Margin="0,0,10,0" Background="#F39C12" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <TextBox x:Name="SearchFilterTextBox" Text="🔍 Поиск по гос. номеру или модели..." KeyUp="SearchFilterTextBox_KeyUp" GotFocus="SearchFilterTextBox_GotFocus" LostFocus="SearchFilterTextBox_LostFocus" Padding="10,8" MinWidth="250" Height="40" Margin="20,0,0,0" Background="White" BorderBrush="#BDC3C7" Foreground="#7F8C8D" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center">
-                        <TextBox.Resources>
-                            <Style TargetType="TextBox" BasedOn="{x:Null}"/>
-                        </TextBox.Resources>
-                    </TextBox>
+                    <TextBox x:Name="SearchFilterTextBox" Text="🔍 Поиск по гос. номеру или модели..." KeyUp="SearchFilterTextBox_KeyUp" GotFocus="SearchFilterTextBox_GotFocus" LostFocus="SearchFilterTextBox_LostFocus" Padding="10,8" MinWidth="250" Height="40" Margin="20,0,0,0" Background="White" BorderBrush="#BDC3C7" Foreground="#7F8C8D" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
                     <WrapPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,0,0">
                         <Button x:Name="ExitButton" Content="🚪 Выход" Click="ExitButton_Click" Padding="15,8" Background="#E74C3C" Foreground="White" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" Height="35"/>
                     </WrapPanel>
                 </StackPanel>
             </Grid>
 
-            <!--  3. РАБОЧАЯ ОБЛАСТЬ (БОКСЫ И СТАТИСТИКА) -->
+            <!-- 3. РАБОЧАЯ ОБЛАСТЬ -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <!-- Фиксированная ширина под боковую панель статистики -->
                     <ColumnDefinition Width="Auto" MinWidth="300"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Зоны для выбранной вкладки -->
-                <!-- Мы привязываемся к SelectedBranchTab.BranchWorkZones, чтобы показывать боксы только активного филиала -->
                 <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,15,0">
                     <StackPanel>
-
+                        <!-- МОЕЧНАЯ ЗОНА -->
                         <StackPanel Visibility="{Binding SelectedBranchTab.HasWashZones, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,20">
                             <TextBlock Text="💦 МОЕЧНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="#34495E" Margin="5,0,0,10" Opacity="0.8"/>
                             <ItemsControl ItemsSource="{Binding SelectedBranchTab.WashZones}">
@@ -284,6 +251,8 @@
                                                 </ContextMenu>
                                             </GroupBox.ContextMenu>
                                             <ListBox ItemsSource="{Binding Orders}"
+                                                     AllowDrop="True" 
+                                                     Drop="Order_Drop"
                                                      SelectedItem="{Binding DataContext.SelectedItem, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Mode=TwoWay}"
                                                      ItemTemplate="{StaticResource OrderTemplate}"
                                                      Style="{StaticResource CleanListBoxStyle}"
@@ -294,6 +263,7 @@
                             </ItemsControl>
                         </StackPanel>
 
+                        <!-- СЕРВИСНАЯ ЗОНА -->
                         <StackPanel Visibility="{Binding SelectedBranchTab.HasServiceZones, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock Text="🔧 СЕРВИСНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="#34495E" Margin="5,0,0,10" Opacity="0.8"/>
                             <ItemsControl ItemsSource="{Binding SelectedBranchTab.ServiceZones}">
@@ -312,6 +282,8 @@
                                                 </ContextMenu>
                                             </GroupBox.ContextMenu>
                                             <ListBox ItemsSource="{Binding Orders}"
+                                                     AllowDrop="True" 
+                                                     Drop="Order_Drop"
                                                      SelectedItem="{Binding DataContext.SelectedItem, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Mode=TwoWay}"
                                                      ItemTemplate="{StaticResource OrderTemplate}"
                                                      Style="{StaticResource CleanListBoxStyle}"
@@ -321,18 +293,14 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </StackPanel>
-
                     </StackPanel>
                 </ScrollViewer>
 
-                <!--  БОКОВАЯ ПАНЕЛЬ СТАТИСТИКИ (остается на месте) -->
+                <!-- БОКОВАЯ ПАНЕЛЬ СТАТИСТИКИ -->
                 <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15" Margin="20,0,0,0">
                     <DockPanel>
-                        <!-- Код панели статистики без изменений -->
                         <StackPanel Orientation="Vertical" Width="280" Margin="15,0,0,0" Background="White" VerticalAlignment="Top">
-                            <!-- ... (Весь твой код статистики оставляем здесь) ... -->
                             <TextBlock Text="👥 Статистика мойщиков:" FontSize="14" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,10"/>
-
                             <ItemsControl ItemsSource="{Binding WashersStats}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -446,7 +414,7 @@
                             </Border>
                             <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center">
                                 <Button Content="📤 Экспорт данных" Click="ExportButton_Click" Padding="15,8" Margin="10" Background="#9B59B6" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                                <TextBlock Text="Важно при возникновении ошибок"/>
+                                <TextBlock Text="Важно при возникновении ошибок" HorizontalAlignment="Center" FontSize="10" Foreground="#7F8C8D"/>
                             </StackPanel>
                         </StackPanel>
                     </DockPanel>
@@ -454,15 +422,7 @@
             </Grid>
         </Grid>
 
-        <!--  ОВЕРЛЕИ -->
-        <controls:AppointmentsOverlay x:Name="AppointmentsOverlay" 
-                                      Visibility="Collapsed"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Stretch"
-                                      Panel.ZIndex="9999"/>
-        <controls:CashboxOverlay x:Name="CashboxPanel" Visibility="Collapsed"
-                                 HorizontalAlignment="Stretch"
-                                 VerticalAlignment="Stretch"
-                                 Panel.ZIndex="9999"/>
+        <controls:AppointmentsOverlay x:Name="AppointmentsOverlay" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Panel.ZIndex="9999"/>
+        <controls:CashboxOverlay x:Name="CashboxPanel" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Panel.ZIndex="9999"/>
     </Grid>
 </Window>

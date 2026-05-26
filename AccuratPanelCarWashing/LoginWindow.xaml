@@ -56,7 +56,7 @@
 
         <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,20">
             <Button Content="Войти" Click="LoginButton_Click" Width="120" Height="40" 
-                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand" FontWeight="Bold"/>
+                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand" FontWeight="Bold" IsDefault="True"/>
             <Button Content="Выход" Click="ExitButton_Click" Width="120" Height="40" 
                     Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand" FontWeight="Bold"/>
         </StackPanel>
