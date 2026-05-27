@@ -1,5 +1,6 @@
 using AccuratSystem.Contracts.Models;
 using AccuratPanelCarWashing.Services;
+using AccuratSystem.Contracts.DTOs; // Добавлено для LoginResponseDto
 using System;
 using System.Linq;
 using System.Windows;
@@ -19,7 +20,8 @@ namespace AccuratPanelCarWashing
 
         private async System.Threading.Tasks.Task LoadBranchesAsync()
         {
-            await System.Threading.Tasks.Task.Delay(5000);
+            // Небольшая задержка, чтобы интерфейс успел отрисоваться
+            await System.Threading.Tasks.Task.Delay(1000);
 
             try
             {
@@ -56,19 +58,30 @@ namespace AccuratPanelCarWashing
             {
                 this.IsEnabled = false;
 
-                // AuthenticateAsync возвращает ContractsUser
-                var contractsUser = await _apiService.AuthenticateAsync(login, password);
+                var loginResponse = await _apiService.AuthenticateAsync(login, password, selectedBranch.Id);
 
-                if (contractsUser != null)
+                if (loginResponse != null && loginResponse.User != null)
                 {
+                    // === БЛОК ДИАГНОСТИКИ (УДАЛИМ ПОТОМ) ===
+                    string debugInfo = $"Филиал: {selectedBranch.Id}\n" +
+                                       $"Склад: {loginResponse.Features?.IsStorageEnabled}\n" +
+                                       $"CRM: {loginResponse.Features?.IsCrmMarketingEnabled}\n" +
+                                       $"Upsell: {loginResponse.Features?.IsUpsellEnabled}\n" +
+                                       $"Boss: {loginResponse.Features?.IsTelegramBossEnabled}";
+
+                    MessageBox.Show(debugInfo, "ПРОВЕРКА ЛИЦЕНЗИЙ");
+                    // ========================================
+
+                    AccuratPanelCarWashing.Services.UserSession.Features = loginResponse.Features;
+
                     AppSettings.CurrentBranchId = selectedBranch.Id;
                     AppSettings.CurrentBranchName = selectedBranch.Name;
                     AppSettings.CurrentBranchWashBaysCount = selectedBranch.WashBaysCount;
                     AppSettings.CurrentBranchServiceLiftsCount = selectedBranch.ServiceLiftsCount;
 
+                    var contractsUser = loginResponse.User;
                     Logger.SetUserContext(contractsUser.FullName, contractsUser.Id);
 
-                    // === ИСПРАВЛЕНО: Создаём WpfUser на основе ContractsUser ===
                     var wpfUser = new AccuratPanelCarWashing.Models.User
                     {
                         Id = contractsUser.Id,
@@ -80,16 +93,14 @@ namespace AccuratPanelCarWashing
                         IsActive = contractsUser.IsActive,
                         BranchId = contractsUser.BranchId,
                         BaseWagePercentage = contractsUser.BaseWagePercentage
-                        // IsAdmin вычисляется автоматически на основе Role
                     };
 
-                    //  НОВАЯ ЛОГИКА МАРШРУТИЗАЦИИ
-                    if (wpfUser.Role == 1) // Директор
+                    if (wpfUser.Role == 1)
                     {
                         var directorWin = new MainWindow(wpfUser);
                         directorWin.Show();
                     }
-                    else // Админ, Мойщик, Сотрудник сервиса
+                    else
                     {
                         var mainWindow = new MainWindow(wpfUser);
                         mainWindow.Show();
@@ -110,6 +121,8 @@ namespace AccuratPanelCarWashing
                 this.IsEnabled = true;
             }
         }
+
+
 
         private void ExitButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
     }

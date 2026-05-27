@@ -524,8 +524,28 @@ namespace AccuratPanelCarWashing
 
         private void EmployeesButton_Click(object sender, RoutedEventArgs e) => App.GetService<EmployeeCardWindow>().ShowDialog();
         private void CashboxButton_Click(object sender, RoutedEventArgs e) { if (_currentShift == null) { MessageBox.Show("Откройте смену!", "Внимание"); return; } CashboxPanel.Show(_currentShift); }
-        private void ServicesButton_Click(object sender, RoutedEventArgs e) => App.GetService<ServiceManagementWindow>().ShowDialog();
-        private void ReportsButton_Click(object sender, RoutedEventArgs e) => new ReportsWindow(_currentUser).ShowDialog();
+        private void ServicesButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!UserSession.IsFeatureEnabled(f => f.IsStorageEnabled)) // Например, привязали к модулю Склад
+            {
+                MessageBox.Show("Модуль управления услугами заблокирован 🔒");
+                return;
+            }
+            App.GetService<ServiceManagementWindow>().ShowDialog();
+        }
+
+        private void ReportsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Проверяем, включен ли модуль CRM/Маркетинга (как пример для отчетов)
+            if (!UserSession.IsFeatureEnabled(f => f.IsCrmMarketingEnabled))
+            {
+                MessageBox.Show("Этот модуль (Продвинутая аналитика) недоступен для вашего филиала.\n\nСвяжитесь с администратором для активации 🔒", "Модуль заблокирован");
+                return;
+            }
+
+            new ReportsWindow(_currentUser).ShowDialog();
+        }
+
         private void ExitButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
         private void ClientsButton_Click(object sender, RoutedEventArgs e) => App.GetService<ClientsWindow>().ShowDialog();
         private void HistoryButton_Click(object sender, RoutedEventArgs e) => new HistoryWindow(_currentUser).ShowDialog();

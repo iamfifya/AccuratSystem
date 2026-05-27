@@ -3,6 +3,7 @@ using Accurat.WebAPI.Models;
 using AccuratSystem.Contracts.DTOs;
 using AccuratSystem.Contracts.Enums;
 using AccuratSystem.Contracts.Models;
+using Akkurat.WebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
@@ -31,6 +32,7 @@ namespace Accurat.WebAPI.Data
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
         public DbSet<OrderWasher> OrderWashers { get; set; }
         public DbSet<AccuratSystem.Contracts.Models.OrderStatusHistory> OrderStatusHistories { get; set; }
+        public DbSet<TenantFeature> TenantFeatures { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -190,6 +192,16 @@ namespace Accurat.WebAPI.Data
                 .HasIndex(osh => new { osh.OrderId, osh.EndTime });
             // Говорим Entity Framework игнорировать это поле, чтобы он не искал его в таблице Orders
             modelBuilder.Entity<AccuratSystem.Contracts.Models.Order>().Ignore(o => o.CurrentStatusStartTime);
+
+            modelBuilder.Entity<TenantFeature>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.BranchId).IsUnique(); // Один филиал = один набор прав
+                entity.Property(e => e.IsUpsellEnabled).HasDefaultValue(false);
+                entity.Property(e => e.IsStorageEnabled).HasDefaultValue(false);
+                entity.Property(e => e.IsCrmMarketingEnabled).HasDefaultValue(false);
+                entity.Property(e => e.IsTelegramBossEnabled).HasDefaultValue(false);
+            });
 
         }
     }

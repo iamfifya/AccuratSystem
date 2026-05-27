@@ -266,14 +266,17 @@ namespace AccuratPanelCarWashing.Services
                 throw new Exception($"Скрытая ошибка API: {ex.Message}");
             }
         }
-
-        public async Task<ContractsUser> AuthenticateAsync(string login, string password)
+        public async Task<LoginResponseDto> AuthenticateAsync(string login, string password, int branchId)
         {
-            var response = await _http.PostAsJsonAsync("Users/login", new { Login = login, Password = password });
+            // Отправляем объект с тремя полями: Login, Password и BranchId
+            var response = await _http.PostAsJsonAsync("Users/login", new { Login = login, Password = password, BranchId = branchId });
             if (response.IsSuccessStatusCode)
-                return await response.Content.ReadFromJsonAsync<ContractsUser>();
+                return await response.Content.ReadFromJsonAsync<LoginResponseDto>();
             return null;
         }
+
+
+
         #endregion
 
         #region ФИНАНСЫ (TRANSACTIONS)

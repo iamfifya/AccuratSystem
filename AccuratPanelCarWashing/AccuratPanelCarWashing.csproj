@@ -403,6 +403,7 @@
     <Compile Include="Services\OrderExtensions.cs" />
     <Compile Include="Services\OrderMath.cs" />
     <Compile Include="Services\TimeHelper.cs" />
+    <Compile Include="Services\UserSession.cs" />
     <Compile Include="StatusToBackgroundConverter.cs" />
     <Compile Include="StatusToColorConverter.cs" />
     <Compile Include="ViewModels\AddEditOrderViewModel.cs" />

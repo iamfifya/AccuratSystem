@@ -58,21 +58,46 @@ namespace Accurat.WebAPI.Controllers
 
             return NoContent(); // Успешное выполнение без возврата тела
         }
+        // 1. Теперь в запросе передаем и логин, и пароль, и ID выбранного филиала
+        public class LoginRequest
+        {
+            public string Login { get; set; }
+            public string Password { get; set; }
+            public int BranchId { get; set; } // <-- ДОБАВЛЯЕМ ЭТО
+        }
+
         [HttpPost("login")]
-        public async Task<ActionResult<User>> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequest request)
         {
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Login == request.Login && u.PasswordHash == request.Password);
 
             if (user == null) return Unauthorized(new { message = "Неверный логин или пароль" });
 
-            return Ok(user);
+            // !!! ИСПРАВЛЕНИЕ: используем BranchId ИЗ ЗАПРОСА (выбранный в WPF), 
+            // а не тот, что привязан к пользователю в базе
+            TenantFeaturesDto features = new TenantFeaturesDto();
+
+            var tenantFeature = await _context.TenantFeatures
+                .FirstOrDefaultAsync(f => f.BranchId == request.BranchId); // Используем request.BranchId
+
+            if (tenantFeature != null)
+            {
+                features = new TenantFeaturesDto
+                {
+                    IsUpsellEnabled = tenantFeature.IsUpsellEnabled,
+                    IsStorageEnabled = tenantFeature.IsStorageEnabled,
+                    IsCrmMarketingEnabled = tenantFeature.IsCrmMarketingEnabled,
+                    IsTelegramBossEnabled = tenantFeature.IsTelegramBossEnabled
+                };
+            }
+
+            return Ok(new LoginResponseDto
+            {
+                User = user,
+                Features = features
+            });
         }
 
-        public class LoginRequest
-        {
-            public string Login { get; set; }
-            public string Password { get; set; }
-        }
     }
 }
