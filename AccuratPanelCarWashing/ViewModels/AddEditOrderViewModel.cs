@@ -74,7 +74,7 @@ namespace AccuratPanelCarWashing.ViewModels
 
             try
             {
-                // 🔥 Добавили branchId в запрос
+                // Добавили branchId в запрос
                 string query = string.Join("&", selectedIds.Select(id => $"currentServices={id}"));
                 var response = await _apiService.GetFromJsonAsync<UpsellSuggestion>($"Upsell/suggest?{query}&branchId={CurrentOrder.BranchId}");
 
@@ -88,7 +88,7 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             if (CurrentSuggestion == null) return;
 
-            // 🔥 Психологический барьер
+            // Психологический барьер
             var result = MessageBox.Show(
                 $"Вы подтверждаете, что клиент изначально НЕ ПРОСИЛ эту услугу, и это ваша успешная допродажа?\n\n" +
                 $"За обман системы бонус аннулируется.",

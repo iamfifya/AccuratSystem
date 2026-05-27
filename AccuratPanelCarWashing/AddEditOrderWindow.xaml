@@ -438,7 +438,7 @@
                                      HorizontalContentAlignment="Stretch"
                                      VerticalContentAlignment="Stretch">
 
-                                <!-- 🔥 ВАЖНО: растягиваем ListBoxItem -->
+                                <!-- ВАЖНО: растягиваем ListBoxItem -->
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -486,7 +486,7 @@
                                                     </WrapPanel>
 
                                                     <WrapPanel>
-                                                    <!-- 🔥 TextBlock с переносом -->
+                                                    <!-- TextBlock с переносом -->
                                                         <TextBlock Text="{Binding Message}" 
                                                                    FontSize="12" TextWrapping="Wrap" Foreground="#2C3E50"/>
                                                         <TextBlock Text=" | "/>

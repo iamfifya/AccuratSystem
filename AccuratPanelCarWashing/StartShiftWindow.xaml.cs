@@ -76,10 +76,10 @@ namespace AccuratPanelCarWashing
 
                 this.IsEnabled = false;
 
-                // 🔥 1. Определяем целевой филиал (приоритет у того, что выбран во вкладке)
+                // 1. Определяем целевой филиал (приоритет у того, что выбран во вкладке)
                 int targetBranchId = PreselectedBranchId ?? AppSettings.CurrentBranchId;
 
-                // 🔥 2. Проверяем открытые смены ТОЛЬКО для этого филиала
+                // 2. Проверяем открытые смены ТОЛЬКО для этого филиала
                 var allShifts = await _apiService.GetShiftsAsync();
                 var openShift = allShifts.FirstOrDefault(s => !s.IsClosed && s.BranchId == targetBranchId);
 

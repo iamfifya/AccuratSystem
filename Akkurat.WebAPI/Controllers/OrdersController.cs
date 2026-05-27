@@ -81,7 +81,7 @@ namespace Accurat.WebAPI.Controllers
                     _context.Orders.Add(order);
                     await _context.SaveChangesAsync(); // Сначала сохраняем заказ, чтобы получить его Id
 
-                    // 🔥 НОВОЕ: Создаем первую запись в истории времени
+                    // НОВОЕ: Создаем первую запись в истории времени
                     var firstHistory = new AccuratSystem.Contracts.Models.OrderStatusHistory
                     {
                         OrderId = order.Id,
@@ -121,7 +121,7 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    // 🔥 ИСПРАВЛЕНИЕ: Добавлено .AsNoTracking(). 
+                    // ИСПРАВЛЕНИЕ: Добавлено .AsNoTracking(). 
                     // EF просто считает данные для проверки статуса, но не заблокирует ID в памяти.
                     var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
                     if (existingOrder == null) return NotFound();
