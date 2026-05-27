@@ -17,6 +17,19 @@ namespace AccuratSystem.Contracts.Models
         public decimal DefaultDiscountPercent { get; set; }
         public string Notes { get; set; } = string.Empty;
 
+        // Это свойство будет использоваться в CustomComboBox для отображения в списке
+        public string DisplayInfo
+        {
+            get
+            {
+                // Формируем строку: "Иванов И.И. | 8999..."
+                // Если телефона нет, выводим только ФИО
+                return string.IsNullOrEmpty(Phone)
+                    ? FullName
+                    : $"{FullName} | {Phone}";
+            }
+        }
+
         // === БЫСТРЫЙ ФИКС: Свойство-помощник для UI ===
         // [JsonIgnore] говорит сериализатору игнорировать это свойство при обмене с сервером
         [JsonIgnore]

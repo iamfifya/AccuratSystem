@@ -9,7 +9,7 @@
         Title="{Binding WindowTitle}"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="550" Height="850"
+        Width="650" Height="850"
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"
@@ -40,397 +40,345 @@
         </Style>
     </Window.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                  HorizontalScrollBarVisibility="Disabled"
-                  CanContentScroll="True"
-                  Margin="0">
-        <Grid Margin="15">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+    <Grid Margin="0,15,0,15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" Padding="25,0,10,0">
+            <StackPanel Margin="0,0,10,20">
+                <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" 
+                           Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15"/>
 
-            <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" 
-                       Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15" Grid.Row="0"/>
+                <Label Content="🏢 Филиал (определяется сменой):" Margin="0,5,0,0" FontWeight="SemiBold"
+                       Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <controls:CustomComboBox x:Name="BranchComboBox" Margin="0,5,0,10" Height="50"
+                                         DisplayMemberPath="Name" SelectedValuePath="Id"
+                                         SelectedValue="{Binding CurrentOrder.BranchId, Mode=TwoWay}"
+                                         SelectionChanged="BranchComboBox_SelectionChanged"
+                                         Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-            <Label Content="🏢 Филиал (определяется сменой):" Grid.Row="1" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <controls:CustomComboBox x:Name="BranchComboBox" Grid.Row="2" Margin="0,5,0,10" Height="50"
-                         DisplayMemberPath="Name" SelectedValuePath="Id"
-                         SelectedValue="{Binding CurrentOrder.BranchId, Mode=TwoWay}"
-                         SelectionChanged="BranchComboBox_SelectionChanged"
-                         IsEnabled="{Binding IsAppointment}"/>
+                <Label Content="📂 Департамент:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <controls:CustomComboBox x:Name="DepartmentComboBox" 
+                                         Margin="0,5,0,10" Height="50"
+                                         Placeholder="Выберите департамент"
+                                         SelectedValue="{Binding CurrentDepartment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         SelectedValuePath="Tag">
+                    <controls:CustomComboBox.Items>
+                        <ComboBoxItem Content="💦 Мойка (автомойка)" Tag="Wash" IsSelected="True"/>
+                        <ComboBoxItem Content="🔧 Сервис (ремонт/ТО)" Tag="Service"/>
+                    </controls:CustomComboBox.Items>
+                </controls:CustomComboBox>
 
-            <Label Content="📂 Департамент:" Grid.Row="3" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <controls:CustomComboBox x:Name="DepartmentComboBox" 
-                                     Grid.Row="4" 
-                                     Margin="0,5,0,10" 
-                                     Height="50"
-                                     Placeholder="Выберите департамент"
-                                     SelectedValue="{Binding CurrentDepartment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     SelectedValuePath="Tag">
-                <controls:CustomComboBox.Items>
-                    <ComboBoxItem Content="💦 Мойка (автомойка)" Tag="Wash" IsSelected="True"/>
-                    <ComboBoxItem Content="🔧 Сервис (ремонт/ТО)" Tag="Service"/>
-                </controls:CustomComboBox.Items>
-            </controls:CustomComboBox>
+                <Label Content="👤 Клиент:" Margin="0,5,0,0" FontWeight="SemiBold"
+                       Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <Grid Margin="0,5,0,10"
+                      Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <Label Content="👤 Клиент:" Grid.Row="5" Margin="0,5,0,0" FontWeight="SemiBold"
-                   Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-            <Grid Grid.Row="6" Margin="0,5,0,10"
-                  Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                    <controls:CustomComboBox x:Name="ClientComboBox" 
+                                             Grid.Column="0" Height="50"
+                                             DisplayMemberPath="DisplayInfo"
+                                             SelectedValuePath="Id"
+                                             SelectedItem="{Binding SelectedClient, Mode=TwoWay}"
+                                             IsEditable="True"
+                                             Placeholder="Выборите постоянника"/>
+                    <Button Grid.Column="1" Content="➕" Click="AddNewClient_Click" 
+                            Width="35" Height="50" Margin="5,0,0,0"
+                            Background="#27AE60" Foreground="White" FontSize="16"/>
+                </Grid>
 
-                <controls:CustomComboBox x:Name="ClientComboBox" 
-                                         Grid.Column="0" Height="50"
-                                         DisplayMemberPath="DisplayInfo"
-                                         SelectedValuePath="Id"
-                                         SelectedItem="{Binding SelectedClient, Mode=TwoWay}"
-                                         IsEditable="True"
-                                         Placeholder="Начните вводить имя или телефон"/>
-                <Button Grid.Column="1" Content="➕" Click="AddNewClient_Click" 
-                        Width="35" Height="50" Margin="5,0,0,0"
-                        Background="#27AE60" Foreground="White" FontSize="16"/>
-            </Grid>
+                <Label Content="Марка и модель авто:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding CarModel, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
 
-            <Label Content="Марка и модель авто:" Grid.Row="7" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <TextBox Text="{Binding CarModel, UpdateSourceTrigger=PropertyChanged}" 
-                     Grid.Row="8" Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
+                <Label Content="Государственный номер:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding CarNumber, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
 
-            <Label Content="Государственный номер:" Grid.Row="9" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <TextBox Text="{Binding CarNumber, UpdateSourceTrigger=PropertyChanged}" 
-                     Grid.Row="10" Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
+                <Label Content="Категория кузова:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <controls:CustomComboBox x:Name="BodyTypeComboBox" Margin="0,5,0,10" Height="50"
+                                         SelectedValue="{Binding SelectedBodyTypeCategory}"
+                                         Placeholder="Выберите категорию"/>
 
-            <Label Content="Категория кузова:" Grid.Row="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <controls:CustomComboBox x:Name="BodyTypeComboBox" Grid.Row="12" Margin="0,5,0,10" Height="50"
-                                     SelectedValue="{Binding SelectedBodyTypeCategory}"
-                                     SelectedValuePath="Value"
-                                     Placeholder="Выберите категорию"/>
+                <Label Content="⏰ Время заезда:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <Grid Margin="0,5,0,10" Height="50">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <local:CustomDatePicker x:Name="OrderDatePicker" Grid.Column="0" Height="50"/>
+                    <TextBlock Grid.Column="1" Text=" " VerticalAlignment="Center"/>
+                    <TextBox x:Name="OrderTimeTextBox" Grid.Column="2" TextAlignment="Center" Height="50" Width="80" Text="12:00"/>
+                </Grid>
 
-            <Label Content="⏰ Время заезда:" Grid.Row="13" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <Grid Grid.Row="14" Margin="0,5,0,10" Height="50">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <local:CustomDatePicker x:Name="OrderDatePicker" Grid.Column="0" Height="50"/>
-                <TextBlock Grid.Column="1" Text=" " VerticalAlignment="Center" Margin="5,0"/>
-                <TextBox x:Name="OrderTimeTextBox" Grid.Column="2" TextAlignment="Center" Height="50" Width="80" Text="12:00"/>
-            </Grid>
-
-            <Label Content="⏱️ Длительность (минуты):" Grid.Row="15" Margin="0,5,0,0" FontWeight="SemiBold"
+                <Label Content="⏱️ Длительность (минуты):" Margin="0,5,0,0" FontWeight="SemiBold"
                    Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            <TextBox x:Name="DurationTextBox" Grid.Row="16" Margin="0,5,0,10" Height="50" Padding="5" Text="60"
+                <TextBox x:Name="DurationTextBox" Margin="0,5,0,10" Height="50" Padding="5" Text="60"
                      Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-            <!-- Выбор рабочей зоны -->
-            <Label Content="{Binding CurrentOrder.Department, 
-                 Converter={StaticResource DepartmentToZoneLabelConverter}, 
-                 FallbackValue='🚘 Выберите зону:'}" 
-                 Grid.Row="17" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Выбор рабочей зоны -->
+                <Label Content="{Binding CurrentOrder.Department,
+                    Converter={StaticResource DepartmentToZoneLabelConverter},
+                    FallbackValue='🚘 Выберите зону:'}" 
+                       Margin="0,5,0,0" FontWeight="SemiBold"/>
 
-            <controls:CustomComboBox x:Name="ZoneComboBox" 
-                         Grid.Row="18" 
-                         Margin="0,5,0,10" 
-                         Height="50"
-                         ItemsSource="{Binding AvailableZones}"
-                         SelectedValuePath="BoxNumber"
-                         DisplayMemberPath="Name"
-                         SelectedValue="{Binding CurrentOrder.BoxNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         Placeholder="Выберите рабочую зону"/>
+                <controls:CustomComboBox x:Name="ZoneComboBox"
+                                         Margin="0,5,0,10" 
+                                         Height="50"
+                                         ItemsSource="{Binding AvailableZones}"
+                                         SelectedValuePath="BoxNumber"
+                                         DisplayMemberPath="Name"
+                                         SelectedValue="{Binding CurrentOrder.BoxNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Placeholder="Выберите рабочую зону"/>
 
-            <Label Content="👤 Выберите сотрудника:" Grid.Row="19" Margin="0,5,0,0" FontWeight="SemiBold"
-                   Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-            <controls:CustomComboBox x:Name="WasherComboBox" Grid.Row="20" Margin="0,5,0,10" Height="50"
-                                     ItemsSource="{Binding Washers}"
-                                     SelectedValue="{Binding SelectedWasherId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     DisplayMemberPath="FullName"
-                                     SelectedValuePath="Id"
-                                     Placeholder="Выберите из списка"
-                                     IsEditable="True"
-                                     Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <Label Content="👤 Выберите сотрудника:" Margin="0,5,0,0" FontWeight="SemiBold"
+                       Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <controls:CustomComboBox x:Name="WasherComboBox" Margin="0,5,0,10" Height="50"
+                                         ItemsSource="{Binding Washers}"
+                                         SelectedValue="{Binding SelectedWasherId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         SelectedValuePath="Id"
+                                         DisplayMemberPath="UserDisplayInfo"
+                                         Placeholder="Выберите из списка"
+                                         IsEditable="True"
+                                         Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-            <!-- Поиск по услугам -->
-            <Label Content="🔍 Поиск услуги:" Grid.Row="21" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <TextBox x:Name="ServiceSearchTextBox" 
-         Grid.Row="22" 
-         Margin="0,5,0,10" 
-         Height="40" 
-         Padding="5"
-         TextChanged="ServiceSearchTextBox_TextChanged"
-         Tag="Введите название услуги..."/>
 
-            <Label Content="🛠️ Выберите услуги:" Grid.Row="23" Margin="0,10,0,5" FontWeight="SemiBold"/>
-            <ListBox x:Name="ServicesListBox" Grid.Row="24" MinHeight="120" MaxHeight="180" Margin="0,5,0,10"
-                     ItemsSource="{Binding Services}" SelectionMode="Multiple"
-                     SelectionChanged="ServicesListBox_SelectionChanged">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="8,8"/>
-                        <Setter Property="MinHeight" Value="40"/>
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#3498DB"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" Grid.Column="0" 
-                                       VerticalAlignment="Center" TextWrapping="Wrap" Foreground="Black"/>
-                            <TextBlock Text="{Binding Price, StringFormat={}{0:N0} ₽}" Grid.Column="1" 
-                                       Foreground="#27AE60" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
 
-            <Label Content="💰 Дополнительная стоимость:" Grid.Row="25" Margin="0,10,0,0" FontWeight="SemiBold"/>
-            <TextBox Text="{Binding ExtraCost, 
+                    <!-- Поиск по услугам -->
+                <Label Content="🔍 Поиск услуги:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <TextBox x:Name="ServiceSearchTextBox"
+                         Margin="0,5,0,10" Height="40" Padding="5"
+                         TextChanged="ServiceSearchTextBox_TextChanged"
+                         Tag="Введите название услуги..."/>
+
+                <Label Content="🛠️ Выберите услуги:" Margin="0,10,0,5" FontWeight="SemiBold"/>
+                <ListBox x:Name="ServicesListBox" MinHeight="120" MaxHeight="180" Margin="0,5,0,10"
+                         ItemsSource="{Binding Services}" SelectionMode="Multiple"
+                         SelectionChanged="ServicesListBox_SelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="8,8"/>
+                            <Setter Property="MinHeight" Value="40"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#3498DB"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}" Grid.Column="0" 
+                                           VerticalAlignment="Center" TextWrapping="Wrap" Foreground="Black"/>
+                                <TextBlock Text="{Binding Price, StringFormat={}{0:N0} ₽}" Grid.Column="1" 
+                                           Foreground="#27AE60" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Label Content="💰 Дополнительная стоимость:" Margin="0,10,0,0" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding ExtraCost, 
                              UpdateSourceTrigger=PropertyChanged, 
                              TargetNullValue=0, 
                              FallbackValue=0,
                              ValidatesOnExceptions=False,
                              Converter={StaticResource DecimalToEmptyZeroConverter}}"
-                     Grid.Row="26" Margin="0,5,0,10" Height="50" Padding="5"/>
+                         Margin="0,5,0,10" Height="50" Padding="5"/>
 
-            <Label Content="📝 Причина дополнительной стоимости:" Grid.Row="27" Margin="0,5,0,0" FontWeight="SemiBold"/>
-            <TextBox Text="{Binding CurrentOrder.ExtraCostReason, UpdateSourceTrigger=PropertyChanged}" 
-                     Grid.Row="28" Margin="0,5,0,10" Height="50" Padding="5" 
+                <Label Content="📝 Причина дополнительной стоимости:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding CurrentOrder.ExtraCostReason, UpdateSourceTrigger=PropertyChanged}" 
+                     Margin="0,5,0,10" Height="50" Padding="5" 
                      TextWrapping="Wrap" AcceptsReturn="True"/>
 
-            <Label Content="📋 Статус заказа:" Grid.Row="29" Margin="0,5,0,0" FontWeight="SemiBold"
+                <Label Content="📋 Статус заказа:" Margin="0,5,0,0" FontWeight="SemiBold"
                    Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-            <controls:CustomComboBox x:Name="StatusComboBox" Grid.Row="30" Margin="0,5,0,10" Height="50"
+                <controls:CustomComboBox x:Name="StatusComboBox" Grid.Row="30" Margin="0,5,0,10" Height="50"
                                      SelectedValue="{Binding CurrentOrder.Status}"
                                      SelectedValuePath="Value"
                                      Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-            <Label Content="🎁 Скидка:" Grid.Row="31" Margin="0,10,0,0" FontWeight="SemiBold"/>
-            <Grid Grid.Row="32" Margin="0,5,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+                <Label Content="🎁 Скидка:" Margin="0,10,0,0" FontWeight="SemiBold"/>
+                <Grid Margin="0,5,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBox x:Name="DiscountPercentTextBox" 
-                         Text="{Binding DiscountPercent, 
+                    <TextBox x:Name="DiscountPercentTextBox" 
+                             Text="{Binding DiscountPercent, 
                                 UpdateSourceTrigger=PropertyChanged, 
                                 TargetNullValue=0, 
                                 FallbackValue=0,
                                 ValidatesOnExceptions=False,
                                 Converter={StaticResource DecimalToEmptyZeroConverter}}"
-                         Grid.Column="0" Height="50" Padding="5" />
+                             Grid.Column="0" Height="50" Padding="5" />
 
-                <TextBlock Grid.Column="1" Text=" % " VerticalAlignment="Center" Margin="5,0" FontSize="14"/>
+                    <TextBlock Grid.Column="1" Text=" % " VerticalAlignment="Center" Margin="5,0" FontSize="14"/>
 
-                <TextBox x:Name="DiscountAmountTextBox" 
-                         Grid.Column="2" Height="50" Padding="5" 
-                         Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToEmptyZeroConverter}}"/>
-            </Grid>
+                    <TextBox x:Name="DiscountAmountTextBox" 
+                             Grid.Column="2" Height="50" Padding="5" 
+                             Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToEmptyZeroConverter}}"/>
+                </Grid>
 
-            <Label Content="💳 Способ оплаты:" Grid.Row="33" Margin="0,10,0,0" FontWeight="SemiBold"
-                   Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-            <controls:CustomComboBox x:Name="PaymentMethodComboBox" Grid.Row="35" Margin="0,5,0,10" Height="50"
+                <Label Content="💳 Способ оплаты:" Margin="0,10,0,0" FontWeight="SemiBold"
+                       Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <controls:CustomComboBox x:Name="PaymentMethodComboBox" Margin="0,5,0,10" Height="50"
                                      SelectedValue="{Binding CurrentOrder.PaymentMethod}"
                                      SelectedValuePath="Value"
                                      Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-            <!-- БАННЕР УМНОГО КАССИРА (UPSYELL) -->
-            <Border Grid.Row="36" 
-        Background="#FFF9C4" 
-        BorderBrush="#FBC02D" 
-        BorderThickness="2" 
-        CornerRadius="10" 
-        Padding="15" 
-        Margin="0,10" 
-        Visibility="{Binding CurrentSuggestion, Converter={StaticResource ZeroToVisibilityConverter}}">
-                <!-- Если есть конвертер, иначе убери -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <!-- БАННЕР УМНОГО КАССИРА (UPSYELL) -->
+                <Border Background="#FFF9C4" 
+                        BorderBrush="#FBC02D" 
+                        BorderThickness="2" 
+                        CornerRadius="10" 
+                        Padding="15" Margin="0,10" 
+                        Visibility="{Binding CurrentSuggestion, Converter={StaticResource ZeroToVisibilityConverter}}">
+                    <!-- Если есть конвертер, иначе убери -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="💡 СОВЕТ:" FontWeight="Bold" Foreground="#F57F17" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Grid.Column="0" Text="💡 СОВЕТ:" FontWeight="Bold" Foreground="#F57F17" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding CurrentSuggestion.Message}" 
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentSuggestion.Message}" 
                        FontSize="14" FontWeight="SemiBold" Foreground="#424242" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding CurrentSuggestion.BonusAmount, StringFormat='Ваш бонус: {0:N0} ₽'}" 
+                            <TextBlock Text="{Binding CurrentSuggestion.BonusAmount, StringFormat='Ваш бонус: {0:N0} ₽'}" 
                        FontSize="12" Foreground="#2E7D32" FontWeight="Bold"/>
-                    </StackPanel>
+                        </StackPanel>
 
-                    <Button Grid.Column="2" Content="Добавить" 
-        Click="ApplyUpsell_Click" 
-        Padding="15,5" Background="#27AE60" Foreground="White" 
-        FontWeight="Bold" Cursor="Hand" BorderThickness="0"/>
-                </Grid>
-            </Border>
+                        <Button Grid.Column="2" Content="Добавить" 
+                                Click="ApplyUpsell_Click" 
+                                Padding="15,5" Background="#27AE60" Foreground="White" 
+                                FontWeight="Bold" Cursor="Hand" BorderThickness="0"/>
+                    </Grid>
+                </Border>
 
 
-            <!-- === ВКЛАДКИ: РАСХОДЫ И ЛЕНТА === -->
-            <TabControl Grid.Row="37" Margin="0,10,0,10" Background="Transparent" BorderThickness="0">
-                <TabControl.ItemContainerStyle>
-                    <Style TargetType="TabItem">
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Padding" Value="15,8"/>
-                        <Setter Property="FontSize" Value="13"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Foreground" Value="#7F8C8D"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Foreground" Value="#2C3E50"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TabControl.ItemContainerStyle>
+                <!-- === ВКЛАДКИ: РАСХОДЫ И ЛЕНТА === -->
+                <TabControl Margin="0,10,0,10" Background="Transparent" BorderThickness="0">
+                    <TabControl.ItemContainerStyle>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Padding" Value="15,8"/>
+                            <Setter Property="FontSize" Value="13"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="#7F8C8D"/>
+                            <Setter Property="Visibility" Value="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Foreground" Value="#2C3E50"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TabControl.ItemContainerStyle>
 
-                <!-- Вкладка: Расходы -->
-                <TabItem Header="💰 Расходы">
-                    <Border Background="White" CornerRadius="8" Padding="10" Margin="5">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                    <!-- Вкладка: Расходы -->
+                    <TabItem Header="💰 Расходы">
+                        <Border Background="White" CornerRadius="8" Padding="10" Margin="5">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                            <!-- Форма добавления расхода -->
-                            <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                <TextBlock Text="➕ Добавить расход" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="ExpenseNameTextBox" Height="40" Padding="5" Margin="0,0,5,0" ToolTip="Название (масло, запчасть...)" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                                    <Button Grid.Column="1" Content="Добавить" Click="AddExpenseButton_Click" Width="100" Height="40" Background="#27AE60" Foreground="White"/>
-                                </Grid>
-                                <Grid Margin="0,5,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="ExpenseCostPriceTextBox" Grid.Column="0" Height="40" Padding="5" Margin="0,0,2,0" ToolTip="Себестоимость ₽" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                                    <TextBox x:Name="ExpenseClientPriceTextBox" Grid.Column="1" Height="40" Padding="5" Margin="2,0,2,0" ToolTip="Цена для клиента ₽" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                                    <TextBox x:Name="ExpenseQuantityTextBox" Grid.Column="2" Height="40" Padding="5" Margin="2,0,0,0" ToolTip="Кол-во" Text="1" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                                </Grid>
-                                <!-- Категория расхода (кастомный комбобокс) -->
-                                <controls:CustomComboBox x:Name="ExpenseCategoryComboBox" 
+                                <!-- Форма добавления расхода -->
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="➕ Добавить расход" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="ExpenseNameTextBox" Height="40" Padding="5" Margin="0,0,5,0" ToolTip="Название (масло, запчасть...)" Style="{StaticResource PlaceholderTextBoxStyle}"/>
+                                        <Button Grid.Column="1" Content="Добавить" Click="AddExpenseButton_Click" Width="100" Height="40" Background="#27AE60" Foreground="White"/>
+                                    </Grid>
+                                    <Grid Margin="0,5,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="ExpenseCostPriceTextBox" Grid.Column="0" Height="40" Padding="5" Margin="0,0,2,0" ToolTip="Себестоимость ₽" Style="{StaticResource PlaceholderTextBoxStyle}"/>
+                                        <TextBox x:Name="ExpenseClientPriceTextBox" Grid.Column="1" Height="40" Padding="5" Margin="2,0,2,0" ToolTip="Цена для клиента ₽" Style="{StaticResource PlaceholderTextBoxStyle}"/>
+                                        <TextBox x:Name="ExpenseQuantityTextBox" Grid.Column="2" Height="40" Padding="5" Margin="2,0,0,0" ToolTip="Кол-во" Text="1" Style="{StaticResource PlaceholderTextBoxStyle}"/>
+                                    </Grid>
+                                    <!-- Категория расхода (кастомный комбобокс) -->
+                                    <controls:CustomComboBox x:Name="ExpenseCategoryComboBox" 
                                                          Height="40" Margin="0,5,0,0" 
                                                          Placeholder="Выберите категорию"
                                                          SelectedValuePath="Tag">
-                                    <controls:CustomComboBox.Items>
-                                        <ComboBoxItem Content="🔧 Запчасти" Tag="Parts"/>
-                                        <ComboBoxItem Content="🧴 Расходники" Tag="Consumables"/>
-                                        <ComboBoxItem Content="🤝 Сторонние работы" Tag="ExternalWork"/>
-                                    </controls:CustomComboBox.Items>
-                                </controls:CustomComboBox>
-                                <TextBox x:Name="ExpenseNoteTextBox" Height="60" Margin="0,5,0,0" Padding="5" ToolTip="Комментарий..." TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                            </StackPanel>
+                                        <controls:CustomComboBox.Items>
+                                            <ComboBoxItem Content="🔧 Запчасти" Tag="Parts"/>
+                                            <ComboBoxItem Content="🧴 Расходники" Tag="Consumables"/>
+                                            <ComboBoxItem Content="🤝 Сторонние работы" Tag="ExternalWork"/>
+                                        </controls:CustomComboBox.Items>
+                                    </controls:CustomComboBox>
+                                    <TextBox x:Name="ExpenseNoteTextBox" Height="60" Margin="0,5,0,0" Padding="5" ToolTip="Комментарий..." TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource PlaceholderTextBoxStyle}"/>
+                                </StackPanel>
 
-                            <!-- Список расходов -->
-                            <ListBox Grid.Row="1" ItemsSource="{Binding OrderExpenses}" Margin="0,0,0,10" Background="Transparent" BorderThickness="0">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#F8F9FA" CornerRadius="6" Padding="10" Margin="0,0,0,5">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"/>
-                                                    <TextBlock Text="{Binding Category, StringFormat='📂 {0}'}" FontSize="11" Foreground="#7F8C8D"/>
-                                                    <TextBlock Text="{Binding Note}" FontSize="11" Foreground="#95A5A6" TextWrapping="Wrap" Visibility="{Binding Note, Converter={StaticResource ZeroToVisibilityConverter}}"/>
-                                                </StackPanel>
-                                                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding ClientPrice, StringFormat={}{0:N0} ₽}" FontWeight="Bold" Foreground="#27AE60"/>
-                                                    <TextBlock Text="{Binding Quantity, StringFormat='×{0}'}" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Right"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                <!-- Список расходов -->
+                                <ListBox Grid.Row="1" ItemsSource="{Binding OrderExpenses}" Margin="0,0,0,10" Background="Transparent" BorderThickness="0">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#F8F9FA" CornerRadius="6" Padding="10" Margin="0,0,0,5">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"/>
+                                                        <TextBlock Text="{Binding Category, StringFormat='📂 {0}'}" FontSize="11" Foreground="#7F8C8D"/>
+                                                        <TextBlock Text="{Binding Note}" FontSize="11" Foreground="#95A5A6" TextWrapping="Wrap" Visibility="{Binding Note, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding ClientPrice, StringFormat={}{0:N0} ₽}" FontWeight="Bold" Foreground="#27AE60"/>
+                                                        <TextBlock Text="{Binding Quantity, StringFormat='×{0}'}" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
 
-                            <!-- Итого по расходам -->
-                            <Border Grid.Row="2" Background="#E8F6F3" CornerRadius="6" Padding="10">
-                                <TextBlock Text="{Binding TotalExpensesAmount, StringFormat='💰 Итого расходов: {0:N0} ₽'}" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-                </TabItem>
+                                <!-- Итого по расходам -->
+                                <Border Grid.Row="2" Background="#E8F6F3" CornerRadius="6" Padding="10">
+                                    <TextBlock Text="{Binding TotalExpensesAmount, StringFormat='💰 Итого расходов: {0:N0} ₽'}" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </TabItem>
 
-                <!-- Вкладка: Лента событий -->
-                <TabItem Header="📋 Лента">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                    <!-- Вкладка: Лента событий -->
+                    <TabItem Header="📋 Лента">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" 
                                   HorizontalScrollBarVisibility="Disabled"
                                   Padding="5">
-                        <Border Background="White" CornerRadius="8" Padding="10" Margin="5">
-                            <ListBox ItemsSource="{Binding OrderTimeline}" 
+                            <Border Background="White" CornerRadius="8" Padding="10" Margin="5">
+                                <ListBox ItemsSource="{Binding OrderTimeline}" 
                                      Background="Transparent" 
                                      BorderThickness="0"
                                      VirtualizingPanel.IsVirtualizing="True"
@@ -438,105 +386,106 @@
                                      HorizontalContentAlignment="Stretch"
                                      VerticalContentAlignment="Stretch">
 
-                                <!-- ВАЖНО: растягиваем ListBoxItem -->
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="Padding" Value="0"/>
-                                        <Setter Property="Margin" Value="0"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListBoxItem">
-                                                    <ContentPresenter />
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
+                                    <!-- ВАЖНО: растягиваем ListBoxItem -->
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
 
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Margin="0,0,0,8" BorderBrush="#F1F2F6" BorderThickness="1" CornerRadius="8" Padding="10,5">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,8" BorderBrush="#F1F2F6" BorderThickness="1" CornerRadius="8" Padding="10,5">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
 
-                                                <!-- Левая колонка: дата/время -->
-                                                <WrapPanel Grid.Column="0" Margin="0,0,10,0" 
+                                                    <!-- Левая колонка: дата/время -->
+                                                    <WrapPanel Grid.Column="0" Margin="0,0,10,0" 
                                                            HorizontalAlignment="Stretch" MinWidth="50">
-                                                    <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM}}" 
+                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM}}" 
                                                                FontSize="11" Foreground="#2C3E50" 
                                                                HorizontalAlignment="Center"/>
-                                                    <TextBlock Text=" | " FontSize="9"/>
-                                                    <TextBlock Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}" 
+                                                        <TextBlock Text=" | " FontSize="9"/>
+                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}" 
                                                                FontSize="11" FontWeight="Bold" Foreground="#2C3E50" 
                                                                HorizontalAlignment="Center"/>
-                                                </WrapPanel>
-
-                                                <!-- Правая колонка: контент -->
-                                                <StackPanel Grid.Column="1">
-                                                    <WrapPanel Orientation="Horizontal" Margin="0,0,0,3">
-                                                        <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,5,0"/>
-                                                        <TextBlock Text="{Binding CreatedBy}" FontWeight="SemiBold" FontSize="12"/>
-                                                        <TextBlock Text="•" FontSize="12" Foreground="#BDC3C7" Margin="5,0"/>
-                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
-                                                                   FontSize="11" Foreground="#7F8C8D"/>
                                                     </WrapPanel>
 
-                                                    <WrapPanel>
-                                                    <!-- TextBlock с переносом -->
-                                                        <TextBlock Text="{Binding Message}" 
+                                                    <!-- Правая колонка: контент -->
+                                                    <StackPanel Grid.Column="1">
+                                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                                            <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,5,0"/>
+                                                            <TextBlock Text="{Binding CreatedBy}" FontWeight="SemiBold" FontSize="12"/>
+                                                            <TextBlock Text="•" FontSize="12" Foreground="#BDC3C7" Margin="5,0"/>
+                                                            <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
+                                                                   FontSize="11" Foreground="#7F8C8D"/>
+                                                        </WrapPanel>
+
+                                                        <WrapPanel>
+                                                            <!-- TextBlock с переносом -->
+                                                            <TextBlock Text="{Binding Message}" 
                                                                    FontSize="12" TextWrapping="Wrap" Foreground="#2C3E50"/>
-                                                        <TextBlock Text=" | "/>
-                                                        <TextBlock Text="{Binding RelatedEntityInfo}"
+                                                            <TextBlock Text=" | "/>
+                                                            <TextBlock Text="{Binding RelatedEntityInfo}"
                                                                    FontSize="12" Foreground="#95A5A6" FontStyle="Italic" 
                                                                    Visibility="{Binding RelatedEntityInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
-                                                    </WrapPanel>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Border>
-                    </ScrollViewer>
-                </TabItem>
-            </TabControl>
-            
-            
-            <Border Grid.Row="38" Background="#F0F8FF" CornerRadius="5" Padding="10" Margin="0,10">
-                <StackPanel>
-                    <TextBlock FontSize="12" Foreground="#7F8C8D" 
-                   HorizontalAlignment="Center" Text="{Binding ServicesTotal, StringFormat=💰 Услуги: {0:N0} ₽}"/>
-                    <TextBlock FontSize="12" Foreground="#E67E22" 
-                   HorizontalAlignment="Center" Text="{Binding ExtraCost, StringFormat=➕ Дополнительно: {0:N0} ₽}"/>
-                    <TextBlock FontSize="12" Foreground="#E74C3C" 
-                   HorizontalAlignment="Center" Text="{Binding DiscountAmount, StringFormat=🎁 Скидка: {0:N0} ₽}"
-                   Visibility="{Binding DiscountAmount, Converter={StaticResource ZeroToVisibilityConverter}}"/>
-                    <TextBlock FontSize="16" FontWeight="Bold" Foreground="#27AE60"
-                   HorizontalAlignment="Center" Text="{Binding FinalTotal, StringFormat=💰 Итого: {0:N0} ₽}"/>
-                    <TextBlock FontSize="10" Foreground="#7F8C8D" 
-                   HorizontalAlignment="Center" Text="{Binding WasherEarningsDisplay, StringFormat='👤 Мойщику: {0:N0} ₽'}"/>
-                    <TextBlock FontSize="10" Foreground="#7F8C8D" 
-                   HorizontalAlignment="Center" Text="{Binding CompanyEarningsDisplay, StringFormat='🏢 Компании: {0:N0} ₽'}"/>
-                </StackPanel>
-            </Border>
-            
+                                                        </WrapPanel>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
 
-            <StackPanel Grid.Row="39" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,20">
-                <Button x:Name="ConvertToOrderButton" Content="📅 Преобразовать в заказ" Click="ConvertToOrderButton_Click" 
+
+                <Border Background="#F0F8FF" CornerRadius="5" Padding="10" Margin="0,10">
+                    <StackPanel>
+                        <TextBlock FontSize="12" Foreground="#7F8C8D" 
+                                   HorizontalAlignment="Center" Text="{Binding ServicesTotal, StringFormat=💰 Услуги: {0:N0} ₽}"/>
+                        <TextBlock FontSize="12" Foreground="#E67E22" 
+                                   HorizontalAlignment="Center" Text="{Binding ExtraCost, StringFormat=➕ Дополнительно: {0:N0} ₽}"/>
+                        <TextBlock FontSize="12" Foreground="#E74C3C" 
+                                   HorizontalAlignment="Center" Text="{Binding DiscountAmount, StringFormat=🎁 Скидка: {0:N0} ₽}"
+                                   Visibility="{Binding DiscountAmount, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                        <TextBlock FontSize="16" FontWeight="Bold" Foreground="#27AE60"
+                                   HorizontalAlignment="Center" Text="{Binding FinalTotal, StringFormat=💰 Итого: {0:N0} ₽}"/>
+                        <TextBlock FontSize="10" Foreground="#7F8C8D" 
+                                   HorizontalAlignment="Center" Text="{Binding WasherEarningsDisplay, StringFormat='👤 Мойщику: {0:N0} ₽'}"/>
+                        <TextBlock FontSize="10" Foreground="#7F8C8D" 
+                                   HorizontalAlignment="Center" Text="{Binding CompanyEarningsDisplay, StringFormat='🏢 Компании: {0:N0} ₽'}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,20">
+            <Button x:Name="ConvertToOrderButton" Content="📅 Преобразовать в заказ" Click="ConvertToOrderButton_Click" 
                         Width="185" Height="35" Margin="0,5" Background="#9B59B6" Foreground="White"
                         Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                <Button Content="🖨 Акт выполненных работ" Click="PrintActButton_Click" 
+            <Button Content="🖨 Акт выполненных работ" Click="PrintActButton_Click" 
                         Width="180" Height="35" Margin="5" 
                         Background="#34495E" Foreground="White"/>
-                <Button Content="✅ Сохранить" Click="SaveButton_Click" Width="120" Height="35" 
+            <Button Content="✅ Сохранить" Click="SaveButton_Click" Width="120" Height="35" 
                         Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
-                <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
+            <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
                         Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
-            </StackPanel>
-        </Grid>
-    </ScrollViewer>
+        </StackPanel>
+    </Grid>
 </Window>

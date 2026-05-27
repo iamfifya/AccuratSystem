@@ -1,6 +1,6 @@
-using AccuratSystem.Contracts.Models;
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
+using AccuratSystem.Contracts.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 using EmployeeSchedule = AccuratSystem.Contracts.Models.EmployeeSchedule;
 
 namespace AccuratPanelCarWashing
@@ -16,16 +17,18 @@ namespace AccuratPanelCarWashing
     public partial class ScheduleWindow : Window
     {
         private readonly ApiService _apiService;
+        private readonly int _currentBranchId;
         private DateTime _currentDate;
         private List<EmployeeSchedule> _scheduleData;
         private Dictionary<int, Border> _dayHeaders = new Dictionary<int, Border>();
         private Dictionary<string, Border> _cells = new Dictionary<string, Border>();
         private bool _isDataModified = false;
 
-        public ScheduleWindow()
+        public ScheduleWindow(int branchId)
         {
             InitializeComponent();
             _apiService = new ApiService();
+            _currentBranchId = branchId; // Сохраняем ID филиала
             _currentDate = DateTime.Now;
             _ = LoadScheduleAsync();
         }
@@ -33,7 +36,7 @@ namespace AccuratPanelCarWashing
         private async Task LoadScheduleAsync()
         {
             this.IsEnabled = false;
-            _scheduleData = await _apiService.GetScheduleAsync(_currentDate.Year, _currentDate.Month);
+            _scheduleData = await _apiService.GetScheduleAsync(_currentBranchId, _currentDate.Year, _currentDate.Month);
 
             if (_scheduleData == null || !_scheduleData.Any())
             {
@@ -43,12 +46,13 @@ namespace AccuratPanelCarWashing
                     "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
-            MonthYearText.Text = _currentDate.ToString("MMMM yyyy");
+            MonthYearText.Text = _currentBanchText();
             BuildScheduleTable();
             _isDataModified = false;
             UpdateSaveButtonState();
             this.IsEnabled = true;
         }
+        private string _currentBanchText() => _currentDate.ToString("MMMM yyyy");
 
         private void UpdateSaveButtonState() => SaveButton.IsEnabled = _isDataModified && _scheduleData.Any();
 
@@ -86,7 +90,8 @@ namespace AccuratPanelCarWashing
             this.IsEnabled = false;
             try
             {
-                await _apiService.SaveScheduleAsync(_currentDate.Year, _currentDate.Month, _scheduleData);
+                // ПЕРЕДАЕМ branchId в API
+                await _apiService.SaveScheduleAsync(_currentBranchId, _currentDate.Year, _currentDate.Month, _scheduleData);
                 _isDataModified = false;
                 UpdateSaveButtonState();
                 MessageBox.Show($"График на {_currentDate:MMMM yyyy} сохранен", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -131,15 +136,26 @@ namespace AccuratPanelCarWashing
 
         private async Task CreateDefaultScheduleAsync()
         {
-            var employees = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
+            // Здесь важно: получаем пользователей ТОЛЬКО этого филиала
+            // Если GetUsersAsync возвращает всех, фильтруем их здесь
+            var allEmployees = await _apiService.GetUsersAsync();
+            var employees = allEmployees.Where(u => u.BranchId == _currentBranchId).ToList();
+
+            if (!employees.Any())
+            {
+                MessageBox.Show("В этом филиале нет привязанных сотрудников!", "Ошибка");
+                return;
+            }
+
             var daysInMonth = DateTime.DaysInMonth(_currentDate.Year, _currentDate.Month);
 
+            // Для шаблона берем график этого же филиала за прошлый месяц
             var prevMonthDate = _currentDate.AddMonths(-1);
-            var prevMonthSchedule = await _apiService.GetScheduleAsync(prevMonthDate.Year, prevMonthDate.Month);
+            var prevMonthSchedule = await _apiService.GetScheduleAsync(_currentBranchId, prevMonthDate.Year, prevMonthDate.Month);
 
-            // ИСПРАВЛЕНО: Проверяем Role напрямую, так как ContractsUser не имеет IsAdmin
+            // Группируем по ролям (используя ваши новые роли: 1,2 - админы, 3,4 - рабочие)
             var admins = employees.Where(e => e.Role == 1 || e.Role == 2).OrderBy(e => e.Id).ToList();
-            var workers = employees.Where(e => e.Role != 1 && e.Role != 2).OrderBy(e => e.Id).ToList();
+            var workers = employees.Where(e => e.Role == 3 || e.Role == 4).OrderBy(e => e.Id).ToList();
 
             _scheduleData = new List<EmployeeSchedule>();
 

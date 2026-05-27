@@ -175,7 +175,7 @@ namespace Accurat.WebAPI.Data
             );
 
             modelBuilder.Entity<EmployeeScheduleEntry>()
-                .HasKey(e => new { e.EmployeeId, e.Year, e.Month, e.Day });
+                .HasKey(e => new { e.EmployeeId, e.BranchId, e.Year, e.Month, e.Day });
 
             // Услуги (прайс-лист) — оставляем как есть
             modelBuilder.Entity<Service>().HasData(

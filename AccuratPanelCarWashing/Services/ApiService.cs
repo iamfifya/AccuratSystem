@@ -327,18 +327,26 @@ namespace AccuratPanelCarWashing.Services
         #endregion
 
         #region ГРАФИКИ (SCHEDULES) И КОНВЕРТАЦИЯ
-        public async Task<List<ContractsEmployeeSchedule>> GetScheduleAsync(int year, int month)
+        public async Task<List<ContractsEmployeeSchedule>> GetScheduleAsync(int branchId, int year, int month)
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsEmployeeSchedule>>($"Schedules/{year}/{month}") ?? new List<ContractsEmployeeSchedule>(); }
+            try
+            {
+                // Добавляем branchId в URL
+                return await _http.GetFromJsonAsync<List<ContractsEmployeeSchedule>>($"Schedules/{branchId}/{year}/{month}")
+                       ?? new List<ContractsEmployeeSchedule>();
+            }
             catch { return new List<ContractsEmployeeSchedule>(); }
         }
 
-        public async Task SaveScheduleAsync(int year, int month, List<ContractsEmployeeSchedule> scheduleData)
+        public async Task SaveScheduleAsync(int branchId, int year, int month, List<ContractsEmployeeSchedule> scheduleData)
         {
-            var response = await _http.PostAsJsonAsync($"Schedules/{year}/{month}", scheduleData);
+            // Добавляем branchId в URL
+            var response = await _http.PostAsJsonAsync($"Schedules/{branchId}/{year}/{month}", scheduleData);
             response.EnsureSuccessStatusCode();
         }
+        #endregion
 
+        #region ConvertAppointmentToOrderAsync
         public async Task<ContractsOrder> ConvertAppointmentToOrderAsync(int appointmentId, int shiftId, int washerId)
         {
             var response = await _http.PostAsync($"Appointments/{appointmentId}/convert?shiftId={shiftId}&washerId={washerId}", null);

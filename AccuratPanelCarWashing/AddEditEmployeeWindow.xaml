@@ -1,15 +1,12 @@
 <Window x:Class="AccuratPanelCarWashing.AddEditEmployeeWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AccuratPanelCarWashing"
         xmlns:controls="clr-namespace:AccuratPanelCarWashing.Controls"
-        mc:Ignorable="d"
         Title="Редактирование сотрудника"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
-        Width="500" Height="800"
+        ResizeMode="CanResize" 
+        Width="500" Height="750" 
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"
@@ -18,71 +15,73 @@
 
     <Grid Margin="15">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <!-- 1. Область со скроллом (занимает всё свободное место) -->
             <RowDefinition Height="*"/>
+            <!-- 2. Область с кнопками (всегда прижата к низу) -->
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" 
-                   Margin="0,0,0,15" Grid.Row="0"/>
+        <!-- С КРОЛЛВОЙЕРОМ -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <!-- Используем StackPanel вместо Grid с 20 строками. 
+                 Теперь элементы просто идут друг за другом! -->
+            <StackPanel Margin="0,0,10,20">
 
-        <Label Content="ФИО:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
-        <TextBox Text="{Binding CurrentEmployee.FullName, UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="2" Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
+                <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" 
+                           Margin="0,0,0,15" HorizontalAlignment="Center"/>
 
-        <Label Content="📱 Телефон:" Grid.Row="3" Margin="0,5" FontWeight="SemiBold"/>
-        <TextBox x:Name="PhoneTextBox" Text="{Binding CurrentEmployee.Phone, UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="4" Margin="0,5" Height="50" Padding="5" Foreground="Black"
-                 PreviewTextInput="PhoneTextBox_PreviewTextInput"
-                 TextChanged="PhoneTextBox_TextChanged" MaxLength="20"/>
-        <TextBlock Text="   формат: 89996094363" Foreground="#95A5A6" 
-                 Grid.Row="5" Margin="0,0,0,10" FontSize="11" HorizontalAlignment="Left"/>
-        
-        <Label Content="Логин:" Grid.Row="6" Margin="0,5" FontWeight="SemiBold"/>
-        <TextBox Text="{Binding CurrentEmployee.Login, UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="7" Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
+                <Label Content="ФИО:" Margin="0,5" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding CurrentEmployee.FullName, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
 
-        <Label Content="Пароль:" Grid.Row="8" Margin="0,5" FontWeight="SemiBold"/>
-        <PasswordBox x:Name="PasswordBox" Grid.Row="9" Margin="0,5" Height="50" Padding="5" Foreground="Black" VerticalContentAlignment="Center"/>
+                <Label Content="📱 Телефон:" Margin="0,5" FontWeight="SemiBold"/>
+                <TextBox x:Name="PhoneTextBox" Text="{Binding CurrentEmployee.Phone, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,5" Height="50" Padding="5" Foreground="Black"
+                         PreviewTextInput="PhoneTextBox_PreviewTextInput"
+                         TextChanged="PhoneTextBox_TextChanged" MaxLength="20"/>
+                <TextBlock Text="   формат: 89996094363" Foreground="#95A5A6" 
+                           Margin="0,0,0,10" FontSize="11" HorizontalAlignment="Left"/>
 
-        <!-- Выбор должности через CustomComboBox  -->
-        <Label Content="Должность:" Grid.Row="10" Margin="0,5,0,0" FontWeight="SemiBold"/>
-        <controls:CustomComboBox x:Name="RoleComboBox" 
-                                 Grid.Row="11" 
-                                 Margin="0,5" 
-                                 Height="40" 
-                                 Placeholder="Выберите должность"
-                                 DisplayMemberPath="Value" 
-                                 SelectedValuePath="Key"
-                                 SelectedValue="{Binding CurrentEmployee.Role, UpdateSourceTrigger=PropertyChanged}"/>
+                <Label Content="Логин:" Margin="0,5" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding CurrentEmployee.Login, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
 
-        <Label Content="Ставка зарплаты (%):" Grid.Row="12" Margin="0,5,0,0" FontWeight="SemiBold"/>
-        <TextBox Text="{Binding CurrentEmployee.BaseWagePercentage, UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="13" Margin="0,5" Height="40" Padding="5" Foreground="Black"/>
+                <Label Content="Пароль:" Margin="0,5" FontWeight="SemiBold"/>
+                <PasswordBox x:Name="PasswordBox" Margin="0,5" Height="50" Padding="5" Foreground="Black" VerticalContentAlignment="Center"/>
 
-        <Label Content="💰 Фиксированный оклад за смену (выход):" FontWeight="SemiBold" Margin="0,10,0,0" Grid.Row="14"/>
-        <TextBox x:Name="SalaryTextBox" Height="40" Padding="5" VerticalContentAlignment="Center"
-         Text="{Binding CurrentEmployee.BaseSalaryPerShift, UpdateSourceTrigger=PropertyChanged, FallbackValue=0}" Grid.Row="15"/>
+                <Label Content="Должность:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <controls:CustomComboBox x:Name="RoleComboBox" 
+                                         Margin="0,5" 
+                                         Height="40" 
+                                         Placeholder="Выберите должность"
+                                         DisplayMemberPath="Value" 
+                                         SelectedValuePath="Key"
+                                         SelectedValue="{Binding CurrentEmployee.Role, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <CheckBox Content="Трудоустроен" IsChecked="{Binding CurrentEmployee.IsActive}" 
-                  Grid.Row="17" Margin="0,10" HorizontalAlignment="Left" Foreground="Black"/>
+                <Label Content="Ставка зарплаты (%):" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding CurrentEmployee.BaseWagePercentage, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,5" Height="40" Padding="5" Foreground="Black"/>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="17" Margin="0,15">
+                <Label Content="💰 Фиксированный оклад за смену (выход):" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                <TextBox x:Name="SalaryTextBox" Height="40" Padding="5" VerticalContentAlignment="Center"
+                         Text="{Binding CurrentEmployee.BaseSalaryPerShift, UpdateSourceTrigger=PropertyChanged, FallbackValue=0}"/>
+
+                <Label Content="📂 Филиал привязки:" Margin="0,10,0,0" FontWeight="SemiBold"/>
+                <controls:CustomComboBox x:Name="BranchComboBox" 
+                                         Margin="0,5" 
+                                         Height="40" 
+                                         Placeholder="Выберите филиал"
+                                         DisplayMemberPath="Name" 
+                                         SelectedValuePath="Id"
+                                         SelectedValue="{Binding CurrentEmployee.BranchId, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <CheckBox Content="Трудоустроен" IsChecked="{Binding CurrentEmployee.IsActive}" 
+                          Margin="0,15" HorizontalAlignment="Left" Foreground="Black"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- КНОПКИ (вне скролла, всегда видны) -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
             <Button Content="✓ Сохранить" Click="SaveButton_Click" Width="100" Height="35" 
                     Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
             <Button Content="✗ Отмена" Click="CloseButton_Click" Width="100" Height="35" 

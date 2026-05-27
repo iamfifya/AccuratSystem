@@ -195,14 +195,17 @@
                             <TextBlock Text="👤" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
-                            <StackPanel>
+                            <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding ActiveUserInfo}" FontSize="13" FontWeight="SemiBold" Foreground="#2C3E50"/>
-                                <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="11" Foreground="#7F8C8D" 
-                                           Visibility="{Binding CurrentShiftInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                                <!-- КНОПКА СМЕНЫ ПОЛЬЗОВАТЕЛЯ -->
+                                <Button Content="🔄" Click="ChangeUserButton_Click" 
+                    Margin="5,0,0,0" Background="Transparent" Foreground="#3498DB" 
+                    BorderThickness="0" Cursor="Hand" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                             <TextBlock Text="{Binding CurrentBranchDisplay}" FontSize="11" Foreground="#7F8C8D"/>
                         </StackPanel>
                     </StackPanel>
+
                 </Grid>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal">

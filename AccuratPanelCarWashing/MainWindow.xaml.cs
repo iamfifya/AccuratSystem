@@ -104,10 +104,12 @@ namespace AccuratPanelCarWashing
             get
             {
                 if (_currentUser == null) return "Гость";
-                string role = _currentUser.IsAdmin ? "👑 Админ" : "👤 Сотрудник";
-                return $"{_currentUser.FullName} • {role}";
+
+                // Используем новое свойство из модели User
+                return $"{_currentUser.FullName} • {_currentUser.RoleDisplay}";
             }
         }
+
 
         public string CurrentShiftInfo { get; private set; }
         public string TotalOrdersInfo { get; private set; }
@@ -144,17 +146,26 @@ namespace AccuratPanelCarWashing
             _apiService = new ApiService();
             _currentUser = user;
 
+            this.Closed += (s, e) => Application.Current.Shutdown();
+
             App.CurrentUser = user;
             DataContext = this;
 
             _currentBranchId = AppSettings.CurrentBranchId;
             AppointmentsOverlay.OnEditRequested += OpenEditOrder;
 
-            _ = LoadDataAsync();
+            this.Loaded += MainWindow_Loaded;
             InitializeSignalR();
             InitializeTimer();
 
         }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Теперь загрузка данных начнется только тогда, когда окно реально появится на экране
+            await LoadDataAsync();
+        }
+
 
         public void SetUser(WpfUser user)
         {
@@ -810,6 +821,36 @@ namespace AccuratPanelCarWashing
         {
             new UpsellManagementWindow().ShowDialog();
         }
+
+        private void ChangeUserButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. Получаем окно логина через ваш DI-сервис (как в App.xaml.cs)
+            var loginWin = App.GetService<LoginWindow>();
+
+            // 2. Показываем его как диалоговое окно
+            if (loginWin.ShowDialog() == true)
+            {
+                var newUser = loginWin.AuthenticatedUser;
+
+                if (newUser != null)
+                {
+                    // 3. Обновляем пользователя
+                    // Метод SetUser внутри себя уже вызывает LoadDataAsync(), 
+                    // поэтому повторно вызывать его здесь не нужно.
+                    SetUser(newUser);
+
+                    // 4. Оповещаем интерфейс, что права доступа изменились
+                    // Это обновит видимость кнопок (Админ/Директор)
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActiveUserInfo)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAdminOrDirector)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDirector)));
+
+                    MessageBox.Show($"Пользователь успешно сменен на {newUser.FullName}", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+
+
     }
 
     public class WasherStat

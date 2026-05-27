@@ -1,16 +1,20 @@
-using AccuratSystem.Contracts.Models;
+using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using AccuratSystem.Contracts.DTOs; // Добавлено для LoginResponseDto
+using AccuratSystem.Contracts.Models;
+using Microsoft.VisualBasic.ApplicationServices;
 using System;
 using System.Linq;
 using System.Windows;
-using AccuratPanelCarWashing.Models;
+
+using WpfUser = AccuratPanelCarWashing.Models.User;
 
 namespace AccuratPanelCarWashing
 {
     public partial class LoginWindow : Window
     {
         private readonly ApiService _apiService = new ApiService();
+        public WpfUser AuthenticatedUser { get; private set; }
 
         public LoginWindow()
         {
@@ -57,23 +61,14 @@ namespace AccuratPanelCarWashing
             try
             {
                 this.IsEnabled = false;
-
                 var loginResponse = await _apiService.AuthenticateAsync(login, password, selectedBranch.Id);
 
                 if (loginResponse != null && loginResponse.User != null)
                 {
-                    // === БЛОК ДИАГНОСТИКИ (УДАЛИМ ПОТОМ) ===
-                    string debugInfo = $"Филиал: {selectedBranch.Id}\n" +
-                                       $"Склад: {loginResponse.Features?.IsStorageEnabled}\n" +
-                                       $"CRM: {loginResponse.Features?.IsCrmMarketingEnabled}\n" +
-                                       $"Upsell: {loginResponse.Features?.IsUpsellEnabled}\n" +
-                                       $"Boss: {loginResponse.Features?.IsTelegramBossEnabled}";
-
-                    MessageBox.Show(debugInfo, "ПРОВЕРКА ЛИЦЕНЗИЙ");
-                    // ========================================
-
+                    // Сохраняем лицензии в сессию
                     AccuratPanelCarWashing.Services.UserSession.Features = loginResponse.Features;
 
+                    // Сохраняем данные филиала
                     AppSettings.CurrentBranchId = selectedBranch.Id;
                     AppSettings.CurrentBranchName = selectedBranch.Name;
                     AppSettings.CurrentBranchWashBaysCount = selectedBranch.WashBaysCount;
@@ -82,7 +77,8 @@ namespace AccuratPanelCarWashing
                     var contractsUser = loginResponse.User;
                     Logger.SetUserContext(contractsUser.FullName, contractsUser.Id);
 
-                    var wpfUser = new AccuratPanelCarWashing.Models.User
+                    // Создаем UI-модель пользователя
+                    AuthenticatedUser = new WpfUser
                     {
                         Id = contractsUser.Id,
                         FullName = contractsUser.FullName,
@@ -95,17 +91,9 @@ namespace AccuratPanelCarWashing
                         BaseWagePercentage = contractsUser.BaseWagePercentage
                     };
 
-                    if (wpfUser.Role == 1)
-                    {
-                        var directorWin = new MainWindow(wpfUser);
-                        directorWin.Show();
-                    }
-                    else
-                    {
-                        var mainWindow = new MainWindow(wpfUser);
-                        mainWindow.Show();
-                    }
-                    this.Close();
+                    // ВАЖНО: Вместо того чтобы самому открывать MainWindow, 
+                    // мы просто говорим, что авторизация прошла успешно.
+                    this.DialogResult = true;
                 }
                 else
                 {

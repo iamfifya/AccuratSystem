@@ -1,4 +1,4 @@
-using AccuratSystem.Contracts.Models;
+using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using System;
 using System.Collections.Generic;
@@ -7,37 +7,50 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
+// !!! ДОБАВЛЯЕМ АЛИАСЫ, ЧТОБЫ УБРАТЬ ОШИБКУ CS0104 !!!
+using ContractsUser = AccuratSystem.Contracts.Models.User;
+using WpfUser = AccuratPanelCarWashing.Models.User;
+
 namespace AccuratPanelCarWashing
 {
     public partial class AddEditEmployeeWindow : Window
     {
         private readonly ApiService _apiService;
-        public User CurrentEmployee { get; set; }
+
+        // ИСПОЛЬЗУЕМ ContractsUser, так как эти данные уходят в API
+        public ContractsUser CurrentEmployee { get; set; }
         public new string Title { get; set; }
 
-        public AddEditEmployeeWindow(User employee)
+        // Конструктор теперь принимает контрактного пользователя
+        public AddEditEmployeeWindow(ContractsUser employee)
         {
             InitializeComponent();
             _apiService = new ApiService();
 
-            //  Заполняем кастомный ComboBox ролями
+            // Заполняем кастомный ComboBox ролями
             RoleComboBox.ItemsSource = new Dictionary<int, string>
             {
                 { 1, "👑 Директор" },
                 { 2, "👨‍💼 Администратор" },
-                { 3, "🔧 Сотрудник сервиса" },
+                { 3, "🛠️ Сотрудник сервиса" },
                 { 4, "🧽 Мойщик" }
             };
 
             if (employee == null)
             {
-                // По умолчанию ставим роль Мойщика (4)
-                CurrentEmployee = new User { IsActive = true, Role = 4 };
+                // Создаем новый контрактный объект
+                CurrentEmployee = new ContractsUser
+                {
+                    IsActive = true,
+                    Role = 4,
+                    BranchId = AppSettings.CurrentBranchId
+                };
                 Title = "➕ Добавление сотрудника (API)";
             }
             else
             {
-                CurrentEmployee = new User
+                // Копируем данные из переданного объекта
+                CurrentEmployee = new ContractsUser
                 {
                     Id = employee.Id,
                     FullName = employee.FullName,
@@ -47,12 +60,34 @@ namespace AccuratPanelCarWashing
                     IsActive = employee.IsActive,
                     Phone = employee.Phone,
                     BaseWagePercentage = employee.BaseWagePercentage,
-                    BaseSalaryPerShift = employee.BaseSalaryPerShift
+                    BaseSalaryPerShift = employee.BaseSalaryPerShift,
+                    BranchId = employee.BranchId
                 };
 
                 Title = "✏ Редактирование сотрудника (API)";
             }
+
             DataContext = this;
+
+            // Загружаем список филиалов для комбобокса
+            _ = LoadBranchesAsync();
+        }
+
+        private async Task LoadBranchesAsync()
+        {
+            try
+            {
+                var branches = await _apiService.GetBranchesAsync();
+                if (branches != null && branches.Any())
+                {
+                    BranchComboBox.ItemsSource = branches;
+                    BranchComboBox.SelectedValue = CurrentEmployee.BranchId;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке списка филиалов: {ex.Message}", "Ошибка API");
+            }
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -65,6 +100,12 @@ namespace AccuratPanelCarWashing
                     return;
                 }
 
+                if (CurrentEmployee.BranchId == 0)
+                {
+                    MessageBox.Show("Пожалуйста, выберите филиал привязки сотрудника", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 string password = PasswordBox.Password;
                 if (CurrentEmployee.Id == 0 && string.IsNullOrWhiteSpace(password))
                 {
@@ -74,7 +115,7 @@ namespace AccuratPanelCarWashing
 
                 if (!string.IsNullOrWhiteSpace(password)) CurrentEmployee.PasswordHash = password;
 
-                this.IsEnabled = false; // Блокируем UI
+                this.IsEnabled = false;
 
                 if (CurrentEmployee.Id == 0)
                 {
@@ -100,7 +141,6 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        // Твой метод форматирования телефона (оставляем без изменений)
         private void PhoneTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             var tb = sender as TextBox;

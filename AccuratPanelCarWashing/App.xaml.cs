@@ -17,30 +17,50 @@ namespace AccuratPanelCarWashing
         {
             base.OnStartup(e);
 
-            // Глобальная обработка необработанных исключений
-            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-            {
-                var ex = args.ExceptionObject as Exception;
-                MessageBox.Show($"Критическая ошибка: {ex?.Message}\n\nПриложение будет закрыто.",
-                    "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                Environment.Exit(1);
-            };
+            // 1. ВАЖНО: Переключаем режим завершения на "Явный"
+            // Теперь приложение НЕ закроется само, даже если все окна закрыты.
+            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            DispatcherUnhandledException += (sender, args) =>
-            {
-                System.Diagnostics.Debug.WriteLine($"Ошибка UI: {args.Exception.Message}");
-                System.Diagnostics.Debug.WriteLine(args.Exception.StackTrace);
-                args.Handled = true;
-            };
+            // Глобальная обработка ошибок (оставляем как есть)
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) => { /* ... */ };
+            DispatcherUnhandledException += (sender, args) => { /* ... */ };
 
             // Настройка DI
             var services = new ServiceCollection();
             ConfigureServices(services);
             _serviceProvider = services.BuildServiceProvider();
 
-            // Запуск приложения
             var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
-            loginWindow.Show();
+
+            if (loginWindow.ShowDialog() == true)
+            {
+                try
+                {
+                    var authenticatedUser = loginWindow.AuthenticatedUser;
+                    if (authenticatedUser == null)
+                    {
+                        Shutdown();
+                        return;
+                    }
+
+                    var mainWin = new MainWindow(authenticatedUser);
+
+                    // Назначаем главным окном
+                    Application.Current.MainWindow = mainWin;
+
+                    mainWin.Show();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка запуска: {ex.Message}");
+                    Shutdown();
+                }
+            }
+            else
+            {
+                // Если пользователь закрыл окно логина — выключаем всё
+                Shutdown();
+            }
         }
 
         private void ConfigureServices(IServiceCollection services)
@@ -65,6 +85,7 @@ namespace AccuratPanelCarWashing
             services.AddTransient<ScheduleWindow>();
             services.AddTransient<AppointmentsOverlay>();
             services.AddTransient<WasherSelectionDialog>();
+            services.AddTransient<UpsellManagementWindow>();
         }
 
         public static T GetService<T>() where T : class
