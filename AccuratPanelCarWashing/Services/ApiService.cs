@@ -411,10 +411,46 @@ namespace AccuratPanelCarWashing.Services
 
         #endregion
 
+        #region УМНЫЙ КАССИР (UPSELL DLC)
+
+        public async Task<List<UpsellSuggestion>> GetUpsellRulesAsync()
+        {
+            try { return await _http.GetFromJsonAsync<List<UpsellSuggestion>>("Upsell") ?? new List<UpsellSuggestion>(); }
+            catch { return new List<UpsellSuggestion>(); }
+        }
+
+        public async Task<UpsellSuggestion> CreateUpsellRuleAsync(UpsellSuggestion rule)
+        {
+            var response = await _http.PostAsJsonAsync("Upsell", rule);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<UpsellSuggestion>();
+        }
+
+        public async Task DeleteUpsellRuleAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"Upsell/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+
+        #endregion
+
         public class ClientStatsResponse
         {
             public int NewClients { get; set; }
             public int UniqueClients { get; set; }
+        }
+
+        public async Task<T> GetFromJsonAsync<T>(string url)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<T>(url);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"API Error: {ex.Message}");
+                return default;
+            }
         }
     }
 }

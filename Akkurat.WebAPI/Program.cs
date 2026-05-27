@@ -3,12 +3,24 @@ using Accurat.WebAPI.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Scalar.AspNetCore; // Подключаем Scalar
+using Scalar.AspNetCore;
+using System.Text.Json.Serialization; // Подключаем Scalar
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Стандартные сервисы
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+        // Вариант «просто убрать цикл»:
+        opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+
+        // Либо «сохранить ссылки», если хотите $id/$ref:
+        // opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+
+        // Если нужно, можно задать максимальную глубину (по‑умолчанию 32)
+        // opts.JsonSerializerOptions.MaxDepth = 64;
+    });
 
 // 2. РОДНОЙ движок OpenAPI от Microsoft (вместо SwaggerGen)
 builder.Services.AddOpenApi();

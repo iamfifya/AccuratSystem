@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Accurat.WebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Accurat.WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260527165319_updforDLC2")]
+    partial class updforDLC2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,24 +82,6 @@ namespace Accurat.WebAPI.Migrations
                     b.HasIndex("TriggerServiceId");
 
                     b.ToTable("UpsellSuggestions");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            BonusAmount = 150m,
-                            Message = "Клиент выбрал стандартную мойку. Предложите покрыть кузов кварцем для защиты от грязи и блеска!",
-                            SuggestedServiceId = 6,
-                            TriggerServiceId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            BonusAmount = 50m,
-                            Message = "В комплекс не входит антидождь/глубокая чистка стекол. Отличный шанс предложить эту услугу!",
-                            SuggestedServiceId = 3,
-                            TriggerServiceId = 2
-                        });
                 });
 
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Branch", b =>
@@ -474,6 +459,9 @@ namespace Accurat.WebAPI.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("OrderId1")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("SplitShare")
                         .HasColumnType("numeric");
 
@@ -481,6 +469,8 @@ namespace Accurat.WebAPI.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("OrderId", "UserId");
+
+                    b.HasIndex("OrderId1");
 
                     b.HasIndex("UserId");
 
@@ -767,26 +757,6 @@ namespace Accurat.WebAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("TenantFeatures");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            BranchId = 1,
-                            IsCrmMarketingEnabled = false,
-                            IsStorageEnabled = false,
-                            IsTelegramBossEnabled = false,
-                            IsUpsellEnabled = true
-                        },
-                        new
-                        {
-                            Id = 2,
-                            BranchId = 2,
-                            IsCrmMarketingEnabled = false,
-                            IsStorageEnabled = false,
-                            IsTelegramBossEnabled = false,
-                            IsUpsellEnabled = true
-                        });
                 });
 
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Order", b =>
@@ -835,11 +805,15 @@ namespace Accurat.WebAPI.Migrations
 
             modelBuilder.Entity("AccuratSystem.Contracts.Models.OrderWasher", b =>
                 {
-                    b.HasOne("AccuratSystem.Contracts.Models.Order", "Order")
+                    b.HasOne("AccuratSystem.Contracts.Models.Order", null)
                         .WithMany("OrderWashers")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("AccuratSystem.Contracts.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId1");
 
                     b.HasOne("AccuratSystem.Contracts.Models.User", null)
                         .WithMany()

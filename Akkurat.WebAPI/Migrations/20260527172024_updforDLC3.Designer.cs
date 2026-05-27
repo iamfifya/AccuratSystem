@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Accurat.WebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Accurat.WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260527172024_updforDLC3")]
+    partial class updforDLC3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -474,6 +477,9 @@ namespace Accurat.WebAPI.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("OrderId1")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("SplitShare")
                         .HasColumnType("numeric");
 
@@ -481,6 +487,8 @@ namespace Accurat.WebAPI.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("OrderId", "UserId");
+
+                    b.HasIndex("OrderId1");
 
                     b.HasIndex("UserId");
 
@@ -835,11 +843,15 @@ namespace Accurat.WebAPI.Migrations
 
             modelBuilder.Entity("AccuratSystem.Contracts.Models.OrderWasher", b =>
                 {
-                    b.HasOne("AccuratSystem.Contracts.Models.Order", "Order")
+                    b.HasOne("AccuratSystem.Contracts.Models.Order", null)
                         .WithMany("OrderWashers")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("AccuratSystem.Contracts.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId1");
 
                     b.HasOne("AccuratSystem.Contracts.Models.User", null)
                         .WithMany()

@@ -790,7 +790,10 @@ namespace AccuratPanelCarWashing
             }
         }
 
-
+        private void UpsellButton_Click(object sender, RoutedEventArgs e)
+        {
+            new UpsellManagementWindow().ShowDialog();
+        }
     }
 
     public class WasherStat

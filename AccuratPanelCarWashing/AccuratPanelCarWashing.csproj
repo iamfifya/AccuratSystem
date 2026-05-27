@@ -406,6 +406,9 @@
     <Compile Include="Services\UserSession.cs" />
     <Compile Include="StatusToBackgroundConverter.cs" />
     <Compile Include="StatusToColorConverter.cs" />
+    <Compile Include="UpsellManagementWindow.xaml.cs">
+      <DependentUpon>UpsellManagementWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\AddEditOrderViewModel.cs" />
     <Compile Include="ViewModels\ServiceViewModel.cs" />
     <Compile Include="StartShiftWindow.xaml.cs">
@@ -496,6 +499,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\OrderCardTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UpsellManagementWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

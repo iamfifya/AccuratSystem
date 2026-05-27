@@ -470,6 +470,15 @@ namespace AccuratPanelCarWashing
                            $"Итого: {_viewModel.FinalTotalWithExpenses:N0} ₽",
                            "Печать акта", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
+        private void ApplyUpsell_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is AddEditOrderViewModel vm)
+            {
+                vm.ApplyUpsell();
+            }
+        }
+
     }
     public class ZoneItem
     {

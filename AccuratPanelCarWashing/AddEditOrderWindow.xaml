@@ -23,6 +23,7 @@
         <local:DecimalToEmptyZeroConverter x:Key="DecimalToEmptyZeroConverter"/>
         <local:DepartmentDisplayConverter x:Key="DepartmentDisplayConverter"/>
         <local:DepartmentToZoneLabelConverter x:Key="DepartmentToZoneLabelConverter"/>
+        <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
 
         <Style x:Key="PlaceholderTextBoxStyle" TargetType="TextBox">
             <Setter Property="Padding" Value="5"/>
@@ -288,15 +289,47 @@
 
             <Label Content="💳 Способ оплаты:" Grid.Row="33" Margin="0,10,0,0" FontWeight="SemiBold"
                    Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-            <controls:CustomComboBox x:Name="PaymentMethodComboBox" Grid.Row="34" Margin="0,5,0,10" Height="50"
+            <controls:CustomComboBox x:Name="PaymentMethodComboBox" Grid.Row="35" Margin="0,5,0,10" Height="50"
                                      SelectedValue="{Binding CurrentOrder.PaymentMethod}"
                                      SelectedValuePath="Value"
                                      Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-            
+            <!-- БАННЕР УМНОГО КАССИРА (UPSYELL) -->
+            <Border Grid.Row="36" 
+        Background="#FFF9C4" 
+        BorderBrush="#FBC02D" 
+        BorderThickness="2" 
+        CornerRadius="10" 
+        Padding="15" 
+        Margin="0,10" 
+        Visibility="{Binding CurrentSuggestion, Converter={StaticResource ZeroToVisibilityConverter}}">
+                <!-- Если есть конвертер, иначе убери -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="💡 СОВЕТ:" FontWeight="Bold" Foreground="#F57F17" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentSuggestion.Message}" 
+                       FontSize="14" FontWeight="SemiBold" Foreground="#424242" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding CurrentSuggestion.BonusAmount, StringFormat='Ваш бонус: {0:N0} ₽'}" 
+                       FontSize="12" Foreground="#2E7D32" FontWeight="Bold"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="2" Content="Добавить" 
+        Click="ApplyUpsell_Click" 
+        Padding="15,5" Background="#27AE60" Foreground="White" 
+        FontWeight="Bold" Cursor="Hand" BorderThickness="0"/>
+                </Grid>
+            </Border>
+
 
             <!-- === ВКЛАДКИ: РАСХОДЫ И ЛЕНТА === -->
-            <TabControl Grid.Row="35" Margin="0,10,0,10" Background="Transparent" BorderThickness="0">
+            <TabControl Grid.Row="37" Margin="0,10,0,10" Background="Transparent" BorderThickness="0">
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem">
                         <Setter Property="Background" Value="Transparent"/>
@@ -473,7 +506,7 @@
             </TabControl>
             
             
-            <Border Grid.Row="36" Background="#F0F8FF" CornerRadius="5" Padding="10" Margin="0,10">
+            <Border Grid.Row="38" Background="#F0F8FF" CornerRadius="5" Padding="10" Margin="0,10">
                 <StackPanel>
                     <TextBlock FontSize="12" Foreground="#7F8C8D" 
                    HorizontalAlignment="Center" Text="{Binding ServicesTotal, StringFormat=💰 Услуги: {0:N0} ₽}"/>
@@ -492,7 +525,7 @@
             </Border>
             
 
-            <StackPanel Grid.Row="37" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,20">
+            <StackPanel Grid.Row="39" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,20">
                 <Button x:Name="ConvertToOrderButton" Content="📅 Преобразовать в заказ" Click="ConvertToOrderButton_Click" 
                         Width="185" Height="35" Margin="0,5" Background="#9B59B6" Foreground="White"
                         Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>

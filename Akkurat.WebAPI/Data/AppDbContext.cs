@@ -33,6 +33,7 @@ namespace Accurat.WebAPI.Data
         public DbSet<OrderWasher> OrderWashers { get; set; }
         public DbSet<AccuratSystem.Contracts.Models.OrderStatusHistory> OrderStatusHistories { get; set; }
         public DbSet<TenantFeature> TenantFeatures { get; set; }
+        public DbSet<UpsellSuggestion> UpsellSuggestions { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,10 +46,9 @@ namespace Accurat.WebAPI.Data
 
             // Настраиваем связи БЕЗ навигационных свойств в лямбдах (для совместимости)
             modelBuilder.Entity<OrderWasher>()
-                .HasOne<Order>()
-                .WithMany(o => o.OrderWashers)
-                .HasForeignKey(ow => ow.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(ow => ow.Order)
+                .WithMany(o => o.OrderWashers) // Убедись, что в классе Order есть public List<OrderWasher> OrderWashers { get; set; }
+                .HasForeignKey(ow => ow.OrderId);
 
             modelBuilder.Entity<OrderWasher>()
                 .HasOne<User>()
@@ -202,6 +202,37 @@ namespace Accurat.WebAPI.Data
                 entity.Property(e => e.IsCrmMarketingEnabled).HasDefaultValue(false);
                 entity.Property(e => e.IsTelegramBossEnabled).HasDefaultValue(false);
             });
+
+            modelBuilder.Entity<UpsellSuggestion>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.TriggerServiceId);
+            });
+
+            modelBuilder.Entity<UpsellSuggestion>().HasData(
+    new UpsellSuggestion
+    {
+        Id = 1,
+        TriggerServiceId = 1, // Стандартная мойка
+        SuggestedServiceId = 6, // Кварцевое покрытие
+        Message = "Клиент выбрал стандартную мойку. Предложите покрыть кузов кварцем для защиты от грязи и блеска!",
+        BonusAmount = 150m // Премия админу/мойщику за допродажу
+    },
+    new UpsellSuggestion
+    {
+        Id = 2,
+        TriggerServiceId = 2, // Комплекс
+        SuggestedServiceId = 3, // Чистка стекол
+        Message = "В комплекс не входит антидождь/глубокая чистка стекол. Отличный шанс предложить эту услугу!",
+        BonusAmount = 50m
+    }
+);
+
+            // И не забудь включить сам модуль для филиала (иначе UserSession.IsFeatureEnabled вернет false)
+            modelBuilder.Entity<TenantFeature>().HasData(
+                new TenantFeature { Id = 1, BranchId = 1, IsUpsellEnabled = true },
+                new TenantFeature { Id = 2, BranchId = 2, IsUpsellEnabled = true }
+            );
 
         }
     }

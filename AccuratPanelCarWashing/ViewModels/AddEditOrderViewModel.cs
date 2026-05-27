@@ -52,6 +52,70 @@ namespace AccuratPanelCarWashing.ViewModels
             }
         }
 
+        // Добавь в начало класса свойства:
+        private UpsellSuggestion _currentSuggestion;
+        public UpsellSuggestion CurrentSuggestion
+        {
+            get => _currentSuggestion;
+            set { _currentSuggestion = value; OnPropertyChanged(nameof(CurrentSuggestion)); }
+        }
+
+        // Добавь этот метод в класс:
+        public async Task CheckForUpsellAsync()
+        {
+            if (CurrentOrder == null || CurrentOrder.BranchId <= 0) return; // Убеждаемся, что филиал есть
+
+            var selectedIds = Services?.Where(s => s.IsSelected).Select(s => s.Id).ToList();
+            if (selectedIds == null || !selectedIds.Any())
+            {
+                CurrentSuggestion = null;
+                return;
+            }
+
+            try
+            {
+                // 🔥 Добавили branchId в запрос
+                string query = string.Join("&", selectedIds.Select(id => $"currentServices={id}"));
+                var response = await _apiService.GetFromJsonAsync<UpsellSuggestion>($"Upsell/suggest?{query}&branchId={CurrentOrder.BranchId}");
+
+                CurrentSuggestion = response;
+            }
+            catch { CurrentSuggestion = null; }
+        }
+
+        // Метод для кнопки "Добавить услугу" в баннере
+        public void ApplyUpsell()
+        {
+            if (CurrentSuggestion == null) return;
+
+            // 🔥 Психологический барьер
+            var result = MessageBox.Show(
+                $"Вы подтверждаете, что клиент изначально НЕ ПРОСИЛ эту услугу, и это ваша успешная допродажа?\n\n" +
+                $"За обман системы бонус аннулируется.",
+                "Подтверждение допродажи",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            var serviceVm = Services?.FirstOrDefault(s => s.Id == CurrentSuggestion.SuggestedServiceId);
+            if (serviceVm != null)
+            {
+                serviceVm.IsSelected = true;
+
+                string bonusNote = $"[АПСЕЛЛ: продана услуга '{serviceVm.Name}', бонус: +{CurrentSuggestion.BonusAmount:N0} ₽]";
+
+                if (string.IsNullOrEmpty(CurrentOrder.Notes))
+                    CurrentOrder.Notes = bonusNote;
+                else if (!CurrentOrder.Notes.Contains("АПСЕЛЛ"))
+                    CurrentOrder.Notes += $"\n{bonusNote}";
+
+                Recalculate();
+                CurrentSuggestion = null;
+            }
+        }
+
+
         // Метод фильтрации услуг по департаменту
         private void FilterServicesByDepartment()
         {
@@ -241,6 +305,8 @@ namespace AccuratPanelCarWashing.ViewModels
             OnPropertyChanged(nameof(WasherEarningsDisplay));
             OnPropertyChanged(nameof(CompanyEarningsDisplay));
             OnPropertyChanged(nameof(ServicesTotal));
+
+            _ = CheckForUpsellAsync();
         }
 
 
