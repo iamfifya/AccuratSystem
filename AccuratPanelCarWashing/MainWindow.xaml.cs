@@ -362,12 +362,28 @@ namespace AccuratPanelCarWashing
                 TotalRevenue = completedOrders.Sum(o => o.FinalPrice);
 
                 var totalWasherEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).WasherEarnings);
-                CompanyEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).CompanyEarnings);
+
+                // Считаем только СВОИ бонусы из заказов, которые создал Я
+                decimal myUpsellShare = completedOrders
+                    .Where(o => o.AdminId == _currentUser?.Id)
+                    .Sum(o => OrderMath.ExtractUpsellBonus(o.Notes));
+
+                // Считаем ВСЕ бонусы за смену (чтобы вычесть их из прибыли компании)
+                decimal totalShiftUpsellBonuses = completedOrders.Sum(o => OrderMath.ExtractUpsellBonus(o.Notes));
+
+                decimal adminPercent = _currentUser?.BaseWagePercentage ?? 0;
+                var adminShiftPercentEarnings = TotalRevenue * (adminPercent / 100m);
+
+                // ЗП именно того админа, который сейчас смотрит в экран
+                var myTotalEarnings = adminShiftPercentEarnings + myUpsellShare;
+
+                // Из прибыли компании вычитаем процент админа и ВСЕ выплаченные за смену бонусы кассиров
+                CompanyEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).CompanyEarnings) - adminShiftPercentEarnings - totalShiftUpsellBonuses;
 
                 var inProgressCount = branchOrders.Count(o => o.Status == "В работе");
                 var cancelledCount = branchOrders.Count(o => o.Status == "Отменен");
 
-                TotalOrdersInfo = $"🚗 Выполнено: {completedOrders.Count} | 🟢 В работе: {inProgressCount} | ❌ Отменено: {cancelledCount} | 👤 Мойщикам: {totalWasherEarnings:N0} ₽";
+                TotalOrdersInfo = $"🚗 Выполнено: {completedOrders.Count} | 🟢 В работе: {inProgressCount} | 👤 Мойщикам: {totalWasherEarnings:N0} ₽ | 💰 Мне: {myTotalEarnings:N0} ₽ (из них апселл: {myUpsellShare:N0} ₽)";
             }
             else if (_currentShift != null && _currentShift.IsClosed)
             {

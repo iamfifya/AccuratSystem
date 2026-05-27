@@ -28,7 +28,6 @@
             
             <TextBlock Grid.Column="0" Text="📊 Ежедневные отчеты" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center" Margin="0,0,20,0"/>
 
-            <!-- Вкладки филиалов -->
             <TabControl Grid.Column="1" 
                         ItemsSource="{Binding BranchTabs}" 
                         SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
@@ -50,8 +49,7 @@
 
                 <TabControl.ContentTemplate>
                     <DataTemplate>
-                        <!-- Пустой контент -->
-                    </DataTemplate>
+                        </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>
         </Grid>
@@ -111,13 +109,14 @@
                                 <TextBlock Text="{Binding SelectedReport.Date, StringFormat=📅 Дата: {0:dd.MM.yyyy}}"/>
                                 <TextBlock Text="{Binding SelectedReport.StartTime, StringFormat=🕐 Начало: {0:HH:mm:ss}}" Margin="0,3,0,0"/>
                                 <TextBlock Text="{Binding SelectedReport.EndTime, StringFormat=🕒 Конец: {0:HH:mm:ss}}" Margin="0,3,0,0"/>
-                                <TextBlock Text="{Binding SelectedReport.TotalCars, StringFormat=🚗 Всего машин: {0}}" Margin="0,5,0,0"/>
+                                <TextBlock Text="{Binding SelectedReport.TotalCars, StringFormat=🚗 Всего заказов (машин): {0}}" Margin="0,5,0,0"/>
 
                                 <TextBlock Text="{Binding SelectedReport.TotalRevenue, StringFormat=💰 Общая выручка: {0:N0} ₽}" 
                                            FontWeight="Bold" Foreground="#27AE60" Margin="0,5,0,0" TextWrapping="Wrap"/>
 
-                                <TextBlock Text="{Binding SelectedReport.TotalWasherEarnings, StringFormat=👤 Мойщикам (Начислено): {0:N0} ₽}" 
+                                <TextBlock Text="{Binding SelectedReport.TotalWasherEarnings, StringFormat=👥 ФОТ сотрудников (Оклад + % + Бонусы): {0:N0} ₽}" 
                                            Foreground="#8E44AD" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                
                                 <TextBlock Text="{Binding SelectedReport.TotalCompanyEarnings, StringFormat=🏢 Компании (Грязными): {0:N0} ₽}" 
                                            Foreground="#34495E" Margin="0,3,0,0" TextWrapping="Wrap"/>
 
@@ -133,7 +132,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- СПОСОБЫ ОПЛАТЫ -->
                         <TextBlock Text="💳 Способы оплаты" FontSize="14" FontWeight="Bold" Margin="0,10,0,5"/>
                         <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                             <Grid>
@@ -146,7 +144,6 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Наличные -->
                                 <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,10">
                                     <TextBlock Text="💵 Наличные" Foreground="#7F8C8D" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
@@ -155,7 +152,6 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Карта -->
                                 <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
                                     <TextBlock Text="💳 Карта" Foreground="#7F8C8D" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
@@ -164,7 +160,6 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Перевод -->
                                 <StackPanel Grid.Row="1" Grid.Column="0">
                                     <TextBlock Text="📱 Перевод" Foreground="#7F8C8D" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
@@ -173,7 +168,6 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- QR-код -->
                                 <StackPanel Grid.Row="1" Grid.Column="1">
                                     <TextBlock Text="📱 QR-код" Foreground="#7F8C8D" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
@@ -200,10 +194,10 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding EmployeeName}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding CarsWashed, StringFormat=🚗 {0} шт.}" 
+                                            <TextBlock Grid.Column="1" Text="{Binding CarsWashed, StringFormat=🚗 Заказов: {0}}" 
                                                        Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="2" Text="{Binding Earnings, StringFormat=💰 Начислено: {0:N0} ₽}" 
-                                                       Foreground="#27AE60" Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                       Foreground="#27AE60" Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center" ToolTip="Оклад + Процент + Бонусы"/>
                                             <TextBlock Grid.Column="3" Text="{Binding Advances, StringFormat=🔻 Авансы: {0:N0} ₽}" 
                                                        Foreground="#E74C3C" Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="4" Text="{Binding ToPay, StringFormat=💳 НА РУКИ: {0:N0} ₽}" 

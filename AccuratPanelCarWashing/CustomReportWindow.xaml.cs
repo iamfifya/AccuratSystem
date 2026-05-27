@@ -1,13 +1,3 @@
-// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
-// UI-модель пользователя (с IsAdmin, DisplayString) — используем в окне
-using WpfUser = AccuratPanelCarWashing.Models.User;
-// Контрактные модели из API — используем для данных с сервера
-using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
-using ContractsCustomPeriodReport = AccuratSystem.Contracts.Models.CustomPeriodReport;
-using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
-using ContractsEmployeeReport = AccuratSystem.Contracts.Models.EmployeeReport;
-
-// Остальные using без конфликтов
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using LiveCharts;
@@ -17,8 +7,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+
+// Алиасы для предотвращения конфликтов
+using WpfUser = AccuratPanelCarWashing.Models.User;
+using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
+using ContractsEmployeeReport = AccuratSystem.Contracts.Models.EmployeeReport;
 
 namespace AccuratPanelCarWashing
 {
@@ -26,42 +22,66 @@ namespace AccuratPanelCarWashing
     {
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
-        private readonly WpfUser _currentUser; // Используем алиас для UI-пользователя
-        private ContractsCustomPeriodReport _currentReport; // Используем алиас для контрактного отчёта
+        private readonly WpfUser _currentUser;
 
         public bool IsDirector => _currentUser?.Role == 1;
 
-        // Для графиков
+        // Данные для графиков
         public SeriesCollection RevenueSeries { get; set; }
         public SeriesCollection ShareSeries { get; set; }
         public string[] Labels { get; set; }
 
         private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
-        public ObservableCollection<BranchTabItem> BranchTabs { get => _branchTabs; set { _branchTabs = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BranchTabs))); } }
+        public ObservableCollection<BranchTabItem> BranchTabs
+        {
+            get => _branchTabs;
+            set { _branchTabs = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BranchTabs))); }
+        }
 
         private BranchTabItem _selectedBranchTab;
-        public BranchTabItem SelectedBranchTab { get => _selectedBranchTab; set { _selectedBranchTab = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab))); } }
+        public BranchTabItem SelectedBranchTab
+        {
+            get => _selectedBranchTab;
+            set
+            {
+                _selectedBranchTab = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
+                // Скрываем контент при смене филиала, чтобы пользователь нажал "Сформировать" заново
+                ReportContent.Visibility = Visibility.Collapsed;
+            }
+        }
 
-        public CustomReportWindow(WpfUser user) // Конструктор принимает UI-пользователя
+        public CustomReportWindow(WpfUser user)
         {
             InitializeComponent();
             _apiService = new ApiService();
             _currentUser = user;
             DataContext = this;
 
+            // Дефолтные даты: за последние 7 дней
             StartDatePicker.SelectedDate = DateTime.Now.AddDays(-7);
             EndDatePicker.SelectedDate = DateTime.Now;
 
             _ = InitializeTabsAsync();
         }
 
-        private async System.Threading.Tasks.Task InitializeTabsAsync()
+        private async Task InitializeTabsAsync()
         {
-            var branches = await _apiService.GetBranchesAsync();
-            BranchTabs.Clear();
-            if (IsDirector) BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Вся сеть" });
-            foreach (var b in branches) BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
-            if (BranchTabs.Any()) SelectedBranchTab = BranchTabs.First();
+            try
+            {
+                var branches = await _apiService.GetBranchesAsync();
+                BranchTabs.Clear();
+
+                if (IsDirector)
+                    BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Вся сеть" });
+
+                foreach (var b in branches)
+                    BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
+
+                if (BranchTabs.Any())
+                    SelectedBranchTab = BranchTabs.First();
+            }
+            catch (Exception ex) { MessageBox.Show($"Ошибка загрузки филиалов: {ex.Message}"); }
         }
 
         private async void GenerateReportButton_Click(object sender, RoutedEventArgs args)
@@ -72,25 +92,30 @@ namespace AccuratPanelCarWashing
                 DateTime start = StartDatePicker.SelectedDate ?? DateTime.Now.AddDays(-7);
                 DateTime end = EndDatePicker.SelectedDate ?? DateTime.Now;
 
-                // Загружаем данные через API с учетом выбранного branchId
                 int branchId = SelectedBranchTab?.BranchId ?? 0;
+
+                // Загрузка данных через API
                 var periodReports = await _apiService.GetShiftReportsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
                 var clientStats = await _apiService.GetClientsStatsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
                 var transactions = await _apiService.GetTransactionsByDateRangeAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
 
-                if (!periodReports.Any()) { MessageBox.Show("Нет данных за период"); return; }
+                if (periodReports == null || !periodReports.Any())
+                {
+                    MessageBox.Show("Нет данных за выбранный период и филиал", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
 
-                //  РАСЧЕТ ДЕПАРТАМЕНТОВ (используем новые поля BaseReport)
+                // 1. РАСЧЕТЫ ОБЩИЕ
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
+                // Чистая прибыль = Прибыль компании - Расходы
                 decimal netProfit = periodReports.Sum(r => r.TotalCompanyEarnings) - transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
 
-                // Заполнение UI
                 TotalRevenueText.Text = $"{totalRev:N0} ₽";
                 NetProfitText.Text = $"{netProfit:N0} ₽";
                 TotalCarsText.Text = periodReports.Sum(r => r.TotalCars).ToString();
-                NewClientsText.Text = clientStats.NewClients.ToString();
+                NewClientsText.Text = clientStats?.NewClients.ToString() ?? "0";
 
-                // Секции департаментов
+                // 2. СЕКЦИИ ДЕПАРТАМЕНТОВ
                 WashRevenueText.Text = $"Выручка: {periodReports.Sum(r => r.WashTotalRevenue):N0} ₽";
                 WashCarsText.Text = $"Заказов: {periodReports.Sum(r => r.WashTotalCars)}";
                 WashProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.WashNetProfit):N0} ₽";
@@ -101,18 +126,19 @@ namespace AccuratPanelCarWashing
                 ServiceProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.ServiceNetProfit):N0} ₽";
                 ServiceProfitText.Foreground = new SolidColorBrush(Colors.DarkBlue);
 
-                // ЗАПОЛНЯЕМ СПОСОБЫ ОПЛАТЫ
+                // 3. СПОСОБЫ ОПЛАТЫ
                 CashTotalText.Text = $"{periodReports.Sum(r => r.CashAmount):N0} ₽ ({periodReports.Sum(r => r.CashCount)} шт.)";
                 CardTotalText.Text = $"{periodReports.Sum(r => r.CardAmount):N0} ₽ ({periodReports.Sum(r => r.CardCount)} шт.)";
                 TransferTotalText.Text = $"{periodReports.Sum(r => r.TransferAmount):N0} ₽ ({periodReports.Sum(r => r.TransferCount)} шт.)";
                 QrTotalText.Text = $"{periodReports.Sum(r => r.QrAmount):N0} ₽ ({periodReports.Sum(r => r.QrCount)} шт.)";
 
-                //  ГРАФИКИ LiveCharts 
+                // 4. ГРАФИКИ
+                var sortedReports = periodReports.OrderBy(r => r.Date).ToList();
                 RevenueSeries = new SeriesCollection {
                     new LineSeries {
                         Title = "Выручка",
-                        Values = new ChartValues<decimal>(periodReports.OrderBy(r => r.Date).Select(r => r.TotalRevenue)),
-                        PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 10
+                        Values = new ChartValues<decimal>(sortedReports.Select(r => r.TotalRevenue)),
+                        PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 8
                     }
                 };
 
@@ -121,21 +147,24 @@ namespace AccuratPanelCarWashing
                     new PieSeries { Title = "Сервис", Values = new ChartValues<decimal> { periodReports.Sum(r => r.ServiceTotalRevenue) }, DataLabels = true }
                 };
 
-                Labels = periodReports.OrderBy(r => r.Date).Select(r => r.Date.ToString("dd.MM")).ToArray();
+                Labels = sortedReports.Select(r => r.Date.ToString("dd.MM")).ToArray();
 
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RevenueSeries)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShareSeries)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Labels)));
 
-                EmployeesSalaryList.ItemsSource = periodReports.SelectMany(r => r.EmployeesWork)
+                // 5. ЗАРПЛАТНАЯ ВЕДОМОСТЬ (Группировка по сотрудникам за весь период)
+                var salaryData = periodReports.SelectMany(r => r.EmployeesWork)
                     .GroupBy(e => e.EmployeeId)
-                    .Select(g => new ContractsEmployeeReport // Используем алиас для контрактного EmployeeReport
+                    .Select(g => new ContractsEmployeeReport
                     {
                         EmployeeName = g.First().EmployeeName,
                         CarsWashed = g.Sum(x => x.CarsWashed),
                         Earnings = g.Sum(x => x.Earnings),
                         Advances = g.Sum(x => x.Advances)
                     }).ToList();
+
+                EmployeesSalaryList.ItemsSource = salaryData;
 
                 ReportContent.Visibility = Visibility.Visible;
             }
@@ -144,6 +173,6 @@ namespace AccuratPanelCarWashing
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
-        private void ExportButton_Click(object sender, RoutedEventArgs e) { /* Твой вызов ExcelExporter */ }
+        private void ExportButton_Click(object sender, RoutedEventArgs e) { /* Вызов вашего ExcelExporter */ }
     }
 }

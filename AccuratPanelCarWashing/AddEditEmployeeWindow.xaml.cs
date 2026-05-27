@@ -46,8 +46,10 @@ namespace AccuratPanelCarWashing
                     Role = employee.Role,
                     IsActive = employee.IsActive,
                     Phone = employee.Phone,
-                    BaseWagePercentage = employee.BaseWagePercentage // ДОБАВИЛИ ЭТУ СТРОКУ
+                    BaseWagePercentage = employee.BaseWagePercentage,
+                    BaseSalaryPerShift = employee.BaseSalaryPerShift
                 };
+
                 Title = "✏ Редактирование сотрудника (API)";
             }
             DataContext = this;

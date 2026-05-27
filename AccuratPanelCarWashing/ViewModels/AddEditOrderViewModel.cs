@@ -392,6 +392,7 @@ namespace AccuratPanelCarWashing.ViewModels
                     OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
                     BranchId = _existingOrder.BranchId,
                     Department = _existingOrder.Department,
+                    AdminId = App.CurrentUser?.Id,
 
                     // ИСПРАВЛЕНИЕ: Клонируем список мойщиков!
                     OrderWashers = _existingOrder.OrderWashers != null
@@ -459,6 +460,7 @@ namespace AccuratPanelCarWashing.ViewModels
                     ClientId = null,
                     Notes = "",
                     BranchId = AppSettings.CurrentBranchId,
+                    AdminId = App.CurrentUser?.Id,
 
 
                     // Для пустого заказа просто создаем новый список

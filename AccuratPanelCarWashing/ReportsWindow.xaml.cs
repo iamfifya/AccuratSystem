@@ -208,13 +208,15 @@ namespace AccuratPanelCarWashing
             lines.Add($"Отчет по филиалу: {branchTitle}");
             lines.Add("");
 
-            lines.Add("Дата;Время начала;Время окончания;Машин;Выручка;Начислено Мойщикам;Расходы;Выдано авансов;Чистая прибыль(ЧПКО);Примечание");
+            // Изменили заголовки (ФОТ Сотрудников вместо Начислено Мойщикам)
+            lines.Add("Дата;Время начала;Время окончания;Заказов;Выручка;ФОТ Сотрудников;Расходы;Выдано авансов;Чистая прибыль(ЧПКО);Примечание");
             lines.Add($"{report.Date:dd.MM.yyyy};{report.StartTime:HH:mm};{report.EndTime:HH:mm};" +
                       $"{report.TotalCars};{report.TotalRevenue:N0};{report.TotalWasherEarnings:N0};" +
                       $"{report.TotalExpenses:N0};{report.TotalAdvances:N0};{report.NetProfit:N0};{report.Notes}");
 
             lines.Add("");
-            lines.Add("Сотрудник;Машин;Выручка(с машин);Начислено(ЗП+Мин);Взято авансов;К ВЫПЛАТЕ");
+            // Изменили заголовки таблицы сотрудников
+            lines.Add("Сотрудник;Кол-во заказов;Общая касса(по этим заказам);Начислено(Оклад+%+Бонус);Взято авансов;К ВЫПЛАТЕ");
 
             foreach (var emp in report.EmployeesWork)
             {

@@ -18,14 +18,35 @@ namespace Accurat.WebAPI.Controllers
         private readonly AppDbContext _context;
         public ReportsController(AppDbContext context) => _context = context;
 
-        // ПАДАЛ ИЗ-ЗА ОТСУТСТВИЯ branchId В ФИЛЬТРЕ
+        // Вспомогательный метод для извлечения бонусов апселла из заметок
+        private decimal ExtractUpsellBonus(string notes)
+        {
+            if (string.IsNullOrEmpty(notes) || !notes.Contains("бонус: +"))
+                return 0;
+
+            try
+            {
+                int startIndex = notes.IndexOf("бонус: +") + "бонус: +".Length;
+                int endIndex = notes.IndexOf(" ₽", startIndex);
+
+                if (endIndex > startIndex)
+                {
+                    string bonusStr = notes.Substring(startIndex, endIndex - startIndex).Trim();
+                    if (decimal.TryParse(bonusStr, out decimal bonus))
+                        return bonus;
+                }
+            }
+            catch { }
+            return 0;
+        }
+
         [HttpGet("shifts")]
         public async Task<ActionResult<IEnumerable<ShiftReport>>> GetShiftReports(int branchId, DateTime start, DateTime end)
         {
             var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
             var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
 
-            // 1. МУЛЬТИФИЛИАЛЬНОСТЬ: Если branchId == 0, запрос не фильтрует по филиалу (берем всю сеть)
+            // МУЛЬТИФИЛИАЛЬНОСТЬ
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
 
@@ -37,18 +58,15 @@ namespace Accurat.WebAPI.Controllers
             var shifts = await shiftsQuery.ToListAsync();
             var reports = new List<ShiftReport>();
             var allUsers = await _context.Users.ToListAsync();
-
-            // ИСПРАВЛЕНО: Загружаем все услуги из базы данных один раз перед циклами
             var allServices = await _context.Services.ToListAsync();
 
             foreach (var shift in shifts)
             {
                 var orders = await _context.Orders
-                    .Include(o => o.OrderWashers) // Загружаем коллекцию
-                    .Where(o => o.ShiftId == shift.Id && o.Status == "Выполнен").ToListAsync();
+                    .Include(o => o.OrderWashers)
+                    .Where(o => o.ShiftId == shift.Id && (o.Status == "Выполнен" || o.Status == "Завершен")).ToListAsync();
                 var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
 
-                // Разделяем заказы по департаментам
                 var washOrders = orders.Where(o => o.Department == "Wash").ToList();
                 var serviceOrders = orders.Where(o => o.Department == "Service").ToList();
 
@@ -60,7 +78,6 @@ namespace Accurat.WebAPI.Controllers
                     EndTime = shift.EndTime,
                     Notes = shift.Notes,
 
-                    // Общие данные
                     TotalCars = orders.Count,
                     TotalRevenue = orders.Sum(o => o.FinalPrice),
                     CashAmount = orders.Where(o => o.PaymentMethod == "Наличные").Sum(o => o.FinalPrice),
@@ -75,72 +92,87 @@ namespace Accurat.WebAPI.Controllers
                     TotalExpenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount),
                     TotalAdvances = transactions.Where(t => t.Type == "Аванс мойщику").Sum(t => t.Amount),
 
-                    // 2. ДЕПАРТАМЕНТИЗАЦИЯ: Мойка
                     WashTotalCars = washOrders.Count,
                     WashTotalRevenue = washOrders.Sum(o => o.FinalPrice),
                     WashTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Wash").Sum(t => t.Amount),
 
-                    // 2. ДЕПАРТАМЕНТИЗАЦИЯ: Сервис
                     ServiceTotalCars = serviceOrders.Count,
                     ServiceTotalRevenue = serviceOrders.Sum(o => o.FinalPrice),
                     ServiceTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Service").Sum(t => t.Amount)
                 };
 
-                decimal totalWasherEarnings = 0;
-                decimal totalCompanyEarnings = 0;
+                // ИЩЕМ ВСЕ БОНУСЫ ЗА СМЕНУ
+                decimal totalShiftUpsellBonuses = orders.Sum(o => ExtractUpsellBonus(o.Notes));
 
+                decimal totalFOT = 0; // Фонд оплаты труда (все ЗП)
                 decimal totalWashCompanyEarnings = 0;
                 decimal totalServiceCompanyEarnings = 0;
 
-                // РАЗВОРАЧИВАЕМ ЗАКАЗЫ ПО МОЙЩИКАМ (SOFT SPLIT)
-                var orderWasherPairs = orders
-                    .SelectMany(o => o.OrderWashers ?? new List<OrderWasher>(),
-                               (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId, SplitShare = ow.SplitShare })
-                    .ToList();
+                // СОБИРАЕМ ВСЕХ, КТО РАБОТАЛ В СМЕНЕ
+                // Берем тех, кого добавили при старте смены + тех, кто реально мыл машины (на всякий случай)
+                var shiftEmployeeIds = shift.EmployeeIds?.ToList() ?? new List<int>();
+                var washerIds = orders.SelectMany(o => o.OrderWashers?.Select(ow => ow.UserId) ?? new List<int>());
+                var allEmployeeIds = shiftEmployeeIds.Union(washerIds).Distinct().ToList();
 
-                foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
+                foreach (var empId in allEmployeeIds)
                 {
-                    if (group.Key == 0) continue;
+                    if (empId == 0) continue;
+                    var emp = allUsers.FirstOrDefault(u => u.Id == empId);
+                    if (emp == null) continue;
 
-                    var emp = allUsers.FirstOrDefault(u => u.Id == group.Key);
-                    decimal empRevenue = group.Sum(x => x.Order.FinalPrice * x.SplitShare);
+                    decimal empTotalEarnings = 0;
+                    decimal empRevenue = 0;
+                    int carsProcessed = 0;
 
-                    // ВЫЗЫВАЕМ ЯДРО РАСЧЕТА
-                    decimal empBaseEarnings = group.Sum(x =>
-                        Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+                    if (emp.Role == 3) // 🛠️ МOЙЩИК
+                    {
+                        var myTasks = orders.SelectMany(o => o.OrderWashers.Where(ow => ow.UserId == empId), (o, ow) => new { Order = o, OrderWasher = ow }).ToList();
+                        carsProcessed = myTasks.Count;
+                        empRevenue = myTasks.Sum(x => x.Order.FinalPrice * x.OrderWasher.SplitShare);
+                        empTotalEarnings = myTasks.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
 
-                    decimal empTotalEarnings = empBaseEarnings;
-                    decimal empAdvances = transactions.Where(t => t.EmployeeId == emp?.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
+                        // Расчет грязной прибыли для компании по департаментам
+                        var washTasks = myTasks.Where(x => x.Order.Department == "Wash");
+                        var serviceTasks = myTasks.Where(x => x.Order.Department == "Service");
+                        totalWashCompanyEarnings += washTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+                        totalServiceCompanyEarnings += serviceTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+                    }
+                    else // 👑 АДМИНИСТРАТОР ИЛИ ДИРЕКТОР
+                    {
+                        carsProcessed = orders.Count;
+                        empRevenue = report.TotalRevenue;
 
-                    totalWasherEarnings += empTotalEarnings;
-                    totalCompanyEarnings += (empRevenue - empTotalEarnings);
+                        decimal baseSalary = emp.BaseSalaryPerShift;
+                        decimal percentEarnings = empRevenue * (emp.BaseWagePercentage / 100m);
 
-                    // Разделение доли компании
-                    var washItems = group.Where(x => x.Order.Department == "Wash");
-                    var serviceItems = group.Where(x => x.Order.Department == "Service");
+                        // Считаем бонусы ТОЛЬКО за те заказы, где этот админ указан как AdminId
+                        decimal personalUpsellBonus = orders
+                            .Where(o => o.AdminId == emp.Id)
+                            .Sum(o => ExtractUpsellBonus(o.Notes));
 
-                    var empWashRevenue = washItems.Sum(x => x.Order.FinalPrice * x.SplitShare);
-                    var empServiceRevenue = serviceItems.Sum(x => x.Order.FinalPrice * x.SplitShare);
+                        empTotalEarnings = baseSalary + percentEarnings + personalUpsellBonus;
+                    }
 
-                    var empWashBase = washItems.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
-                    var empServiceBase = serviceItems.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+                    decimal empAdvances = transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
 
-                    totalWashCompanyEarnings += (empWashRevenue - empWashBase);
-                    totalServiceCompanyEarnings += (empServiceRevenue - empServiceBase);
+                    totalFOT += empTotalEarnings;
 
                     report.EmployeesWork.Add(new EmployeeReport
                     {
-                        EmployeeId = emp?.Id ?? 0,
-                        EmployeeName = emp?.FullName ?? "Неизвестно",
-                        CarsWashed = group.Count(), // Считаем количество участий в заказах
+                        EmployeeId = emp.Id,
+                        EmployeeName = emp.FullName,
+                        CarsWashed = carsProcessed,
                         TotalAmount = empRevenue,
                         Earnings = empTotalEarnings,
                         Advances = empAdvances
                     });
                 }
 
-                report.TotalWasherEarnings = totalWasherEarnings;
-                report.TotalCompanyEarnings = totalCompanyEarnings;
+                report.TotalWasherEarnings = totalFOT; // В контракте поле называется так, но теперь это весь ФОТ
+
+                // Итоговая прибыль компании = Вся выручка - Вся ЗП сотрудников (включая админов)
+                report.TotalCompanyEarnings = report.TotalRevenue - totalFOT;
+
                 report.WashCompanyEarnings = totalWashCompanyEarnings;
                 report.ServiceCompanyEarnings = totalServiceCompanyEarnings;
 
@@ -159,10 +191,8 @@ namespace Accurat.WebAPI.Controllers
             var newClientsQuery = _context.Clients.Where(c => c.RegistrationDate >= startUtc && c.RegistrationDate <= endUtc);
             var uniqueClientsQuery = _context.Orders.Where(o => o.Time >= startUtc && o.Time <= endUtc && o.ClientId != null);
 
-            // Если передан конкретный филиал, фильтруем. Иначе — считаем по всей сети.
             if (branchId > 0)
             {
-                // Заметка: У клиента может не быть привязки к филиалу, но уникальных считаем по заказам филиала
                 uniqueClientsQuery = uniqueClientsQuery.Where(o => o.BranchId == branchId);
             }
 

@@ -36,6 +36,10 @@ namespace AccuratSystem.Contracts.Models
         public int ShiftId { get; set; }
         public int? ClientId { get; set; }
         public int BranchId { get; set; }
+
+        // Кто именно сидел за кассой и оформлял этот заказ
+        public int? AdminId { get; set; }
+
         // В конец класса Order в Contracts/Models/Order.cs добавь:
         public Branch Branch { get; set; }
 
@@ -44,7 +48,5 @@ namespace AccuratSystem.Contracts.Models
         // НОВЫЕ ПОЛЯ ДЛЯ СЕРВИСА
         public string GeneralNotes { get; set; } = string.Empty;
         public DateTime? FinishedAt { get; set; }
-
-        // Навигационные коллекции убраны из Contracts
     }
 }

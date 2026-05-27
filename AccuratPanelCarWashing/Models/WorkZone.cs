@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace AccuratPanelCarWashing.Models
@@ -20,5 +21,14 @@ namespace AccuratPanelCarWashing.Models
         public string Department { get; set; } = string.Empty; // "Wash" или "Service"
 
         public ObservableCollection<OrderDisplayItem> Orders { get; set; } = new ObservableCollection<OrderDisplayItem>();
+
+
+        // Новое свойство, которое будет использоваться в XAML
+        public bool IsVisible => Orders != null && Orders.Any();
+        public WorkZone()
+        {
+            // Следим за изменениями коллекции, чтобы поднимать PropertyChanged
+            Orders.CollectionChanged += (_, __) => OnPropertyChanged(nameof(IsVisible));
+        }
     }
 }
