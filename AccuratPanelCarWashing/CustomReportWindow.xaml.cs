@@ -93,29 +93,22 @@ namespace AccuratPanelCarWashing
                 DateTime end = EndDatePicker.SelectedDate ?? DateTime.Now;
 
                 int branchId = SelectedBranchTab?.BranchId ?? 0;
-
-                // Загрузка данных через API
                 var periodReports = await _apiService.GetShiftReportsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
                 var clientStats = await _apiService.GetClientsStatsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
-                var transactions = await _apiService.GetTransactionsByDateRangeAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
 
-                if (periodReports == null || !periodReports.Any())
-                {
-                    MessageBox.Show("Нет данных за выбранный период и филиал", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
+                if (!periodReports.Any()) { MessageBox.Show("Нет данных за выбранный период", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information); return; }
 
-                // 1. РАСЧЕТЫ ОБЩИЕ
+                // 🔥 УПРОСТИЛИ РАСЧЕТ: API теперь отдает готовую чистую прибыль по каждой смене
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
-                // Чистая прибыль = Прибыль компании - Расходы
-                decimal netProfit = periodReports.Sum(r => r.TotalCompanyEarnings) - transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
+                decimal netProfit = periodReports.Sum(r => r.NetProfit);
 
+                // Заполнение UI
                 TotalRevenueText.Text = $"{totalRev:N0} ₽";
                 NetProfitText.Text = $"{netProfit:N0} ₽";
                 TotalCarsText.Text = periodReports.Sum(r => r.TotalCars).ToString();
-                NewClientsText.Text = clientStats?.NewClients.ToString() ?? "0";
+                NewClientsText.Text = clientStats.NewClients.ToString();
 
-                // 2. СЕКЦИИ ДЕПАРТАМЕНТОВ
+                // Секции департаментов
                 WashRevenueText.Text = $"Выручка: {periodReports.Sum(r => r.WashTotalRevenue):N0} ₽";
                 WashCarsText.Text = $"Заказов: {periodReports.Sum(r => r.WashTotalCars)}";
                 WashProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.WashNetProfit):N0} ₽";
@@ -126,19 +119,18 @@ namespace AccuratPanelCarWashing
                 ServiceProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.ServiceNetProfit):N0} ₽";
                 ServiceProfitText.Foreground = new SolidColorBrush(Colors.DarkBlue);
 
-                // 3. СПОСОБЫ ОПЛАТЫ
+                // ЗАПОЛНЯЕМ СПОСОБЫ ОПЛАТЫ
                 CashTotalText.Text = $"{periodReports.Sum(r => r.CashAmount):N0} ₽ ({periodReports.Sum(r => r.CashCount)} шт.)";
                 CardTotalText.Text = $"{periodReports.Sum(r => r.CardAmount):N0} ₽ ({periodReports.Sum(r => r.CardCount)} шт.)";
                 TransferTotalText.Text = $"{periodReports.Sum(r => r.TransferAmount):N0} ₽ ({periodReports.Sum(r => r.TransferCount)} шт.)";
                 QrTotalText.Text = $"{periodReports.Sum(r => r.QrAmount):N0} ₽ ({periodReports.Sum(r => r.QrCount)} шт.)";
 
-                // 4. ГРАФИКИ
-                var sortedReports = periodReports.OrderBy(r => r.Date).ToList();
+                // ГРАФИКИ LiveCharts 
                 RevenueSeries = new SeriesCollection {
                     new LineSeries {
                         Title = "Выручка",
-                        Values = new ChartValues<decimal>(sortedReports.Select(r => r.TotalRevenue)),
-                        PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 8
+                        Values = new ChartValues<decimal>(periodReports.OrderBy(r => r.Date).Select(r => r.TotalRevenue)),
+                        PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 10
                     }
                 };
 
@@ -147,14 +139,14 @@ namespace AccuratPanelCarWashing
                     new PieSeries { Title = "Сервис", Values = new ChartValues<decimal> { periodReports.Sum(r => r.ServiceTotalRevenue) }, DataLabels = true }
                 };
 
-                Labels = sortedReports.Select(r => r.Date.ToString("dd.MM")).ToArray();
+                Labels = periodReports.OrderBy(r => r.Date).Select(r => r.Date.ToString("dd.MM")).ToArray();
 
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RevenueSeries)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShareSeries)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Labels)));
 
-                // 5. ЗАРПЛАТНАЯ ВЕДОМОСТЬ (Группировка по сотрудникам за весь период)
-                var salaryData = periodReports.SelectMany(r => r.EmployeesWork)
+                // Схлопываем данные сотрудников за весь период
+                EmployeesSalaryList.ItemsSource = periodReports.SelectMany(r => r.EmployeesWork)
                     .GroupBy(e => e.EmployeeId)
                     .Select(g => new ContractsEmployeeReport
                     {
@@ -163,8 +155,6 @@ namespace AccuratPanelCarWashing
                         Earnings = g.Sum(x => x.Earnings),
                         Advances = g.Sum(x => x.Advances)
                     }).ToList();
-
-                EmployeesSalaryList.ItemsSource = salaryData;
 
                 ReportContent.Visibility = Visibility.Visible;
             }
