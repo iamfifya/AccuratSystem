@@ -39,28 +39,13 @@
         <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="Bold" 
                    Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15" Grid.Row="0"/>
 
-        <!-- Выбор департамента (САМОЕ ПЕРВОЕ ПОЛЕ) -->
-        <Label Content="📂 Департамент:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
-        <controls:CustomComboBox x:Name="DepartmentComboBox" 
-                         Grid.Row="2" 
-                         Margin="0,5" 
-                         Height="50"
-                         Placeholder="Выберите департамент"
-                         SelectedValue="{Binding CurrentOrder.Department, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         SelectedValuePath="Tag">
-            <controls:CustomComboBox.Items>
-                <ComboBoxItem Content="💦 Мойка (автомойка)" Tag="Wash" IsSelected="True"/>
-                <ComboBoxItem Content="🔧 Сервис (ремонт/ТО)" Tag="Service"/>
-            </controls:CustomComboBox.Items>
-        </controls:CustomComboBox>
-
-        <Label Content="Название услуги:" Grid.Row="3" Margin="0,5" FontWeight="SemiBold"/>
+        <Label Content="Название услуги:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
         <TextBox x:Name="NameTextBox" Text="{Binding CurrentService.Name, UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="4" Margin="0,5" Height="50" Padding="5"/>
+                 Grid.Row="2" Margin="0,5" Height="50" Padding="5"/>
 
-        <Label Content="Цены по категориям кузова:" Grid.Row="5" Margin="0,5" FontWeight="SemiBold"/>
+        <Label Content="Цены по категориям кузова:" Grid.Row="3" Margin="0,5" FontWeight="SemiBold"/>
 
-        <Grid Grid.Row="6" Margin="0,5">
+        <Grid Grid.Row="4" Margin="0,5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -89,26 +74,26 @@
             </StackPanel>
         </Grid>
 
-        <Label Content="Длительность (минуты):" Grid.Row="7" Margin="0,5" FontWeight="SemiBold"/>
+        <Label Content="Длительность (минуты):" Grid.Row="5" Margin="0,5" FontWeight="SemiBold"/>
         <TextBox x:Name="DurationTextBox" Text="{Binding CurrentService.DurationMinutes, UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="8" Margin="0,5" Height="50" Padding="5"/>
+                 Grid.Row="6" Margin="0,5" Height="50" Padding="5"/>
 
-        <Label Content="Описание:" Grid.Row="9" Margin="0,5" FontWeight="SemiBold"/>
+        <Label Content="Описание:" Grid.Row="7" Margin="0,5" FontWeight="SemiBold"/>
         <TextBox x:Name="DescriptionTextBox" Text="{Binding CurrentService.Description, UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="10" Margin="0,5" Height="80" Padding="5" TextWrapping="Wrap" AcceptsReturn="True"/>
+                 Grid.Row="8" Margin="0,5" Height="80" Padding="5" TextWrapping="Wrap" AcceptsReturn="True"/>
 
-        <Label Content="Индивидуальный % зарплаты за услугу:" Grid.Row="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+        <Label Content="Индивидуальный % зарплаты за услугу:" Grid.Row="9" Margin="0,5,0,0" FontWeight="SemiBold"/>
         <TextBox x:Name="CustomWageTextBox" 
                  Text="{Binding CurrentService.CustomWagePercentage, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}" 
-                 Grid.Row="12" Margin="0,5" Height="40" Padding="5" 
+                 Grid.Row="10" Margin="0,5" Height="40" Padding="5" 
                  ToolTip="Оставьте пустым, чтобы использовать базовую ставку сотрудника"/>
         <TextBlock Text="Если указать здесь процент, он перекроет базовую ставку мойщика для этой услуги." 
-                   Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10" Grid.Row="13"/>
+                   Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10" Grid.Row="11"/>
 
         <!-- Категория услуги -->
-        <Label Content="📂 Категория услуги:" Grid.Row="14" Margin="0,5,0,0" FontWeight="SemiBold"/>
+        <Label Content="📂 Категория услуги:" Grid.Row="12" Margin="0,5,0,0" FontWeight="SemiBold"/>
         <controls:CustomComboBox x:Name="CategoryComboBox" 
-                         Grid.Row="15" 
+                         Grid.Row="13" 
                          Margin="0,5" 
                          Height="50"
                          Placeholder="Выберите категорию услуги"
@@ -120,7 +105,7 @@
             </controls:CustomComboBox.Items>
         </controls:CustomComboBox>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="16" Margin="0,15">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="14" Margin="0,15">
             <Button Content="✅ Сохранить" Click="SaveButton_Click" Width="120" Height="35" 
                     Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
             <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
