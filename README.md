@@ -64,12 +64,14 @@
 4. Запушьте ветку (`git push origin feature/amazing-feature`).
 5. Откройте Pull Request.
 
+```bash
 graph TD
     A[WPF Admin Terminal] -->|SignalR/REST| B(ASP.NET Core API)
     C[MAUI Mobile App] -->|SignalR/REST| B
     B -->|EF Core| D[(PostgreSQL)]
     B --> E[Outbox Processor]
     E --> F[Background Jobs]
+```
 
 ## Технологический стек
 
