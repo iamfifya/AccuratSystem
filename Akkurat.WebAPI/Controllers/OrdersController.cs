@@ -105,6 +105,75 @@ namespace Accurat.WebAPI.Controllers
             }
         }
 
+        [HttpPost("{id}/convert")]
+        public async Task<ActionResult<Order>> ConvertToOrder(int id, [FromQuery] int shiftId, [FromQuery] int washerId)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // 1. Ищем заказ (запись) и обязательно подтягиваем OrderWashers
+                    var order = await _context.Orders
+                        .Include(o => o.OrderWashers)
+                        .FirstOrDefaultAsync(o => o.Id == id);
+
+                    if (order == null)
+                        return NotFound($"Запись с ID {id} не найдена в БД.");
+
+                    // 2. Снимаем флаги предварительной записи
+                    order.IsAppointment = false;
+                    order.Status = "В работе";
+                    order.ShiftId = shiftId;
+                    order.Time = DateTime.UtcNow; // Фиксируем реальное время заезда в бокс
+
+                    // 3. 💥 ЖЕЛЕЗНО НАЗНАЧАЕМ МОЙЩИКА 💥
+                    order.OrderWashers.Clear();
+                    order.OrderWashers.Add(new OrderWasher
+                    {
+                        OrderId = order.Id,
+                        UserId = washerId,
+                        SplitShare = 1.0m
+                    });
+
+                    // 4. Фиксируем время старта работы в истории статусов
+                    var newHistory = new AccuratSystem.Contracts.Models.OrderStatusHistory
+                    {
+                        OrderId = order.Id,
+                        Status = "В работе",
+                        StartTime = DateTime.UtcNow,
+                        UserId = washerId
+                    };
+                    _context.OrderStatusHistories.Add(newHistory);
+
+                    // 5. Делаем отметку в ленте событий
+                    var timelineEntry = new AccuratSystem.Contracts.Models.OrderTimelineEntry
+                    {
+                        OrderId = order.Id,
+                        EntryType = TimelineEntryType.StatusChanged,
+                        Message = "Предварительная запись переведена в работу",
+                        CreatedBy = "Система (Конвертация)",
+                        Timestamp = DateTime.UtcNow
+                    };
+                    _context.OrderTimelineEntries.Add(timelineEntry);
+
+                    // 6. Сохраняем всё в базу
+                    _context.Entry(order).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    // 7. Обновляем UI у всех админов
+                    await _hubContext.Clients.All.SendAsync("UpdateData");
+
+                    return Ok(order);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return StatusCode(500, "Ошибка конвертации на сервере: " + ex.Message);
+                }
+            }
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateOrder(int id, Order order)
         {

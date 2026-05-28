@@ -364,8 +364,15 @@ namespace AccuratPanelCarWashing.Services
         #region ConvertAppointmentToOrderAsync
         public async Task<ContractsOrder> ConvertAppointmentToOrderAsync(int appointmentId, int shiftId, int washerId)
         {
-            var response = await _http.PostAsync($"Appointments/{appointmentId}/convert?shiftId={shiftId}&washerId={washerId}", null);
-            response.EnsureSuccessStatusCode();
+            // Бьем ровно по тому маршруту, который создали в контроллере
+            var response = await _http.PostAsync($"Orders/{appointmentId}/convert?shiftId={shiftId}&washerId={washerId}", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorText = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Отказ сервера ({response.StatusCode}): {errorText}");
+            }
+
             return await response.Content.ReadFromJsonAsync<ContractsOrder>();
         }
         #endregion

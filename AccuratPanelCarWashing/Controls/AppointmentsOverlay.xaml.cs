@@ -275,18 +275,21 @@ namespace AccuratPanelCarWashing.Controls
         {
             if (SelectedItem == null)
             {
-                MessageBox.Show("Выберите запись для преобразования", "Внимание",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Выберите запись для преобразования", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_currentShift == null || _currentShift.IsClosed)
+            {
+                MessageBox.Show("Нельзя преобразовать запись: нет активной смены!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             try
             {
-                // 1. Загружаем список мойщиков для диалога выбора
+                // 1. Грузим мойщиков
                 var allUsers = await _apiService.GetUsersAsync();
-
-                // ИСПРАВЛЕНО: Проверяем Role напрямую, так как User из API — контрактный тип
-                var washers = allUsers.Where(u => u.Role != 1 && u.Role != 2).ToList(); // Только мойщики (не админы)
+                var washers = allUsers.Where(u => u.Role != 1 && u.Role != 2).ToList();
 
                 if (!washers.Any())
                 {
@@ -294,72 +297,35 @@ namespace AccuratPanelCarWashing.Controls
                     return;
                 }
 
-                // 2. Показываем диалог выбора мойщика
+                // 2. Выбираем мойщика
                 var washerDialog = new WasherSelectionDialog(washers);
                 if (washerDialog.ShowDialog() != true || washerDialog.SelectedWasher == null)
-                {
-                    // Пользователь отменил выбор
                     return;
-                }
 
                 var selectedWasher = washerDialog.SelectedWasher;
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] Выбран мойщик: {selectedWasher.FullName} (Id={selectedWasher.Id})");
 
-                // 3. Загружаем оригинальную запись с сервера
-                var allOrders = await _apiService.GetOrdersAsync();
-                var originalOrder = allOrders.FirstOrDefault(o => o.Id == SelectedItem.Id);
+                // 3. 💥 ВАЖНО: Вызываем специальный метод API для конвертации!
+                var convertedOrder = await _apiService.ConvertAppointmentToOrderAsync(
+                    SelectedItem.Id,
+                    _currentShift.Id,
+                    selectedWasher.Id);
 
-                if (originalOrder == null)
-                {
-                    MessageBox.Show("Запись не найдена на сервере", "Ошибка");
-                    return;
-                }
-
-                if (!originalOrder.IsAppointment)
-                {
-                    MessageBox.Show("Это уже обычный заказ", "Информация");
-                    return;
-                }
-
-                // 4. ПРЕДВАРИТЕЛЬНО НАЗНАЧАЕМ МОЙЩИКА в заказ
-                // ИСПРАВЛЕНО: Используем метод расширения вместо прямого доступа к WasherId
-                originalOrder.SetWasherId(selectedWasher.Id);
-
-                // Если смена активна — тоже подставляем (опционально)
-                if (_currentShift != null && originalOrder.ShiftId == 0)
-                {
-                    originalOrder.ShiftId = _currentShift.Id;
-                }
-
-                // 5. Открываем окно редактирования с уже заполненными данными
+                // 4. Открываем окно редактирования с УЖЕ конвертированным заказом от сервера
                 var viewModel = App.GetService<AddEditOrderViewModel>();
-                var editWin = new AddEditOrderWindow(viewModel, _currentShift, originalOrder);
+                var editWin = new AddEditOrderWindow(viewModel, _currentShift, convertedOrder);
 
-                // 6. После сохранения — перезагружаем данные
                 editWin.Closed += (s, args) =>
                 {
-                    if (editWin.DialogResult == true)
-                    {
-                        // Заказ успешно сохранён — обновляем список записей
-                        _ = LoadAppointmentsAsync();
-
-                        // Обновляем MainWindow, если он открыт
-                        var mainWindow = Application.Current.Windows
-                            .OfType<MainWindow>()
-                            .FirstOrDefault();
-                        mainWindow?.RefreshData();
-
-                        MessageBox.Show($"✅ Заказ преобразован!\nМойщик: {selectedWasher.FullName}",
-                            "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    _ = LoadAppointmentsAsync();
+                    var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                    mainWindow?.RefreshData();
                 };
 
                 editWin.ShowDialog();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при преобразовании: {ex.Message}", "Критическая ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при преобразовании: {ex.Message}", "Ошибка API", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

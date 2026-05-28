@@ -304,25 +304,26 @@ namespace AccuratPanelCarWashing
                 }
 
                 this.IsEnabled = false; // Блокируем UI на время запроса
-                
-                // Для записей (appointments) НЕ привязываем к смене
+
                 if (_viewModel.CurrentOrder.IsAppointment)
                 {
-                    _viewModel.CurrentOrder.ShiftId = 0; // Записи не привязаны к смене
-                                                         // BranchId уже установлен из UI, НЕ перезаписываем его!
+                    _viewModel.CurrentOrder.ShiftId = 0;
                 }
                 else
                 {
+                    // Если это заказ, смена должна быть открыта
                     if (_currentShift != null && !_currentShift.IsClosed)
                     {
                         _viewModel.CurrentOrder.ShiftId = _currentShift.Id;
                         _viewModel.CurrentOrder.BranchId = _currentShift.BranchId;
                     }
-                    else if (!_viewModel.CurrentOrder.IsAppointment)
+                    else
                     {
-                        // Если это не запись, а заказ, но смены нет — предупреждаем
                         MessageBox.Show("Нельзя сохранить заказ: на этом филиале нет активной смены!\nСначала начните смену.",
                             "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                        // Обязательно возвращаем UI в рабочее состояние перед выходом
+                        this.IsEnabled = true;
                         return;
                     }
                 }
@@ -392,7 +393,6 @@ namespace AccuratPanelCarWashing
         // Метод для "Преобразования записи в заказ"
         private async void ConvertToOrderButton_Click(object sender, RoutedEventArgs e)
         {
-            // Проверяем наличие активной смены
             if (_currentShift == null || _currentShift.IsClosed)
             {
                 MessageBox.Show("Нельзя преобразовать запись в заказ: на этом филиале нет активной смены!\nСначала начните смену.",
@@ -403,40 +403,60 @@ namespace AccuratPanelCarWashing
             var result = MessageBox.Show("Преобразовать запись в активный заказ?", "Подтверждение", MessageBoxButton.YesNo);
             if (result != MessageBoxResult.Yes) return;
 
-            // 1. Загружаем список мойщиков для диалога выбора
-            var allUsers = await _apiService.GetUsersAsync();
-            var washers = allUsers.Where(u => u.Role != 1 && u.Role != 2).ToList(); // Только мойщики (не админы)
+            // Берём мойщиков прямо из кэша ViewModel, чтобы не делать лишний запрос к API
+            var washers = _viewModel.Washers.Where(u => u.Role != 1 && u.Role != 2).ToList();
 
             if (!washers.Any())
             {
-                MessageBox.Show("Нет доступных мойщиков. Сначала добавьте сотрудников!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Нет доступных мойщиков!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // 2. Показываем диалог выбора мойщика
             var washerDialog = new WasherSelectionDialog(washers);
             if (washerDialog.ShowDialog() != true || washerDialog.SelectedWasher == null)
-            {
-                return; // Пользователь отменил выбор
-            }
+                return;
 
             var selectedWasher = washerDialog.SelectedWasher;
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Выбран мойщик: {selectedWasher.FullName} (Id={selectedWasher.Id})");
 
-            // 3. Назначаем мойщика в заказ И в ComboBox
-            _viewModel.CurrentOrder.SetWasherId(selectedWasher.Id);
-            WasherComboBox.SelectedValue = selectedWasher.Id; // <-- ДОБАВИТЬ ЭТО
+            try
+            {
+                this.IsEnabled = false;
 
-            // 4. Преобразуем запись в заказ
-            _viewModel.CurrentOrder.IsAppointment = false;
-            _viewModel.CurrentOrder.Status = "В работе";
+                if (_viewModel.CurrentOrder.Id > 0)
+                {
+                    // 💥 Запись УЖЕ в базе. Делаем конвертацию строго через сервер
+                    var convertedOrder = await _apiService.ConvertAppointmentToOrderAsync(
+                        _viewModel.CurrentOrder.Id,
+                        _currentShift.Id,
+                        selectedWasher.Id);
 
-            // Принудительно уведомляем UI, чтобы StatusComboBox обновился
-            _viewModel.OnPropertyChanged(nameof(_viewModel.CurrentOrder));
-            StatusComboBox.SelectedValue = "В работе";
+                    MessageBox.Show($"✅ Запись преобразована в заказ!\nМойщик назначен: {selectedWasher.FullName}",
+                        "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
 
-            // 5. Сохраняем
-            SaveButton_Click(sender, e);
+                    // Закрываем окно. Заказ сохранен, UI на главной обновится по SignalR или вручную
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    // 💥 Это НОВАЯ запись, которой еще нет в базе (нажали Плюс -> Преобразовать).
+                    // Просто меняем свойства вью-модели и вызываем обычное сохранение
+                    _viewModel.SelectedWasherId = selectedWasher.Id;
+                    _viewModel.CurrentOrder.IsAppointment = false;
+                    _viewModel.CurrentOrder.Status = "В работе";
+                    _viewModel.SetAsOrder();
+
+                    SaveButton_Click(sender, e);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при преобразовании: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                this.IsEnabled = true;
+            }
         }
 
         // Обработчик поиска по услугам
