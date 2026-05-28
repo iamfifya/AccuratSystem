@@ -27,7 +27,7 @@ namespace AccuratPanelCarWashing
         private readonly ApiService _apiService;
         private readonly WpfUser _currentUser;
 
-        public bool IsDirector => _currentUser?.Role == 1;
+        public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
 
         public List<ContractsShiftReport> Reports
         {

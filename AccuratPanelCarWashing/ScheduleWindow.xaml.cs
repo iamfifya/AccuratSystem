@@ -1,52 +1,107 @@
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using AccuratSystem.Contracts.Models;
+using Microsoft.VisualBasic.ApplicationServices;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 using EmployeeSchedule = AccuratSystem.Contracts.Models.EmployeeSchedule;
+using WpfUser = AccuratPanelCarWashing.Models.User; // ДОБАВЬТЕ ЭТУ СТРОКУ
+
 
 namespace AccuratPanelCarWashing
 {
-    public partial class ScheduleWindow : Window
+    public partial class ScheduleWindow : Window, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
-        private readonly int _currentBranchId;
+        private readonly WpfUser _currentUser; // Нужно для проверки прав (Директор)
         private DateTime _currentDate;
         private List<EmployeeSchedule> _scheduleData;
         private Dictionary<int, Border> _dayHeaders = new Dictionary<int, Border>();
         private Dictionary<string, Border> _cells = new Dictionary<string, Border>();
         private bool _isDataModified = false;
 
-        public ScheduleWindow(int branchId)
+        // Вкладки филиалов
+        private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
+        public ObservableCollection<BranchTabItem> BranchTabs
+        {
+            get => _branchTabs;
+            set { _branchTabs = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BranchTabs))); }
+        }
+
+        private BranchTabItem _selectedBranchTab;
+        public BranchTabItem SelectedBranchTab
+        {
+            get => _selectedBranchTab;
+            set
+            {
+                _selectedBranchTab = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
+                // При смене вкладки загружаем данные для нового филиала
+                if (_selectedBranchTab != null)
+                {
+                    _ = LoadScheduleAsync();
+                }
+            }
+        }
+
+        public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
+
+        public ScheduleWindow(WpfUser user) // Теперь принимаем пользователя
         {
             InitializeComponent();
             _apiService = new ApiService();
-            _currentBranchId = branchId; // Сохраняем ID филиала
+            _currentUser = user;
             _currentDate = DateTime.Now;
-            _ = LoadScheduleAsync();
+            DataContext = this;
+
+            _ = InitializeTabsAsync();
+        }
+
+        private async Task InitializeTabsAsync()
+        {
+            try
+            {
+                var branches = await _apiService.GetBranchesAsync();
+                BranchTabs.Clear();
+
+                if (IsDirector)
+                    BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Все филиалы" });
+
+                foreach (var b in branches)
+                    BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
+
+                // Выбираем текущий филиал пользователя или первый из списка
+                int defaultId = _currentUser?.BranchId ?? AppSettings.CurrentBranchId;
+                SelectedBranchTab = BranchTabs.FirstOrDefault(t => t.BranchId == defaultId) ?? BranchTabs.FirstOrDefault();
+            }
+            catch (Exception ex) { MessageBox.Show($"Ошибка загрузки филиалов: {ex.Message}"); }
         }
 
         private async Task LoadScheduleAsync()
         {
+            if (SelectedBranchTab == null) return;
+
             this.IsEnabled = false;
-            _scheduleData = await _apiService.GetScheduleAsync(_currentBranchId, _currentDate.Year, _currentDate.Month);
+            int branchId = SelectedBranchTab.BranchId;
+
+            _scheduleData = await _apiService.GetScheduleAsync(branchId, _currentDate.Year, _currentDate.Month);
 
             if (_scheduleData == null || !_scheduleData.Any())
             {
                 _scheduleData = new List<EmployeeSchedule>();
-                MessageBox.Show($"График на {_currentDate:MMMM yyyy} не найден.\n\n" +
-                    "Нажмите кнопку '🔧 Создать по шаблону'.",
-                    "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Убрал MessageBox отсюда, чтобы он не спамил при переключении вкладок
             }
 
-            MonthYearText.Text = _currentBanchText();
+            MonthYearText.Text = _currentDate.ToString("MMMM yyyy");
             BuildScheduleTable();
             _isDataModified = false;
             UpdateSaveButtonState();
@@ -86,12 +141,12 @@ namespace AccuratPanelCarWashing
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (!_scheduleData.Any()) return;
+            if (SelectedBranchTab == null) return;
 
             this.IsEnabled = false;
             try
             {
-                // ПЕРЕДАЕМ branchId в API
-                await _apiService.SaveScheduleAsync(_currentBranchId, _currentDate.Year, _currentDate.Month, _scheduleData);
+                await _apiService.SaveScheduleAsync(SelectedBranchTab.BranchId, _currentDate.Year, _currentDate.Month, _scheduleData);
                 _isDataModified = false;
                 UpdateSaveButtonState();
                 MessageBox.Show($"График на {_currentDate:MMMM yyyy} сохранен", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -105,8 +160,9 @@ namespace AccuratPanelCarWashing
 
         private async void TemplateButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show("Создать шаблон графика?\nТекущий график будет заменен новым.", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (SelectedBranchTab == null) return;
 
+            var result = MessageBox.Show("Создать шаблон графика?\nТекущий график будет заменен новым.", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
                 this.IsEnabled = false;
@@ -115,8 +171,7 @@ namespace AccuratPanelCarWashing
                 _isDataModified = true;
                 UpdateSaveButtonState();
                 this.IsEnabled = true;
-
-                MessageBox.Show("Шаблон графика создан.\nНе забудьте сохранить изменения!", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Шаблон графика создан.", "Успешно");
             }
         }
 
@@ -136,10 +191,9 @@ namespace AccuratPanelCarWashing
 
         private async Task CreateDefaultScheduleAsync()
         {
-            // Здесь важно: получаем пользователей ТОЛЬКО этого филиала
-            // Если GetUsersAsync возвращает всех, фильтруем их здесь
+            int branchId = SelectedBranchTab.BranchId;
             var allEmployees = await _apiService.GetUsersAsync();
-            var employees = allEmployees.Where(u => u.BranchId == _currentBranchId).ToList();
+            var employees = allEmployees.Where(u => u.BranchId == branchId).ToList();
 
             if (!employees.Any())
             {
@@ -148,12 +202,9 @@ namespace AccuratPanelCarWashing
             }
 
             var daysInMonth = DateTime.DaysInMonth(_currentDate.Year, _currentDate.Month);
-
-            // Для шаблона берем график этого же филиала за прошлый месяц
             var prevMonthDate = _currentDate.AddMonths(-1);
-            var prevMonthSchedule = await _apiService.GetScheduleAsync(_currentBranchId, prevMonthDate.Year, prevMonthDate.Month);
+            var prevMonthSchedule = await _apiService.GetScheduleAsync(branchId, prevMonthDate.Year, prevMonthDate.Month);
 
-            // Группируем по ролям (используя ваши новые роли: 1,2 - админы, 3,4 - рабочие)
             var admins = employees.Where(e => e.Role == 1 || e.Role == 2).OrderBy(e => e.Id).ToList();
             var workers = employees.Where(e => e.Role == 3 || e.Role == 4).OrderBy(e => e.Id).ToList();
 

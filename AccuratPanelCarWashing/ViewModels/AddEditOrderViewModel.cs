@@ -152,8 +152,13 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             _currentShift = currentShift;
             _existingOrder = order;
+
+            // ИСПРАВЛЕНО: Если заказ есть в БД (Id > 0), мы его РЕДАКТИРУЕМ
             _isEditMode = order != null && order.Id > 0;
-            _isAppointment = order != null && order.IsAppointment && order.Id == 0;
+
+            // ИСПРАВЛЕНО: Флаг записи берем напрямую из модели, без проверки Id == 0
+            _isAppointment = order != null && order.IsAppointment;
+
             _currentCalc = null;
 
             InitializeOrder();
@@ -367,8 +372,17 @@ namespace AccuratPanelCarWashing.ViewModels
         }
         private void InitializeOrder()
         {
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] InitializeOrder: _existingOrder={_existingOrder != null}, _isEditMode={_isEditMode}");
+
+            if (_existingOrder != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] _existingOrder.Id={_existingOrder.Id}, CarNumber={_existingOrder.CarNumber}, CarModel={_existingOrder.CarModel}");
+            }
+
             if (_existingOrder != null && _isEditMode)
             {
+                System.Diagnostics.Debug.WriteLine("[DEBUG] Режим редактирования");
+
                 CurrentOrder = new ContractsOrder
                 {
                     Id = _existingOrder.Id,
@@ -392,22 +406,29 @@ namespace AccuratPanelCarWashing.ViewModels
                     OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
                     BranchId = _existingOrder.BranchId,
                     Department = _existingOrder.Department,
-                    AdminId = App.CurrentUser?.Id,
-
-                    // ИСПРАВЛЕНИЕ: Клонируем список мойщиков!
+                    AdminId = _existingOrder.AdminId,
+                    DurationMinutes = _existingOrder.DurationMinutes,
                     OrderWashers = _existingOrder.OrderWashers != null
                         ? _existingOrder.OrderWashers.ToList()
                         : new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
+
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] CurrentOrder создан: Id={CurrentOrder.Id}, CarNumber={CurrentOrder.CarNumber}, CarModel={CurrentOrder.CarModel}");
+
                 _discountPercent = CurrentOrder.DiscountPercent;
                 _discountAmount = CurrentOrder.DiscountAmount;
-                SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory;
+                SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory > 0 ? CurrentOrder.BodyTypeCategory : 1;
                 _currentDepartment = CurrentOrder.Department ?? "Wash";
                 OnPropertyChanged(nameof(CurrentDepartment));
-                _windowTitle = "✏ Редактирование заказа";
+
+                _windowTitle = _isAppointment ? "✏ Редактирование записи" : "✏ Редактирование заказа";
+
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] _windowTitle={_windowTitle}");
             }
             else if (_existingOrder != null && _isAppointment)
             {
+                System.Diagnostics.Debug.WriteLine("[DEBUG] Режим редактирования записи");
+
                 CurrentOrder = new ContractsOrder
                 {
                     Id = 0,
@@ -421,27 +442,30 @@ namespace AccuratPanelCarWashing.ViewModels
                     ExtraCost = _existingOrder.ExtraCost,
                     ExtraCostReason = _existingOrder.ExtraCostReason,
                     Status = "Предварительная запись",
+                    PaymentMethod = "Не указано",
                     IsAppointment = true,
+                    ShiftId = 0,
+                    BranchId = _existingOrder.BranchId,
                     ClientId = _existingOrder.ClientId,
                     Notes = _existingOrder.Notes,
                     DiscountPercent = _existingOrder.DiscountPercent,
                     DiscountAmount = _existingOrder.DiscountAmount,
                     OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
-                    BranchId = _existingOrder.BranchId,
                     Department = _existingOrder.Department,
-
-                    // ИСПРАВЛЕНИЕ: Клонируем список мойщиков для конвертированной записи!
                     OrderWashers = _existingOrder.OrderWashers != null
                         ? _existingOrder.OrderWashers.ToList()
                         : new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
-                SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory;
+
                 _currentDepartment = CurrentOrder.Department ?? "Wash";
                 OnPropertyChanged(nameof(CurrentDepartment));
-                _windowTitle = "✏ Редактирование записи";
+
+                _windowTitle = "📅 Редактирование записи";
             }
             else
             {
+                System.Diagnostics.Debug.WriteLine("[DEBUG] Режим создания нового заказа");
+
                 CurrentOrder = new ContractsOrder
                 {
                     Id = 0,
@@ -461,9 +485,6 @@ namespace AccuratPanelCarWashing.ViewModels
                     Notes = "",
                     BranchId = AppSettings.CurrentBranchId,
                     AdminId = App.CurrentUser?.Id,
-
-
-                    // Для пустого заказа просто создаем новый список
                     OrderWashers = new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
 
@@ -472,6 +493,17 @@ namespace AccuratPanelCarWashing.ViewModels
 
                 _windowTitle = "➕ Добавление заказа";
             }
+
+            OnPropertyChanged(nameof(CurrentOrder));
+            OnPropertyChanged(nameof(WindowTitle));
+        }
+
+        public void SetAsOrder()
+        {
+            _isAppointment = false;
+            OnPropertyChanged(nameof(IsAppointment));
+            _windowTitle = "✏ Редактирование заказа";
+            OnPropertyChanged(nameof(WindowTitle));
         }
 
         public async Task LoadWashersAsync()
@@ -571,9 +603,9 @@ namespace AccuratPanelCarWashing.ViewModels
 
         public bool Validate()
         {
+            // 🔥 ИСПРАВЛЕНО: используем CurrentOrder напрямую, а не _viewModel.CurrentOrder
             if (!IsAppointment)  // Только для обычных заказов
             {
-                // Проверяем, выбран ли исполнитель через метод расширения
                 if (!CurrentOrder.GetWasherId().HasValue || CurrentOrder.GetWasherId().Value <= 0)
                 {
                     MessageBox.Show("Выберите сотрудника (мойщика), который выполнял заказ!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);

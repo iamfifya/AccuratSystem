@@ -1,4 +1,5 @@
 <Window x:Class="AccuratPanelCarWashing.ReportsWindow"
+        x:Name="RootWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Отчеты по сменам"
@@ -37,7 +38,7 @@
                 
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
-                        <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, ElementName=RootWindow, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     </Style>
                 </TabControl.ItemContainerStyle>
 

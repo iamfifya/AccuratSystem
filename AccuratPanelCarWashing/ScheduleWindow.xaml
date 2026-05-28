@@ -1,15 +1,14 @@
 <Window x:Class="AccuratPanelCarWashing.ScheduleWindow"
+        x:Name="RootWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AccuratPanelCarWashing"
-        mc:Ignorable="d"
+        xmlns:controls="clr-namespace:AccuratPanelCarWashing.Controls"
         Title="График работы"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
-        MinWidth="1000" MinHeight="600"
-        Width="1200" Height="700"
+        MinWidth="1100" MinHeight="600"
+        Width="1200" Height="750"
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"
@@ -18,13 +17,13 @@
         Foreground="Black">
 
     <Window.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Style x:Key="HeaderCellStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
-
         <Style x:Key="DayHeaderCellStyle" TargetType="TextBlock" BasedOn="{StaticResource HeaderCellStyle}">
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Padding" Value="5,8"/>
@@ -34,16 +33,55 @@
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Вкладки филиалов -->
             <RowDefinition Height="Auto"/>
+            <!-- Заголовок -->
             <RowDefinition Height="Auto"/>
+            <!-- Навигация по месяцам -->
             <RowDefinition Height="Auto"/>
+            <!-- Легенда -->
+            <RowDefinition Height="Auto"/>
+            <!-- Шапка таблицы -->
             <RowDefinition Height="*"/>
+            <!-- Сама таблица (скролл) -->
             <RowDefinition Height="Auto"/>
+            <!-- Кнопки -->
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="ГРАФИК РАБОТЫ СОТРУДНИКОВ" FontSize="20" FontWeight="Black" Foreground="#2C3E50" Margin="0,0,0,15"/>
+        <!-- 1. Вкладки филиалов (используем общий стиль из ресурсов) -->
+        <TabControl Grid.Row="0" 
+            ItemsSource="{Binding BranchTabs}" 
+            SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
+            Background="Transparent" 
+            BorderThickness="0" 
+            Margin="0,0,0,15">
 
-        <DockPanel Grid.Row="1" Margin="0,0,0,15" LastChildFill="False">
+            <TabControl.ItemContainerStyle>
+                <!-- 
+          ВАЖНО: BasedOn="{StaticResource {x:Type TabItem}}" 
+          говорит WPF: "Возьми всё оформление из общего стиля TabItem в ResourceDictionary, 
+          но добавь сюда специфическую логику видимости" 
+        -->
+                <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                    <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, ElementName=RootWindow, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                </Style>
+            </TabControl.ItemContainerStyle>
+
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding BranchName}" FontSize="12" FontWeight="Bold"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+
+            <TabControl.ContentTemplate>
+                <DataTemplate/>
+            </TabControl.ContentTemplate>
+        </TabControl>
+
+
+        <TextBlock Grid.Row="1" Text="ГРАФИК РАБОТЫ СОТРУДНИКОВ" FontSize="20" FontWeight="Black" Foreground="#2C3E50" Margin="0,0,0,15" HorizontalAlignment="Center"/>
+
+        <DockPanel Grid.Row="2" Margin="0,0,0,15" LastChildFill="False">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                 <Button Content="◀" Click="PrevMonth_Click" Width="35" Height="35" FontSize="16" FontWeight="Bold" Background="#3498DB" Foreground="White" BorderThickness="0"/>
                 <Border Background="White" BorderBrush="#BDC3C7" BorderThickness="1,1,1,1" Padding="15,0" Margin="5,0" Width="200" Height="40">
@@ -57,7 +95,7 @@
             </StackPanel>
         </DockPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Легенда (Левый клик - переключить, Правый клик - очистить):" FontWeight="Medium" Margin="0,0,15,0" VerticalAlignment="Center"/>
             <Border Width="15" Height="15" Background="#A9DFBF" BorderBrush="Gray" BorderThickness="1"/>
             <TextBlock Text=" Р - Рабочий" VerticalAlignment="Center" Margin="0,0,15,0"/>
@@ -67,20 +105,16 @@
             <TextBlock Text=" П - Пропуск" VerticalAlignment="Center" Margin="0,0,10,0"/>
         </StackPanel>
 
-        <Border Grid.Row="3" Background="#2C3E50" Height="45" CornerRadius="4,4,0,0">
+        <Border Grid.Row="4" Background="#2C3E50" Height="45" CornerRadius="4,4,0,0">
             <Grid x:Name="HeaderGrid" Background="#2C3E50">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="150" MinWidth="120"/>
                 </Grid.ColumnDefinitions>
-
-                <TextBlock Text="Сотрудник / День" Style="{StaticResource HeaderCellStyle}" 
-                           HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,8"/>
+                <TextBlock Text="Сотрудник / День" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,8"/>
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="4" 
-              VerticalScrollBarVisibility="Auto" 
-              HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <Grid x:Name="ScheduleGrid" VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="150" MinWidth="120"/>
@@ -88,22 +122,9 @@
             </Grid>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
-            <Button x:Name="SaveButton" 
-                    Content="💾 Сохранить" 
-                    Click="SaveButton_Click" 
-                    MinWidth="100" Height="35" 
-                    Margin="20,5,5,5" 
-                    Background="#27AE60" 
-                    Foreground="White"
-                    IsEnabled="False"/>
-            <Button Content="✖ Закрыть" Click="CloseButton_Click" 
-                    MinWidth="100" Height="35"
-                    Margin="5"
-                    Background="#E74C3C"
-                    Foreground="White"
-                    FontWeight="Bold"
-                    BorderThickness="0"/>
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
+            <Button x:Name="SaveButton" Content="💾 Сохранить" Click="SaveButton_Click" MinWidth="100" Height="35" Margin="20,5,5,5" Background="#27AE60" Foreground="White" IsEnabled="False"/>
+            <Button Content="✖ Закрыть" Click="CloseButton_Click" MinWidth="100" Height="35" Margin="5" Background="#E74C3C" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
         </StackPanel>
     </Grid>
 </Window>

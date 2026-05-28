@@ -23,21 +23,11 @@
                 string roleName;
                 switch (Role)
                 {
-                    case 1:
-                        roleName = "Директор";
-                        break;
-                    case 2:
-                        roleName = "Админ";
-                        break;
-                    case 3:
-                        roleName = "Сервис";
-                        break;
-                    case 4:
-                        roleName = "Мойщик";
-                        break;
-                    default:    
-                        roleName = "Сотрудник";
-                        break;
+                    case 1: roleName = "Директор"; break;
+                    case 2: roleName = "Админ"; break;
+                    case 3: roleName = "Мойщик"; break;
+                    case 4: roleName = "Сервис"; break;
+                    default: roleName = "Сотрудник"; break;
                 }
                 return $"{FullName} ({roleName})";
             }

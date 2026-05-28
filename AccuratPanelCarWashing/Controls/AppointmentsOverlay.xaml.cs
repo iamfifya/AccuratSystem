@@ -447,17 +447,37 @@ namespace AccuratPanelCarWashing.Controls
             OnEditRequested?.Invoke(SelectedItem);
         }
 
-        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedItem == null)
             {
-                MessageBox.Show("Выберите запись для удаления", "Внимание");
+                MessageBox.Show("Выберите запись для удаления", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (MessageBox.Show("Удалить выбранную запись?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            var result = MessageBox.Show($"Удалить запись для {SelectedItem.CarNumber}?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result != MessageBoxResult.Yes) return;
+
+            try
             {
-                MessageBox.Show("Метод удаления записей нужно добавить в API. Обратитесь к разработчику (ко мне) =)", "В разработке");
+                bool success = await _apiService.DeleteOrderAsync(SelectedItem.Id);
+                if (success)
+                {
+                    MessageBox.Show("Запись удалена", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await LoadAppointmentsAsync(); // Перезагружаем список
+
+                    // Обновляем MainWindow
+                    var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                    mainWindow?.RefreshData();
+                }
+                else
+                {
+                    MessageBox.Show("Не удалось удалить запись", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -29,7 +29,7 @@ namespace AccuratPanelCarWashing
         private readonly WpfUser _currentUser; // UI-пользователь с IsAdmin
 
         // Свойства для вкладок
-        public bool IsDirector => _currentUser?.Role == 1;
+        public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
 
         private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
         public ObservableCollection<BranchTabItem> BranchTabs

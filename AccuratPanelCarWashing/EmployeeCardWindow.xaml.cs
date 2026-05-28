@@ -43,16 +43,19 @@ namespace AccuratPanelCarWashing
         {
             try
             {
-                // API возвращает ContractsUser, поэтому мапим их в WpfUser
                 var usersFromApi = await _apiService.GetUsersAsync();
                 _allEmployees = usersFromApi.Select(u => new WpfUser
                 {
                     Id = u.Id,
                     FullName = u.FullName,
                     Login = u.Login,
+                    PasswordHash = u.PasswordHash,           // ← ДОБАВИТЬ
                     Role = u.Role,
+                    IsActive = u.IsActive,                   // ← ДОБАВИТЬ
+                    Phone = u.Phone,
                     BranchId = u.BranchId,
-                    Phone = u.Phone
+                    BaseWagePercentage = u.BaseWagePercentage,   // ← ДОБАВИТЬ
+                    BaseSalaryPerShift = u.BaseSalaryPerShift    // ← ДОБАВИТЬ
                 }).ToList();
 
                 await Dispatcher.InvokeAsync(() => ApplyFilter());
@@ -75,17 +78,7 @@ namespace AccuratPanelCarWashing
                     e.Login.IndexOf(_searchFilter, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            filtered = filtered.OrderBy(e =>
-            {
-                switch (e.Role)
-                {
-                    case 1: return 1;
-                    case 2: return 2;
-                    case 4: return 3;
-                    case 3: return 4;
-                    default: return 5;
-                }
-            }).ThenBy(e => e.FullName);
+            filtered = filtered.OrderBy(e => e.Role).ThenBy(e => e.FullName);
 
             EmployeesList = filtered.ToList();
             EmployeesListView.ItemsSource = EmployeesList;
@@ -106,9 +99,25 @@ namespace AccuratPanelCarWashing
 
         private void OpenEditEmployee(WpfUser employee)
         {
-            var editWin = new AddEditEmployeeWindow(employee);
+            // Создаем контрактный объект для API
+            var contractUser = new ContractsUser
+            {
+                Id = employee.Id,
+                FullName = employee.FullName,
+                Login = employee.Login,
+                PasswordHash = employee.PasswordHash,
+                Role = employee.Role,
+                IsActive = employee.IsActive,
+                Phone = employee.Phone,
+                BranchId = employee.BranchId,
+                BaseWagePercentage = employee.BaseWagePercentage,
+                BaseSalaryPerShift = employee.BaseSalaryPerShift
+            };
+
+            var editWin = new AddEditEmployeeWindow(contractUser);
             if (editWin.ShowDialog() == true) _ = LoadEmployeesAsync();
         }
+
 
         private void EmployeesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
             => _selectedEmployee = EmployeesListView.SelectedItem as WpfUser;
@@ -121,12 +130,19 @@ namespace AccuratPanelCarWashing
 
         private void ScheduleButton_Click(object sender, RoutedEventArgs e)
         {
-            // ИСПРАВЛЕНО: SelectedBranchTab здесь нет. 
-            // Берем текущий ID филиала из глобальных настроек приложения.
-            int branchId = AppSettings.CurrentBranchId;
+            // Явно приводим App.CurrentUser к типу WpfUser, чтобы компилятор не путался
+            WpfUser currentUser = App.CurrentUser as WpfUser;
 
-            var scheduleWin = new ScheduleWindow(branchId);
+            if (currentUser == null)
+            {
+                MessageBox.Show("Ошибка: Пользователь не авторизован", "Ошибка");
+                return;
+            }
+
+            var scheduleWin = new ScheduleWindow(currentUser);
             scheduleWin.ShowDialog();
         }
+
+
     }
 }

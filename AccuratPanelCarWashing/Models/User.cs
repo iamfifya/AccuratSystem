@@ -8,39 +8,26 @@ namespace AccuratPanelCarWashing.Models
     public class User : AccuratSystem.Contracts.Models.User, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
 
-        // Свойство для красивого отображения роли
+        [JsonIgnore]
+        public bool IsAdmin => Role == 1 || Role == 2;
+
+        // 🔧 ДОБАВЛЕНО: Свойство для отображения в UI
+        [JsonIgnore]
         public string RoleDisplay
         {
             get
             {
-                switch (this.Role)
+                switch (Role)
                 {
                     case 1: return "👑 Директор";
-                    case 2: return "⚙️ Администратор";
-                    case 3: return "🛠️ Сотрудник сервиса";
-                    case 4: return "👤 Мойщик";
+                    case 2: return "🛡️ Администратор";
+                    case 3: return "🧽 Мойщик";
+                    case 4: return "🔧 Сервис";
                     default: return "👤 Сотрудник";
                 }
-            }
-        }
-
-
-        [JsonIgnore]
-        public bool IsAdmin
-        {
-            get { return Role == 1 || Role == 2; }
-            set
-            {
-                Role = value ? 2 : 3;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsAdmin));
-                OnPropertyChanged(nameof(RoleDisplay)); // Обновляем и роль тоже
             }
         }
 

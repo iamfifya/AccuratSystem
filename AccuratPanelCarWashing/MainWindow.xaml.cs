@@ -50,9 +50,9 @@ namespace AccuratPanelCarWashing
         private List<ContractsShift> _allShiftsCache = new List<ContractsShift>();
         private bool _isDataLoading = false;
 
-        public bool IsDirector => _currentUser?.Role == 1;
+        public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
         public bool IsSingleBranch => _currentUser?.Role != 1;
-        public bool IsAdminOrDirector => _currentUser?.Role == 1 || _currentUser?.Role == 2;
+        public bool IsAdminOrDirector => UserPermissions.IsManagement(_currentUser);
 
         private List<ContractsService> _cachedServices = new List<ContractsService>();
         private List<ContractsUser> _cachedUsers = new List<ContractsUser>();
@@ -189,9 +189,36 @@ namespace AccuratPanelCarWashing
                 _allShiftsCache = await _apiService.GetShiftsAsync();
                 _cachedUsers = await _apiService.GetUsersAsync();
                 _cachedServices = await _apiService.GetServicesAsync();
-                _allOrders = await _apiService.GetOrdersAsync();
+                var allOrdersFromApi = await _apiService.GetOrdersAsync();
 
                 var newTabs = new ObservableCollection<BranchTabItem>();
+
+                if (_currentShift != null)
+                {
+                    if (IsSingleBranch)
+                    {
+                        // Обычный сотрудник видит:
+                        // 1. Заказы своей смены на своем филиале
+                        // 2. ВСЕ записи (appointments) на своем филиале
+                        _allOrders = allOrdersFromApi
+                            .Where(o =>
+                                (o.ShiftId == _currentShift.Id && o.BranchId == AppSettings.CurrentBranchId) ||
+                                (o.IsAppointment && o.BranchId == AppSettings.CurrentBranchId))
+                            .ToList();
+                    }
+                    else
+                    {
+                        // Админ видит все заказы текущей смены + все записи
+                        _allOrders = allOrdersFromApi
+                            .Where(o => o.ShiftId == _currentShift.Id || o.IsAppointment)
+                            .ToList();
+                    }
+                }
+                else
+                {
+                    // Нет смены - показываем только записи
+                    _allOrders = allOrdersFromApi.Where(o => o.IsAppointment).ToList();
+                }
 
                 if (IsAdminOrDirector)
                 {
@@ -256,14 +283,13 @@ namespace AccuratPanelCarWashing
         {
             int currentShiftId = _currentShift?.Id ?? -1;
 
-            // 1. ЖЕСТКИЙ ФИЛЬТР: 
-            // - Обычные заказы: только для ТЕКУЩЕЙ смены выбранного филиала
-            // - Записи (IsAppointment): только активные на СЕГОДНЯ для выбранного филиала
+            // Показываем ВСЕ будущие записи, а не только на сегодня
             var filteredOrders = _allOrders.Where(o =>
                 o.BranchId == _currentBranchId &&
                 (
                     (!o.IsAppointment && o.ShiftId == currentShiftId) ||
-                    (o.IsAppointment && o.Time.Date == DateTime.Now.Date && (o.Status == "Предварительная запись" || o.Status == "Запись" || o.Status == "Ожидает"))
+                    (o.IsAppointment && o.Time >= DateTime.Now.Date &&
+                     (o.Status == "Предварительная запись" || o.Status == "Запись" || o.Status == "Ожидает"))
                 )
             ).AsEnumerable();
 
@@ -517,12 +543,17 @@ namespace AccuratPanelCarWashing
 
         private void OpenEditOrder(OrderDisplayItem orderDisplay)
         {
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] OpenEditOrder: orderDisplay.Id={orderDisplay.Id}");
+
             var originalOrder = _allOrders.FirstOrDefault(o => o.Id == orderDisplay.Id);
+
             if (originalOrder == null && orderDisplay.Id > 0)
             {
                 MessageBox.Show($"Заказ #{orderDisplay.Id} не найден в кэше.\nПопробуйте обновить данные (кнопка 🔄).", "Предупреждение");
                 return;
             }
+
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] originalOrder найден: Id={originalOrder?.Id}, CarNumber={originalOrder?.CarNumber}");
 
             if (originalOrder != null)
             {

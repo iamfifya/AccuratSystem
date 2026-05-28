@@ -234,6 +234,21 @@ namespace AccuratPanelCarWashing.Services
             }
         }
 
+        public async Task<bool> DeleteOrderAsync(int orderId)
+        {
+            try
+            {
+                var response = await _http.DeleteAsync($"Orders/{orderId}");
+                response.EnsureSuccessStatusCode();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка удаления заказа: {ex.Message}");
+                return false;
+            }
+        }
+
         #endregion
 
         #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА

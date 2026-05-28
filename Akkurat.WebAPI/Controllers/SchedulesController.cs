@@ -14,14 +14,13 @@ namespace Accurat.WebAPI.Controllers
         private readonly AppDbContext _context;
         public SchedulesController(AppDbContext context) => _context = context;
 
-        // ДОБАВЛЯЕМ branchId в путь: api/Schedules/1/2024/10
         [HttpGet("{branchId}/{year}/{month}")]
         public async Task<ActionResult<List<EmployeeScheduleDto>>> GetSchedule(int branchId, int year, int month)
         {
             // 1. Получаем только тех сотрудников, которые привязаны к этому филиалу
-            // Либо тех, кто вообще активен (если директор хочет видеть всех)
+            // Используем UserRole.Director вместо числа 1
             var users = await _context.Users
-                .Where(u => u.IsActive && (u.BranchId == branchId || u.Role == 1))
+                .Where(u => u.IsActive && (u.BranchId == branchId || u.Role == (int)UserRole.Director))
                 .ToListAsync();
 
             var entries = await _context.EmployeeSchedules
@@ -35,13 +34,13 @@ namespace Accurat.WebAPI.Controllers
                 {
                     EmployeeId = u.Id,
                     EmployeeName = u.FullName,
-                    // Используем вашу новую логику ролей
+                    // Используем UserRole для определения должности
                     Position = u.Role switch
                     {
-                        1 => "Директор",
-                        2 => "Администратор",
-                        3 => "Сотрудник сервиса",
-                        4 => "Мойщик",
+                        (int)UserRole.Director => "Директор",
+                        (int)UserRole.Administrator => "Администратор",
+                        (int)UserRole.ServiceStaff => "Сотрудник сервиса",
+                        (int)UserRole.Washer => "Мойщик",
                         _ => "Сотрудник"
                     },
                     Days = new Dictionary<int, string>()
@@ -60,7 +59,6 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost("{branchId}/{year}/{month}")]
         public async Task<IActionResult> SaveSchedule(int branchId, int year, int month, [FromBody] List<EmployeeScheduleDto> scheduleData)
         {
-            // Удаляем старые записи ТОЛЬКО для этого филиала
             var oldEntries = await _context.EmployeeSchedules
                 .Where(e => e.BranchId == branchId && e.Year == year && e.Month == month)
                 .ToListAsync();
@@ -76,7 +74,7 @@ namespace Accurat.WebAPI.Controllers
                     _context.EmployeeSchedules.Add(new EmployeeScheduleEntry
                     {
                         EmployeeId = emp.EmployeeId,
-                        BranchId = branchId, // ТЕПЕРЬ ПЕРЕДАЕМ BranchId в базу!
+                        BranchId = branchId,
                         Year = year,
                         Month = month,
                         Day = kv.Key,
@@ -88,7 +86,6 @@ namespace Accurat.WebAPI.Controllers
             return Ok();
         }
     }
-
 
     public class EmployeeScheduleDto
     {

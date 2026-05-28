@@ -257,7 +257,14 @@ namespace AccuratPanelCarWashing
                     _viewModel.CurrentOrder.SetWasherId(wid);
                 }
                 if (ClientComboBox.SelectedValue is int cid) _viewModel.CurrentOrder.ClientId = cid;
-                if (StatusComboBox.SelectedValue is string st) _viewModel.CurrentOrder.Status = st;
+                if (StatusComboBox.SelectedValue is string st && !string.IsNullOrWhiteSpace(st))
+                {
+                    _viewModel.CurrentOrder.Status = st;
+                }
+                else if (string.IsNullOrEmpty(_viewModel.CurrentOrder.Status))
+                {
+                    _viewModel.CurrentOrder.Status = "В работе"; // Дефолтный статус, если не установлен
+                }
                 if (PaymentMethodComboBox.SelectedValue is string pm) _viewModel.CurrentOrder.PaymentMethod = pm;
 
                 //  3. ЧИТАЕМ ДАННЫЕ ИЗ ВЫБРАННОЙ ЗОНЫ
@@ -297,11 +304,27 @@ namespace AccuratPanelCarWashing
                 }
 
                 this.IsEnabled = false; // Блокируем UI на время запроса
-
-                if (_currentShift != null)
+                
+                // Для записей (appointments) НЕ привязываем к смене
+                if (_viewModel.CurrentOrder.IsAppointment)
                 {
-                    _viewModel.CurrentOrder.ShiftId = _currentShift.Id;
-                    _viewModel.CurrentOrder.BranchId = _currentShift.BranchId;
+                    _viewModel.CurrentOrder.ShiftId = 0; // Записи не привязаны к смене
+                                                         // BranchId уже установлен из UI, НЕ перезаписываем его!
+                }
+                else
+                {
+                    if (_currentShift != null && !_currentShift.IsClosed)
+                    {
+                        _viewModel.CurrentOrder.ShiftId = _currentShift.Id;
+                        _viewModel.CurrentOrder.BranchId = _currentShift.BranchId;
+                    }
+                    else if (!_viewModel.CurrentOrder.IsAppointment)
+                    {
+                        // Если это не запись, а заказ, но смены нет — предупреждаем
+                        MessageBox.Show("Нельзя сохранить заказ: на этом филиале нет активной смены!\nСначала начните смену.",
+                            "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
                 }
 
                 // ПРОВЕРКА: нельзя создать заказ сервиса для филиала без сервисных зон
@@ -369,13 +392,51 @@ namespace AccuratPanelCarWashing
         // Метод для "Преобразования записи в заказ"
         private async void ConvertToOrderButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show("Преобразовать запись в активный заказ?", "Подтверждение", MessageBoxButton.YesNo);
-            if (result == MessageBoxResult.Yes)
+            // Проверяем наличие активной смены
+            if (_currentShift == null || _currentShift.IsClosed)
             {
-                _viewModel.CurrentOrder.IsAppointment = false;
-                _viewModel.CurrentOrder.Status = "В работе";
-                SaveButton_Click(sender, e);
+                MessageBox.Show("Нельзя преобразовать запись в заказ: на этом филиале нет активной смены!\nСначала начните смену.",
+                    "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            var result = MessageBox.Show("Преобразовать запись в активный заказ?", "Подтверждение", MessageBoxButton.YesNo);
+            if (result != MessageBoxResult.Yes) return;
+
+            // 1. Загружаем список мойщиков для диалога выбора
+            var allUsers = await _apiService.GetUsersAsync();
+            var washers = allUsers.Where(u => u.Role != 1 && u.Role != 2).ToList(); // Только мойщики (не админы)
+
+            if (!washers.Any())
+            {
+                MessageBox.Show("Нет доступных мойщиков. Сначала добавьте сотрудников!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // 2. Показываем диалог выбора мойщика
+            var washerDialog = new WasherSelectionDialog(washers);
+            if (washerDialog.ShowDialog() != true || washerDialog.SelectedWasher == null)
+            {
+                return; // Пользователь отменил выбор
+            }
+
+            var selectedWasher = washerDialog.SelectedWasher;
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Выбран мойщик: {selectedWasher.FullName} (Id={selectedWasher.Id})");
+
+            // 3. Назначаем мойщика в заказ И в ComboBox
+            _viewModel.CurrentOrder.SetWasherId(selectedWasher.Id);
+            WasherComboBox.SelectedValue = selectedWasher.Id; // <-- ДОБАВИТЬ ЭТО
+
+            // 4. Преобразуем запись в заказ
+            _viewModel.CurrentOrder.IsAppointment = false;
+            _viewModel.CurrentOrder.Status = "В работе";
+
+            // Принудительно уведомляем UI, чтобы StatusComboBox обновился
+            _viewModel.OnPropertyChanged(nameof(_viewModel.CurrentOrder));
+            StatusComboBox.SelectedValue = "В работе";
+
+            // 5. Сохраняем
+            SaveButton_Click(sender, e);
         }
 
         // Обработчик поиска по услугам
