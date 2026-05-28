@@ -191,34 +191,12 @@ namespace AccuratPanelCarWashing
                 _cachedServices = await _apiService.GetServicesAsync();
                 var allOrdersFromApi = await _apiService.GetOrdersAsync();
 
-                var newTabs = new ObservableCollection<BranchTabItem>();
+                // 💥 ИСПРАВЛЕНИЕ: Просто сохраняем ВСЕ заказы с сервера в локальный кэш!
+                // Нам не нужно их тут жестко резать, так как методы ApplyFilterAndDisplay() 
+                // и UpdateInfo() сами прекрасно всё отфильтруют по нужной смене и филиалу.
+                _allOrders = allOrdersFromApi;
 
-                if (_currentShift != null)
-                {
-                    if (IsSingleBranch)
-                    {
-                        // Обычный сотрудник видит:
-                        // 1. Заказы своей смены на своем филиале
-                        // 2. ВСЕ записи (appointments) на своем филиале
-                        _allOrders = allOrdersFromApi
-                            .Where(o =>
-                                (o.ShiftId == _currentShift.Id && o.BranchId == AppSettings.CurrentBranchId) ||
-                                (o.IsAppointment && o.BranchId == AppSettings.CurrentBranchId))
-                            .ToList();
-                    }
-                    else
-                    {
-                        // Админ видит все заказы текущей смены + все записи
-                        _allOrders = allOrdersFromApi
-                            .Where(o => o.ShiftId == _currentShift.Id || o.IsAppointment)
-                            .ToList();
-                    }
-                }
-                else
-                {
-                    // Нет смены - показываем только записи
-                    _allOrders = allOrdersFromApi.Where(o => o.IsAppointment).ToList();
-                }
+                var newTabs = new ObservableCollection<BranchTabItem>();
 
                 if (IsAdminOrDirector)
                 {
@@ -242,7 +220,7 @@ namespace AccuratPanelCarWashing
 
                 BranchTabs = newTabs;
 
-                // ВОССТАНАВЛИВАЕМ вкладку (а не просто берем первую)
+                // ВОССТАНАВЛИВАЕМ вкладку
                 if (BranchTabs.Any())
                 {
                     var tabToSelect = BranchTabs.FirstOrDefault(t => t.BranchId == savedBranchId) ?? BranchTabs.First();
@@ -254,9 +232,10 @@ namespace AccuratPanelCarWashing
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentBranchDisplay)));
                 }
 
-                // Выбираем смену для ТЕКУЩЕГО филиала
+                // 💥 ТОЛЬКО ТЕПЕРЬ мы знаем правильный филиал и можем найти активную смену
                 _currentShift = _allShiftsCache.FirstOrDefault(s => !s.IsClosed && s.BranchId == _currentBranchId);
 
+                // Теперь методы вытащат из полного кэша _allOrders то, что нужно
                 ApplyFilterAndDisplay();
                 UpdateInfo();
             }
