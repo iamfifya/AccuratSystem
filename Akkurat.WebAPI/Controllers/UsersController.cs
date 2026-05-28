@@ -74,7 +74,7 @@ namespace Accurat.WebAPI.Controllers
 
             if (user == null) return Unauthorized(new { message = "Неверный логин или пароль" });
 
-            // !!! ИСПРАВЛЕНИЕ: используем BranchId ИЗ ЗАПРОСА (выбранный в WPF), 
+            // !!!  используем BranchId ИЗ ЗАПРОСА (выбранный в WPF), 
             // а не тот, что привязан к пользователю в базе
             TenantFeaturesDto features = new TenantFeaturesDto();
 

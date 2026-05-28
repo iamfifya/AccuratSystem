@@ -32,8 +32,8 @@ namespace AccuratPanelCarWashing
             {
                 { 1, "👑 Директор" },
                 { 2, "👨‍💼 Администратор" },
-                { 3, "🛠️ Сотрудник сервиса" },
-                { 4, "🧽 Мойщик" }
+                { 3, "🧽 Мойщик" },
+                { 4, "🛠️ Сотрудник сервиса" }
             };
 
             if (employee == null)
@@ -42,7 +42,7 @@ namespace AccuratPanelCarWashing
                 CurrentEmployee = new ContractsUser
                 {
                     IsActive = true,
-                    Role = 4,
+                    Role = 3, // По умолчанию ставим мойщика (3), а не сервис (4)
                     BranchId = AppSettings.CurrentBranchId
                 };
                 Title = "➕ Добавление сотрудника (API)";

@@ -36,7 +36,7 @@ namespace AccuratPanelCarWashing.Models
             {
                 if (IsCompleted || StatusStartTime == null) return "";
 
-                // ИСПРАВЛЕНИЕ: Переводим время сервера (UTC) в локальное время компьютера
+                //  Переводим время сервера (UTC) в локальное время компьютера
                 var elapsed = DateTime.Now - StatusStartTime.Value.ToLocalTime();
                 return elapsed.ToString(@"hh\:mm\:ss");
             }

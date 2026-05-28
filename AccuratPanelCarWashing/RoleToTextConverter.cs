@@ -14,8 +14,8 @@ namespace AccuratPanelCarWashing
                 {
                     case 1: return "Директор";
                     case 2: return "Администратор";
-                    case 3: return "Сотрудник сервиса";
-                    case 4: return "Мойщик";
+                    case 3: return "Мойщик";
+                    case 4: return "Сотрудник сервиса";
                     default: return "Неизвестно";
                 }
             }

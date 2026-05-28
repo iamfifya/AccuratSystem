@@ -43,7 +43,7 @@
                                       Margin="5">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding FullName}" FontSize="13" Margin="5,0" Foreground="Black"/>
-                                    <TextBlock Text="{Binding IsAdmin, Converter={StaticResource BoolToRoleConverter}}" 
+                                    <TextBlock Text="{Binding RoleDisplay}" 
                                                FontSize="10" Foreground="#7F8C8D" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </CheckBox>

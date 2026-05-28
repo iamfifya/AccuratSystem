@@ -190,7 +190,7 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    // ИСПРАВЛЕНИЕ: Добавлено .AsNoTracking(). 
+                    //  Добавлено .AsNoTracking(). 
                     // EF просто считает данные для проверки статуса, но не заблокирует ID в памяти.
                     var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
                     if (existingOrder == null) return NotFound();

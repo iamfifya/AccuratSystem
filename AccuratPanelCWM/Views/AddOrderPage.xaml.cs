@@ -102,7 +102,7 @@ namespace AccuratPanelCWM.Views
 
             int bodyCategory = BodyTypePicker.SelectedIndex + 1; // Индекс 0 = 1 категория
 
-            // ИСПРАВЛЕНИЕ: Добавили защиту от NULL (?. и ??)
+            //  Добавили защиту от NULL (?. и ??)
             var selectedIds = ServicesCollectionView.SelectedItems?
                                 .Cast<ServiceUiWrapper>()
                                 .Select(s => s.Id).ToList() ?? new List<int>();

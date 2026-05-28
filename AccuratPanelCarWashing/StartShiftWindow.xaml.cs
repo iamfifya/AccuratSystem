@@ -1,6 +1,6 @@
 using AccuratSystem.Contracts.Models;
 using AccuratPanelCarWashing.Services;
-using AccuratPanelCarWashing.Models; // <-- ВАЖНО: для AppSettings
+using AccuratPanelCarWashing.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,7 +17,6 @@ namespace AccuratPanelCarWashing
         private DateTime _selectedDate;
         private List<EmployeeSelection> _employees;
 
-        // Сюда MainWindow передает ID филиала из активной вкладки
         public int? PreselectedBranchId { get; set; }
 
         public DateTime SelectedDate
@@ -48,17 +47,31 @@ namespace AccuratPanelCarWashing
             {
                 var allEmployees = await _apiService.GetUsersAsync();
 
+                //  Формируем нормальное название должности сразу
                 Employees = allEmployees.Where(e => e.IsActive).Select(e => new EmployeeSelection
                 {
                     Id = e.Id,
                     FullName = e.FullName,
-                    IsAdmin = e.Role == 1 || e.Role == 2,
+                    RoleDisplay = GetRoleName(e.Role), // Формируем строку
                     IsSelected = false
                 }).ToList();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки сотрудников: {ex.Message}");
+            }
+        }
+
+        // Вспомогательный метод для правильного маппинга ролей
+        private string GetRoleName(int role)
+        {
+            switch (role)
+            {
+                case 1: return "Директор";
+                case 2: return "Администратор";
+                case 3: return "Мойщик";
+                case 4: return "Сотрудник сервиса";
+                default: return "Сотрудник";
             }
         }
 
@@ -76,10 +89,8 @@ namespace AccuratPanelCarWashing
 
                 this.IsEnabled = false;
 
-                // 1. Определяем целевой филиал (приоритет у того, что выбран во вкладке)
                 int targetBranchId = PreselectedBranchId ?? AppSettings.CurrentBranchId;
 
-                // 2. Проверяем открытые смены ТОЛЬКО для этого филиала
                 var allShifts = await _apiService.GetShiftsAsync();
                 var openShift = allShifts.FirstOrDefault(s => !s.IsClosed && s.BranchId == targetBranchId);
 
@@ -90,14 +101,13 @@ namespace AccuratPanelCarWashing
 
                     if (result == MessageBoxResult.Yes)
                         await _apiService.CloseShiftAsync(openShift.Id);
-                    else return; // Отмена создания, если пользователь передумал
+                    else return;
                 }
 
-                // 3. Создаем новую смену для целевого филиала
                 var newShift = new Shift
                 {
-                    BranchId = targetBranchId, // Привязываем к правильному филиалу
-                    Date = DateTime.SpecifyKind(SelectedDate.Date, DateTimeKind.Utc), // UTC для Postgres
+                    BranchId = targetBranchId,
+                    Date = DateTime.SpecifyKind(SelectedDate.Date, DateTimeKind.Utc),
                     EmployeeIds = selectedIds,
                     IsClosed = false,
                     Notes = ""
@@ -131,7 +141,10 @@ namespace AccuratPanelCarWashing
         public event PropertyChangedEventHandler PropertyChanged;
         public int Id { get; set; }
         public string FullName { get; set; }
-        public bool IsAdmin { get; set; }
+
+        //  Добавили свойство для отображения должности
+        public string RoleDisplay { get; set; }
+
         private bool _isSelected;
         public bool IsSelected
         {

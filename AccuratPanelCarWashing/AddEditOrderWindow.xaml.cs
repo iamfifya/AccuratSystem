@@ -142,7 +142,7 @@ namespace AccuratPanelCarWashing
                     OrderTimeTextBox.Text = DateTime.Now.ToString("HH:mm");
                     if (allUsers.Any()) WasherComboBox.SelectedItem = allUsers.FirstOrDefault();
 
-                    // ИСПРАВЛЕНИЕ: Берем филиал строго из модели (которую мы пробросили с главной вкладки!)
+                    //  Берем филиал строго из модели (которую мы пробросили с главной вкладки!)
                     BranchComboBox.SelectedValue = _viewModel.CurrentOrder.BranchId;
                     UpdateZones(null);
                 }
