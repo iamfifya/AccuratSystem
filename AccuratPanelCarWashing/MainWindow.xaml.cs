@@ -51,7 +51,7 @@ namespace AccuratPanelCarWashing
         private bool _isDataLoading = false;
 
         public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
-        public bool IsSingleBranch => _currentUser?.Role != 1;
+        public bool IsSingleBranch => _currentUser?.RoleId != 1;
         public bool IsAdminOrDirector => UserPermissions.IsManagement(_currentUser);
 
         private List<ContractsService> _cachedServices = new List<ContractsService>();
@@ -104,8 +104,6 @@ namespace AccuratPanelCarWashing
             get
             {
                 if (_currentUser == null) return "Гость";
-
-                // Используем новое свойство из модели User
                 return $"{_currentUser.FullName} • {_currentUser.RoleDisplay}";
             }
         }
@@ -262,11 +260,15 @@ namespace AccuratPanelCarWashing
         {
             int currentShiftId = _currentShift?.Id ?? -1;
 
-            // Показываем ВСЕ будущие записи, а не только на сегодня
+            // 💥 ИСПРАВЛЕНИЕ ФИЛЬТРА: Расширили условие.
+            // Теперь мы железно показываем ВСЕ обычные заказы за сегодня, даже если со сменой что-то не так.
             var filteredOrders = _allOrders.Where(o =>
                 o.BranchId == _currentBranchId &&
                 (
-                    (!o.IsAppointment && o.ShiftId == currentShiftId) ||
+                    // 1. Обычные заказы: привязаны к смене ИЛИ созданы сегодня (надежная страховка)
+                    (!o.IsAppointment && (o.ShiftId == currentShiftId || o.Time.Date == DateTime.Now.Date)) ||
+
+                    // 2. Предварительные записи: от сегодня и в будущее
                     (o.IsAppointment && o.Time >= DateTime.Now.Date &&
                      (o.Status == "Предварительная запись" || o.Status == "Запись" || o.Status == "Ожидает"))
                 )

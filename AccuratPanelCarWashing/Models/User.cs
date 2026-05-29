@@ -12,24 +12,11 @@ namespace AccuratPanelCarWashing.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         [JsonIgnore]
-        public bool IsAdmin => Role == 1 || Role == 2;
+        public bool IsAdmin => RoleId == 1 || RoleId == 2;
 
-        // 🔧 ДОБАВЛЕНО: Свойство для отображения в UI
+        // 💥 ИСПРАВЛЕНИЕ: Никаких switch! Просто берем название из базы
         [JsonIgnore]
-        public string RoleDisplay
-        {
-            get
-            {
-                switch (Role)
-                {
-                    case 1: return "👑 Директор";
-                    case 2: return "🛡️ Администратор";
-                    case 3: return "🧽 Мойщик";
-                    case 4: return "🔧 Сервис";
-                    default: return "👤 Сотрудник";
-                }
-            }
-        }
+        public string RoleDisplay => Role != null ? Role.Name : "👤 Сотрудник";
 
         [JsonIgnore]
         public string DisplayString

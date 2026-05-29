@@ -85,6 +85,7 @@ namespace AccuratPanelCarWashing
                         Phone = contractsUser.Phone,
                         Login = contractsUser.Login,
                         PasswordHash = contractsUser.PasswordHash,
+                        RoleId = contractsUser.RoleId,
                         Role = contractsUser.Role,
                         IsActive = contractsUser.IsActive,
                         BranchId = contractsUser.BranchId,

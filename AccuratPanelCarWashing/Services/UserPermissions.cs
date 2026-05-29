@@ -10,14 +10,14 @@ namespace AccuratPanelCarWashing.Services
 
         // Условие В: Доступ только Администраторам и Директору (Менеджеры)
         public static bool IsManagement(User user)
-            => user != null && (user.Role == (int)UserRole.Director || user.Role == (int)UserRole.Administrator);
+            => user != null && (user.RoleId == (int)UserRole.Director || user.RoleId == (int)UserRole.Administrator);
 
         // Условие Б: Только Директор
         public static bool IsSuperUser(User user)
-            => user != null && user.Role == (int)UserRole.Director;
+            => user != null && user.RoleId == (int)UserRole.Director;
 
         // Дополнительно: доступ только для рабочих (мойщики + сервис)
         public static bool IsStaff(User user)
-            => user != null && (user.Role == (int)UserRole.Washer || user.Role == (int)UserRole.ServiceStaff);
+            => user != null && (user.RoleId == (int)UserRole.Washer || user.RoleId == (int)UserRole.ServiceStaff);
     }
 }

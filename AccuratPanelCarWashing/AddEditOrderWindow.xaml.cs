@@ -404,7 +404,7 @@ namespace AccuratPanelCarWashing
             if (result != MessageBoxResult.Yes) return;
 
             // Берём мойщиков прямо из кэша ViewModel, чтобы не делать лишний запрос к API
-            var washers = _viewModel.Washers.Where(u => u.Role != 1 && u.Role != 2).ToList();
+            var washers = _viewModel.Washers.Where(u => u.RoleId != 1 && u.RoleId != 2).ToList();
 
             if (!washers.Any())
             {

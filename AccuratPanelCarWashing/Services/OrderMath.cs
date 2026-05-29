@@ -117,7 +117,7 @@ namespace AccuratPanelCarWashing.Services
 
             stats.AdvancesTotal = advancesTaken;
 
-            if (currentEmployee.Role == 3) // 🛠️ МOЙЩИК: Считаем сделку по его заказам
+            if (currentEmployee.RoleId == 3) // 🛠️ МOЙЩИК: Считаем сделку по его заказам
             {
                 var myOrders = branchOrdersForShift.Where(o => o.GetWasherId() == currentEmployee.Id).ToList();
                 stats.PieceworkEarnings = myOrders.Sum(o => Calculate(o, allServices, allUsers).WasherEarnings);

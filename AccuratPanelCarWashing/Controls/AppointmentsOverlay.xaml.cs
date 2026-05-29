@@ -122,7 +122,7 @@ namespace AccuratPanelCarWashing.Controls
                         if (currentUser is WpfUser wpfUser)
                             isAdminOrDirector = wpfUser.IsAdmin;
                         else if (currentUser is ContractsUser contractsUser)
-                            isAdminOrDirector = contractsUser.Role == 1 || contractsUser.Role == 2;
+                            isAdminOrDirector = contractsUser.RoleId == 1 || contractsUser.RoleId == 2;
                     }
                 }
 
@@ -289,7 +289,7 @@ namespace AccuratPanelCarWashing.Controls
             {
                 // 1. Грузим мойщиков
                 var allUsers = await _apiService.GetUsersAsync();
-                var washers = allUsers.Where(u => u.Role != 1 && u.Role != 2).ToList();
+                var washers = allUsers.Where(u => u.RoleId != 1 && u.RoleId  != 2).ToList();
 
                 if (!washers.Any())
                 {

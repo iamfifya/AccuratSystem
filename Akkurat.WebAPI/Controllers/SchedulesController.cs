@@ -17,10 +17,10 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("{branchId}/{year}/{month}")]
         public async Task<ActionResult<List<EmployeeScheduleDto>>> GetSchedule(int branchId, int year, int month)
         {
-            // 1. Получаем только тех сотрудников, которые привязаны к этому филиалу
-            // Используем UserRole.Director вместо числа 1
+            // 1. Получаем сотрудников + СРАЗУ ПОДТЯГИВАЕМ ИХ РОЛИ ИЗ НОВОЙ ТАБЛИЦЫ
             var users = await _context.Users
-                .Where(u => u.IsActive && (u.BranchId == branchId || u.Role == (int)UserRole.Director))
+                .Include(u => u.RoleId) // 💥 Добавили Include, чтобы подгрузить название должности
+                .Where(u => u.IsActive && (u.BranchId == branchId || u.RoleId == (int)UserRole.Director))
                 .ToListAsync();
 
             var entries = await _context.EmployeeSchedules
@@ -34,15 +34,10 @@ namespace Accurat.WebAPI.Controllers
                 {
                     EmployeeId = u.Id,
                     EmployeeName = u.FullName,
-                    // Используем UserRole для определения должности
-                    Position = u.Role switch
-                    {
-                        (int)UserRole.Director => "Директор",
-                        (int)UserRole.Administrator => "Администратор",
-                        (int)UserRole.ServiceStaff => "Сотрудник сервиса",
-                        (int)UserRole.Washer => "Мойщик",
-                        _ => "Сотрудник"
-                    },
+
+                    // 💥 ИСПРАВЛЕНИЕ: Никаких больше switch! Просто берем имя из связанной таблицы
+                    Position = u.RoleId != 0 ? u.RoleId.ToString() : "Сотрудник",
+
                     Days = new Dictionary<int, string>()
                 };
 

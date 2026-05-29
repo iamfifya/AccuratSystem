@@ -47,31 +47,18 @@ namespace AccuratPanelCarWashing
             {
                 var allEmployees = await _apiService.GetUsersAsync();
 
-                //  Формируем нормальное название должности сразу
+                // 💥 ИСПРАВЛЕНИЕ: Берем название должности прямо из подгруженного объекта Role
                 Employees = allEmployees.Where(e => e.IsActive).Select(e => new EmployeeSelection
                 {
                     Id = e.Id,
                     FullName = e.FullName,
-                    RoleDisplay = GetRoleName(e.Role), // Формируем строку
+                    RoleDisplay = e.Role != null ? e.Role.Name : "Сотрудник", // Вуаля!
                     IsSelected = false
                 }).ToList();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка загрузки сотрудников: {ex.Message}");
-            }
-        }
-
-        // Вспомогательный метод для правильного маппинга ролей
-        private string GetRoleName(int role)
-        {
-            switch (role)
-            {
-                case 1: return "Директор";
-                case 2: return "Администратор";
-                case 3: return "Мойщик";
-                case 4: return "Сотрудник сервиса";
-                default: return "Сотрудник";
             }
         }
 

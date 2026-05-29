@@ -51,12 +51,12 @@
 
                 <Label Content="Должность:" Margin="0,5,0,0" FontWeight="SemiBold"/>
                 <controls:CustomComboBox x:Name="RoleComboBox" 
-                                         Margin="0,5" 
-                                         Height="40" 
-                                         Placeholder="Выберите должность"
-                                         DisplayMemberPath="Value" 
-                                         SelectedValuePath="Key"
-                                         SelectedValue="{Binding CurrentEmployee.Role, UpdateSourceTrigger=PropertyChanged}"/>
+                         Margin="0,5" 
+                         Height="40" 
+                         Placeholder="Выберите должность"
+                         DisplayMemberPath="Name" 
+                         SelectedValuePath="Id"
+                         SelectedValue="{Binding CurrentEmployee.RoleId, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <Label Content="Ставка зарплаты (%):" Margin="0,5,0,0" FontWeight="SemiBold"/>
                 <TextBox Text="{Binding CurrentEmployee.BaseWagePercentage, UpdateSourceTrigger=PropertyChanged}" 

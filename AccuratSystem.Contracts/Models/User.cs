@@ -7,31 +7,27 @@
         public string Phone { get; set; } = string.Empty;
         public string Login { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
-        public int Role { get; set; } // 1 - Директор, 2 - Админ, 3 - Мойщик, 4 - Сотрудник сервиса
+
+        // ИЗМЕНЕНИЯ ЗДЕСЬ:
+        public int RoleId { get; set; }
+        public Role Role { get; set; } // Связь с таблицей Roles
+
         public bool IsActive { get; set; } = true;
         public int? BranchId { get; set; }
-        public decimal BaseWagePercentage { get; set; } // Процент
-        public decimal BaseSalaryPerShift { get; set; } // Фиксированный оклад за выход (смену)
+        public decimal BaseWagePercentage { get; set; }
+        public decimal BaseSalaryPerShift { get; set; }
 
-        // Навигационное свойство (без ? для C# 7.3)
         public Branch Branch { get; set; }
 
         public string UserDisplayInfo
         {
             get
             {
-                string roleName;
-                switch (Role)
-                {
-                    case 1: roleName = "Директор"; break;
-                    case 2: roleName = "Админ"; break;
-                    case 3: roleName = "Мойщик"; break;
-                    case 4: roleName = "Сервис"; break;
-                    default: roleName = "Сотрудник"; break;
-                }
+                // Просто берем имя из связанной таблицы. 
+                // Если Role еще не подгрузился из БД, выводим дефолт.
+                string roleName = Role != null ? Role.Name : "Сотрудник";
                 return $"{FullName} ({roleName})";
             }
         }
-
     }
 }

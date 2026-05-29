@@ -19,8 +19,6 @@
 
     <Window.Resources>
 
-        <local:RoleToTextConverter x:Key="RoleToTextConverter"/>
-
         <Style x:Key="HeaderCellStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="White"/>
@@ -218,7 +216,7 @@
                                                TextTrimming="CharacterEllipsis"
                                                Grid.Column="3"/>
 
-                                    <TextBlock Text="{Binding Role, Converter={StaticResource RoleToTextConverter}}" 
+                                    <TextBlock Text="{Binding Role.Name}" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"

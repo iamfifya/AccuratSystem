@@ -50,7 +50,7 @@ namespace AccuratPanelCarWashing
                     FullName = u.FullName,
                     Login = u.Login,
                     PasswordHash = u.PasswordHash,           // ← ДОБАВИТЬ
-                    Role = u.Role,
+                    RoleId = u.RoleId,
                     IsActive = u.IsActive,                   // ← ДОБАВИТЬ
                     Phone = u.Phone,
                     BranchId = u.BranchId,
@@ -78,7 +78,7 @@ namespace AccuratPanelCarWashing
                     e.Login.IndexOf(_searchFilter, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
-            filtered = filtered.OrderBy(e => e.Role).ThenBy(e => e.FullName);
+            filtered = filtered.OrderBy(e => e.RoleId).ThenBy(e => e.FullName);
 
             EmployeesList = filtered.ToList();
             EmployeesListView.ItemsSource = EmployeesList;
@@ -106,7 +106,7 @@ namespace AccuratPanelCarWashing
                 FullName = employee.FullName,
                 Login = employee.Login,
                 PasswordHash = employee.PasswordHash,
-                Role = employee.Role,
+                RoleId = employee.RoleId,
                 IsActive = employee.IsActive,
                 Phone = employee.Phone,
                 BranchId = employee.BranchId,

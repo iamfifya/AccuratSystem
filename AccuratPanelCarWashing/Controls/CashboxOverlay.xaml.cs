@@ -72,7 +72,7 @@ namespace AccuratPanelCarWashing.Controls
                         Phone = user.Phone,
                         Login = user.Login,
                         PasswordHash = user.PasswordHash,
-                        Role = user.Role,
+                        RoleId = user.RoleId,
                         IsActive = user.IsActive,
                         BranchId = user.BranchId,
                         BaseWagePercentage = user.BaseWagePercentage

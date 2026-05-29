@@ -374,7 +374,6 @@
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\WorkZone.cs" />
     <Compile Include="PercentageConverter.cs" />
-    <Compile Include="RoleToTextConverter.cs" />
     <Compile Include="SafePriceConverter.cs" />
     <Compile Include="ScheduleWindow.xaml.cs">
       <DependentUpon>ScheduleWindow.xaml</DependentUpon>

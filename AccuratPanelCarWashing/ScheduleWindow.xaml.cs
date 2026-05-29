@@ -205,8 +205,8 @@ namespace AccuratPanelCarWashing
             var prevMonthDate = _currentDate.AddMonths(-1);
             var prevMonthSchedule = await _apiService.GetScheduleAsync(branchId, prevMonthDate.Year, prevMonthDate.Month);
 
-            var admins = employees.Where(e => e.Role == 1 || e.Role == 2).OrderBy(e => e.Id).ToList();
-            var workers = employees.Where(e => e.Role == 3 || e.Role == 4).OrderBy(e => e.Id).ToList();
+            var admins = employees.Where(e => e.RoleId == 1 || e.RoleId == 2).OrderBy(e => e.Id).ToList();
+            var workers = employees.Where(e => e.RoleId == 3 || e.RoleId == 4).OrderBy(e => e.Id).ToList();
 
             _scheduleData = new List<EmployeeSchedule>();
 

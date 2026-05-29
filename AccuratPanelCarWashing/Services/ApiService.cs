@@ -109,6 +109,12 @@ namespace AccuratPanelCarWashing.Services
             var response = await _http.PutAsJsonAsync($"Users/{user.Id}", user);
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task<List<Role>> GetRolesAsync()
+        {
+            try { return await _http.GetFromJsonAsync<List<Role>>("Roles") ?? new List<Role>(); }
+            catch (HttpRequestException ex) { throw new Exception($"Ошибка получения должностей: {ex.Message}"); }
+        }
         #endregion
 
         #region КЛИЕНТЫ (CLIENTS)

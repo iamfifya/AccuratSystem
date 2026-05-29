@@ -34,11 +34,27 @@ namespace Accurat.WebAPI.Data
         public DbSet<AccuratSystem.Contracts.Models.OrderStatusHistory> OrderStatusHistories { get; set; }
         public DbSet<TenantFeature> TenantFeatures { get; set; }
         public DbSet<UpsellSuggestion> UpsellSuggestions { get; set; }
+        public DbSet<Role> Roles { get; set; } // Новая таблица с должностями
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // 1. Явно указываем связь User -> Role
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany()
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // 2. Сидируем (заполняем) таблицу ролей при создании БД
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Name = "Директор" },
+                new Role { Id = 2, Name = "Администратор" },
+                new Role { Id = 3, Name = "Мойщик" },
+                new Role { Id = 4, Name = "Сотрудник сервиса" }
+            );
 
             // Настройка композитного ключа для OrderWasher
             modelBuilder.Entity<OrderWasher>()
@@ -171,7 +187,7 @@ namespace Accurat.WebAPI.Data
             );
 
             modelBuilder.Entity<User>().HasData(
-                new User { Id = 1, FullName = "Анастасия", Phone = "+79877063709", Login = "а1", PasswordHash = "1", Role = 2, IsActive = true, BranchId = null }
+                new User { Id = 1, FullName = "Анастасия", Phone = "+79877063709", Login = "а1", PasswordHash = "1", RoleId = 2, IsActive = true, BranchId = null }
             );
 
             modelBuilder.Entity<EmployeeScheduleEntry>()

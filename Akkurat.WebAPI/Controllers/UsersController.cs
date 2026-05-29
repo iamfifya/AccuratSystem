@@ -21,7 +21,10 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            // Include подтянет данные из таблицы Roles
+            return await _context.Users
+                .Include(u => u.Role)
+                .ToListAsync();
         }
 
         [HttpPost]
@@ -69,7 +72,9 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequest request)
         {
+            // Добавили Include, чтобы вместе с юзером с сервера прилетала его должность
             var user = await _context.Users
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Login == request.Login && u.PasswordHash == request.Password);
 
             if (user == null) return Unauthorized(new { message = "Неверный логин или пароль" });

@@ -27,53 +27,29 @@ namespace AccuratPanelCarWashing
             InitializeComponent();
             _apiService = new ApiService();
 
-            // Заполняем кастомный ComboBox ролями
-            RoleComboBox.ItemsSource = new Dictionary<int, string>
-            {
-                { 1, "👑 Директор" },
-                { 2, "👨‍💼 Администратор" },
-                { 3, "🧽 Мойщик" },
-                { 4, "🛠️ Сотрудник сервиса" }
-            };
+            // 💥 УБРАЛИ ХАРДКОД! Теперь список пустой, пока не скачается из БД
+            // RoleComboBox.DisplayMemberPath = "Name";
+            // RoleComboBox.SelectedValuePath = "Id";
 
             if (employee == null)
             {
-                // Создаем новый контрактный объект
-                CurrentEmployee = new ContractsUser
-                {
-                    IsActive = true,
-                    Role = 3, // По умолчанию ставим мойщика (3), а не сервис (4)
-                    BranchId = AppSettings.CurrentBranchId
-                };
-                Title = "➕ Добавление сотрудника (API)";
+                CurrentEmployee = new ContractsUser { IsActive = true, RoleId = 3, BranchId = AppSettings.CurrentBranchId };
+                Title = "➕ Добавление сотрудника";
             }
             else
             {
-                // Копируем данные из переданного объекта
-                CurrentEmployee = new ContractsUser
-                {
-                    Id = employee.Id,
-                    FullName = employee.FullName,
-                    Login = employee.Login,
-                    PasswordHash = employee.PasswordHash,
-                    Role = employee.Role,
-                    IsActive = employee.IsActive,
-                    Phone = employee.Phone,
-                    BaseWagePercentage = employee.BaseWagePercentage,
-                    BaseSalaryPerShift = employee.BaseSalaryPerShift,
-                    BranchId = employee.BranchId
-                };
-
-                Title = "✏ Редактирование сотрудника (API)";
+                // Твой текущий код копирования сотрудника...
+                CurrentEmployee = employee;
+                Title = "✏ Редактирование сотрудника";
             }
 
             DataContext = this;
 
-            // Загружаем список филиалов для комбобокса
-            _ = LoadBranchesAsync();
+            // Запускаем асинхронную загрузку филиалов И ролей из БД
+            _ = LoadBranchesAndRolesAsync();
         }
 
-        private async Task LoadBranchesAsync()
+        private async Task LoadBranchesAndRolesAsync()
         {
             try
             {
@@ -83,10 +59,15 @@ namespace AccuratPanelCarWashing
                     BranchComboBox.ItemsSource = branches;
                     BranchComboBox.SelectedValue = CurrentEmployee.BranchId;
                 }
+
+                // 💥 КАЧАЕМ РОЛИ НАПРЯМУЮ ИЗ БАЗЫ:
+                var roles = await _apiService.GetRolesAsync();
+                RoleComboBox.ItemsSource = roles;
+                RoleComboBox.SelectedValue = CurrentEmployee.RoleId;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке списка филиалов: {ex.Message}", "Ошибка API");
+                MessageBox.Show($"Ошибка загрузки справочников: {ex.Message}", "Ошибка API");
             }
         }
 

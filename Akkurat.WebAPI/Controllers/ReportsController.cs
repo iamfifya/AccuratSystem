@@ -124,7 +124,7 @@ namespace Accurat.WebAPI.Controllers
                     decimal empRevenue = 0;
                     int carsProcessed = 0;
 
-                    if (emp.Role == 3) // 🛠️ МOЙЩИК
+                    if (emp.RoleId == 3) // 🛠️ МOЙЩИК
                     {
                         var myTasks = orders.SelectMany(o => o.OrderWashers.Where(ow => ow.UserId == empId), (o, ow) => new { Order = o, OrderWasher = ow }).ToList();
                         carsProcessed = myTasks.Count;
