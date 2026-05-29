@@ -10,7 +10,6 @@
              d:DesignHeight="800" d:DesignWidth="1200">
 
     <UserControl.Resources>
-        <local:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
 
         <!-- Анимация появления -->
@@ -94,9 +93,9 @@
                             <TextBlock Text="{Binding FinalPrice, StringFormat={}{0:N0} ₽}" FontSize="16" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <Border Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}" 
-                                CornerRadius="4" Padding="8,2" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                        <Border Background="{Binding StatusColorHex, Converter={StaticResource HexToBrushConverter}}" 
+                                CornerRadius="4" Padding="6,2">
+                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="9" FontWeight="Bold"/>
                         </Border>
                     </Grid>
 

@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using OrderStatus = AccuratSystem.Contracts.Models.OrderStatus;
 
 namespace Accurat.WebAPI.Data
 {
@@ -36,6 +37,10 @@ namespace Accurat.WebAPI.Data
         public DbSet<UpsellSuggestion> UpsellSuggestions { get; set; }
         public DbSet<Role> Roles { get; set; } // Новая таблица с должностями
         public DbSet<Company> Companies { get; set; }
+        public DbSet<CarCategory> CarCategories { get; set; }
+        public DbSet<PaymentMethod> PaymentMethods { get; set; }
+        public DbSet<AccuratSystem.Contracts.Models.OrderStatus> OrderStatuses { get; set; }
+        public DbSet<CompanySettings> CompanySettings { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -171,6 +176,12 @@ namespace Accurat.WebAPI.Data
                 c => c.ToDictionary(kv => kv.Key, kv => kv.Value)
             );
 
+            // Связь: у одной компании может быть много категорий авто
+            modelBuilder.Entity<CarCategory>()
+                .HasOne(c => c.Company)
+                .WithMany()
+                .HasForeignKey(c => c.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
             modelBuilder.Entity<Service>()
@@ -181,6 +192,23 @@ namespace Accurat.WebAPI.Data
                 )
                 .HasColumnType("jsonb")
                 .Metadata.SetValueComparer(dictionaryComparer);
+
+            // Настройка связи с Company
+            modelBuilder.Entity<PaymentMethod>()
+                .HasOne(p => p.Company)
+                .WithMany()
+                .HasForeignKey(p => p.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Настраиваем связь 1-к-1. CompanyId является и первичным ключом, и внешним.
+            modelBuilder.Entity<CompanySettings>()
+                .HasKey(cs => cs.CompanyId);
+
+            modelBuilder.Entity<CompanySettings>()
+                .HasOne(cs => cs.Company)
+                .WithOne()
+                .HasForeignKey<CompanySettings>(cs => cs.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
 
@@ -213,6 +241,14 @@ namespace Accurat.WebAPI.Data
             modelBuilder.Entity<EmployeeScheduleEntry>()
                 .HasKey(e => new { e.EmployeeId, e.BranchId, e.Year, e.Month, e.Day });
 
+            // Добавляем наши привычные 4 категории и привязываем их к компании Accurat (CompanyId = 1)
+            modelBuilder.Entity<CarCategory>().HasData(
+                new CarCategory { Id = 1, CompanyId = 1, Name = "Категория 1 (Легковая)", SortOrder = 1 },
+                new CarCategory { Id = 2, CompanyId = 1, Name = "Категория 2 (Универсал/Кроссовер)", SortOrder = 2 },
+                new CarCategory { Id = 3, CompanyId = 1, Name = "Категория 3 (Внедорожник)", SortOrder = 3 },
+                new CarCategory { Id = 4, CompanyId = 1, Name = "Категория 4 (Микроавтобус)", SortOrder = 4 }
+            );
+
             // Услуги (прайс-лист) — оставляем как есть
             modelBuilder.Entity<Service>().HasData(
                 new Service { Id = 1, Name = "Стандартная мойка кузова", Description = "2-х фазная мойка", DurationMinutes = 40, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 1150m }, { 2, 1250m }, { 3, 1500m }, { 4, 1750m } } },
@@ -244,6 +280,31 @@ namespace Accurat.WebAPI.Data
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.TriggerServiceId);
             });
+
+            // Добавляем твои 4 стандартных способа оплаты (плюс "Не указано" для дефолта)
+            modelBuilder.Entity<PaymentMethod>().HasData(
+                new PaymentMethod { Id = 1, CompanyId = 1, Name = "Не указано", SortOrder = 1 },
+                new PaymentMethod { Id = 2, CompanyId = 1, Name = "Наличные", SortOrder = 2 },
+                new PaymentMethod { Id = 3, CompanyId = 1, Name = "Карта", SortOrder = 3 },
+                new PaymentMethod { Id = 4, CompanyId = 1, Name = "Перевод", SortOrder = 4 },
+                new PaymentMethod { Id = 5, CompanyId = 1, Name = "QR-код", SortOrder = 5 }
+            );
+
+            modelBuilder.Entity<OrderStatus>().HasData(
+                new OrderStatus { Id = 1, CompanyId = 1, Name = "В работе", Icon = "🟢", ColorHex = "#3498DB", SortOrder = 1 }, // Синий
+                new OrderStatus { Id = 2, CompanyId = 1, Name = "Выполнен", Icon = "✅", ColorHex = "#2ECC71", SortOrder = 2 }, // Зеленый
+                new OrderStatus { Id = 3, CompanyId = 1, Name = "Отменен", Icon = "❌", ColorHex = "#95A5A6", SortOrder = 3 }  // Серый
+            );
+
+            // Добавляем настройки для компании Accurat (CompanyId = 1)
+            modelBuilder.Entity<CompanySettings>().HasData(
+                new CompanySettings
+                {
+                    CompanyId = 1,
+                    CompanySharePercentage = 65m,
+                    DefaultAppointmentDuration = 60
+                }
+            );
 
             modelBuilder.Entity<UpsellSuggestion>().HasData(
     new UpsellSuggestion

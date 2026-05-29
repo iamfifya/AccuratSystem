@@ -11,16 +11,13 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Конвертеры -->
-            <local:BoolToRoleConverter x:Key="BoolToRoleConverter"/>
             <local:IntToBoolConverter x:Key="IntToBoolConverter"/>
             <local:PercentageConverter x:Key="PercentageConverter"/>
             <local:ActiveToStatusConverter x:Key="ActiveToStatusConverter"/>
             <local:ActiveToColorConverter x:Key="ActiveToColorConverter"/>
             <local:ActiveToBackgroundConverter x:Key="ActiveToBackgroundConverter"/>
             <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
-            <local:CompletedToStatusConverter x:Key="CompletedToStatusConverter"/>
             <local:StatusToColorConverter x:Key="StatusToColorConverter"/>
-            <local:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
             <local:AppointmentToStyleConverter x:Key="AppointmentToStyleConverter"/>
             <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <local:AppointmentToBackgroundConverter x:Key="AppointmentToBackgroundConverter"/>
@@ -32,6 +29,7 @@
             <local:DecimalToEmptyZeroConverter x:Key="DecimalToEmptyZeroConverter"/>
             <local:DepartmentDisplayConverter x:Key="DepartmentDisplayConverter"/>
             <local:DepartmentToZoneLabelConverter x:Key="DepartmentToZoneLabelConverter"/>
+            <local:HexToBrushConverter x:Key="HexToBrushConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -15,7 +15,6 @@
         Foreground="Black">
 
     <Window.Resources>
-        <local:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 

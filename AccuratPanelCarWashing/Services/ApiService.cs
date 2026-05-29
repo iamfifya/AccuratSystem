@@ -10,6 +10,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using AccuratSystem.Contracts.DTOs;
+using System.Net.Http.Json;
 using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
 using ContractsCashboxSummary = AccuratSystem.Contracts.Models.CashboxSummary;
 using ContractsClient = AccuratSystem.Contracts.Models.Client;
@@ -114,6 +116,47 @@ namespace AccuratPanelCarWashing.Services
         {
             try { return await _http.GetFromJsonAsync<List<Role>>("Roles") ?? new List<Role>(); }
             catch (HttpRequestException ex) { throw new Exception($"Ошибка получения должностей: {ex.Message}"); }
+        }
+
+        public async Task<List<AccuratSystem.Contracts.Models.CarCategory>> GetCarCategoriesAsync(int branchId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.CarCategory>>($"CarCategories/by-branch/{branchId}")
+                       ?? new List<AccuratSystem.Contracts.Models.CarCategory>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки категорий авто: {ex.Message}");
+                return new List<AccuratSystem.Contracts.Models.CarCategory>();
+            }
+        }
+
+        public async Task<List<AccuratSystem.Contracts.Models.PaymentMethod>> GetPaymentMethodsAsync(int branchId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.PaymentMethod>>($"PaymentMethods/by-branch/{branchId}")
+                       ?? new List<AccuratSystem.Contracts.Models.PaymentMethod>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки способов оплаты: {ex.Message}");
+                return new List<AccuratSystem.Contracts.Models.PaymentMethod>();
+            }
+        }
+
+        public async Task<List<AccuratSystem.Contracts.Models.OrderStatus>> GetOrderStatusesAsync(int branchId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.OrderStatus>>($"OrderStatuses/by-branch/{branchId}")
+                       ?? new List<AccuratSystem.Contracts.Models.OrderStatus>();
+            }
+            catch (Exception)
+            {
+                return new List<AccuratSystem.Contracts.Models.OrderStatus>();
+            }
         }
         #endregion
 
@@ -324,6 +367,37 @@ namespace AccuratPanelCarWashing.Services
         {
             try { return await _http.GetFromJsonAsync<List<ContractsTransaction>>($"Transactions/shift/{shiftId}") ?? new List<ContractsTransaction>(); }
             catch { return new List<ContractsTransaction>(); }
+        }
+
+        public async Task<AccuratSystem.Contracts.Models.CompanySettings> GetCompanySettingsAsync(int branchId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<AccuratSystem.Contracts.Models.CompanySettings>($"CompanySettings/by-branch/{branchId}")
+                       ?? new AccuratSystem.Contracts.Models.CompanySettings();
+            }
+            catch (Exception)
+            {
+                return new AccuratSystem.Contracts.Models.CompanySettings();
+            }
+        }
+
+        public async Task<OrderCalculation> CalculateOrderPreviewAsync(OrderPreviewRequestDto request)
+        {
+            try
+            {
+                var response = await _http.PostAsJsonAsync("orders/calculate-preview", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<OrderCalculation>() ?? new OrderCalculation();
+                }
+                return new OrderCalculation();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка калькулятора: {ex.Message}");
+                return new OrderCalculation();
+            }
         }
         #endregion
 

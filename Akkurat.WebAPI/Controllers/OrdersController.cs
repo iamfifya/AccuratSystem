@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Accurat.WebAPI.Data;
 using Accurat.WebAPI.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Accurat.WebAPI.Services; // 💥 ПОДКЛЮЧИЛИ НАШИ СЕРВИСЫ С ORDERMATH
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -23,27 +24,81 @@ namespace Accurat.WebAPI.Controllers
             _hubContext = hubContext;
         }
 
+        // ==========================================
+        // 💥 НОВЫЙ ЭНДПОИНТ: СИНХРОННЫЙ API-КАЛЬКУЛЯТОР PREVIEW
+        // ==========================================
+        [HttpPost("calculate-preview")]
+        public async Task<ActionResult<OrderCalculation>> CalculatePreview([FromBody] OrderPreviewRequestDto request)
+        {
+            try
+            {
+                // 1. Ищем филиал, чтобы через него выйти на настройки компании (тенанта)
+                var branch = await _context.Branches.FindAsync(request.BranchId);
+                if (branch == null) return BadRequest(new { message = "Филиал не найден" });
+
+                var settings = await _context.CompanySettings.FindAsync(branch.CompanyId);
+
+                // 2. Вытаскиваем актуальные услуги напрямую из базы данных
+                var services = await _context.Services
+                    .Where(s => request.ServiceIds.Contains(s.Id))
+                    .ToListAsync();
+
+                // 3. Вытаскиваем мойщика (если он выбран), чтобы учесть его персональный процент
+                var washers = new List<User>();
+                if (request.WasherId > 0)
+                {
+                    var washer = await _context.Users.FindAsync(request.WasherId);
+                    if (washer != null) washers.Add(washer);
+                }
+
+                // 4. Генерируем виртуальный заказ для передачи в математическое ядро
+                var virtualOrder = new Order
+                {
+                    BranchId = request.BranchId,
+                    ServiceIds = request.ServiceIds,
+                    BodyTypeCategory = request.BodyTypeCategory,
+                    ExtraCost = request.ExtraCost,
+                    DiscountPercent = request.DiscountPercent,
+                    DiscountAmount = request.DiscountAmount,
+                    Notes = request.Notes ?? string.Empty
+                };
+
+                // Назначаем мойщика в коллекцию OrderWashers, если он передан
+                if (request.WasherId > 0)
+                {
+                    virtualOrder.OrderWashers = new List<OrderWasher>
+                    {
+                        new OrderWasher { OrderId = 0, UserId = request.WasherId, SplitShare = 1.0m }
+                    };
+                }
+
+                // 5. Вызываем расчет на стороне сервера
+                var calculation = OrderMath.Calculate(virtualOrder, services, washers, settings);
+
+                return Ok(calculation);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Ошибка калькулятора на сервере: " + ex.Message });
+            }
+        }
+
         // 1. Получить все заказы
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            // 1. Загружаем заказы. Благодаря .Ignore() в DbContext, EF не будет искать CurrentStatusStartTime в БД
             var orders = await _context.Orders.Include(o => o.OrderWashers).ToListAsync();
 
             foreach (var order in orders)
             {
-                // 2. Теперь мы вручную идем в таблицу истории и берем дату начала текущего статуса
                 var latestHistory = await _context.OrderStatusHistories
                     .FirstOrDefaultAsync(h => h.OrderId == order.Id && h.EndTime == null);
 
-                // Записываем дату в свойство, которое теперь "невидимо" для БД, но доступно для нас
                 order.CurrentStatusStartTime = latestHistory?.StartTime;
             }
 
             return orders;
         }
-
-
 
         // 2. Создать новый заказ (С АВТОМАТИЧЕСКИМ СТАРТОМ ВРЕМЕНИ)
         [HttpPost]
@@ -75,13 +130,21 @@ namespace Accurat.WebAPI.Controllers
 
                     order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
 
-                    // Если статус не указан, ставим "В работе"
                     if (string.IsNullOrEmpty(order.Status)) order.Status = "В работе";
 
-                    _context.Orders.Add(order);
-                    await _context.SaveChangesAsync(); // Сначала сохраняем заказ, чтобы получить его Id
+                    // 💥 ЗАЩИТА: Пересчитываем финансовые показатели на бэкенде перед сохранением!
+                    // Берем услуги, настройки и пересчитываем FinalPrice, чтобы клиент не прислал фейк.
+                    var branch = await _context.Branches.FindAsync(order.BranchId);
+                    var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+                    var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
+                    var washers = await _context.Users.Where(u => order.OrderWashers.Select(ow => ow.UserId).Contains(u.Id)).ToListAsync();
 
-                    // НОВОЕ: Создаем первую запись в истории времени
+                    var finalCalc = OrderMath.Calculate(order, services, washers, settings);
+                    order.FinalPrice = finalCalc.FinalPrice; // Железно пишем серверную цену
+
+                    _context.Orders.Add(order);
+                    await _context.SaveChangesAsync();
+
                     var firstHistory = new AccuratSystem.Contracts.Models.OrderStatusHistory
                     {
                         OrderId = order.Id,
@@ -112,7 +175,6 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    // 1. Ищем заказ (запись) и обязательно подтягиваем OrderWashers
                     var order = await _context.Orders
                         .Include(o => o.OrderWashers)
                         .FirstOrDefaultAsync(o => o.Id == id);
@@ -120,13 +182,11 @@ namespace Accurat.WebAPI.Controllers
                     if (order == null)
                         return NotFound($"Запись с ID {id} не найдена в БД.");
 
-                    // 2. Снимаем флаги предварительной записи
                     order.IsAppointment = false;
                     order.Status = "В работе";
                     order.ShiftId = shiftId;
-                    order.Time = DateTime.UtcNow; // Фиксируем реальное время заезда в бокс
+                    order.Time = DateTime.UtcNow;
 
-                    // 3. 💥 ЖЕЛЕЗНО НАЗНАЧАЕМ МОЙЩИКА 💥
                     order.OrderWashers.Clear();
                     order.OrderWashers.Add(new OrderWasher
                     {
@@ -135,7 +195,6 @@ namespace Accurat.WebAPI.Controllers
                         SplitShare = 1.0m
                     });
 
-                    // 4. Фиксируем время старта работы в истории статусов
                     var newHistory = new AccuratSystem.Contracts.Models.OrderStatusHistory
                     {
                         OrderId = order.Id,
@@ -145,7 +204,6 @@ namespace Accurat.WebAPI.Controllers
                     };
                     _context.OrderStatusHistories.Add(newHistory);
 
-                    // 5. Делаем отметку в ленте событий
                     var timelineEntry = new AccuratSystem.Contracts.Models.OrderTimelineEntry
                     {
                         OrderId = order.Id,
@@ -156,12 +214,19 @@ namespace Accurat.WebAPI.Controllers
                     };
                     _context.OrderTimelineEntries.Add(timelineEntry);
 
-                    // 6. Сохраняем всё в базу
+                    // 💥 ПЕРЕСЧЕТ ПРИ КОНВЕРТАЦИИ:
+                    var branch = await _context.Branches.FindAsync(order.BranchId);
+                    var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+                    var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
+                    var washer = await _context.Users.FindAsync(washerId);
+
+                    var finalCalc = OrderMath.Calculate(order, services, washer != null ? new List<User> { washer } : null, settings);
+                    order.FinalPrice = finalCalc.FinalPrice;
+
                     _context.Entry(order).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                     transaction.Commit();
 
-                    // 7. Обновляем UI у всех админов
                     await _hubContext.Clients.All.SendAsync("UpdateData");
 
                     return Ok(order);
@@ -190,12 +255,9 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    //  Добавлено .AsNoTracking(). 
-                    // EF просто считает данные для проверки статуса, но не заблокирует ID в памяти.
                     var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
                     if (existingOrder == null) return NotFound();
 
-                    // Если статус изменился, фиксируем это в истории времени
                     if (existingOrder.Status != order.Status)
                     {
                         var currentHistory = await _context.OrderStatusHistories
@@ -211,7 +273,15 @@ namespace Accurat.WebAPI.Controllers
                         _context.OrderStatusHistories.Add(newHistory);
                     }
 
-                    // Теперь EF без проблем примет обновленный заказ от WPF
+                    // 💥 ПЕРЕСЧЕТ ПРИ ОБНОВЛЕНИИ (ВЫЗОВ ИЗ ОКНА РЕДАКТИРОВАНИЯ):
+                    var branch = await _context.Branches.FindAsync(order.BranchId);
+                    var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+                    var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
+                    var washers = await _context.Users.Where(u => order.OrderWashers.Select(ow => ow.UserId).Contains(u.Id)).ToListAsync();
+
+                    var finalCalc = OrderMath.Calculate(order, services, washers, settings);
+                    order.FinalPrice = finalCalc.FinalPrice;
+
                     _context.Entry(order).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                     transaction.Commit();
@@ -226,7 +296,6 @@ namespace Accurat.WebAPI.Controllers
                 }
             }
         }
-
 
         [HttpPatch("{id}/complete")]
         public async Task<IActionResult> CompleteOrder(int id, [FromQuery] string paymentMethod)
@@ -391,8 +460,6 @@ namespace Accurat.WebAPI.Controllers
             return Ok(expenses);
         }
 
-        // === ПРОФЕССИОНАЛЬНЫЙ УЧЕТ ВРЕМЕНИ ===
-
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> ChangeStatus(int id, [FromBody] AccuratSystem.Contracts.DTOs.ChangeStatusDto dto)
         {
@@ -468,7 +535,6 @@ namespace Accurat.WebAPI.Controllers
                 .Select(g => new
                 {
                     Status = g.Key,
-                    // Считаем сумму тиков (long), а затем переводим обратно в TimeSpan
                     TotalDuration = TimeSpan.FromTicks(g.Sum(x => x.DurationTicks.Ticks)),
                     Occurrences = g.Count()
                 }).ToList();

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Accurat.WebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Accurat.WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260529204815_AddCarCategories")]
+    partial class AddCarCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -301,30 +304,6 @@ namespace Accurat.WebAPI.Migrations
                         });
                 });
 
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.CompanySettings", b =>
-                {
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("CompanySharePercentage")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("DefaultAppointmentDuration")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CompanyId");
-
-                    b.ToTable("CompanySettings");
-
-                    b.HasData(
-                        new
-                        {
-                            CompanyId = 1,
-                            CompanySharePercentage = 65m,
-                            DefaultAppointmentDuration = 60
-                        });
-                });
-
             modelBuilder.Entity("AccuratSystem.Contracts.Models.EmployeeScheduleEntry", b =>
                 {
                     b.Property<int>("EmployeeId")
@@ -525,63 +504,6 @@ namespace Accurat.WebAPI.Migrations
                     b.ToTable("OrderServiceItems");
                 });
 
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.OrderStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ColorHex")
-                        .HasColumnType("text");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Icon")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OrderStatuses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            ColorHex = "#3498DB",
-                            CompanyId = 1,
-                            Icon = "🟢",
-                            Name = "В работе",
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            ColorHex = "#2ECC71",
-                            CompanyId = 1,
-                            Icon = "✅",
-                            Name = "Выполнен",
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = 3,
-                            ColorHex = "#95A5A6",
-                            CompanyId = 1,
-                            Icon = "❌",
-                            Name = "Отменен",
-                            SortOrder = 3
-                        });
-                });
-
             modelBuilder.Entity("AccuratSystem.Contracts.Models.OrderStatusHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -670,75 +592,6 @@ namespace Accurat.WebAPI.Migrations
                     b.HasIndex("WasherId");
 
                     b.ToTable("OrderWashers");
-                });
-
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.PaymentMethod", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.ToTable("PaymentMethods");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CompanyId = 1,
-                            IsActive = true,
-                            Name = "Не указано",
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CompanyId = 1,
-                            IsActive = true,
-                            Name = "Наличные",
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CompanyId = 1,
-                            IsActive = true,
-                            Name = "Карта",
-                            SortOrder = 3
-                        },
-                        new
-                        {
-                            Id = 4,
-                            CompanyId = 1,
-                            IsActive = true,
-                            Name = "Перевод",
-                            SortOrder = 4
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CompanyId = 1,
-                            IsActive = true,
-                            Name = "QR-код",
-                            SortOrder = 5
-                        });
                 });
 
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Role", b =>
@@ -1107,17 +960,6 @@ namespace Accurat.WebAPI.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.CompanySettings", b =>
-                {
-                    b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
-                        .WithOne()
-                        .HasForeignKey("AccuratSystem.Contracts.Models.CompanySettings", "CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-                });
-
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Order", b =>
                 {
                     b.HasOne("AccuratSystem.Contracts.Models.Branch", "Branch")
@@ -1183,17 +1025,6 @@ namespace Accurat.WebAPI.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Washer");
-                });
-
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.PaymentMethod", b =>
-                {
-                    b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Shift", b =>

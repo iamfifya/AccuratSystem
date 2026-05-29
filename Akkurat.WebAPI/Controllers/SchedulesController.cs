@@ -19,7 +19,7 @@ namespace Accurat.WebAPI.Controllers
         {
             // 1. Получаем сотрудников + СРАЗУ ПОДТЯГИВАЕМ ИХ РОЛИ ИЗ НОВОЙ ТАБЛИЦЫ
             var users = await _context.Users
-                .Include(u => u.RoleId) // 💥 Добавили Include, чтобы подгрузить название должности
+                .Include(u => u.Role) // ✅ Инклудим навигационное свойство (сам класс Role)
                 .Where(u => u.IsActive && (u.BranchId == branchId || u.RoleId == (int)UserRole.Director))
                 .ToListAsync();
 
@@ -35,8 +35,8 @@ namespace Accurat.WebAPI.Controllers
                     EmployeeId = u.Id,
                     EmployeeName = u.FullName,
 
-                    // 💥 ИСПРАВЛЕНИЕ: Никаких больше switch! Просто берем имя из связанной таблицы
-                    Position = u.RoleId != 0 ? u.RoleId.ToString() : "Сотрудник",
+                    // Берем реальное имя из таблицы Roles. Если Role по какой-то причине null, пишем "Сотрудник"
+                    Position = u.Role != null ? u.Role.Name : "Сотрудник",
 
                     Days = new Dictionary<int, string>()
                 };

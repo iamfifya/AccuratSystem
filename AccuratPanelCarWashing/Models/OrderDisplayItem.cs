@@ -26,6 +26,9 @@ namespace AccuratPanelCarWashing.Models
         public int DurationMinutes { get; set; } = 60;
         public string PaymentMethod { get; set; }
 
+        private string _statusColorHex;
+        public string StatusColorHex { get => _statusColorHex; set { _statusColorHex = value; OnPropertyChanged(); } }
+
         // === НОВОЕ: Время начала текущего статуса ===
         public DateTime? StatusStartTime { get; set; }
 

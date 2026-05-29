@@ -22,7 +22,7 @@
         <local:ActiveToStatusConverter x:Key="ActiveToStatusConverter"/>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
-        <local:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
+        <local:HexToBrushConverter x:Key="HexToBrushConverter"/>
 
         <!-- Стиль для карточки услуги в ListBox -->
         <Style x:Key="ServiceCardStyle" TargetType="ListBoxItem">

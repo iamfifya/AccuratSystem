@@ -1,8 +1,6 @@
 // === ЯВНЫЕ АЛИАСЫ ТОЛЬКО ДЛЯ КОНФЛИКТНЫХ ИМЁН ===
-// UI-модель пользователя (с IsAdmin, DisplayString) — используем для _currentUser
 using AccuratPanelCarWashing.Models;
-// Остальные using
-using AccuratPanelCarWashing.Services; // Для методов расширения (GetWasherId/SetWasherId)
+using AccuratPanelCarWashing.Services;
 using AccuratSystem.Contracts.DTOs;
 using AccuratSystem.Contracts.Enums;
 using AccuratSystem.Contracts.Models;
@@ -18,8 +16,6 @@ using ContractsOrder = AccuratSystem.Contracts.Models.Order;
 using ContractsService = AccuratSystem.Contracts.Models.Service;
 using ContractsShift = AccuratSystem.Contracts.Models.Shift;
 using ContractsUser = AccuratSystem.Contracts.Models.User;
-using WpfUser = AccuratPanelCarWashing.Models.User;
-
 
 namespace AccuratPanelCarWashing.ViewModels
 {
@@ -34,8 +30,9 @@ namespace AccuratPanelCarWashing.ViewModels
         private bool _isSubscribedToDataChanged = false;
         private OrderCalculation _currentCalc;
         private readonly ApiService _apiService;
-        private List<ContractsService> _allServicesCache = new List<ContractsService>(); // Контрактный тип
+        private List<ContractsService> _allServicesCache = new List<ContractsService>();
         private string _currentDepartment = "Wash";
+
         public string CurrentDepartment
         {
             get => _currentDepartment;
@@ -45,14 +42,11 @@ namespace AccuratPanelCarWashing.ViewModels
                 {
                     _currentDepartment = value;
                     OnPropertyChanged(nameof(CurrentDepartment));
-
-                    // При смене департамента — фильтруем услуги
                     FilterServicesByDepartment();
                 }
             }
         }
 
-        // Добавь в начало класса свойства:
         private UpsellSuggestion _currentSuggestion;
         public UpsellSuggestion CurrentSuggestion
         {
@@ -60,10 +54,9 @@ namespace AccuratPanelCarWashing.ViewModels
             set { _currentSuggestion = value; OnPropertyChanged(nameof(CurrentSuggestion)); }
         }
 
-        // Добавь этот метод в класс:
         public async Task CheckForUpsellAsync()
         {
-            if (CurrentOrder == null || CurrentOrder.BranchId <= 0) return; // Убеждаемся, что филиал есть
+            if (CurrentOrder == null || CurrentOrder.BranchId <= 0) return;
 
             var selectedIds = Services?.Where(s => s.IsSelected).Select(s => s.Id).ToList();
             if (selectedIds == null || !selectedIds.Any())
@@ -74,21 +67,17 @@ namespace AccuratPanelCarWashing.ViewModels
 
             try
             {
-                // Добавили branchId в запрос
                 string query = string.Join("&", selectedIds.Select(id => $"currentServices={id}"));
                 var response = await _apiService.GetFromJsonAsync<UpsellSuggestion>($"Upsell/suggest?{query}&branchId={CurrentOrder.BranchId}");
-
                 CurrentSuggestion = response;
             }
             catch { CurrentSuggestion = null; }
         }
 
-        // Метод для кнопки "Добавить услугу" в баннере
         public void ApplyUpsell()
         {
             if (CurrentSuggestion == null) return;
 
-            // Психологический барьер
             var result = MessageBox.Show(
                 $"Вы подтверждаете, что клиент изначально НЕ ПРОСИЛ эту услугу, и это ваша успешная допродажа?\n\n" +
                 $"За обман системы бонус аннулируется.",
@@ -115,20 +104,68 @@ namespace AccuratPanelCarWashing.ViewModels
             }
         }
 
+        // === СВОЙСТВА-ОБЕРТКИ (ТЕПЕРЬ ТОЛЬКО В ОДНОМ ЭКЗЕМПЛЯРЕ!) ===
+        public decimal ServicesTotal => _currentCalc?.ServicesTotal ?? 0;
+        public decimal FinalTotal => _currentCalc?.FinalPrice ?? 0;
+        public decimal WasherEarningsDisplay => _currentCalc?.WasherEarnings ?? 0;
+        public decimal CompanyEarningsDisplay => _currentCalc?.CompanyGrossEarnings ?? 0;
+        public decimal FinalTotalWithExpenses => FinalTotal + TotalExpensesAmount;
 
-        // Метод фильтрации услуг по департаменту
+        public decimal ExtraCost
+        {
+            get => CurrentOrder.ExtraCost;
+            set
+            {
+                if (CurrentOrder.ExtraCost != value)
+                {
+                    CurrentOrder.ExtraCost = value;
+                    OnPropertyChanged(nameof(ExtraCost));
+                    Recalculate();
+                }
+            }
+        }
+
+        // === ЕДИНСТВЕННЫЙ МЕТОД РАСЧЕТА (АСИНХРОННЫЙ, ЧЕРЕЗ API) ===
+        public async void Recalculate()
+        {
+            if (CurrentOrder == null || Services == null || _apiService == null) return;
+
+            SyncServiceIds();
+
+            var request = new OrderPreviewRequestDto
+            {
+                BranchId = CurrentOrder.BranchId > 0 ? CurrentOrder.BranchId : AppSettings.CurrentBranchId,
+                WasherId = CurrentOrder.GetWasherId() ?? 0,
+                ServiceIds = Services.Where(s => s.IsSelected).Select(s => s.Id).ToList(),
+                BodyTypeCategory = CurrentOrder.BodyTypeCategory > 0 ? CurrentOrder.BodyTypeCategory : 1,
+                ExtraCost = CurrentOrder.ExtraCost,
+                DiscountPercent = CurrentOrder.DiscountPercent,
+                DiscountAmount = CurrentOrder.DiscountAmount,
+                Notes = CurrentOrder.Notes ?? ""
+            };
+
+            var calcResult = await _apiService.CalculateOrderPreviewAsync(request);
+            _currentCalc = calcResult;
+
+            OnPropertyChanged(nameof(ServicesTotal));
+            OnPropertyChanged(nameof(FinalTotal));
+            OnPropertyChanged(nameof(FinalTotalWithExpenses));
+            OnPropertyChanged(nameof(WasherEarningsDisplay));
+            OnPropertyChanged(nameof(CompanyEarningsDisplay));
+
+            _ = CheckForUpsellAsync();
+        }
+
         private void FilterServicesByDepartment()
         {
             if (_allServicesCache == null) return;
 
             var selectedIds = CurrentOrder?.ServiceIds?.ToList() ?? new List<int>();
 
-            // Фильтруем по категории услуги
             var filtered = _currentDepartment == "Service"
                 ? _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Service).ToList()
                 : _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Wash).ToList();
 
-            // Обновляем коллекцию услуг в UI
             Services = new ObservableCollection<ServiceViewModel>(
                 filtered.Select(s => new ServiceViewModel
                 {
@@ -139,7 +176,6 @@ namespace AccuratPanelCarWashing.ViewModels
                     IsSelected = selectedIds.Contains(s.Id)
                 }));
 
-            // Пересчитываем итог
             Recalculate();
         }
 
@@ -153,12 +189,8 @@ namespace AccuratPanelCarWashing.ViewModels
             _currentShift = currentShift;
             _existingOrder = order;
 
-            // ИСПРАВЛЕНО: Если заказ есть в БД (Id > 0), мы его РЕДАКТИРУЕМ
             _isEditMode = order != null && order.Id > 0;
-
-            // ИСПРАВЛЕНО: Флаг записи берем напрямую из модели, без проверки Id == 0
             _isAppointment = order != null && order.IsAppointment;
-
             _currentCalc = null;
 
             InitializeOrder();
@@ -171,7 +203,7 @@ namespace AccuratPanelCarWashing.ViewModels
 
         private ContractsOrder _currentOrder;
         private ObservableCollection<ServiceViewModel> _services;
-        private List<ContractsUser> _washers; // Контрактный тип для данных из API
+        private List<ContractsUser> _washers;
         private int _selectedBodyTypeCategory = 1;
         private string _windowTitle;
         private decimal _discountPercent;
@@ -215,25 +247,6 @@ namespace AccuratPanelCarWashing.ViewModels
             }
         }
 
-        // === ОБЁРТКИ НАД OrderMath (чтобы XAML не ломался) ===
-        public decimal ServicesTotal => CurrentCalculation.ServicesTotal;
-        public decimal ExtraCost
-        {
-            get => CurrentOrder.ExtraCost;
-            set
-            {
-                if (CurrentOrder.ExtraCost != value)
-                {
-                    CurrentOrder.ExtraCost = value;
-                    OnPropertyChanged(nameof(ExtraCost));
-                    Recalculate();
-                }
-            }
-        }
-        public decimal FinalTotal => CurrentCalculation.FinalPrice;
-        public decimal WasherEarningsDisplay => CurrentCalculation.WasherEarnings;
-        public decimal CompanyEarningsDisplay => CurrentCalculation.CompanyEarnings;
-
         public string WindowTitle => _windowTitle;
         public bool IsEditMode => _isEditMode;
         public bool IsAppointment => _isAppointment;
@@ -270,52 +283,6 @@ namespace AccuratPanelCarWashing.ViewModels
             }
         }
 
-        // === ГЛАВНЫЙ МЕТОД РАСЧЁТА ===
-        private OrderCalculation CurrentCalculation
-        {
-            get
-            {
-                if (_currentCalc == null)
-                {
-                    // Передаем список контрактных типов
-                    _currentCalc = OrderMath.Calculate(CurrentOrder, _allServicesCache, _washers);
-                }
-                return _currentCalc;
-            }
-        }
-
-        public void Recalculate()
-        {
-            _currentCalc = null;
-
-            // СИНХРОНИЗИРУЕМ ВЫБРАННЫЕ УСЛУГИ С МОДЕЛЬЮ ПЕРЕД РАСЧЕТОМ
-            SyncServiceIds();
-
-            // ОТЛАДКА:
-            var selectedCount = Services?.Count(s => s.IsSelected) ?? 0;
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Recalculate: {selectedCount} услуг выбрано");
-            if (Services != null)
-            {
-                foreach (var s in Services.Where(s => s.IsSelected))
-                {
-                    System.Diagnostics.Debug.WriteLine($"  - {s.Name}: {s.Price} ₽");
-                }
-            }
-
-            System.Diagnostics.Debug.WriteLine($"  ServicesTotal: {ServicesTotal}");
-            System.Diagnostics.Debug.WriteLine($"  FinalTotal: {FinalTotal}");
-            System.Diagnostics.Debug.WriteLine($"  WasherEarnings: {WasherEarningsDisplay}");
-
-            OnPropertyChanged(nameof(FinalTotal));
-            OnPropertyChanged(nameof(WasherEarningsDisplay));
-            OnPropertyChanged(nameof(CompanyEarningsDisplay));
-            OnPropertyChanged(nameof(ServicesTotal));
-
-            _ = CheckForUpsellAsync();
-        }
-
-
-        // === Просто синхронизирует выбранные услуги с заказом ===
         public void SyncServiceIds()
         {
             if (CurrentOrder != null && Services != null)
@@ -327,7 +294,7 @@ namespace AccuratPanelCarWashing.ViewModels
             _ = LoadServicesAsync();
             Recalculate();
         }
-        // Сохранение теперь асинхронное и возвращает результат
+
         public async Task<(bool success, string message)> SaveOrderAsync()
         {
             if (!Validate()) return (false, "Ошибка валидации");
@@ -338,17 +305,16 @@ namespace AccuratPanelCarWashing.ViewModels
             CurrentOrder.BodyTypeCategory = SelectedBodyTypeCategory;
             CurrentOrder.FinalPrice = FinalTotal;
 
-            // ВАЖНО: Принудительно синхронизируем WasherId в коллекцию OrderWashers перед отправкой
             if (CurrentOrder.GetWasherId().HasValue)
             {
                 CurrentOrder.OrderWashers = new List<AccuratSystem.Contracts.Models.OrderWasher>
-        {
-            new AccuratSystem.Contracts.Models.OrderWasher
-            {
-                UserId = CurrentOrder.GetWasherId().Value,
-                SplitShare = 1.0m // Полная доля
-            }
-        };
+                {
+                    new AccuratSystem.Contracts.Models.OrderWasher
+                    {
+                        UserId = CurrentOrder.GetWasherId().Value,
+                        SplitShare = 1.0m
+                    }
+                };
             }
 
             try
@@ -370,19 +336,11 @@ namespace AccuratPanelCarWashing.ViewModels
                 return (false, $"Ошибка API: {ex.Message}");
             }
         }
+
         private void InitializeOrder()
         {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] InitializeOrder: _existingOrder={_existingOrder != null}, _isEditMode={_isEditMode}");
-
-            if (_existingOrder != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] _existingOrder.Id={_existingOrder.Id}, CarNumber={_existingOrder.CarNumber}, CarModel={_existingOrder.CarModel}");
-            }
-
             if (_existingOrder != null && _isEditMode)
             {
-                System.Diagnostics.Debug.WriteLine("[DEBUG] Режим редактирования");
-
                 CurrentOrder = new ContractsOrder
                 {
                     Id = _existingOrder.Id,
@@ -413,8 +371,6 @@ namespace AccuratPanelCarWashing.ViewModels
                         : new List<AccuratSystem.Contracts.Models.OrderWasher>()
                 };
 
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] CurrentOrder создан: Id={CurrentOrder.Id}, CarNumber={CurrentOrder.CarNumber}, CarModel={CurrentOrder.CarModel}");
-
                 _discountPercent = CurrentOrder.DiscountPercent;
                 _discountAmount = CurrentOrder.DiscountAmount;
                 SelectedBodyTypeCategory = CurrentOrder.BodyTypeCategory > 0 ? CurrentOrder.BodyTypeCategory : 1;
@@ -422,13 +378,9 @@ namespace AccuratPanelCarWashing.ViewModels
                 OnPropertyChanged(nameof(CurrentDepartment));
 
                 _windowTitle = _isAppointment ? "✏ Редактирование записи" : "✏ Редактирование заказа";
-
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] _windowTitle={_windowTitle}");
             }
             else if (_existingOrder != null && _isAppointment)
             {
-                System.Diagnostics.Debug.WriteLine("[DEBUG] Режим редактирования записи");
-
                 CurrentOrder = new ContractsOrder
                 {
                     Id = 0,
@@ -464,8 +416,6 @@ namespace AccuratPanelCarWashing.ViewModels
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("[DEBUG] Режим создания нового заказа");
-
                 CurrentOrder = new ContractsOrder
                 {
                     Id = 0,
@@ -508,13 +458,12 @@ namespace AccuratPanelCarWashing.ViewModels
 
         public async Task LoadWashersAsync()
         {
-            Washers = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
+            Washers = await _apiService.GetUsersAsync();
             OnPropertyChanged(nameof(Washers));
         }
 
         public async Task LoadServicesAsync()
         {
-            // Грузим с сервера контрактные сервисы
             _allServicesCache = await _apiService.GetServicesAsync();
             var selectedIds = CurrentOrder?.ServiceIds?.ToList() ?? new List<int>();
 
@@ -525,7 +474,6 @@ namespace AccuratPanelCarWashing.ViewModels
                     {
                         Id = s.Id,
                         Name = s.Name,
-                        // Вычисляем цену вручную через PriceByBodyType
                         Price = s.PriceByBodyType.TryGetValue(SelectedBodyTypeCategory, out var p) ? p :
                                (s.PriceByBodyType.TryGetValue(1, out var def) ? def : 0),
                         IsSelected = selectedIds.Contains(s.Id)
@@ -561,7 +509,6 @@ namespace AccuratPanelCarWashing.ViewModels
             }
             Application.Current.Dispatcher.Invoke(() =>
             {
-                // Обновляем коллекцию в потоке UI
                 Recalculate();
                 FilterServices();
             });
@@ -571,15 +518,11 @@ namespace AccuratPanelCarWashing.ViewModels
         {
             if (Services != null && _allServicesCache.Any())
             {
-                // Сначала фильтруем по департаменту
                 var availableServices = _currentDepartment == "Service"
                     ? _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Service).ToList()
                     : _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Wash).ToList();
 
-                // Запоминаем, какие услуги уже были отмечены галочками
                 var selectedIds = Services.Where(s => s.IsSelected).Select(s => s.Id).ToList();
-
-                // Создаем новую коллекцию, чтобы WPF гарантированно перерисовал интерфейс
                 var newServices = new ObservableCollection<ServiceViewModel>();
 
                 foreach (var s in _allServicesCache)
@@ -588,14 +531,13 @@ namespace AccuratPanelCarWashing.ViewModels
                     {
                         Id = s.Id,
                         Name = s.Name,
-                        // Вычисляем цену вручную
                         Price = s.PriceByBodyType.TryGetValue(SelectedBodyTypeCategory, out var p) ? p :
                                (s.PriceByBodyType.TryGetValue(1, out var def) ? def : 0),
                         IsSelected = selectedIds.Contains(s.Id)
                     });
                 }
 
-                Services = newServices; // Обновляем свойство, UI перерисовывает список с новыми ценами
+                Services = newServices;
                 Recalculate();
                 FilterServices();
             }
@@ -603,8 +545,7 @@ namespace AccuratPanelCarWashing.ViewModels
 
         public bool Validate()
         {
-            // 🔥 ИСПРАВЛЕНО: используем CurrentOrder напрямую, а не _viewModel.CurrentOrder
-            if (!IsAppointment)  // Только для обычных заказов
+            if (!IsAppointment)
             {
                 if (!CurrentOrder.GetWasherId().HasValue || CurrentOrder.GetWasherId().Value <= 0)
                 {
@@ -657,7 +598,6 @@ namespace AccuratPanelCarWashing.ViewModels
 
         public void Cleanup()
         {
-            // Если подписки нет — метод можно оставить пустым
             _isSubscribedToDataChanged = false;
         }
 
@@ -681,7 +621,6 @@ namespace AccuratPanelCarWashing.ViewModels
                             DiscountPercent = value.DefaultDiscountPercent;
                         }
 
-                        // Присваиваем значения через свойства-обертки. 
                         CarModel = value.CarModel;
                         CarNumber = value.CarNumber;
                     }
@@ -689,7 +628,6 @@ namespace AccuratPanelCarWashing.ViewModels
             }
         }
 
-        // === ОБЁРТКИ ДЛЯ НАДЁЖНОЙ ПРИВЯЗКИ ===
         public string CarModel
         {
             get => CurrentOrder?.CarModel;
@@ -720,23 +658,19 @@ namespace AccuratPanelCarWashing.ViewModels
 
         public int? SelectedWasherId
         {
-            get => CurrentOrder?.GetWasherId(); // Используем метод расширения
+            get => CurrentOrder?.GetWasherId();
             set
             {
                 if (CurrentOrder != null && CurrentOrder.GetWasherId() != value)
                 {
-                    CurrentOrder.SetWasherId(value); // Используем метод расширения
+                    CurrentOrder.SetWasherId(value);
                     OnPropertyChanged(nameof(SelectedWasherId));
-                    // Пересчитываем деньги на экране сразу при выборе другого мойщика!
                     Recalculate();
                 }
             }
         }
 
-        // Добавь поле для поиска
         private string _serviceSearchText = "";
-
-        // Свойство для привязки (опционально, если хочешь TwoWay)
         public string ServiceSearchText
         {
             get => _serviceSearchText;
@@ -746,26 +680,21 @@ namespace AccuratPanelCarWashing.ViewModels
                 {
                     _serviceSearchText = value;
                     OnPropertyChanged(nameof(ServiceSearchText));
-                    FilterServices(); // Фильтруем при изменении
+                    FilterServices();
                 }
             }
         }
 
-        // Обновлённый метод фильтрации: департамент + поиск
         private void FilterServices()
         {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] FilterServices: Department={_currentDepartment}, Search='{_serviceSearchText}'");
-
             if (_allServicesCache == null) return;
 
             var selectedIds = CurrentOrder?.ServiceIds?.ToList() ?? new List<int>();
 
-            // 1. Фильтр по департаменту
             var filtered = _currentDepartment == "Service"
                 ? _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Service)
                 : _allServicesCache.Where(s => s.ServiceCategory == AccuratSystem.Contracts.Enums.ServiceCategory.Wash);
 
-            // 2. Фильтр по поиску (если есть текст)
             if (!string.IsNullOrWhiteSpace(_serviceSearchText))
             {
                 string search = _serviceSearchText.ToLower();
@@ -774,7 +703,6 @@ namespace AccuratPanelCarWashing.ViewModels
                     (s.Description != null && s.Description.ToLower().Contains(search)));
             }
 
-            // Обновляем коллекцию услуг в UI
             Services = new ObservableCollection<ServiceViewModel>(
                 filtered.Select(s => new ServiceViewModel
                 {
@@ -786,15 +714,8 @@ namespace AccuratPanelCarWashing.ViewModels
                 }));
 
             Recalculate();
-
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Filtered services count: {Services.Count}");
-            foreach (var s in Services)
-            {
-                System.Diagnostics.Debug.WriteLine($"  - {s.Name}");
-            }
         }
 
-        // Список доступных зон для текущего филиала и департамента
         private ObservableCollection<ZoneItem> _availableZones = new ObservableCollection<ZoneItem>();
         public ObservableCollection<ZoneItem> AvailableZones
         {
@@ -802,21 +723,11 @@ namespace AccuratPanelCarWashing.ViewModels
             set { _availableZones = value; OnPropertyChanged(nameof(AvailableZones)); }
         }
 
-        // Метод обновления списка зон (вызывается из окна)
         public void UpdateAvailableZones(List<ZoneItem> allZones)
         {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] UpdateAvailableZones: Total={allZones.Count}, Department={_currentDepartment}");
-
-            // Фильтруем зоны по текущему департаменту
             var filtered = allZones.Where(z => z.Department == _currentDepartment).ToList();
-
             AvailableZones = new ObservableCollection<ZoneItem>(filtered);
 
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Filtered to {AvailableZones.Count} zones for {_currentDepartment}");
-            foreach (var z in AvailableZones)
-                System.Diagnostics.Debug.WriteLine($"  ✓ {z.Name}");
-
-            // Если текущая зона не входит в отфильтрованный список — сбрасываем выбор
             if (CurrentOrder?.BoxNumber > 0 && !filtered.Any(z => z.BoxNumber == CurrentOrder.BoxNumber))
             {
                 CurrentOrder.BoxNumber = filtered.FirstOrDefault()?.BoxNumber ?? 0;
@@ -826,7 +737,6 @@ namespace AccuratPanelCarWashing.ViewModels
             OnPropertyChanged(nameof(AvailableZones));
         }
 
-        // === ПОЛЯ ДЛЯ РАСХОДОВ И ЛЕНТЫ ===
         private ObservableCollection<OrderExpense> _orderExpenses = new ObservableCollection<OrderExpense>();
         public ObservableCollection<OrderExpense> OrderExpenses
         {
@@ -841,10 +751,8 @@ namespace AccuratPanelCarWashing.ViewModels
             set { _orderTimeline = value; OnPropertyChanged(nameof(OrderTimeline)); }
         }
 
-        // Итого по расходам (для отображения)
         public decimal TotalExpensesAmount => OrderExpenses?.Sum(e => e.ClientPrice * e.Quantity) ?? 0;
 
-        // === МЕТОДЫ ЗАГРУЗКИ ===
         public async Task LoadOrderExpensesAsync(int orderId)
         {
             try
@@ -873,7 +781,6 @@ namespace AccuratPanelCarWashing.ViewModels
             }
         }
 
-        // === ДОБАВЛЕНИЕ РАСХОДА ===
         public async Task<bool> AddExpenseAsync(string name, string category, decimal costPrice, decimal clientPrice, int quantity, string note)
         {
             if (CurrentOrder?.Id <= 0) return false;
@@ -887,7 +794,6 @@ namespace AccuratPanelCarWashing.ViewModels
                 ClientPrice = clientPrice,
                 Quantity = quantity,
                 Note = note,
-
                 CreatedByUser = App.CurrentUser?.DisplayString
             };
 
@@ -896,10 +802,7 @@ namespace AccuratPanelCarWashing.ViewModels
                 var newExpense = await _apiService.AddOrderExpenseAsync(CurrentOrder.Id, dto);
                 OrderExpenses.Add(newExpense);
                 OnPropertyChanged(nameof(TotalExpensesAmount));
-
-                // Добавляем запись в ленту
                 await LoadOrderTimelineAsync(CurrentOrder.Id);
-
                 return true;
             }
             catch (Exception ex)
@@ -908,8 +811,5 @@ namespace AccuratPanelCarWashing.ViewModels
                 return false;
             }
         }
-
-        // === ОБНОВЛЕНИЕ ИТОГОВОЙ СУММЫ С УЧЁТОМ РАСХОДОВ ===
-        public decimal FinalTotalWithExpenses => FinalTotal + TotalExpensesAmount;
     }
 }

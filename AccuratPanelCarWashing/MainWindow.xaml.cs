@@ -3,6 +3,7 @@ using AccuratPanelCarWashing.Controls;
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
 using AccuratPanelCarWashing.ViewModels;
+using AccuratSystem.Contracts.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
@@ -379,7 +380,7 @@ namespace AccuratPanelCarWashing
                 var completedOrders = branchOrders.Where(o => o.Status == "Выполнен" || o.Status == "Завершен").ToList();
                 TotalRevenue = completedOrders.Sum(o => o.FinalPrice);
 
-                var totalWasherEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).WasherEarnings);
+                var totalWasherEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).WasherEarnings);
 
                 // Считаем только СВОИ бонусы из заказов, которые создал Я
                 decimal myUpsellShare = completedOrders
@@ -396,7 +397,7 @@ namespace AccuratPanelCarWashing
                 var myTotalEarnings = adminShiftPercentEarnings + myUpsellShare;
 
                 // Из прибыли компании вычитаем процент админа и ВСЕ выплаченные за смену бонусы кассиров
-                CompanyEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).CompanyEarnings) - adminShiftPercentEarnings - totalShiftUpsellBonuses;
+                CompanyEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).CompanyEarnings) - adminShiftPercentEarnings - totalShiftUpsellBonuses;
 
                 var inProgressCount = branchOrders.Count(o => o.Status == "В работе");
                 var cancelledCount = branchOrders.Count(o => o.Status == "Отменен");
@@ -466,12 +467,12 @@ namespace AccuratPanelCarWashing
 
             WashersStats = completedOrders.Where(o => o.GetWasherId() > 0).GroupBy(o => o.GetWasherId()).Select(g =>
             {
-                var washerRevenue = g.Sum(o => OrderMath.Calculate(o, _cachedServices).FinalPrice);
+                var washerRevenue = g.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).FinalPrice);
                 return new WasherStat
                 {
                     WasherName = GetWasherName(g.Key),
                     CarsCount = g.Count(),
-                    Earnings = g.Sum(o => OrderMath.Calculate(o, _cachedServices).WasherEarnings),
+                    Earnings = g.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).WasherEarnings),
                     TotalRevenue = washerRevenue,
                     Percentage = totalShiftRevenue > 0 ? (washerRevenue / totalShiftRevenue) * 100m : 0m
                 };

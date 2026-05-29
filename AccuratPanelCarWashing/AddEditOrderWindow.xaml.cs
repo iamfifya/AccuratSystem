@@ -63,9 +63,6 @@ namespace AccuratPanelCarWashing
             // Подписка на смену департамента и филиала для обновления зон
             DepartmentComboBox.SelectionChanged += DepartmentComboBox_SelectionChanged;
             BranchComboBox.SelectionChanged += BranchComboBox_SelectionChanged; // Добавили подписку здесь!
-
-            // 3. Заполняем статические списки в UI (категории, оплаты)
-            SetupStaticLists();
         }
 
         // Обработчик: при смене департамента обновляем список зон
@@ -104,6 +101,27 @@ namespace AccuratPanelCarWashing
                 var allUsers = await _apiService.GetUsersAsync();
                 var allClients = await _apiService.GetClientsAsync();
                 _allBranches = await _apiService.GetBranchesAsync(); // Загружаем филиалы
+
+                // Загружаем категории кузовов для текущего филиала
+                int currentBranchId = order?.BranchId > 0 ? order.BranchId : AppSettings.CurrentBranchId;
+                var carCategories = await _apiService.GetCarCategoriesAsync(currentBranchId);
+
+                // Привязываем к UI
+                BodyTypeComboBox.ItemsSource = carCategories;
+                BodyTypeComboBox.DisplayMemberPath = "Name";
+                BodyTypeComboBox.SelectedValuePath = "Id";
+
+                // ЗАГРУЗКА СПОСОБОВ ОПЛАТЫ
+                var paymentMethods = await _apiService.GetPaymentMethodsAsync(currentBranchId);
+                PaymentMethodComboBox.ItemsSource = paymentMethods;
+                PaymentMethodComboBox.DisplayMemberPath = "Name"; // Что видит пользователь
+                PaymentMethodComboBox.SelectedValuePath = "Name";
+
+                // СТАТУСЫ ЗАКАЗОВ
+                var orderStatuses = await _apiService.GetOrderStatusesAsync(currentBranchId);
+                StatusComboBox.ItemsSource = orderStatuses;
+                StatusComboBox.DisplayMemberPath = "DisplayName"; // Покажет "🟢 В работе"
+                StatusComboBox.SelectedValuePath = "Name";
 
                 WasherComboBox.ItemsSource = allUsers;
                 _viewModel.Washers = allUsers;
@@ -200,36 +218,6 @@ namespace AccuratPanelCarWashing
                     ZoneComboBox.SelectedValue = null;
                 }
             }
-        }
-
-        private void SetupStaticLists()
-        {
-            BodyTypeComboBox.ItemsSource = new List<KeyValuePair<string, int>> {
-                new KeyValuePair<string, int>("Категория 1 (Легковая)", 1),
-                new KeyValuePair<string, int>("Категория 2 (Универсал)", 2),
-                new KeyValuePair<string, int>("Категория 3 (Кроссовер)", 3),
-                new KeyValuePair<string, int>("Категория 4 (Внедорожник)", 4)
-            };
-            BodyTypeComboBox.DisplayMemberPath = "Key";
-            BodyTypeComboBox.SelectedValuePath = "Value";
-
-            StatusComboBox.ItemsSource = new List<KeyValuePair<string, string>> {
-                new KeyValuePair<string, string>("🟢 В работе", "В работе"),
-                new KeyValuePair<string, string>("✅ Выполнен", "Выполнен"),
-                new KeyValuePair<string, string>("❌ Отменен", "Отменен")
-            };
-            StatusComboBox.DisplayMemberPath = "Key";
-            StatusComboBox.SelectedValuePath = "Value";
-
-            PaymentMethodComboBox.ItemsSource = new List<KeyValuePair<string, string>> {
-                new KeyValuePair<string, string>("❓ Не указано", "Не указано"),
-                new KeyValuePair<string, string>("💵 Наличные", "Наличные"),
-                new KeyValuePair<string, string>("💳 Карта", "Карта"),
-                new KeyValuePair<string, string>("📱 Перевод", "Перевод"),
-                new KeyValuePair<string, string>("📱 QR-код", "QR-код")
-            };
-            PaymentMethodComboBox.DisplayMemberPath = "Key";
-            PaymentMethodComboBox.SelectedValuePath = "Value";
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)

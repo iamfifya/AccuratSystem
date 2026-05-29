@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Accurat.WebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Accurat.WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260529205852_AddOrderStatuses")]
+    partial class AddOrderStatuses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -301,30 +304,6 @@ namespace Accurat.WebAPI.Migrations
                         });
                 });
 
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.CompanySettings", b =>
-                {
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("CompanySharePercentage")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("DefaultAppointmentDuration")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CompanyId");
-
-                    b.ToTable("CompanySettings");
-
-                    b.HasData(
-                        new
-                        {
-                            CompanyId = 1,
-                            CompanySharePercentage = 65m,
-                            DefaultAppointmentDuration = 60
-                        });
-                });
-
             modelBuilder.Entity("AccuratSystem.Contracts.Models.EmployeeScheduleEntry", b =>
                 {
                     b.Property<int>("EmployeeId")
@@ -533,9 +512,6 @@ namespace Accurat.WebAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ColorHex")
-                        .HasColumnType("text");
-
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
@@ -556,7 +532,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 1,
-                            ColorHex = "#3498DB",
                             CompanyId = 1,
                             Icon = "🟢",
                             Name = "В работе",
@@ -565,7 +540,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 2,
-                            ColorHex = "#2ECC71",
                             CompanyId = 1,
                             Icon = "✅",
                             Name = "Выполнен",
@@ -574,7 +548,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 3,
-                            ColorHex = "#95A5A6",
                             CompanyId = 1,
                             Icon = "❌",
                             Name = "Отменен",
@@ -1101,17 +1074,6 @@ namespace Accurat.WebAPI.Migrations
                     b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.CompanySettings", b =>
-                {
-                    b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
-                        .WithOne()
-                        .HasForeignKey("AccuratSystem.Contracts.Models.CompanySettings", "CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

@@ -331,7 +331,6 @@
     </Compile>
     <Compile Include="AppointmentToBackgroundConverter.cs" />
     <Compile Include="AppointmentToStyleConverter.cs" />
-    <Compile Include="BoolToRoleConverter.cs" />
     <Compile Include="BoolToVisibilityConverter.cs" />
     <Compile Include="ClientDetailsWindow.xaml.cs">
       <DependentUpon>ClientDetailsWindow.xaml</DependentUpon>
@@ -339,7 +338,6 @@
     <Compile Include="ClientsWindow.xaml.cs">
       <DependentUpon>ClientsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CompletedToStatusConverter.cs" />
     <Compile Include="Controls\AppointmentsOverlay.xaml.cs">
       <DependentUpon>AppointmentsOverlay.xaml</DependentUpon>
     </Compile>
@@ -358,6 +356,7 @@
     <Compile Include="DecimalToEmptyZeroConverter.cs" />
     <Compile Include="DepartmentToZoneLabelConverter.cs" />
     <Compile Include="ExcelExporter.cs" />
+    <Compile Include="HexToBrushConverter.cs" />
     <Compile Include="HistoryWindow.xaml.cs">
       <DependentUpon>HistoryWindow.xaml</DependentUpon>
     </Compile>
@@ -400,11 +399,9 @@
     <Compile Include="Services\HttpRetryHandler.cs" />
     <Compile Include="Services\Logger.cs" />
     <Compile Include="Services\OrderExtensions.cs" />
-    <Compile Include="Services\OrderMath.cs" />
     <Compile Include="Services\TimeHelper.cs" />
     <Compile Include="Services\UserPermissions.cs" />
     <Compile Include="Services\UserSession.cs" />
-    <Compile Include="StatusToBackgroundConverter.cs" />
     <Compile Include="StatusToColorConverter.cs" />
     <Compile Include="UpsellManagementWindow.xaml.cs">
       <DependentUpon>UpsellManagementWindow.xaml</DependentUpon>
