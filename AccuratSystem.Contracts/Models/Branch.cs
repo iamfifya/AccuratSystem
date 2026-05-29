@@ -12,6 +12,9 @@ namespace AccuratSystem.Contracts.Models
         public int WashBaysCount { get; set; }
         public int ServiceLiftsCount { get; set; }
 
+        public int CompanyId { get; set; }
+        public Company Company { get; set; }
+
         // Навигационные свойства убраны для C# 7.3 совместимости в Contracts
         // Связи настраиваются в AppDbContext бэкенда
     }

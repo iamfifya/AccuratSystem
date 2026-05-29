@@ -35,11 +35,19 @@ namespace Accurat.WebAPI.Data
         public DbSet<TenantFeature> TenantFeatures { get; set; }
         public DbSet<UpsellSuggestion> UpsellSuggestions { get; set; }
         public DbSet<Role> Roles { get; set; } // Новая таблица с должностями
+        public DbSet<Company> Companies { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Связь 1 ко многим: Компания -> Филиалы
+            modelBuilder.Entity<Branch>()
+                .HasOne(b => b.Company)
+                .WithMany(c => c.Branches)
+                .HasForeignKey(b => b.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // 1. Явно указываем связь User -> Role
             modelBuilder.Entity<User>()
@@ -177,9 +185,21 @@ namespace Accurat.WebAPI.Data
 
 
             // Seed-данные (филиалы, клиенты, услуги) — оставляем как есть
+            // 1. Создаем первую компанию-владельца
+            modelBuilder.Entity<Company>().HasData(
+                new Company
+                {
+                    Id = 1,
+                    Name = "ACCURAT GROUP",
+                    IsActive = true,
+                    RegistrationDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
+
+            // 2. Добавляем CompanyId = 1 в наши филиалы
             modelBuilder.Entity<Branch>().HasData(
-                new Branch { Id = 1, Name = "ACCURAT - На Строителей", Address = "ул. Строителей, 54", Type = 1, WashBaysCount = 2, ServiceLiftsCount = 0 },
-                new Branch { Id = 2, Name = "ACCURAT - На Луначарского", Address = "ул. Луначарского, 26а", Type = 3, WashBaysCount = 3, ServiceLiftsCount = 3 }
+                new Branch { Id = 1, CompanyId = 1, Name = "ACCURAT - На Строителей", Address = "ул. Строителей, 54", Type = 1, WashBaysCount = 2, ServiceLiftsCount = 0 },
+                new Branch { Id = 2, CompanyId = 1, Name = "ACCURAT - На Луначарского", Address = "ул. Луначарского, 26а", Type = 3, WashBaysCount = 3, ServiceLiftsCount = 3 }
             );
 
             modelBuilder.Entity<Client>().HasData(
