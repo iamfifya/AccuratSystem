@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Accurat.WebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Accurat.WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260531215234_AddCompanyToUsers")]
+    partial class AddCompanyToUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -227,9 +230,6 @@ namespace Accurat.WebAPI.Migrations
                     b.Property<string>("CarNumber")
                         .HasColumnType("text");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
                     b.Property<decimal>("DefaultDiscountPercent")
                         .HasColumnType("numeric");
 
@@ -256,8 +256,6 @@ namespace Accurat.WebAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("Clients");
 
                     b.HasData(
@@ -266,7 +264,6 @@ namespace Accurat.WebAPI.Migrations
                             Id = 1,
                             CarModel = "ВАЗ 2105",
                             CarNumber = "В583КВ43",
-                            CompanyId = 0,
                             DefaultDiscountPercent = 0m,
                             FullName = "Кураедов Дмитрий Витальевич",
                             Notes = "Разработчик",
@@ -801,9 +798,6 @@ namespace Accurat.WebAPI.Migrations
                     b.Property<decimal?>("BasePriceHint")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
                     b.Property<decimal?>("CustomWagePercentage")
                         .HasColumnType("numeric");
 
@@ -832,15 +826,12 @@ namespace Accurat.WebAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("Services");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
-                            CompanyId = 0,
                             Description = "2-х фазная мойка",
                             DurationMinutes = 40,
                             HasFloatingPrice = false,
@@ -852,7 +843,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 2,
-                            CompanyId = 0,
                             Description = "Двухфазная мойка, пылесос, уборка",
                             DurationMinutes = 90,
                             HasFloatingPrice = false,
@@ -864,7 +854,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 3,
-                            CompanyId = 0,
                             Description = "Внутренняя и внешняя очистка",
                             DurationMinutes = 15,
                             HasFloatingPrice = false,
@@ -876,7 +865,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 4,
-                            CompanyId = 0,
                             Description = "Уборка салона",
                             DurationMinutes = 20,
                             HasFloatingPrice = false,
@@ -888,7 +876,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 5,
-                            CompanyId = 0,
                             Description = "Уборка пластика",
                             DurationMinutes = 15,
                             HasFloatingPrice = false,
@@ -900,7 +887,6 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 6,
-                            CompanyId = 0,
                             Description = "SHINE SYSTEM",
                             DurationMinutes = 20,
                             HasFloatingPrice = false,
@@ -1007,7 +993,7 @@ namespace Accurat.WebAPI.Migrations
                     b.Property<int?>("BranchId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("CompanyId")
+                    b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
                     b.Property<string>("FullName")
@@ -1135,17 +1121,6 @@ namespace Accurat.WebAPI.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.Client", b =>
-                {
-                    b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-                });
-
             modelBuilder.Entity("AccuratSystem.Contracts.Models.CompanySettings", b =>
                 {
                     b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
@@ -1235,17 +1210,6 @@ namespace Accurat.WebAPI.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("AccuratSystem.Contracts.Models.Service", b =>
-                {
-                    b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-                });
-
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Shift", b =>
                 {
                     b.HasOne("AccuratSystem.Contracts.Models.Branch", "Branch")
@@ -1289,7 +1253,8 @@ namespace Accurat.WebAPI.Migrations
                     b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("AccuratSystem.Contracts.Models.Role", "Role")
                         .WithMany()

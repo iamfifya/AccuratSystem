@@ -118,7 +118,7 @@
                         </StackPanel>
 
                         <Border Grid.Column="1" 
-                                Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}" 
+                                Background="{Binding StatusColorHex, Converter={StaticResource HexToBrushConverter}}" 
                                 CornerRadius="4" Padding="6,2" 
                                 HorizontalAlignment="Right" VerticalAlignment="Top">
                             <TextBlock Text="{Binding Status}" Foreground="White" FontSize="9" FontWeight="Bold"/>

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Accurat.WebAPI.Data;
 using Accurat.WebAPI.Hubs;
 using Microsoft.AspNetCore.SignalR;
-using Accurat.WebAPI.Services; // 💥 ПОДКЛЮЧИЛИ НАШИ СЕРВИСЫ С ORDERMATH
+using Accurat.WebAPI.Services; // ПОДКЛЮЧИЛИ НАШИ СЕРВИСЫ С ORDERMATH
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -17,6 +17,9 @@ namespace Accurat.WebAPI.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IHubContext<AppHub> _hubContext;
+        private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id)
+            ? int.Parse(id)
+            : 1;
 
         public OrdersController(AppDbContext context, IHubContext<AppHub> hubContext)
         {
@@ -25,7 +28,7 @@ namespace Accurat.WebAPI.Controllers
         }
 
         // ==========================================
-        // 💥 НОВЫЙ ЭНДПОИНТ: СИНХРОННЫЙ API-КАЛЬКУЛЯТОР PREVIEW
+        // НОВЫЙ ЭНДПОИНТ: СИНХРОННЫЙ API-КАЛЬКУЛЯТОР PREVIEW
         // ==========================================
         [HttpPost("calculate-preview")]
         public async Task<ActionResult<OrderCalculation>> CalculatePreview([FromBody] OrderPreviewRequestDto request)
@@ -87,13 +90,16 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            var orders = await _context.Orders.Include(o => o.OrderWashers).ToListAsync();
+            var orders = await _context.Orders
+                .Include(o => o.OrderWashers)
+                // Если Разработчик (0) — берем всё. Иначе берем только заказы своей компании.
+                .Where(o => CurrentCompanyId == 0 || _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id).Contains(o.BranchId))
+                .ToListAsync();
 
             foreach (var order in orders)
             {
                 var latestHistory = await _context.OrderStatusHistories
                     .FirstOrDefaultAsync(h => h.OrderId == order.Id && h.EndTime == null);
-
                 order.CurrentStatusStartTime = latestHistory?.StartTime;
             }
 
@@ -132,7 +138,7 @@ namespace Accurat.WebAPI.Controllers
 
                     if (string.IsNullOrEmpty(order.Status)) order.Status = "В работе";
 
-                    // 💥 ЗАЩИТА: Пересчитываем финансовые показатели на бэкенде перед сохранением!
+                    // ЗАЩИТА: Пересчитываем финансовые показатели на бэкенде перед сохранением!
                     // Берем услуги, настройки и пересчитываем FinalPrice, чтобы клиент не прислал фейк.
                     var branch = await _context.Branches.FindAsync(order.BranchId);
                     var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
@@ -214,7 +220,7 @@ namespace Accurat.WebAPI.Controllers
                     };
                     _context.OrderTimelineEntries.Add(timelineEntry);
 
-                    // 💥 ПЕРЕСЧЕТ ПРИ КОНВЕРТАЦИИ:
+                    // ПЕРЕСЧЕТ ПРИ КОНВЕРТАЦИИ:
                     var branch = await _context.Branches.FindAsync(order.BranchId);
                     var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
                     var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
@@ -273,7 +279,7 @@ namespace Accurat.WebAPI.Controllers
                         _context.OrderStatusHistories.Add(newHistory);
                     }
 
-                    // 💥 ПЕРЕСЧЕТ ПРИ ОБНОВЛЕНИИ (ВЫЗОВ ИЗ ОКНА РЕДАКТИРОВАНИЯ):
+                    // ПЕРЕСЧЕТ ПРИ ОБНОВЛЕНИИ (ВЫЗОВ ИЗ ОКНА РЕДАКТИРОВАНИЯ):
                     var branch = await _context.Branches.FindAsync(order.BranchId);
                     var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
                     var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();

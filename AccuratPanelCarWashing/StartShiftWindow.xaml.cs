@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace AccuratPanelCarWashing
 {
@@ -15,6 +16,11 @@ namespace AccuratPanelCarWashing
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
         private DateTime _selectedDate;
+        
+        // 💥 ПОЛНЫЙ список сотрудников (оригинал, в котором хранятся выбранные галочки)
+        private List<EmployeeSelection> _allEmployees = new List<EmployeeSelection>();
+        
+        // Отфильтрованный список (то, что мы видим на экране прямо сейчас)
         private List<EmployeeSelection> _employees;
 
         public int? PreselectedBranchId { get; set; }
@@ -45,16 +51,19 @@ namespace AccuratPanelCarWashing
         {
             try
             {
-                var allEmployees = await _apiService.GetUsersAsync();
+                var allUsers = await _apiService.GetUsersAsync();
 
-                // 💥 ИСПРАВЛЕНИЕ: Берем название должности прямо из подгруженного объекта Role
-                Employees = allEmployees.Where(e => e.IsActive).Select(e => new EmployeeSelection
+                // Заполняем мастер-список
+                _allEmployees = allUsers.Where(e => e.IsActive).Select(e => new EmployeeSelection
                 {
                     Id = e.Id,
                     FullName = e.FullName,
-                    RoleDisplay = e.Role != null ? e.Role.Name : "Сотрудник", // Вуаля!
+                    RoleDisplay = e.Role != null ? e.Role.Name : "Сотрудник",
                     IsSelected = false
                 }).ToList();
+
+                // Изначально отображаем всех
+                Employees = _allEmployees.ToList();
             }
             catch (Exception ex)
             {
@@ -62,11 +71,33 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        // 💥 СОБЫТИЕ ПОИСКА
+        private void EmployeeSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string filter = EmployeeSearchTextBox.Text.ToLower().Trim();
+
+            if (string.IsNullOrWhiteSpace(filter))
+            {
+                // Если поиск пуст — возвращаем всех
+                Employees = _allEmployees.ToList();
+            }
+            else
+            {
+                // Ищем и по имени, и по должности
+                Employees = _allEmployees.Where(emp => 
+                    emp.FullName.ToLower().Contains(filter) || 
+                    emp.RoleDisplay.ToLower().Contains(filter)
+                ).ToList();
+            }
+        }
+
         private async void StartShiftButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var selectedIds = Employees.Where(emp => emp.IsSelected).Select(emp => emp.Id).ToList();
+                // 💥 ВАЖНО: Берем выбранных из _allEmployees, а не из Employees!
+                // Так мы не потеряем тех, кого выбрали, а потом скрыли фильтром поиска.
+                var selectedIds = _allEmployees.Where(emp => emp.IsSelected).Select(emp => emp.Id).ToList();
 
                 if (!selectedIds.Any())
                 {
@@ -128,8 +159,6 @@ namespace AccuratPanelCarWashing
         public event PropertyChangedEventHandler PropertyChanged;
         public int Id { get; set; }
         public string FullName { get; set; }
-
-        //  Добавили свойство для отображения должности
         public string RoleDisplay { get; set; }
 
         private bool _isSelected;

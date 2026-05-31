@@ -93,7 +93,7 @@
                        TextWrapping="Wrap" Visibility="{Binding ExtraCost, Converter={StaticResource ZeroToVisibilityConverter}}"/>
 
                 <Border CornerRadius="10" Padding="5,2" Margin="0,5,0,0" 
-                    Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}"
+                    Background="{Binding StatusColorHex, Converter={StaticResource HexToBrushConverter}}"
                     HorizontalAlignment="Center">
                     <TextBlock FontSize="9" Foreground="White" Text="{Binding Status}"/>
                 </Border>

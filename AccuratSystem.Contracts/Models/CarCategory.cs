@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
 
-        // 💥 Привязка к компании (тенанту)
+        // Привязка к компании (тенанту)
         public int CompanyId { get; set; }
         public Company Company { get; set; }
 

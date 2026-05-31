@@ -14,7 +14,7 @@ namespace AccuratPanelCarWashing.Models
         [JsonIgnore]
         public bool IsAdmin => RoleId == 1 || RoleId == 2;
 
-        // 💥 ИСПРАВЛЕНИЕ: Никаких switch! Просто берем название из базы
+        // ИСПРАВЛЕНИЕ: Никаких switch! Просто берем название из базы
         [JsonIgnore]
         public string RoleDisplay => Role != null ? Role.Name : "👤 Сотрудник";
 

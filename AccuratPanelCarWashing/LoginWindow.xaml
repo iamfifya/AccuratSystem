@@ -17,48 +17,38 @@
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- 0: Заголовок "Accurat" -->
-            <RowDefinition Height="Auto"/>
-            <!-- 1: Логин Label -->
-            <RowDefinition Height="Auto"/>
-            <!-- 2: Логин TextBox -->
-            <RowDefinition Height="Auto"/>
-            <!-- 3: Пароль Label -->
-            <RowDefinition Height="Auto"/>
-            <!-- 4: Пароль PasswordBox -->
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <!-- 5: Кастомный филиал -->
             <RowDefinition Height="*"/>
-            <!-- 6: Кнопки -->
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock Text="ACCURAT" FontSize="48" 
-                   Foreground="Black" HorizontalAlignment="Center" Margin="0,0,0,20" Grid.Row="0" 
-                   FontFamily="Cascadia Mono Light"/>
+               Foreground="Black" HorizontalAlignment="Center" Margin="0,0,0,20" Grid.Row="0" 
+               FontFamily="Cascadia Mono Light"/>
 
-        <Label Content="Логин:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
-        <TextBox x:Name="LoginTextBox" Grid.Row="2" Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
+        <StackPanel x:Name="LoginPanel" Grid.Row="1" VerticalAlignment="Center" Visibility="Visible">
+            <Label Content="Логин:" Margin="0,5" FontWeight="SemiBold"/>
+            <TextBox x:Name="LoginTextBox" Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
 
-        <Label Content="Пароль:" Grid.Row="3" Margin="0,5" FontWeight="SemiBold"/>
-        <PasswordBox x:Name="PasswordBox" Grid.Row="4" Margin="0,5" Height="50" Padding="5" 
+            <Label Content="Пароль:" Margin="0,5" FontWeight="SemiBold"/>
+            <PasswordBox x:Name="PasswordBox" Margin="0,5" Height="50" Padding="5" 
                      VerticalContentAlignment="Center" Foreground="Black"/>
+        </StackPanel>
 
-        <!-- Твой новый кастомный комбобокс -->
-        <Label Content="Рабочая точка(Филиал):" Grid.Row="5" Margin="0,5" FontWeight="SemiBold"/>
-        <controls:CustomComboBox x:Name="BranchComboBox" 
-                                 Grid.Row="6" 
-                                 Margin="0,5,0,10" 
+        <StackPanel x:Name="BranchSelectionPanel" Grid.Row="1" VerticalAlignment="Center" Visibility="Collapsed">
+            <Label Content="Рабочая точка (Филиал):" Margin="0,5" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            <controls:CustomComboBox x:Name="BranchComboBox" 
+                                 Margin="0,15,0,10" 
                                  Height="50"
                                  Placeholder="Выберите место работы"
                                  DisplayMemberPath="Name"
                                  SelectedValuePath="Id"/>
+        </StackPanel>
 
-        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,20">
-            <Button Content="Войти" Click="LoginButton_Click" Width="120" Height="40" 
-                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand" FontWeight="Bold" IsDefault="True"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,20">
+            <Button x:Name="ActionBtn" Content="Войти" Click="ActionBtn_Click" Width="120" Height="40" 
+                Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand" FontWeight="Bold" IsDefault="True"/>
             <Button Content="Выход" Click="ExitButton_Click" Width="120" Height="40" 
-                    Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand" FontWeight="Bold"/>
+                Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand" FontWeight="Bold"/>
         </StackPanel>
     </Grid>
 </Window>

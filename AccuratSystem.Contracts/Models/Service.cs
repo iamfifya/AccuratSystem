@@ -6,6 +6,11 @@ namespace AccuratSystem.Contracts.Models
     public class Service
     {
         public int Id { get; set; }
+
+        // 💥 ИЗОЛЯЦИЯ ТЕНАНТА
+        public int CompanyId { get; set; }
+        public Company Company { get; set; }
+
         public string Name { get; set; } = string.Empty;
         public int DurationMinutes { get; set; }
         public string Description { get; set; } = string.Empty;

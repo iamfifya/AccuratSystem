@@ -235,8 +235,15 @@ namespace Accurat.WebAPI.Data
             );
 
             modelBuilder.Entity<User>().HasData(
-                new User { Id = 1, FullName = "Анастасия", Phone = "+79877063709", Login = "а1", PasswordHash = "1", RoleId = 2, IsActive = true, BranchId = null }
+                new User { Id = 1, FullName = "Анастасия", Phone = "+79877063709", Login = "а1", PasswordHash = "1", RoleId = 2, IsActive = true, BranchId = null, CompanyId = 1 }
             );
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Company)
+                .WithMany()
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict); // Нельзя удалить компанию, если в ней есть сотрудники
+
 
             modelBuilder.Entity<EmployeeScheduleEntry>()
                 .HasKey(e => new { e.EmployeeId, e.BranchId, e.Year, e.Month, e.Day });

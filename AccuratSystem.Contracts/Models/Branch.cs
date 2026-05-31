@@ -14,6 +14,7 @@ namespace AccuratSystem.Contracts.Models
 
         public int CompanyId { get; set; }
         public Company Company { get; set; }
+        public bool IsActive { get; set; }
 
         // Навигационные свойства убраны для C# 7.3 совместимости в Contracts
         // Связи настраиваются в AppDbContext бэкенда

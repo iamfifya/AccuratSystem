@@ -304,7 +304,7 @@ namespace AccuratPanelCarWashing.Controls
 
                 var selectedWasher = washerDialog.SelectedWasher;
 
-                // 3. 💥 ВАЖНО: Вызываем специальный метод API для конвертации!
+                // 3. ВАЖНО: Вызываем специальный метод API для конвертации!
                 var convertedOrder = await _apiService.ConvertAppointmentToOrderAsync(
                     SelectedItem.Id,
                     _currentShift.Id,

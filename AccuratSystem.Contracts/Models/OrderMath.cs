@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AccuratSystem.Contracts.Models // 💥 ОБЩИЙ НЕЙМСПЕЙС
+namespace AccuratSystem.Contracts.Models // ОБЩИЙ НЕЙМСПЕЙС
 {
     public static class OrderMath
     {

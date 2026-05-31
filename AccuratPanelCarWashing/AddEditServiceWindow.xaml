@@ -9,7 +9,7 @@
         Title="Добавление/Редактирование услуги"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="550" Height="800"
+        Width="700" Height="800"
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"

@@ -12,7 +12,11 @@
         public int RoleId { get; set; }
         public Role Role { get; set; } // Связь с таблицей Roles
 
-        public bool IsActive { get; set; } = true;
+        // ДОБАВЛЯЕМ ЖЕСТКУЮ ПРИВЯЗКУ К КОМПАНИИ:
+        public int? CompanyId { get; set; }
+        public Company Company { get; set; }
+
+        public bool IsActive { get; set; }
         public int? BranchId { get; set; }
         public decimal BaseWagePercentage { get; set; }
         public decimal BaseSalaryPerShift { get; set; }

@@ -8,7 +8,7 @@
         Title="{Binding WindowTitle}"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="500" Height="950"
+        Width="700" Height="950"
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"

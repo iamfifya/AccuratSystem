@@ -28,13 +28,19 @@ namespace AccuratPanelCarWashing.Services
 {
     public class ApiService
     {
-        private readonly HttpClient _http;
+        private static readonly HttpClient _http;
 
-        public ApiService()
+        static ApiService()
         {
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+
             _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
+        }
+
+        public ApiService()
+        {
+            // Обычный конструктор теперь пустой
         }
 
         #region СМЕНЫ (SHIFTS)
@@ -330,16 +336,26 @@ namespace AccuratPanelCarWashing.Services
                 throw new Exception($"Скрытая ошибка API: {ex.Message}");
             }
         }
-        public async Task<LoginResponseDto> AuthenticateAsync(string login, string password, int branchId)
+        public async Task<LoginResponseDto> AuthenticateAsync(string login, string password)
         {
-            // Отправляем объект с тремя полями: Login, Password и BranchId
-            var response = await _http.PostAsJsonAsync("Users/login", new { Login = login, Password = password, BranchId = branchId });
+            var request = new LoginRequestDto { Login = login, Password = password };
+            var response = await _http.PostAsJsonAsync("Users/login", request);
+
             if (response.IsSuccessStatusCode)
                 return await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+
             return null;
         }
 
-
+        public void UpdateTenantContext(int companyId)
+        {
+            // Этот метод теперь будет применять заголовок глобально ко всем окнам!
+            if (_http.DefaultRequestHeaders.Contains("X-Company-Id"))
+            {
+                _http.DefaultRequestHeaders.Remove("X-Company-Id");
+            }
+            _http.DefaultRequestHeaders.Add("X-Company-Id", companyId.ToString());
+        }
 
         #endregion
 

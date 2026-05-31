@@ -12,21 +12,25 @@ namespace Accurat.WebAPI.Controllers
     public class ServicesController : ControllerBase
     {
         private readonly AppDbContext _context;
+        public ServicesController(AppDbContext context) => _context = context;
 
-        public ServicesController(AppDbContext context)
-        {
-            _context = context;
-        }
+        private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id) ? int.Parse(id) : 1;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Service>>> GetServices()
         {
-            return await _context.Services.ToListAsync();
+            // Отдаем услуги только текущей компании (или все, если Разработчик)
+            return await _context.Services
+                .Where(s => CurrentCompanyId == 0 || s.CompanyId == CurrentCompanyId)
+                .ToListAsync();
         }
 
         [HttpPost]
         public async Task<ActionResult<Service>> CreateService(Service service)
         {
+            // Принудительно привязываем новую услугу к текущей компании
+            service.CompanyId = CurrentCompanyId == 0 ? 1 : CurrentCompanyId;
+
             _context.Services.Add(service);
             await _context.SaveChangesAsync();
             return Ok(service);

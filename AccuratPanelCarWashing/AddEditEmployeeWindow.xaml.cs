@@ -27,7 +27,7 @@ namespace AccuratPanelCarWashing
             InitializeComponent();
             _apiService = new ApiService();
 
-            // 💥 УБРАЛИ ХАРДКОД! Теперь список пустой, пока не скачается из БД
+            // УБРАЛИ ХАРДКОД! Теперь список пустой, пока не скачается из БД
             // RoleComboBox.DisplayMemberPath = "Name";
             // RoleComboBox.SelectedValuePath = "Id";
 
@@ -60,7 +60,7 @@ namespace AccuratPanelCarWashing
                     BranchComboBox.SelectedValue = CurrentEmployee.BranchId;
                 }
 
-                // 💥 КАЧАЕМ РОЛИ НАПРЯМУЮ ИЗ БАЗЫ:
+                // КАЧАЕМ РОЛИ НАПРЯМУЮ ИЗ БАЗЫ:
                 var roles = await _apiService.GetRolesAsync();
                 RoleComboBox.ItemsSource = roles;
                 RoleComboBox.SelectedValue = CurrentEmployee.RoleId;

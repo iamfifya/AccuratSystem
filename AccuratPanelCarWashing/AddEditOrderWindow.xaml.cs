@@ -412,7 +412,7 @@ namespace AccuratPanelCarWashing
 
                 if (_viewModel.CurrentOrder.Id > 0)
                 {
-                    // 💥 Запись УЖЕ в базе. Делаем конвертацию строго через сервер
+                    // Запись УЖЕ в базе. Делаем конвертацию строго через сервер
                     var convertedOrder = await _apiService.ConvertAppointmentToOrderAsync(
                         _viewModel.CurrentOrder.Id,
                         _currentShift.Id,
@@ -427,7 +427,7 @@ namespace AccuratPanelCarWashing
                 }
                 else
                 {
-                    // 💥 Это НОВАЯ запись, которой еще нет в базе (нажали Плюс -> Преобразовать).
+                    // Это НОВАЯ запись, которой еще нет в базе (нажали Плюс -> Преобразовать).
                     // Просто меняем свойства вью-модели и вызываем обычное сохранение
                     _viewModel.SelectedWasherId = selectedWasher.Id;
                     _viewModel.CurrentOrder.IsAppointment = false;

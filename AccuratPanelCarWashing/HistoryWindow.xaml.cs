@@ -149,6 +149,9 @@ namespace AccuratPanelCarWashing
                 var allServices = await _apiService.GetServicesAsync();
                 var allUsers = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
 
+                // Грузим статусы, чтобы достать их цвета
+                var allStatuses = await _apiService.GetOrderStatusesAsync(AppSettings.CurrentBranchId);
+
                 var closedShiftsOnDate = allShifts.Where(s => s.Date.Date == date.Date && s.IsClosed).ToList();
                 var shiftIdsOnDate = closedShiftsOnDate.Select(s => s.Id).ToList();
 
@@ -193,6 +196,7 @@ namespace AccuratPanelCarWashing
                     ExtraCostReason = o.ExtraCostReason,
                     BoxNumber = o.BoxNumber,
                     Status = o.Status,
+                    StatusColorHex = allStatuses.FirstOrDefault(s => s.Name == o.Status)?.ColorHex ?? "#7F8C8D",
                     PaymentMethod = o.PaymentMethod,
                     IsAppointment = o.IsAppointment
                 }).OrderBy(i => i.Time).ToList();

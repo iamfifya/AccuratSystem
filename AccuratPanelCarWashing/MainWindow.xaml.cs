@@ -190,7 +190,7 @@ namespace AccuratPanelCarWashing
                 _cachedServices = await _apiService.GetServicesAsync();
                 var allOrdersFromApi = await _apiService.GetOrdersAsync();
 
-                // 💥  Просто сохраняем ВСЕ заказы с сервера в локальный кэш!
+                //  Просто сохраняем ВСЕ заказы с сервера в локальный кэш!
                 // Нам не нужно их тут жестко резать, так как методы ApplyFilterAndDisplay() 
                 // и UpdateInfo() сами прекрасно всё отфильтруют по нужной смене и филиалу.
                 _allOrders = allOrdersFromApi;
@@ -231,7 +231,7 @@ namespace AccuratPanelCarWashing
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentBranchDisplay)));
                 }
 
-                // 💥 ТОЛЬКО ТЕПЕРЬ мы знаем правильный филиал и можем найти активную смену
+                // ТОЛЬКО ТЕПЕРЬ мы знаем правильный филиал и можем найти активную смену
                 _currentShift = _allShiftsCache.FirstOrDefault(s => !s.IsClosed && s.BranchId == _currentBranchId);
 
                 // Теперь методы вытащат из полного кэша _allOrders то, что нужно
@@ -261,7 +261,7 @@ namespace AccuratPanelCarWashing
         {
             int currentShiftId = _currentShift?.Id ?? -1;
 
-            // 💥 ИСПРАВЛЕНИЕ ФИЛЬТРА: Расширили условие.
+            // ИСПРАВЛЕНИЕ ФИЛЬТРА: Расширили условие.
             // Теперь мы железно показываем ВСЕ обычные заказы за сегодня, даже если со сменой что-то не так.
             var filteredOrders = _allOrders.Where(o =>
                 o.BranchId == _currentBranchId &&

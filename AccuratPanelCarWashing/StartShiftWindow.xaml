@@ -8,7 +8,7 @@
         Title="Начать смену"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="450" Height="700"
+        Width="700" Height="850"
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"
@@ -18,42 +18,65 @@
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="🚗 Новая смена" FontSize="24" FontWeight="Bold" 
-                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,20" Grid.Row="0"/>
+        <TextBlock Grid.Row="0" Text="🚗 Новая смена" FontSize="24" FontWeight="Bold" 
+                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+        <ScrollViewer Grid.Row="1">
+            <StackPanel>
+                <Label Content="📅 Дата смены:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
+                
+                <VirtualizingStackPanel HorizontalAlignment="Center">
+                    <local:CustomDatePicker x:Name="ShiftDatePicker" Grid.Row="2" Height="50" 
+                                            SelectedDate="{Binding SelectedDate, Mode=TwoWay}"/>
+                </VirtualizingStackPanel>
+                <Label Content="🔍 Поиск сотрудника:" Grid.Row="3" Margin="0,10,0,0" FontWeight="SemiBold"/>
+                <TextBox x:Name="EmployeeSearchTextBox" Grid.Row="4"
+                         Margin="0,5,0,10" Height="40" Padding="5"
+                         TextChanged="EmployeeSearchTextBox_TextChanged"/>
 
-        <Label Content="📅 Дата смены:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
-        <local:CustomDatePicker x:Name="ShiftDatePicker" Grid.Row="2" Height="50" 
-                        SelectedDate="{Binding SelectedDate, Mode=TwoWay}"/>
+                <Label Content="👥 Выберите сотрудников:" Grid.Row="5" Margin="0,5,0,5" FontWeight="SemiBold"/>
 
-        <Label Content="👥 Выберите сотрудников:" Grid.Row="3" Margin="0,10,0,5" FontWeight="SemiBold"/>
+                <ListBox x:Name="EmployeesListBox" Grid.Row="6" Margin="0,5,0,10"
+                         ItemsSource="{Binding Employees}" SelectionMode="Multiple"
+                         Foreground="Black">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="8,8"/>
+                            <Setter Property="MinHeight" Value="40"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#3498DB"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding FullName}" Grid.Column="0" 
+                                           VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding RoleDisplay}" Grid.Column="1" 
+                                           VerticalAlignment="Center" Margin="15,0,0,0"
+                                           FontSize="11" Opacity="0.7"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
-        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Employees}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border BorderBrush="#BDC3C7" BorderThickness="0,0,0,1" Padding="10,5">
-                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                      Margin="5">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding FullName}" FontSize="13" Margin="5,0" Foreground="Black"/>
-                                    <TextBlock Text="{Binding RoleDisplay}" 
-                                               FontSize="10" Foreground="#7F8C8D" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </CheckBox>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            </StackPanel>
         </ScrollViewer>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="5" Margin="0,15">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2" Margin="0,15">
             <Button Content="✅ Начать смену" Click="StartShiftButton_Click" Width="150" Height="35" 
                     Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
             <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 

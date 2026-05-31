@@ -6,7 +6,7 @@
         Title="Редактирование сотрудника"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize" 
-        Width="500" Height="750" 
+        Width="700" Height="750" 
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"

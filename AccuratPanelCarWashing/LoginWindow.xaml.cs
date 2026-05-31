@@ -1,12 +1,10 @@
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
-using AccuratSystem.Contracts.DTOs; // Добавлено для LoginResponseDto
+using AccuratSystem.Contracts.DTOs;
 using AccuratSystem.Contracts.Models;
-using Microsoft.VisualBasic.ApplicationServices;
 using System;
 using System.Linq;
 using System.Windows;
-
 using WpfUser = AccuratPanelCarWashing.Models.User;
 
 namespace AccuratPanelCarWashing
@@ -14,87 +12,78 @@ namespace AccuratPanelCarWashing
     public partial class LoginWindow : Window
     {
         private readonly ApiService _apiService = new ApiService();
+        private LoginResponseDto _loginResponse;
+        private bool _isStepTwo = false;
+
         public WpfUser AuthenticatedUser { get; private set; }
 
         public LoginWindow()
         {
             InitializeComponent();
-            _ = LoadBranchesAsync();
         }
 
-        private async System.Threading.Tasks.Task LoadBranchesAsync()
+        private async void ActionBtn_Click(object sender, RoutedEventArgs e)
         {
-            // Небольшая задержка, чтобы интерфейс успел отрисоваться
-            await System.Threading.Tasks.Task.Delay(1000);
-
-            try
+            // ШАГ 2: Выбор филиала
+            if (_isStepTwo)
             {
-                var branches = await _apiService.GetBranchesAsync();
-
-                if (branches == null || !branches.Any())
+                if (BranchComboBox.SelectedValue is int branchId)
                 {
-                    MessageBox.Show("Список филиалов пуст! Проверьте подключение к API и наличие филиалов в базе.", "Отладка");
-                    return;
+                    var selectedBranch = _loginResponse.AvailableBranches.FirstOrDefault(b => b.Id == branchId);
+                    if (selectedBranch != null) CompleteLogin(selectedBranch);
                 }
-
-                BranchComboBox.ItemsSource = branches;
-                BranchComboBox.SelectedItem = branches.FirstOrDefault();
+                else
+                {
+                    MessageBox.Show("Пожалуйста, выберите филиал из списка.", "Внимание");
+                }
+                return;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Не удалось связаться с сервером для получения списка филиалов: {ex.Message}");
-            }
-        }
 
-        private async void LoginButton_Click(object sender, RoutedEventArgs e)
-        {
+            // ШАГ 1: Ввод логина и пароля
             string login = LoginTextBox.Text.Trim();
             string password = PasswordBox.Password;
-            var selectedBranch = BranchComboBox.SelectedItem as Branch;
 
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password) || selectedBranch == null)
+            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
             {
-                MessageBox.Show("Заполните все поля и выберите филиал!", "Внимание");
+                MessageBox.Show("Введите логин и пароль!", "Внимание");
                 return;
             }
 
             try
             {
                 this.IsEnabled = false;
-                var loginResponse = await _apiService.AuthenticateAsync(login, password, selectedBranch.Id);
 
-                if (loginResponse != null && loginResponse.User != null)
+                _loginResponse = await _apiService.AuthenticateAsync(login, password);
+
+                if (_loginResponse != null && _loginResponse.User != null)
                 {
-                    // Сохраняем лицензии в сессию
-                    AccuratPanelCarWashing.Services.UserSession.Features = loginResponse.Features;
+                    var branches = _loginResponse.AvailableBranches;
 
-                    // Сохраняем данные филиала
-                    AppSettings.CurrentBranchId = selectedBranch.Id;
-                    AppSettings.CurrentBranchName = selectedBranch.Name;
-                    AppSettings.CurrentBranchWashBaysCount = selectedBranch.WashBaysCount;
-                    AppSettings.CurrentBranchServiceLiftsCount = selectedBranch.ServiceLiftsCount;
-
-                    var contractsUser = loginResponse.User;
-                    Logger.SetUserContext(contractsUser.FullName, contractsUser.Id);
-
-                    // Создаем UI-модель пользователя
-                    AuthenticatedUser = new WpfUser
+                    if (branches == null || !branches.Any())
                     {
-                        Id = contractsUser.Id,
-                        FullName = contractsUser.FullName,
-                        Phone = contractsUser.Phone,
-                        Login = contractsUser.Login,
-                        PasswordHash = contractsUser.PasswordHash,
-                        RoleId = contractsUser.RoleId,
-                        Role = contractsUser.Role,
-                        IsActive = contractsUser.IsActive,
-                        BranchId = contractsUser.BranchId,
-                        BaseWagePercentage = contractsUser.BaseWagePercentage
-                    };
+                        MessageBox.Show("У вас нет доступа ни к одному филиалу. Обратитесь к администратору.", "Доступ закрыт");
+                        return;
+                    }
 
-                    // ВАЖНО: Вместо того чтобы самому открывать MainWindow, 
-                    // мы просто говорим, что авторизация прошла успешно.
-                    this.DialogResult = true;
+                    if (branches.Count == 1)
+                    {
+                        // Если филиал один — пускаем сразу
+                        CompleteLogin(branches.First());
+                    }
+                    else
+                    {
+                        // Если несколько — переключаем интерфейс на ШАГ 2
+                        LoginPanel.Visibility = Visibility.Collapsed;
+                        BranchSelectionPanel.Visibility = Visibility.Visible;
+
+                        BranchComboBox.ItemsSource = branches;
+
+                        // Выбираем первый элемент вручную
+                        BranchComboBox.SelectedValue = branches.First().Id;
+
+                        ActionBtn.Content = "Продолжить";
+                        _isStepTwo = true;
+                    }
                 }
                 else
                 {
@@ -111,7 +100,44 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        private void CompleteLogin(Branch selectedBranch)
+        {
+            if (_loginResponse.Features != null)
+            {
+                AccuratPanelCarWashing.Services.UserSession.Features = _loginResponse.Features;
+            }
 
+            AppSettings.CurrentBranchId = selectedBranch.Id;
+            AppSettings.CurrentBranchName = selectedBranch.Name;
+            AppSettings.CurrentBranchWashBaysCount = selectedBranch.WashBaysCount;
+            AppSettings.CurrentBranchServiceLiftsCount = selectedBranch.ServiceLiftsCount;
+
+            var contractsUser = _loginResponse.User;
+            Logger.SetUserContext(contractsUser.FullName, contractsUser.Id);
+
+            AuthenticatedUser = new WpfUser
+            {
+                Id = contractsUser.Id,
+                FullName = contractsUser.FullName,
+                Phone = contractsUser.Phone,
+                Login = contractsUser.Login,
+                PasswordHash = contractsUser.PasswordHash,
+                RoleId = contractsUser.RoleId,
+                Role = contractsUser.Role,
+                IsActive = contractsUser.IsActive,
+                BranchId = selectedBranch.Id,
+                CompanyId = contractsUser.CompanyId,
+                BaseWagePercentage = contractsUser.BaseWagePercentage
+            };
+
+            // Передаем ID компании в HttpClient, чтобы все последующие запросы были изолированы
+            // Если CompanyId = null (мы Разработчик), отправляем 0 как ключ Режима Бога
+            int tenantContextId = contractsUser.CompanyId ?? 0;
+            _apiService.UpdateTenantContext(tenantContextId);
+
+            this.DialogResult = true;
+            this.Close();
+        }
 
         private void ExitButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
     }
