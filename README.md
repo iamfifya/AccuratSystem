@@ -2,7 +2,7 @@
 [![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Last Commit](https://badgen.net/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
-[![Code Size](https://badgen.net/github/repo-size/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem)
+[![Code Size](https://img.shields.io/github/languages/code-size/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem)
 
 ## 📝 Описание проекта
 
