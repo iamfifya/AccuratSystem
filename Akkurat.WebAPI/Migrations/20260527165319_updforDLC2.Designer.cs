@@ -736,7 +736,7 @@ namespace Accurat.WebAPI.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("IsStorageEnabled")
+                    b.Property<bool>("IsServicesEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);

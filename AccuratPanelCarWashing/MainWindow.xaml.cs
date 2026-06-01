@@ -566,22 +566,22 @@ namespace AccuratPanelCarWashing
         private void CashboxButton_Click(object sender, RoutedEventArgs e) { if (_currentShift == null) { MessageBox.Show("Откройте смену!", "Внимание"); return; } CashboxPanel.Show(_currentShift); }
         private void ServicesButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!UserSession.IsFeatureEnabled(f => f.IsStorageEnabled)) // Например, привязали к модулю Склад
-            {
-                MessageBox.Show("Модуль управления услугами заблокирован 🔒");
-                return;
-            }
+            // if (!UserSession.IsFeatureEnabled(f => f.IsServicesEnabled)) // Например, привязали к модулю Склад
+            // {
+            //     MessageBox.Show("Модуль управления услугами заблокирован 🔒");
+            //     return;
+            // }
             App.GetService<ServiceManagementWindow>().ShowDialog();
         }
 
         private void ReportsButton_Click(object sender, RoutedEventArgs e)
         {
             // Проверяем, включен ли модуль CRM/Маркетинга (как пример для отчетов)
-            if (!UserSession.IsFeatureEnabled(f => f.IsCrmMarketingEnabled))
-            {
-                MessageBox.Show("Этот модуль (Продвинутая аналитика) недоступен для вашего филиала.\n\nСвяжитесь с администратором для активации 🔒", "Модуль заблокирован");
-                return;
-            }
+            // if (!UserSession.IsFeatureEnabled(f => f.IsCrmMarketingEnabled))
+            // {
+            //     MessageBox.Show("Этот модуль (Продвинутая аналитика) недоступен для вашего филиала.\n\nСвяжитесь с администратором для активации 🔒", "Модуль заблокирован");
+            //     return;
+            // }
 
             new ReportsWindow(_currentUser).ShowDialog();
         }
@@ -640,7 +640,7 @@ namespace AccuratPanelCarWashing
             // НОВАЯ ЛОГИКА: разделяем проверку по департаментам
             var branchOrders = _allOrders.Where(o => o.BranchId == _currentBranchId).ToList();
 
-            // ❌ Мойка: блокируем, если есть активные заказы
+            // Мойка: блокируем, если есть активные заказы
             var activeWashOrders = branchOrders
                 .Where(o => o.Department == "Wash" && o.Status == "В работе")
                 .ToList();

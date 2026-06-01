@@ -105,7 +105,7 @@ namespace Accurat.WebAPI.Controllers
                 features = new TenantFeaturesDto
                 {
                     IsUpsellEnabled = tenantFeature.IsUpsellEnabled,
-                    IsStorageEnabled = tenantFeature.IsStorageEnabled,
+                    IsServicesEnabled = tenantFeature.IsServicesEnabled,
                     IsCrmMarketingEnabled = tenantFeature.IsCrmMarketingEnabled,
                     IsTelegramBossEnabled = tenantFeature.IsTelegramBossEnabled
                 };

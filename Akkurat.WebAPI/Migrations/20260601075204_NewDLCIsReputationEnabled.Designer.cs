@@ -966,7 +966,7 @@ namespace Accurat.WebAPI.Migrations
                     b.Property<bool>("IsReputationEnabled")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsStorageEnabled")
+                    b.Property<bool>("IsServicesEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
@@ -995,7 +995,7 @@ namespace Accurat.WebAPI.Migrations
                             CompanyId = 1,
                             IsCrmMarketingEnabled = false,
                             IsReputationEnabled = false,
-                            IsStorageEnabled = false,
+                            IsServicesEnabled = false,
                             IsTelegramBossEnabled = false,
                             IsUpsellEnabled = true
                         },
@@ -1005,7 +1005,7 @@ namespace Accurat.WebAPI.Migrations
                             CompanyId = 2,
                             IsCrmMarketingEnabled = false,
                             IsReputationEnabled = false,
-                            IsStorageEnabled = false,
+                            IsServicesEnabled = false,
                             IsTelegramBossEnabled = false,
                             IsUpsellEnabled = true
                         });

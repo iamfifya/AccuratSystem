@@ -837,7 +837,7 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 1,
-                            CompanyId = 0,
+                            CompanyId = 1,
                             Description = "2-х фазная мойка",
                             DurationMinutes = 40,
                             HasFloatingPrice = false,
@@ -849,7 +849,7 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 2,
-                            CompanyId = 0,
+                            CompanyId = 1,
                             Description = "Двухфазная мойка, пылесос, уборка",
                             DurationMinutes = 90,
                             HasFloatingPrice = false,
@@ -861,7 +861,7 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 3,
-                            CompanyId = 0,
+                            CompanyId = 1,
                             Description = "Внутренняя и внешняя очистка",
                             DurationMinutes = 15,
                             HasFloatingPrice = false,
@@ -873,7 +873,7 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 4,
-                            CompanyId = 0,
+                            CompanyId = 1,
                             Description = "Уборка салона",
                             DurationMinutes = 20,
                             HasFloatingPrice = false,
@@ -885,7 +885,7 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 5,
-                            CompanyId = 0,
+                            CompanyId = 1,
                             Description = "Уборка пластика",
                             DurationMinutes = 15,
                             HasFloatingPrice = false,
@@ -897,7 +897,7 @@ namespace Accurat.WebAPI.Migrations
                         new
                         {
                             Id = 6,
-                            CompanyId = 0,
+                            CompanyId = 1,
                             Description = "SHINE SYSTEM",
                             DurationMinutes = 20,
                             HasFloatingPrice = false,
@@ -961,9 +961,11 @@ namespace Accurat.WebAPI.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<bool>("IsReputationEnabled")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
-                    b.Property<bool>("IsStorageEnabled")
+                    b.Property<bool>("IsServicesEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
@@ -992,7 +994,7 @@ namespace Accurat.WebAPI.Migrations
                             CompanyId = 1,
                             IsCrmMarketingEnabled = false,
                             IsReputationEnabled = false,
-                            IsStorageEnabled = false,
+                            IsServicesEnabled = false,
                             IsTelegramBossEnabled = false,
                             IsUpsellEnabled = true
                         },
@@ -1002,7 +1004,7 @@ namespace Accurat.WebAPI.Migrations
                             CompanyId = 2,
                             IsCrmMarketingEnabled = false,
                             IsReputationEnabled = false,
-                            IsStorageEnabled = false,
+                            IsServicesEnabled = false,
                             IsTelegramBossEnabled = false,
                             IsUpsellEnabled = true
                         });

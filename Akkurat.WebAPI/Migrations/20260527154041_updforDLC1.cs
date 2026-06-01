@@ -19,7 +19,7 @@ namespace Accurat.WebAPI.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     BranchId = table.Column<int>(type: "integer", nullable: false),
                     IsUpsellEnabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    IsStorageEnabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    IsServicesEnabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     IsCrmMarketingEnabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     IsTelegramBossEnabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
                 },

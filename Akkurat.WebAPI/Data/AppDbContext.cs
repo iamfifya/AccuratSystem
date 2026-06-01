@@ -255,12 +255,12 @@ namespace Accurat.WebAPI.Data
 
             // Услуги (прайс-лист) — оставляем как есть
             modelBuilder.Entity<Service>().HasData(
-                new Service { Id = 1, Name = "Стандартная мойка кузова", Description = "2-х фазная мойка", DurationMinutes = 40, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 1150m }, { 2, 1250m }, { 3, 1500m }, { 4, 1750m } } },
-                new Service { Id = 2, Name = "КОМПЛЕКС ACCURAT", Description = "Двухфазная мойка, пылесос, уборка", DurationMinutes = 90, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 2150m }, { 2, 2350m }, { 3, 2700m }, { 4, 3150m } } },
-                new Service { Id = 3, Name = "Чистка стекол", Description = "Внутренняя и внешняя очистка", DurationMinutes = 15, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } } },
-                new Service { Id = 4, Name = "Пылесос салона", Description = "Уборка салона", DurationMinutes = 20, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } } },
-                new Service { Id = 5, Name = "Влажная уборка", Description = "Уборка пластика", DurationMinutes = 15, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } } },
-                new Service { Id = 6, Name = "Кварцевое покрытие", Description = "SHINE SYSTEM", DurationMinutes = 20, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 1000m }, { 2, 1000m }, { 3, 1000m }, { 4, 1000m } } }
+                new Service { Id = 1, Name = "Стандартная мойка кузова", Description = "2-х фазная мойка", DurationMinutes = 40, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 1150m }, { 2, 1250m }, { 3, 1500m }, { 4, 1750m } }, CompanyId = 1 },
+                new Service { Id = 2, Name = "КОМПЛЕКС ACCURAT", Description = "Двухфазная мойка, пылесос, уборка", DurationMinutes = 90, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 2150m }, { 2, 2350m }, { 3, 2700m }, { 4, 3150m } },CompanyId = 1 },
+                new Service { Id = 3, Name = "Чистка стекол", Description = "Внутренняя и внешняя очистка", DurationMinutes = 15, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } }, CompanyId = 1 },
+                new Service { Id = 4, Name = "Пылесос салона", Description = "Уборка салона", DurationMinutes = 20, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } }, CompanyId = 1 },
+                new Service { Id = 5, Name = "Влажная уборка", Description = "Уборка пластика", DurationMinutes = 15, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } }, CompanyId = 1 },
+                new Service { Id = 6, Name = "Кварцевое покрытие", Description = "SHINE SYSTEM", DurationMinutes = 20, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 1000m }, { 2, 1000m }, { 3, 1000m }, { 4, 1000m } }, CompanyId = 1 }
             );
 
             // Создаем индекс для быстрой выборки текущего статуса заказа
@@ -274,9 +274,10 @@ namespace Accurat.WebAPI.Data
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.CompanyId).IsUnique(); // Один филиал = один набор прав
                 entity.Property(e => e.IsUpsellEnabled).HasDefaultValue(false);
-                entity.Property(e => e.IsStorageEnabled).HasDefaultValue(false);
+                entity.Property(e => e.IsServicesEnabled).HasDefaultValue(false);
                 entity.Property(e => e.IsCrmMarketingEnabled).HasDefaultValue(false);
                 entity.Property(e => e.IsTelegramBossEnabled).HasDefaultValue(false);
+                entity.Property(e => e.IsReputationEnabled).HasDefaultValue(false);
             });
 
             modelBuilder.Entity<UpsellSuggestion>(entity =>
