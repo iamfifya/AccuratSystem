@@ -41,8 +41,28 @@ namespace Accurat.WebAPI.Controllers
         {
             if (id != service.Id) return BadRequest();
 
+            // 1. Достаем оригинал из БД
+            var existingService = await _context.Services.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            if (existingService == null) return NotFound();
+
+            // 2. ЗАЩИТА SAAS: Жестко возвращаем родной CompanyId
+            service.CompanyId = existingService.CompanyId;
+
+            // Запрещаем редактировать чужие услуги (если это не Разработчик)
+            if (CurrentCompanyId != 0 && service.CompanyId != CurrentCompanyId)
+                return Forbid();
+
+            // 3. Сохраняем
             _context.Entry(service).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
 
             return NoContent();
         }

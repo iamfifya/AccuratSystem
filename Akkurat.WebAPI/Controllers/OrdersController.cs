@@ -261,8 +261,15 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
+                    // Вот этот блок "бронежилета" должен быть только в одном экземпляре!
                     var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
                     if (existingOrder == null) return NotFound();
+
+                    order.BranchId = existingOrder.BranchId;
+                    order.ShiftId = existingOrder.ShiftId;
+                    order.AdminId = existingOrder.AdminId;
+                    order.FinishedAt = existingOrder.FinishedAt;
+                    order.GeneralNotes = existingOrder.GeneralNotes;
 
                     if (existingOrder.Status != order.Status)
                     {
@@ -279,7 +286,6 @@ namespace Accurat.WebAPI.Controllers
                         _context.OrderStatusHistories.Add(newHistory);
                     }
 
-                    // ПЕРЕСЧЕТ ПРИ ОБНОВЛЕНИИ (ВЫЗОВ ИЗ ОКНА РЕДАКТИРОВАНИЯ):
                     var branch = await _context.Branches.FindAsync(order.BranchId);
                     var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
                     var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
@@ -288,6 +294,24 @@ namespace Accurat.WebAPI.Controllers
                     var finalCalc = OrderMath.Calculate(order, services, washers, settings);
                     order.FinalPrice = finalCalc.FinalPrice;
 
+                    // Вручную перезаписываем вложенную коллекцию мойщиков!
+                    // Удаляем старые привязки из БД
+                    var oldWashers = await _context.OrderWashers.Where(ow => ow.OrderId == id).ToListAsync();
+                    _context.OrderWashers.RemoveRange(oldWashers);
+
+                    // И записываем те, что прислал WPF-клиент
+                    if (order.OrderWashers != null && order.OrderWashers.Any())
+                    {
+                        foreach (var ow in order.OrderWashers)
+                        {
+                            ow.OrderId = id; // Жестко привязываем к текущему заказу
+                                             // Важно: обнуляем навигационное свойство Washer, чтобы EF не пытался создать нового юзера
+                            ow.Washer = null;
+                            _context.OrderWashers.Add(ow);
+                        }
+                    }
+
+                    // И только потом обновляем сам заказ
                     _context.Entry(order).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                     transaction.Commit();

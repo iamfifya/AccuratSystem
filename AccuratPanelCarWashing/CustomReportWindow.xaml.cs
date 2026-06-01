@@ -23,6 +23,9 @@ namespace AccuratPanelCarWashing
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
         private readonly WpfUser _currentUser;
+        
+        // Добавляем поле для хранения сформированного отчета
+        private AccuratSystem.Contracts.Models.CustomPeriodReport _lastGeneratedReport;
 
         public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
 
@@ -98,7 +101,6 @@ namespace AccuratPanelCarWashing
 
                 if (!periodReports.Any()) { MessageBox.Show("Нет данных за выбранный период", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information); return; }
 
-                // 🔥 УПРОСТИЛИ РАСЧЕТ: API теперь отдает готовую чистую прибыль по каждой смене
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
                 decimal netProfit = periodReports.Sum(r => r.NetProfit);
 
@@ -145,16 +147,45 @@ namespace AccuratPanelCarWashing
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShareSeries)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Labels)));
 
-                // Схлопываем данные сотрудников за весь период
-                EmployeesSalaryList.ItemsSource = periodReports.SelectMany(r => r.EmployeesWork)
-                    .GroupBy(e => e.EmployeeId)
-                    .Select(g => new ContractsEmployeeReport
+                _lastGeneratedReport = new AccuratSystem.Contracts.Models.CustomPeriodReport
+                {
+                    StartDate = start,
+                    EndDate = end,
+                    BranchName = SelectedBranchTab?.BranchName ?? "Вся сеть",
+                    TotalCars = periodReports.Sum(r => r.TotalCars),
+                    TotalRevenue = totalRev,
+                    TotalWasherEarnings = periodReports.Sum(r => r.TotalWasherEarnings),
+                    TotalCompanyEarnings = periodReports.Sum(r => r.TotalCompanyEarnings),
+                    TotalExpenses = periodReports.Sum(r => r.TotalExpenses),
+                    CashCount = periodReports.Sum(r => r.CashCount),
+                    CashAmount = periodReports.Sum(r => r.CashAmount),
+                    CardCount = periodReports.Sum(r => r.CardCount),
+                    CardAmount = periodReports.Sum(r => r.CardAmount),
+                    TransferCount = periodReports.Sum(r => r.TransferCount),
+                    TransferAmount = periodReports.Sum(r => r.TransferAmount),
+                    QrCount = periodReports.Sum(r => r.QrCount),
+                    QrAmount = periodReports.Sum(r => r.QrAmount),
+                    DailyReports = periodReports.Select(r => new AccuratSystem.Contracts.Models.DailyReportSummary
                     {
-                        EmployeeName = g.First().EmployeeName,
-                        CarsWashed = g.Sum(x => x.CarsWashed),
-                        Earnings = g.Sum(x => x.Earnings),
-                        Advances = g.Sum(x => x.Advances)
-                    }).ToList();
+                        Date = r.Date,
+                        TotalCars = r.TotalCars,
+                        TotalRevenue = r.TotalRevenue,
+                        TotalWasherEarnings = r.TotalWasherEarnings,
+                        TotalCompanyEarnings = r.TotalCompanyEarnings
+                    }).ToList(),
+                    EmployeesWork = periodReports.SelectMany(r => r.EmployeesWork)
+                        .GroupBy(e => e.EmployeeId)
+                        .Select(g => new AccuratSystem.Contracts.Models.EmployeeReport
+                        {
+                            EmployeeName = g.First().EmployeeName,
+                            CarsWashed = g.Sum(x => x.CarsWashed),
+                            Earnings = g.Sum(x => x.Earnings),
+                            Advances = g.Sum(x => x.Advances)
+                        }).ToList()
+                };
+
+                // ВОТ ЭТА СТРОЧКА ПОТЕРЯЛАСЬ! Отдаем данные в таблицу:
+                EmployeesSalaryList.ItemsSource = _lastGeneratedReport.EmployeesWork;
 
                 ReportContent.Visibility = Visibility.Visible;
             }
@@ -163,6 +194,33 @@ namespace AccuratPanelCarWashing
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
-        private void ExportButton_Click(object sender, RoutedEventArgs e) { /* Вызов вашего ExcelExporter */ }
+        private void ExportButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_lastGeneratedReport == null)
+            {
+                MessageBox.Show("Сначала сформируйте отчет!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var saveDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel файлы (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx",
+                FileName = $"Интервальный_Отчет_{_lastGeneratedReport.StartDate:dd.MM.yyyy}-{_lastGeneratedReport.EndDate:dd.MM.yyyy}"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    ExcelExporter.ExportCustomPeriodReport(_lastGeneratedReport, saveDialog.FileName);
+                    MessageBox.Show($"Отчет успешно экспортирован!\n\nФайл сохранен: {saveDialog.FileName}", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибка экспорта", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
     }
 }

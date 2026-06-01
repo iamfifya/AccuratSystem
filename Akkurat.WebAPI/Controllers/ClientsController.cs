@@ -70,13 +70,30 @@ namespace Accurat.WebAPI.Controllers
         {
             if (id != client.Id) return BadRequest(new { message = "ID в URL и в объекте не совпадают" });
 
-            // Опционально: можно добавить проверку, что клиент принадлежит компании
+            // 1. Достаем оригинал из базы без отслеживания
+            var existingClient = await _context.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+            if (existingClient == null) return NotFound(new { message = "Клиент не найден в базе" });
+
+            // 2. ЗАЩИТА SAAS: Жестко восстанавливаем CompanyId!
+            // Запрещаем клиенту менять компанию
+            client.CompanyId = existingClient.CompanyId;
+
+            // 3. ЗАЩИТА БИЗНЕС-ДАННЫХ: 
+            // Кассир не должен иметь возможности через подмену JSON изменить сумму покупок или количество визитов
+            client.RegistrationDate = existingClient.RegistrationDate;
+            client.VisitsCount = existingClient.VisitsCount;
+            client.TotalSpent = existingClient.TotalSpent;
+            client.LastVisitDate = existingClient.LastVisitDate;
+
+            // 4. Теперь безопасно сохраняем
             _context.Entry(client).State = EntityState.Modified;
 
-            try { await _context.SaveChangesAsync(); }
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Clients.Any(c => c.Id == id)) return NotFound(new { message = "Клиент не найден в базе" });
                 throw;
             }
 

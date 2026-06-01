@@ -162,15 +162,15 @@ namespace Accurat.WebAPI.Controllers
             var shift = await _context.Shifts.FindAsync(id);
             if (shift == null) return NotFound();
 
-            // 1. Грузим всё необходимое из базы ( Добавили ThenInclude)
+            // 1. Грузим всё необходимое из базы
             var orders = await _context.Orders
                 .Include(o => o.OrderWashers)
-                    .ThenInclude(ow => ow.Washer)
                 .Where(o => o.ShiftId == id && o.Status == "Выполнен" && o.PaymentMethod == "Наличные")
                 .ToListAsync();
 
             var transactions = await _context.Transactions.Where(t => t.ShiftId == id).ToListAsync();
             var allServices = await _context.Services.ToListAsync();
+            var allUsers = await _context.Users.ToListAsync(); // ДОБАВИЛИ ЗАГРУЗКУ ЮЗЕРОВ
 
             // 2. Считаем выручку
             decimal cashRevenue = orders.Sum(o => o.FinalPrice);
@@ -191,9 +191,11 @@ namespace Accurat.WebAPI.Controllers
 
             foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
             {
-                // Вызываем ядро!
+                // Вызываем ядро и передаем allUsers!
                 decimal basePay = group.Sum(x =>
-                    Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+                    Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
+
+                totalTopUp += basePay; // У тебя эта строка в контроллере потерялась, я ее вернул, иначе NetCashProfit посчитается криво!
             }
 
             // 5. Итоговые цифры

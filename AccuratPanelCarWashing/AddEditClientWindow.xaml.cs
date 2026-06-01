@@ -34,6 +34,7 @@ namespace AccuratPanelCarWashing
                 CurrentClient = new Client
                 {
                     Id = client.Id,
+                    CompanyId = client.CompanyId,
                     FullName = client.FullName,
                     Phone = client.Phone,
                     CarModel = client.CarModel,

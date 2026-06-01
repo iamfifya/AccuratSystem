@@ -46,15 +46,34 @@ namespace Accurat.WebAPI.Controllers
         {
             if (id != user.Id) return BadRequest(new { message = "ID в URL и в объекте не совпадают" });
 
+            // 1. Достаем "оригинал" пользователя из базы без отслеживания (AsNoTracking)
+            var existingUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+            if (existingUser == null) return NotFound(new { message = "Сотрудник не найден в базе" });
+
+            // 2. ЗАЩИТА SAAS: Жестко восстанавливаем CompanyId из базы! 
+            // Клиент не имеет права менять привязку к компании.
+            user.CompanyId = existingUser.CompanyId;
+
+            // 3. ЗАЩИТА ПАРОЛЯ: Если WPF прислал пустой пароль (не меняли в окне), 
+            // возвращаем старый хеш из базы, чтобы не затереть его.
+            if (string.IsNullOrWhiteSpace(user.PasswordHash))
+            {
+                user.PasswordHash = existingUser.PasswordHash;
+            }
+
+            // 4. Теперь можно безопасно сохранять
             _context.Entry(user).State = EntityState.Modified;
 
-            try { await _context.SaveChangesAsync(); }
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Users.Any(u => u.Id == id)) return NotFound(new { message = "Сотрудник не найден в базе" });
                 throw;
             }
-            return NoContent(); 
+
+            return NoContent();
         }
 
         [HttpPost("login")]

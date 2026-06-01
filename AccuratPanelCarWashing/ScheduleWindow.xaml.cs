@@ -73,13 +73,11 @@ namespace AccuratPanelCarWashing
                 var branches = await _apiService.GetBranchesAsync();
                 BranchTabs.Clear();
 
-                if (IsDirector)
-                    BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Все филиалы" });
-
+                // Убрали вкладку "Все филиалы" (BranchId = 0)
+                // График работы не может быть глобальным, он всегда создается для конкретной мойки
                 foreach (var b in branches)
                     BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
 
-                // Выбираем текущий филиал пользователя или первый из списка
                 int defaultId = _currentUser?.BranchId ?? AppSettings.CurrentBranchId;
                 SelectedBranchTab = BranchTabs.FirstOrDefault(t => t.BranchId == defaultId) ?? BranchTabs.FirstOrDefault();
             }
@@ -193,7 +191,11 @@ namespace AccuratPanelCarWashing
         {
             int branchId = SelectedBranchTab.BranchId;
             var allEmployees = await _apiService.GetUsersAsync();
-            var employees = allEmployees.Where(u => u.BranchId == branchId).ToList();
+
+            // Берем сотрудников ЭТОГО филиала + Директоров/Управляющих (у которых BranchId = null)
+            var employees = allEmployees
+                .Where(u => u.BranchId == branchId || u.RoleId == 1 || u.RoleId == 2)
+                .ToList();
 
             if (!employees.Any())
             {

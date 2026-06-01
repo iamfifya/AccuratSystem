@@ -1,6 +1,5 @@
-using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
-using AccuratSystem.Contracts.Models;
+using AccuratSystem.Contracts.Models; // Используем общие контракты напрямую
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,22 +9,20 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-using WpfUser = AccuratPanelCarWashing.Models.User;
-using ContractsUser = AccuratSystem.Contracts.Models.User;
-
 namespace AccuratPanelCarWashing
 {
     public partial class EmployeeCardWindow : Window, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        private ApiService _apiService;
+        private readonly ApiService _apiService;
 
-        private List<WpfUser> _allEmployees;
-        private List<WpfUser> _employeesList;
+        // Заменили WpfUser на оригинальный User из контрактов
+        private List<User> _allEmployees;
+        private List<User> _employeesList;
         private string _searchFilter = "";
-        private WpfUser _selectedEmployee;
+        private User _selectedEmployee;
 
-        public List<WpfUser> EmployeesList
+        public List<User> EmployeesList
         {
             get => _employeesList;
             set { _employeesList = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EmployeesList))); }
@@ -43,22 +40,10 @@ namespace AccuratPanelCarWashing
         {
             try
             {
-                var usersFromApi = await _apiService.GetUsersAsync();
-                _allEmployees = usersFromApi.Select(u => new WpfUser
-                {
-                    Id = u.Id,
-                    FullName = u.FullName,
-                    Login = u.Login,
-                    PasswordHash = u.PasswordHash,           // ← ДОБАВИТЬ
-                    RoleId = u.RoleId,
-                    IsActive = u.IsActive,                   // ← ДОБАВИТЬ
-                    Phone = u.Phone,
-                    BranchId = u.BranchId,
-                    BaseWagePercentage = u.BaseWagePercentage,   // ← ДОБАВИТЬ
-                    BaseSalaryPerShift = u.BaseSalaryPerShift    // ← ДОБАВИТЬ
-                }).ToList();
-
-                await Dispatcher.InvokeAsync(() => ApplyFilter());
+                // Идеальная чистота: никакого ручного маппинга!
+                // Все поля (включая Role, CompanyId, PasswordHash) прилетают и сохраняются автоматически.
+                _allEmployees = await _apiService.GetUsersAsync();
+                ApplyFilter();
             }
             catch (Exception ex)
             {
@@ -78,6 +63,7 @@ namespace AccuratPanelCarWashing
                     e.Login.IndexOf(_searchFilter, StringComparison.OrdinalIgnoreCase) >= 0);
             }
 
+            // Сортируем по должности, затем по алфавиту
             filtered = filtered.OrderBy(e => e.RoleId).ThenBy(e => e.FullName);
 
             EmployeesList = filtered.ToList();
@@ -92,46 +78,38 @@ namespace AccuratPanelCarWashing
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            // 2. Убрали _SqliteDataService из вызова
             var addWin = new AddEditEmployeeWindow(null);
             if (addWin.ShowDialog() == true) _ = LoadEmployeesAsync();
         }
 
-        private void OpenEditEmployee(WpfUser employee)
+        private void OpenEditEmployee(User employee)
         {
-            // Создаем контрактный объект для API
-            var contractUser = new ContractsUser
-            {
-                Id = employee.Id,
-                FullName = employee.FullName,
-                Login = employee.Login,
-                PasswordHash = employee.PasswordHash,
-                RoleId = employee.RoleId,
-                IsActive = employee.IsActive,
-                Phone = employee.Phone,
-                BranchId = employee.BranchId,
-                BaseWagePercentage = employee.BaseWagePercentage,
-                BaseSalaryPerShift = employee.BaseSalaryPerShift
-            };
-
-            var editWin = new AddEditEmployeeWindow(contractUser);
+            // Мы просто передаем объект дальше! 
+            // Больше не нужно вручную собирать ContractUser по кусочкам.
+            var editWin = new AddEditEmployeeWindow(employee);
             if (editWin.ShowDialog() == true) _ = LoadEmployeesAsync();
         }
 
-
         private void EmployeesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-            => _selectedEmployee = EmployeesListView.SelectedItem as WpfUser;
+            => _selectedEmployee = EmployeesListView.SelectedItem as User;
+
         private void EmployeesListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        { if (_selectedEmployee != null) OpenEditEmployee(_selectedEmployee); }
+        {
+            if (_selectedEmployee != null) OpenEditEmployee(_selectedEmployee);
+        }
+
         private void EditEmployeeMenuItem_Click(object sender, RoutedEventArgs e)
-        { if (_selectedEmployee != null) OpenEditEmployee(_selectedEmployee); }
+        {
+            if (_selectedEmployee != null) OpenEditEmployee(_selectedEmployee);
+        }
+
         private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = LoadEmployeesAsync();
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
 
         private void ScheduleButton_Click(object sender, RoutedEventArgs e)
         {
-            // Явно приводим App.CurrentUser к типу WpfUser, чтобы компилятор не путался
-            WpfUser currentUser = App.CurrentUser as WpfUser;
+            // Здесь App.CurrentUser, если он у тебя всё еще WpfUser, оставляем как есть
+            var currentUser = App.CurrentUser as AccuratPanelCarWashing.Models.User;
 
             if (currentUser == null)
             {
@@ -142,7 +120,5 @@ namespace AccuratPanelCarWashing
             var scheduleWin = new ScheduleWindow(currentUser);
             scheduleWin.ShowDialog();
         }
-
-
     }
 }

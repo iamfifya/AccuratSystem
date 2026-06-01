@@ -15,7 +15,7 @@ namespace Accurat.WebAPI.Controllers
         private readonly AppDbContext _context;
         public UpsellController(AppDbContext context) => _context = context;
 
-        // 💥 ДОБАВЛЯЕМ ЧТЕНИЕ ЗАГОЛОВКА
+        // ДОБАВЛЯЕМ ЧТЕНИЕ ЗАГОЛОВКА
         private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id) ? int.Parse(id) : 1;
 
         // === 1. УМНАЯ ВЫДАЧА СОВЕТА (Для кассира) ===
@@ -27,7 +27,7 @@ namespace Accurat.WebAPI.Controllers
             if (currentServices == null || !currentServices.Any())
                 return NotFound();
 
-            // 💥 ИСПРАВЛЕНИЕ: Проверяем лицензию по компании из заголовка!
+            // Проверяем лицензию по компании из заголовка!
             var tenantFeature = await _context.TenantFeatures.FirstOrDefaultAsync(f => f.CompanyId == CurrentCompanyId);
 
             // Если Разработчик (CurrentCompanyId == 0), то модуль включен по умолчанию

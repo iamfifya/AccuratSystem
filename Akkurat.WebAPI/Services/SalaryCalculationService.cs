@@ -6,9 +6,14 @@ namespace Accurat.WebAPI.Services
 {
     public static class SalaryCalculationService
     {
-        public static decimal CalculateWasherIncomeForOrder(OrderWasher orderWasher, Order order, List<Service> allServices)
+        // ДОБАВИЛИ ПАРАМЕТР: List<User> allUsers
+        public static decimal CalculateWasherIncomeForOrder(OrderWasher orderWasher, Order order, List<Service> allServices, List<User> allUsers)
         {
-            if (orderWasher.Washer == null) return 0;
+            // БРОНЕЖИЛЕТ ОТ БАГОВ EF CORE: 
+            // Если навигационное свойство Washer пустое, ищем юзера вручную по UserId!
+            var washer = orderWasher.Washer ?? allUsers?.FirstOrDefault(u => u.Id == orderWasher.UserId);
+
+            if (washer == null) return 0;
 
             decimal totalIncome = 0;
 
@@ -21,7 +26,7 @@ namespace Accurat.WebAPI.Services
                     if (service != null && service.PriceByBodyType != null && service.PriceByBodyType.TryGetValue(order.BodyTypeCategory, out decimal servicePrice))
                     {
                         // МАГИЯ: Берем кастомный процент услуги, а если его нет — базовый процент сотрудника
-                        decimal activePercentage = service.CustomWagePercentage ?? orderWasher.Washer.BaseWagePercentage;
+                        decimal activePercentage = service.CustomWagePercentage ?? washer.BaseWagePercentage;
 
                         totalIncome += (servicePrice * (activePercentage / 100m)) * orderWasher.SplitShare;
                     }
@@ -29,10 +34,9 @@ namespace Accurat.WebAPI.Services
             }
 
             // 2. Обработка ExtraCost (наценка за сильное загрязнение и т.д.)
-            // На нее всегда применяем базовый процент сотрудника
             if (order.ExtraCost > 0)
             {
-                totalIncome += (order.ExtraCost * (orderWasher.Washer.BaseWagePercentage / 100m)) * orderWasher.SplitShare;
+                totalIncome += (order.ExtraCost * (washer.BaseWagePercentage / 100m)) * orderWasher.SplitShare;
             }
 
             return totalIncome;

@@ -39,12 +39,16 @@ namespace AccuratPanelCarWashing
                 CurrentService = new Service
                 {
                     Id = service.Id,
+                    CompanyId = service.CompanyId,
+                    ServiceCategory = service.ServiceCategory,
                     Name = service.Name,
                     DurationMinutes = service.DurationMinutes,
                     Description = service.Description,
                     IsActive = service.IsActive,
                     PriceByBodyType = new Dictionary<int, decimal>(service.PriceByBodyType),
-                    CustomWagePercentage = service.CustomWagePercentage // ПОДХВАТЫВАЕМ ПРОЦЕНТ
+                    CustomWagePercentage = service.CustomWagePercentage,
+                    BasePriceHint = service.BasePriceHint,     // На всякий случай
+                    HasFloatingPrice = service.HasFloatingPrice // На всякий случай
                 };
                 WindowTitle = "✏ Редактирование услуги (API)";
             }
@@ -52,7 +56,7 @@ namespace AccuratPanelCarWashing
             DataContext = this;
             LoadPricesToUI();
 
-            // Инициализируем выбранную категорию
+            // Теперь здесь всегда будет правильное значение, а не дефолтный 0!
             CategoryComboBox.SelectedValue = (int)CurrentService.ServiceCategory;
         }
 

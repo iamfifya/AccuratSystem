@@ -300,10 +300,17 @@ namespace AccuratPanelCarWashing.ViewModels
             if (!Validate()) return (false, "Ошибка валидации");
 
             SyncServiceIds();
-            CurrentOrder.TotalPrice = ServicesTotal;
-            CurrentOrder.OriginalTotalPrice = ServicesTotal;
+
+            // ИСПРАВЛЕНИЕ: Обновляем цены перед отправкой, ТОЛЬКО если калькулятор отработал!
+            // Иначе оставляем те, что уже есть, а сервер всё равно пересчитает их сам.
+            if (_currentCalc != null)
+            {
+                CurrentOrder.TotalPrice = ServicesTotal;
+                CurrentOrder.OriginalTotalPrice = ServicesTotal;
+                CurrentOrder.FinalPrice = FinalTotal;
+            }
+
             CurrentOrder.BodyTypeCategory = SelectedBodyTypeCategory;
-            CurrentOrder.FinalPrice = FinalTotal;
 
             if (CurrentOrder.GetWasherId().HasValue)
             {
@@ -339,6 +346,7 @@ namespace AccuratPanelCarWashing.ViewModels
 
         private void InitializeOrder()
         {
+            // _isEditMode покрывает и существующие заказы, и существующие записи (у них Id > 0)
             if (_existingOrder != null && _isEditMode)
             {
                 CurrentOrder = new ContractsOrder
@@ -361,11 +369,16 @@ namespace AccuratPanelCarWashing.ViewModels
                     Notes = _existingOrder.Notes,
                     DiscountPercent = _existingOrder.DiscountPercent,
                     DiscountAmount = _existingOrder.DiscountAmount,
-                    OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
                     BranchId = _existingOrder.BranchId,
                     Department = _existingOrder.Department,
                     AdminId = _existingOrder.AdminId,
                     DurationMinutes = _existingOrder.DurationMinutes,
+                    // ВОЗВРАЩАЕМ ПОТЕРЯННЫЕ ПОЛЯ:
+                    OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
+                    TotalPrice = _existingOrder.TotalPrice,
+                    FinalPrice = _existingOrder.FinalPrice,
+                    FinishedAt = _existingOrder.FinishedAt,
+                    GeneralNotes = _existingOrder.GeneralNotes,
                     OrderWashers = _existingOrder.OrderWashers != null
                         ? _existingOrder.OrderWashers.ToList()
                         : new List<AccuratSystem.Contracts.Models.OrderWasher>()
@@ -379,43 +392,9 @@ namespace AccuratPanelCarWashing.ViewModels
 
                 _windowTitle = _isAppointment ? "✏ Редактирование записи" : "✏ Редактирование заказа";
             }
-            else if (_existingOrder != null && _isAppointment)
-            {
-                CurrentOrder = new ContractsOrder
-                {
-                    Id = 0,
-                    CarModel = _existingOrder.CarModel,
-                    CarNumber = _existingOrder.CarNumber,
-                    CarBodyType = _existingOrder.CarBodyType,
-                    BodyTypeCategory = _existingOrder.BodyTypeCategory,
-                    Time = _existingOrder.Time,
-                    BoxNumber = _existingOrder.BoxNumber,
-                    ServiceIds = new List<int>(_existingOrder.ServiceIds),
-                    ExtraCost = _existingOrder.ExtraCost,
-                    ExtraCostReason = _existingOrder.ExtraCostReason,
-                    Status = "Предварительная запись",
-                    PaymentMethod = "Не указано",
-                    IsAppointment = true,
-                    ShiftId = 0,
-                    BranchId = _existingOrder.BranchId,
-                    ClientId = _existingOrder.ClientId,
-                    Notes = _existingOrder.Notes,
-                    DiscountPercent = _existingOrder.DiscountPercent,
-                    DiscountAmount = _existingOrder.DiscountAmount,
-                    OriginalTotalPrice = _existingOrder.OriginalTotalPrice,
-                    Department = _existingOrder.Department,
-                    OrderWashers = _existingOrder.OrderWashers != null
-                        ? _existingOrder.OrderWashers.ToList()
-                        : new List<AccuratSystem.Contracts.Models.OrderWasher>()
-                };
-
-                _currentDepartment = CurrentOrder.Department ?? "Wash";
-                OnPropertyChanged(nameof(CurrentDepartment));
-
-                _windowTitle = "📅 Редактирование записи";
-            }
             else
             {
+                // Для совершенно новых заказов/записей (Плюс)
                 CurrentOrder = new ContractsOrder
                 {
                     Id = 0,

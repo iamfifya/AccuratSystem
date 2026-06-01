@@ -1,4 +1,4 @@
-// === ЯВНЫЕ АЛИАСЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ ИМЁН ===
+// Подключение пространств имен и создание явных алиасов для разрешения конфликтов имен
 using AccuratPanelCarWashing.Controls;
 using AccuratPanelCarWashing.Models;
 using AccuratPanelCarWashing.Services;
@@ -30,46 +30,148 @@ using WpfUser = AccuratPanelCarWashing.Models.User;
 
 namespace AccuratPanelCarWashing
 {
+    /// <summary>
+    /// Главное окно приложения, реализующее логику отображения заказов, управления сменами и взаимодействия с сервером.
+    /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        #region События
+
+        /// <summary>
+        /// Событие, возникающее при изменении значения свойства для уведомления пользовательского интерфейса.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        #endregion
+
+        #region Приватные поля
+
+        /// <summary>
+        /// Сервис для взаимодействия с API сервера.
+        /// </summary>
         private ApiService _apiService;
+
+        /// <summary>
+        /// Локальный кэш всех заказов, полученных с сервера.
+        /// </summary>
         private List<ContractsOrder> _allOrders = new List<ContractsOrder>();
+
+        /// <summary>
+        /// Список предварительных записей на текущий день.
+        /// </summary>
         private List<WpfAppointment> _todayAppointments = new List<WpfAppointment>();
+
+        /// <summary>
+        /// Текущая активная рабочая смена.
+        /// </summary>
         private ContractsShift _currentShift;
+
+        /// <summary>
+        /// Идентификатор текущего выбранного филиала.
+        /// </summary>
         private int _currentBranchId;
+
+        /// <summary>
+        /// Текущий авторизованный пользователь системы.
+        /// </summary>
         private WpfUser _currentUser;
+
+        /// <summary>
+        /// Текущая строка поискового фильтра.
+        /// </summary>
         private string _searchFilter = "";
 
+        /// <summary>
+        /// Таймер для обновления пользовательского интерфейса.
+        /// </summary>
         private System.Windows.Threading.DispatcherTimer _uiTimer;
 
-
+        /// <summary>
+        /// Подключение к хабу SignalR для получения уведомлений в реальном времени.
+        /// </summary>
         private HubConnection _hubConnection;
 
-        // Добавляем кэш смен и флаг загрузки
+        /// <summary>
+        /// Локальный кэш всех рабочих смен.
+        /// </summary>
         private List<ContractsShift> _allShiftsCache = new List<ContractsShift>();
+
+        /// <summary>
+        /// Флаг, указывающий на то, что в данный момент выполняется загрузка данных.
+        /// </summary>
         private bool _isDataLoading = false;
 
-        public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
-        public bool IsSingleBranch => _currentUser?.RoleId != 1;
-        public bool IsAdminOrDirector => UserPermissions.IsManagement(_currentUser);
-
+        /// <summary>
+        /// Локальный кэш доступных услуг.
+        /// </summary>
         private List<ContractsService> _cachedServices = new List<ContractsService>();
+
+        /// <summary>
+        /// Локальный кэш пользователей системы.
+        /// </summary>
         private List<ContractsUser> _cachedUsers = new List<ContractsUser>();
+
+        /// <summary>
+        /// Статистика работы мойщиков.
+        /// </summary>
         private List<WasherStat> _washersStats;
 
+        /// <summary>
+        /// Прибыль компании за текущую смену.
+        /// </summary>
         private decimal _companyEarnings;
+
+        /// <summary>
+        /// Общая выручка за текущую смену.
+        /// </summary>
         private decimal _totalRevenue;
 
+        /// <summary>
+        /// Коллекция вкладок филиалов.
+        /// </summary>
         private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
+
+        /// <summary>
+        /// Текущая выбранная вкладка филиала.
+        /// </summary>
+        private BranchTabItem _selectedBranchTab;
+
+        /// <summary>
+        /// Текущий выбранный элемент заказа в интерфейсе.
+        /// </summary>
+        private OrderDisplayItem _selectedItem;
+
+        #endregion
+
+        #region Публичные свойства и поля для привязки данных
+
+        /// <summary>
+        /// Признак того, что текущий пользователь является директором.
+        /// </summary>
+        public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
+
+        /// <summary>
+        /// Признак того, что пользователь привязан только к одному филиалу.
+        /// </summary>
+        public bool IsSingleBranch => _currentUser?.RoleId != 1;
+
+        /// <summary>
+        /// Признак того, что текущий пользователь является администратором или директором.
+        /// </summary>
+        public bool IsAdminOrDirector => UserPermissions.IsManagement(_currentUser);
+
+        /// <summary>
+        /// Коллекция вкладок филиалов для отображения в интерфейсе.
+        /// </summary>
         public ObservableCollection<BranchTabItem> BranchTabs
         {
             get => _branchTabs;
             set { _branchTabs = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BranchTabs))); }
         }
 
-        private BranchTabItem _selectedBranchTab;
+        /// <summary>
+        /// Выбранная вкладка филиала с логикой переключения и обновления данных.
+        /// </summary>
         public BranchTabItem SelectedBranchTab
         {
             get => _selectedBranchTab;
@@ -98,8 +200,14 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        /// <summary>
+        /// Отображаемое название текущего выбранного филиала.
+        /// </summary>
         public string CurrentBranchDisplay => SelectedBranchTab != null ? $"{SelectedBranchTab.BranchName}" : "";
 
+        /// <summary>
+        /// Информация об активном пользователе для отображения в интерфейсе.
+        /// </summary>
         public string ActiveUserInfo
         {
             get
@@ -109,11 +217,19 @@ namespace AccuratPanelCarWashing
             }
         }
 
-
+        /// <summary>
+        /// Информация о текущей смене.
+        /// </summary>
         public string CurrentShiftInfo { get; private set; }
+
+        /// <summary>
+        /// Сводная информация о количестве заказов и финансовых показателях.
+        /// </summary>
         public string TotalOrdersInfo { get; private set; }
 
-        private OrderDisplayItem _selectedItem;
+        /// <summary>
+        /// Выбранный заказ с логикой обновления состояния выделения.
+        /// </summary>
         public OrderDisplayItem SelectedItem
         {
             get => _selectedItem;
@@ -126,19 +242,73 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        /// <summary>
+        /// Количество оплат посредством QR-кода.
+        /// </summary>
         public int QrCount { get; set; }
+
+        /// <summary>
+        /// Сумма оплат посредством QR-кода.
+        /// </summary>
         public decimal QrAmount { get; set; }
+
+        /// <summary>
+        /// Количество оплат наличными средствами.
+        /// </summary>
         public int CashCount { get; set; }
+
+        /// <summary>
+        /// Сумма оплат наличными средствами.
+        /// </summary>
         public decimal CashAmount { get; set; }
+
+        /// <summary>
+        /// Количество оплат банковской картой.
+        /// </summary>
         public int CardCount { get; set; }
+
+        /// <summary>
+        /// Сумма оплат банковской картой.
+        /// </summary>
         public decimal CardAmount { get; set; }
+
+        /// <summary>
+        /// Количество оплат переводом.
+        /// </summary>
         public int TransferCount { get; set; }
+
+        /// <summary>
+        /// Сумма оплат переводом.
+        /// </summary>
         public decimal TransferAmount { get; set; }
 
+        /// <summary>
+        /// Статистика работы мойщиков для привязки к интерфейсу.
+        /// </summary>
         public List<WasherStat> WashersStats { get => _washersStats; set { _washersStats = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WashersStats))); } }
+
+        /// <summary>
+        /// Прибыль компании для привязки к интерфейсу.
+        /// </summary>
         public decimal CompanyEarnings { get => _companyEarnings; set { _companyEarnings = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CompanyEarnings))); } }
+
+        /// <summary>
+        /// Общая выручка для привязки к интерфейсу.
+        /// </summary>
         public decimal TotalRevenue { get => _totalRevenue; set { _totalRevenue = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalRevenue))); } }
 
+        /// <summary>
+        /// Признак того, что текущий пользователь является разработчиком.
+        /// </summary>
+        public bool IsDeveloper => _currentUser?.RoleId == 0 || _currentUser?.Role?.Name == "Разработчик";
+
+        #endregion
+
+        #region Конструктор и инициализация
+
+        /// <summary>
+        /// Инициализирует новый экземпляр главного окна и настраивает начальные параметры.
+        /// </summary>
         public MainWindow(WpfUser user)
         {
             InitializeComponent();
@@ -156,24 +326,38 @@ namespace AccuratPanelCarWashing
             this.Loaded += MainWindow_Loaded;
             InitializeSignalR();
             InitializeTimer();
-
         }
 
+        #endregion
+
+        #region Жизненный цикл окна и загрузка данных
+
+        /// <summary>
+        /// Обработчик события загрузки окна, запускающий асинхронную загрузку данных.
+        /// </summary>
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Теперь загрузка данных начнется только тогда, когда окно реально появится на экране
             await LoadDataAsync();
         }
 
-
+        /// <summary>
+        /// Устанавливает нового пользователя и инициирует перезагрузку данных.
+        /// </summary>
         public void SetUser(WpfUser user)
         {
             _currentUser = user;
             _ = LoadDataAsync();
         }
 
+        /// <summary>
+        /// Инициирует принудительное обновление данных из источника.
+        /// </summary>
         public void RefreshData() => _ = LoadDataAsync();
 
+        /// <summary>
+        /// Асинхронно загружает все необходимые данные с сервера и обновляет локальный кэш.
+        /// </summary>
         private async Task LoadDataAsync()
         {
             if (_isDataLoading) return; // Защита от бесконечного цикла
@@ -248,6 +432,13 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        #endregion
+
+        #region Логика фильтрации и отображения данных
+
+        /// <summary>
+        /// Заполняет рабочие зоны (боксы и подъемники) для указанной вкладки филиала.
+        /// </summary>
         private void PopulateZones(BranchTabItem tab, ContractsBranch branch)
         {
             for (int i = 1; i <= branch.WashBaysCount; i++)
@@ -257,6 +448,9 @@ namespace AccuratPanelCarWashing
                 tab.ServiceZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🔧 ПОДЪЕМНИК {i}", Department = "Service" });
         }
 
+        /// <summary>
+        /// Применяет фильтры к списку заказов и распределяет их по рабочим зонам для отображения.
+        /// </summary>
         private void ApplyFilterAndDisplay()
         {
             int currentShiftId = _currentShift?.Id ?? -1;
@@ -347,6 +541,13 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        #endregion
+
+        #region Вспомогательные методы
+
+        /// <summary>
+        /// Возвращает полное имя мойщика по его идентификатору.
+        /// </summary>
         private string GetWasherName(int? washerId)
         {
             if (washerId == null || washerId == 0) return "Не назначен";
@@ -354,6 +555,13 @@ namespace AccuratPanelCarWashing
             return washer?.FullName ?? "Не назначен";
         }
 
+        #endregion
+
+        #region Обновление информации и статистики
+
+        /// <summary>
+        /// Обновляет сводную информацию о текущей смене, выручке и количестве заказов.
+        /// </summary>
         private void UpdateInfo()
         {
             int currentShiftId = _currentShift?.Id ?? -1;
@@ -427,6 +635,9 @@ namespace AccuratPanelCarWashing
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalOrdersInfo)));
         }
 
+        /// <summary>
+        /// Обновляет статистику оплат по различным методам оплаты.
+        /// </summary>
         private void UpdatePaymentStats(List<ContractsOrder> branchOrders)
         {
             if (!branchOrders.Any())
@@ -454,6 +665,9 @@ namespace AccuratPanelCarWashing
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QrAmount)));
         }
 
+        /// <summary>
+        /// Обновляет статистику производительности и заработка мойщиков за текущую смену.
+        /// </summary>
         private void UpdateWashersStats(List<ContractsOrder> branchOrders)
         {
             if (_currentShift == null || _currentShift.IsClosed || !branchOrders.Any())
@@ -479,6 +693,13 @@ namespace AccuratPanelCarWashing
             }).OrderByDescending(s => s.Earnings).ToList();
         }
 
+        #endregion
+
+        #region Обработчики событий элементов управления
+
+        /// <summary>
+        /// Обрабатывает получение фокуса полем поиска, очищая текст-подсказку.
+        /// </summary>
         private void SearchFilterTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
             if (SearchFilterTextBox.Text == "🔍 Поиск по гос. номеру или модели...")
@@ -488,6 +709,9 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        /// <summary>
+        /// Обрабатывает потерю фокуса полем поиска, восстанавливая текст-подсказку при пустом вводе.
+        /// </summary>
         private void SearchFilterTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(SearchFilterTextBox.Text))
@@ -499,6 +723,9 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        /// <summary>
+        /// Обрабатывает нажатие клавиш в поле поиска, применяя фильтр к списку заказов.
+        /// </summary>
         private void SearchFilterTextBox_KeyUp(object sender, KeyEventArgs e)
         {
             _searchFilter = SearchFilterTextBox.Text.Trim();
@@ -506,6 +733,21 @@ namespace AccuratPanelCarWashing
             ApplyFilterAndDisplay();
         }
 
+        /// <summary>
+        /// Обрабатывает двойной щелчок по элементу списка заказов, открывая окно редактирования.
+        /// </summary>
+        private void BoxItemsControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ListBox listBox && listBox.SelectedItem is OrderDisplayItem selected) OpenEditOrder(selected);
+        }
+
+        #endregion
+
+        #region Работа с заказами
+
+        /// <summary>
+        /// Открывает окно добавления нового заказа.
+        /// </summary>
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             if (_currentShift == null || _currentShift.IsClosed)
@@ -523,6 +765,9 @@ namespace AccuratPanelCarWashing
             if (addWin.ShowDialog() == true) _ = LoadDataAsync();
         }
 
+        /// <summary>
+        /// Открывает окно редактирования существующего заказа.
+        /// </summary>
         private void OpenEditOrder(OrderDisplayItem orderDisplay)
         {
             System.Diagnostics.Debug.WriteLine($"[DEBUG] OpenEditOrder: orderDisplay.Id={orderDisplay.Id}");
@@ -545,6 +790,9 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        /// <summary>
+        /// Обрабатывает выбор пункта меню удаления (отмены) заказа.
+        /// </summary>
         private async void DeleteOrderMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedItem == null) return;
@@ -562,8 +810,28 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        /// <summary>
+        /// Обрабатывает выбор пункта меню редактирования заказа.
+        /// </summary>
+        private void EditOrderMenuItem_Click(object sender, RoutedEventArgs e) { if (SelectedItem != null) OpenEditOrder(SelectedItem); else MessageBox.Show("Выберите заказ"); }
+
+        #endregion
+
+        #region Обработчики кнопок и навигация
+
+        /// <summary>
+        /// Открывает окно управления карточками сотрудников.
+        /// </summary>
         private void EmployeesButton_Click(object sender, RoutedEventArgs e) => App.GetService<EmployeeCardWindow>().ShowDialog();
+
+        /// <summary>
+        /// Открывает панель управления кассой для текущей смены.
+        /// </summary>
         private void CashboxButton_Click(object sender, RoutedEventArgs e) { if (_currentShift == null) { MessageBox.Show("Откройте смену!", "Внимание"); return; } CashboxPanel.Show(_currentShift); }
+
+        /// <summary>
+        /// Открывает окно управления списком услуг.
+        /// </summary>
         private void ServicesButton_Click(object sender, RoutedEventArgs e)
         {
             // if (!UserSession.IsFeatureEnabled(f => f.IsServicesEnabled)) // Например, привязали к модулю Склад
@@ -574,6 +842,9 @@ namespace AccuratPanelCarWashing
             App.GetService<ServiceManagementWindow>().ShowDialog();
         }
 
+        /// <summary>
+        /// Открывает окно формирования и просмотра отчетов.
+        /// </summary>
         private void ReportsButton_Click(object sender, RoutedEventArgs e)
         {
             // Проверяем, включен ли модуль CRM/Маркетинга (как пример для отчетов)
@@ -586,14 +857,34 @@ namespace AccuratPanelCarWashing
             new ReportsWindow(_currentUser).ShowDialog();
         }
 
+        /// <summary>
+        /// Завершает работу приложения.
+        /// </summary>
         private void ExitButton_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
+
+        /// <summary>
+        /// Открывает окно управления базой клиентов.
+        /// </summary>
         private void ClientsButton_Click(object sender, RoutedEventArgs e) => App.GetService<ClientsWindow>().ShowDialog();
+
+        /// <summary>
+        /// Открывает окно просмотра истории операций.
+        /// </summary>
         private void HistoryButton_Click(object sender, RoutedEventArgs e) => new HistoryWindow(_currentUser).ShowDialog();
+
+        /// <summary>
+        /// Отображает оверлей с доской предварительных записей.
+        /// </summary>
         private void AppointmentsBoardButton_Click(object sender, RoutedEventArgs e) => AppointmentsOverlay?.Show();
+
+        /// <summary>
+        /// Инициирует ручное обновление данных при нажатии кнопки обновления.
+        /// </summary>
         private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = LoadDataAsync();
 
-        private void EditOrderMenuItem_Click(object sender, RoutedEventArgs e) { if (SelectedItem != null) OpenEditOrder(SelectedItem); else MessageBox.Show("Выберите заказ"); }
-
+        /// <summary>
+        /// Экспортирует данные с сервера в локальный JSON-файл.
+        /// </summary>
         private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -620,6 +911,9 @@ namespace AccuratPanelCarWashing
             catch (Exception ex) { MessageBox.Show($"Ошибка экспорта: {ex.Message}"); }
         }
 
+        /// <summary>
+        /// Открывает окно запуска новой рабочей смены.
+        /// </summary>
         private async void StartShiftButton_Click(object sender, RoutedEventArgs e)
         {
             var startShiftWin = new StartShiftWindow();
@@ -629,6 +923,9 @@ namespace AccuratPanelCarWashing
                 await LoadDataAsync();
         }
 
+        /// <summary>
+        /// Выполняет процедуру закрытия текущей рабочей смены с проверкой активных заказов.
+        /// </summary>
         private async void CloseShiftButton_Click(object sender, RoutedEventArgs e)
         {
             if (_currentShift == null || _currentShift.IsClosed)
@@ -689,11 +986,69 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        private void BoxItemsControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        /// <summary>
+        /// Открывает окно управления модулем дополнительных продаж.
+        /// </summary>
+        private void UpsellButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is ListBox listBox && listBox.SelectedItem is OrderDisplayItem selected) OpenEditOrder(selected);
+            // Добавили проверку купленного модуля
+            if (!UserSession.IsFeatureEnabled(f => f.IsUpsellEnabled))
+            {
+                MessageBox.Show("Модуль 'Умный кассир' отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
+                return;
+            }
+
+            new UpsellManagementWindow().ShowDialog();
         }
 
+        /// <summary>
+        /// Открывает окно авторизации для смены текущего пользователя.
+        /// </summary>
+        private void ChangeUserButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. Получаем окно логина через ваш DI-сервис (как в App.xaml.cs)
+            var loginWin = App.GetService<LoginWindow>();
+
+            // 2. Показываем его как диалоговое окно
+            if (loginWin.ShowDialog() == true)
+            {
+                var newUser = loginWin.AuthenticatedUser;
+
+                if (newUser != null)
+                {
+                    // 3. Обновляем пользователя
+                    // Метод SetUser внутри себя уже вызывает LoadDataAsync(), 
+                    // поэтому повторно вызывать его здесь не нужно.
+                    SetUser(newUser);
+
+                    // 4. Оповещаем интерфейс, что права доступа изменились
+                    // Это обновит видимость кнопок (Админ/Директор)
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActiveUserInfo)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAdminOrDirector)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDirector)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDeveloper)));
+
+                    MessageBox.Show($"Пользователь успешно сменен на {newUser.FullName}", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Открывает секретную панель разработчика.
+        /// </summary>
+        private void DevPanelButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Открываем новую секретную панель
+            new SuperAdminWindow(_currentUser).ShowDialog();
+        }
+
+        #endregion
+
+        #region Real-time обновления и таймеры
+
+        /// <summary>
+        /// Инициализирует и настраивает подключение к SignalR для получения уведомлений об обновлениях.
+        /// </summary>
         private async void InitializeSignalR()
         {
             _hubConnection = new HubConnectionBuilder()
@@ -721,6 +1076,9 @@ namespace AccuratPanelCarWashing
             catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"SignalR Connection Error: {ex.Message}"); }
         }
 
+        /// <summary>
+        /// Инициализирует таймер для посекундного обновления отображаемого времени нахождения заказа в статусе.
+        /// </summary>
         private void InitializeTimer()
         {
             _uiTimer = new System.Windows.Threading.DispatcherTimer();
@@ -749,7 +1107,13 @@ namespace AccuratPanelCarWashing
             _uiTimer.Start();
         }
 
-        // 1. Инициация перетаскивания
+        #endregion
+
+        #region Перетаскивание элементов (Drag and Drop)
+
+        /// <summary>
+        /// Инициирует процесс перетаскивания карточки заказа при зажатии левой кнопки мыши.
+        /// </summary>
         private void OrderCard_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe)
@@ -763,7 +1127,9 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        // 2. Обработка сброса в новый бокс
+        /// <summary>
+        /// Обрабатывает событие сброса карточки заказа в новую рабочую зону.
+        /// </summary>
         private async void Order_Drop(object sender, DragEventArgs e)
         {
             var droppedOrder = e.Data.GetData("OrderItem") as OrderDisplayItem;
@@ -797,6 +1163,13 @@ namespace AccuratPanelCarWashing
             }
         }
 
+        #endregion
+
+        #region Обработка горячих клавиш
+
+        /// <summary>
+        /// Перехватывает нажатия клавиш на уровне окна для выполнения глобальных команд.
+        /// </summary>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -830,65 +1203,41 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        private void UpsellButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Добавили проверку купленного модуля
-            if (!UserSession.IsFeatureEnabled(f => f.IsUpsellEnabled))
-            {
-                MessageBox.Show("Модуль 'Умный кассир' отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
-                return;
-            }
-
-            new UpsellManagementWindow().ShowDialog();
-        }
-
-        private void ChangeUserButton_Click(object sender, RoutedEventArgs e)
-        {
-            // 1. Получаем окно логина через ваш DI-сервис (как в App.xaml.cs)
-            var loginWin = App.GetService<LoginWindow>();
-
-            // 2. Показываем его как диалоговое окно
-            if (loginWin.ShowDialog() == true)
-            {
-                var newUser = loginWin.AuthenticatedUser;
-
-                if (newUser != null)
-                {
-                    // 3. Обновляем пользователя
-                    // Метод SetUser внутри себя уже вызывает LoadDataAsync(), 
-                    // поэтому повторно вызывать его здесь не нужно.
-                    SetUser(newUser);
-
-                    // 4. Оповещаем интерфейс, что права доступа изменились
-                    // Это обновит видимость кнопок (Админ/Директор)
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActiveUserInfo)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAdminOrDirector)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDirector)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDeveloper)));
-
-                    MessageBox.Show($"Пользователь успешно сменен на {newUser.FullName}", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
-        }
-
-        // Свойство для проверки "Режима Бога"
-        public bool IsDeveloper => _currentUser?.RoleId == 0 || _currentUser?.Role?.Name == "Разработчик";
-
-        // Обработчик клика
-        private void DevPanelButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Открываем новую секретную панель
-            new SuperAdminWindow(_currentUser).ShowDialog();
-        }
-
+        #endregion
     }
 
+    #region Модели данных
+
+    /// <summary>
+    /// Модель данных для хранения статистики работы конкретного мойщика.
+    /// </summary>
     public class WasherStat
     {
+        /// <summary>
+        /// Полное имя мойщика.
+        /// </summary>
         public string WasherName { get; set; }
+
+        /// <summary>
+        /// Количество обслуженных автомобилей.
+        /// </summary>
         public int CarsCount { get; set; }
+
+        /// <summary>
+        /// Заработная плата мойщика за смену.
+        /// </summary>
         public decimal Earnings { get; set; }
+
+        /// <summary>
+        /// Общая выручка, принесенная мойщиком.
+        /// </summary>
         public decimal TotalRevenue { get; set; }
+
+        /// <summary>
+        /// Доля выручки мойщика от общей выручки смены в процентах.
+        /// </summary>
         public decimal Percentage { get; set; }
     }
+
+    #endregion
 }

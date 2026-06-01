@@ -18,22 +18,20 @@ namespace Accurat.WebAPI.Controllers
         private readonly AppDbContext _context;
         public ReportsController(AppDbContext context) => _context = context;
 
-        // Вспомогательный метод для извлечения бонусов апселла из заметок
+        // ЧИТАЕМ ЗАГОЛОВОК ТЕНАНТА
+        private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id) ? int.Parse(id) : 1;
+
         private decimal ExtractUpsellBonus(string notes)
         {
-            if (string.IsNullOrEmpty(notes) || !notes.Contains("бонус: +"))
-                return 0;
-
+            if (string.IsNullOrEmpty(notes) || !notes.Contains("бонус: +")) return 0;
             try
             {
                 int startIndex = notes.IndexOf("бонус: +") + "бонус: +".Length;
                 int endIndex = notes.IndexOf(" ₽", startIndex);
-
                 if (endIndex > startIndex)
                 {
                     string bonusStr = notes.Substring(startIndex, endIndex - startIndex).Trim();
-                    if (decimal.TryParse(bonusStr, out decimal bonus))
-                        return bonus;
+                    if (decimal.TryParse(bonusStr, out decimal bonus)) return bonus;
                 }
             }
             catch { }
@@ -46,9 +44,15 @@ namespace Accurat.WebAPI.Controllers
             var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
             var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
 
-            // МУЛЬТИФИЛИАЛЬНОСТЬ
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
+
+            // БРОНЕЖИЛЕТ: Директор видит "Всю сеть" ТОЛЬКО СВОЕЙ КОМПАНИИ
+            if (CurrentCompanyId != 0)
+            {
+                var myBranchIds = _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id);
+                shiftsQuery = shiftsQuery.Where(s => myBranchIds.Contains(s.BranchId));
+            }
 
             if (branchId > 0)
             {
@@ -57,13 +61,15 @@ namespace Accurat.WebAPI.Controllers
 
             var shifts = await shiftsQuery.ToListAsync();
             var reports = new List<ShiftReport>();
-            var allUsers = await _context.Users.ToListAsync();
-            var allServices = await _context.Services.ToListAsync();
+            // Тянем только нужных юзеров и сервисы для производительности
+            var allUsers = await _context.Users.Where(u => CurrentCompanyId == 0 || u.CompanyId == CurrentCompanyId).ToListAsync();
+            var allServices = await _context.Services.Where(s => CurrentCompanyId == 0 || s.CompanyId == CurrentCompanyId).ToListAsync();
 
             foreach (var shift in shifts)
             {
                 var orders = await _context.Orders
                     .Include(o => o.OrderWashers)
+                        .ThenInclude(ow => ow.Washer) // ВОТ ОН, ФИКС №1! Подтягиваем профиль мойщика
                     .Where(o => o.ShiftId == shift.Id && (o.Status == "Выполнен" || o.Status == "Завершен")).ToListAsync();
                 var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
 
@@ -101,15 +107,11 @@ namespace Accurat.WebAPI.Controllers
                     ServiceTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Service").Sum(t => t.Amount)
                 };
 
-                // ИЩЕМ ВСЕ БОНУСЫ ЗА СМЕНУ
                 decimal totalShiftUpsellBonuses = orders.Sum(o => ExtractUpsellBonus(o.Notes));
-
-                decimal totalFOT = 0; // Фонд оплаты труда (все ЗП)
+                decimal totalFOT = 0;
                 decimal totalWashCompanyEarnings = 0;
                 decimal totalServiceCompanyEarnings = 0;
 
-                // СОБИРАЕМ ВСЕХ, КТО РАБОТАЛ В СМЕНЕ
-                // Берем тех, кого добавили при старте смены + тех, кто реально мыл машины (на всякий случай)
                 var shiftEmployeeIds = shift.EmployeeIds?.ToList() ?? new List<int>();
                 var washerIds = orders.SelectMany(o => o.OrderWashers?.Select(ow => ow.UserId) ?? new List<int>());
                 var allEmployeeIds = shiftEmployeeIds.Union(washerIds).Distinct().ToList();
@@ -129,32 +131,27 @@ namespace Accurat.WebAPI.Controllers
                         var myTasks = orders.SelectMany(o => o.OrderWashers.Where(ow => ow.UserId == empId), (o, ow) => new { Order = o, OrderWasher = ow }).ToList();
                         carsProcessed = myTasks.Count;
                         empRevenue = myTasks.Sum(x => x.Order.FinalPrice * x.OrderWasher.SplitShare);
-                        empTotalEarnings = myTasks.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+
+                        // ИСПРАВЛЕНИЕ: Передаем allUsers в метод!
+                        empTotalEarnings = myTasks.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
 
                         // Расчет грязной прибыли для компании по департаментам
                         var washTasks = myTasks.Where(x => x.Order.Department == "Wash");
                         var serviceTasks = myTasks.Where(x => x.Order.Department == "Service");
-                        totalWashCompanyEarnings += washTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
-                        totalServiceCompanyEarnings += serviceTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices));
+                        totalWashCompanyEarnings += washTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
+                        totalServiceCompanyEarnings += serviceTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
                     }
-                    else // 👑 АДМИНИСТРАТОР ИЛИ ДИРЕКТОР
+                    else // 👑 АДМИН
                     {
                         carsProcessed = orders.Count;
                         empRevenue = report.TotalRevenue;
-
                         decimal baseSalary = emp.BaseSalaryPerShift;
                         decimal percentEarnings = empRevenue * (emp.BaseWagePercentage / 100m);
-
-                        // Считаем бонусы ТОЛЬКО за те заказы, где этот админ указан как AdminId
-                        decimal personalUpsellBonus = orders
-                            .Where(o => o.AdminId == emp.Id)
-                            .Sum(o => ExtractUpsellBonus(o.Notes));
-
+                        decimal personalUpsellBonus = orders.Where(o => o.AdminId == emp.Id).Sum(o => ExtractUpsellBonus(o.Notes));
                         empTotalEarnings = baseSalary + percentEarnings + personalUpsellBonus;
                     }
 
                     decimal empAdvances = transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
-
                     totalFOT += empTotalEarnings;
 
                     report.EmployeesWork.Add(new EmployeeReport
@@ -168,11 +165,8 @@ namespace Accurat.WebAPI.Controllers
                     });
                 }
 
-                report.TotalWasherEarnings = totalFOT; // В контракте поле называется так, но теперь это весь ФОТ
-
-                // Итоговая прибыль компании = Вся выручка - Вся ЗП сотрудников (включая админов)
+                report.TotalWasherEarnings = totalFOT;
                 report.TotalCompanyEarnings = report.TotalRevenue - totalFOT;
-
                 report.WashCompanyEarnings = totalWashCompanyEarnings;
                 report.ServiceCompanyEarnings = totalServiceCompanyEarnings;
 
@@ -190,6 +184,15 @@ namespace Accurat.WebAPI.Controllers
 
             var newClientsQuery = _context.Clients.Where(c => c.RegistrationDate >= startUtc && c.RegistrationDate <= endUtc);
             var uniqueClientsQuery = _context.Orders.Where(o => o.Time >= startUtc && o.Time <= endUtc && o.ClientId != null);
+
+            // БРОНЕЖИЛЕТ
+            if (CurrentCompanyId != 0)
+            {
+                newClientsQuery = newClientsQuery.Where(c => c.CompanyId == CurrentCompanyId);
+
+                var myBranchIds = _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id);
+                uniqueClientsQuery = uniqueClientsQuery.Where(o => myBranchIds.Contains(o.BranchId));
+            }
 
             if (branchId > 0)
             {
