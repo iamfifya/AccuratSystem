@@ -1,4 +1,8 @@
 # Accurat System — Комплексная SaaS-платформа управления сетью автомоек и сервисов
+[![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
+[![Code Size](https://img.shields.io/github/languages/code-size/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem)
 
 ## 📝 Описание проекта
 
@@ -56,7 +60,7 @@ graph TD
 * [x] **Core SaaS System:** Базовый учет, тенанты, сквозные заголовки контекста.
 * [x] **Smart Cashier (DLC):** Модуль умных подсказок (Upsell) и калькулятор апселл-бонусов.
 * [x] **Smart Staff Management:** Обновленный модуль запуска смен (`StartShiftWindow`) с интерактивным поиском и многовыборочным сохранением состояния фильтра.
-* [ ] **Integration Module (DLC):** Вызов краткой и развернутой сводки из сервисов для отзывов(Яндекс, Гугл, 2ГИС).
+* [ ] **IsReputationEnabled Module (DLC):** Вызов краткой и развернутой сводки из сервисов для отзывов(Яндекс, Гугл, 2ГИС).
 * [ ] **CRM-Marketing (DLC):** Автоматическая SMS/Telegram рассылка триггерных уведомлений по базе.
 * [ ] **Storage Module (DLC):** Складской учет автохимии, материалов, инвентаризация и калькуляция себестоимости.
 * [ ] **Telegram Boss (DLC):** Бот-агрегатор для отправки вечерних отчетов и P&L-метрик владельцам бизнеса.
