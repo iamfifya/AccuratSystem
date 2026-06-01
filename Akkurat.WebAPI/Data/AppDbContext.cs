@@ -1,9 +1,6 @@
-﻿// ДОБАВЬ ЭТОТ USING для OutboxMessage (он API-only, не в Contracts)
-using Accurat.WebAPI.Models;
-using AccuratSystem.Contracts.DTOs;
+﻿using AccuratSystem.Contracts.DTOs;
 using AccuratSystem.Contracts.Enums;
 using AccuratSystem.Contracts.Models;
-using Akkurat.WebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
@@ -275,7 +272,7 @@ namespace Accurat.WebAPI.Data
             modelBuilder.Entity<TenantFeature>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.BranchId).IsUnique(); // Один филиал = один набор прав
+                entity.HasIndex(e => e.CompanyId).IsUnique(); // Один филиал = один набор прав
                 entity.Property(e => e.IsUpsellEnabled).HasDefaultValue(false);
                 entity.Property(e => e.IsStorageEnabled).HasDefaultValue(false);
                 entity.Property(e => e.IsCrmMarketingEnabled).HasDefaultValue(false);
@@ -334,8 +331,8 @@ namespace Accurat.WebAPI.Data
 
             // И не забудь включить сам модуль для филиала (иначе UserSession.IsFeatureEnabled вернет false)
             modelBuilder.Entity<TenantFeature>().HasData(
-                new TenantFeature { Id = 1, BranchId = 1, IsUpsellEnabled = true },
-                new TenantFeature { Id = 2, BranchId = 2, IsUpsellEnabled = true }
+                new TenantFeature { Id = 1, CompanyId = 1, IsUpsellEnabled = true },
+                new TenantFeature { Id = 2, CompanyId = 2, IsUpsellEnabled = true }
             );
 
         }

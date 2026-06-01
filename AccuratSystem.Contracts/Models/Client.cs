@@ -7,7 +7,7 @@ namespace AccuratSystem.Contracts.Models
     {
         public int Id { get; set; }
 
-        // 💥 ИЗОЛЯЦИЯ ТЕНАНТА
+        // ИЗОЛЯЦИЯ ТЕНАНТА
         public int CompanyId { get; set; }
         public Company Company { get; set; }
 

@@ -33,8 +33,8 @@ Backend часть программного комплекса для управ
 
 1. Клонирование репозитория:
    ```bash
-   git clone [https://github.com/iamfifya/Akkurat.WebAPI.git](https://github.com/iamfifya/Akkurat.WebAPI.git)
-   cd Akkurat.WebAPI
+   git clone [https://github.com/iamfifya/Accurat.WebAPI.git](https://github.com/iamfifya/Accurat.WebAPI.git)
+   cd Accurat.WebAPI
 
 2. Настройка базы данных:
 Откройте файл appsettings.json (или appsettings.Development.json) и укажите корректные параметры подключения к вашему серверу PostgreSQL в секции ConnectionStrings.

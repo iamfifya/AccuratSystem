@@ -832,6 +832,13 @@ namespace AccuratPanelCarWashing
 
         private void UpsellButton_Click(object sender, RoutedEventArgs e)
         {
+            // Добавили проверку купленного модуля
+            if (!UserSession.IsFeatureEnabled(f => f.IsUpsellEnabled))
+            {
+                MessageBox.Show("Модуль 'Умный кассир' отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
+                return;
+            }
+
             new UpsellManagementWindow().ShowDialog();
         }
 
@@ -857,12 +864,22 @@ namespace AccuratPanelCarWashing
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActiveUserInfo)));
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAdminOrDirector)));
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDirector)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsDeveloper)));
 
                     MessageBox.Show($"Пользователь успешно сменен на {newUser.FullName}", "Успешно", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
         }
 
+        // Свойство для проверки "Режима Бога"
+        public bool IsDeveloper => _currentUser?.RoleId == 0 || _currentUser?.Role?.Name == "Разработчик";
+
+        // Обработчик клика
+        private void DevPanelButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Открываем новую секретную панель
+            new SuperAdminWindow(_currentUser).ShowDialog();
+        }
 
     }
 

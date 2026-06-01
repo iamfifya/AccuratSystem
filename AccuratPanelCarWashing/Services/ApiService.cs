@@ -357,6 +357,41 @@ namespace AccuratPanelCarWashing.Services
             _http.DefaultRequestHeaders.Add("X-Company-Id", companyId.ToString());
         }
 
+        public async Task UpdateBranchAsync(ContractsBranch branch)
+        {
+            var response = await _http.PutAsJsonAsync($"Branches/{branch.Id}", branch);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteBranchAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"Branches/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<ContractsBranch> CreateBranchAsync(ContractsBranch branch)
+        {
+            var response = await _http.PostAsJsonAsync("Branches", branch);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ContractsBranch>();
+        }
+        #endregion
+
+        #region СОТРУДНИКИ (USERS) (добавь к существующим)
+        public async Task DeleteUserAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"Users/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+        #endregion
+
+        #region КЛИЕНТЫ (CLIENTS) (добавь к существующим)
+        public async Task DeleteClientAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"Clients/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+
         #endregion
 
         #region ФИНАНСЫ (TRANSACTIONS)
@@ -559,6 +594,75 @@ namespace AccuratPanelCarWashing.Services
         }
 
         #endregion
+
+        #region СУПЕРАДМИН (COMPANIES)
+        public async Task<List<Company>> GetCompaniesAsync()
+        {
+            try { return await _http.GetFromJsonAsync<List<Company>>("Companies") ?? new List<Company>(); }
+            catch { return new List<Company>(); }
+        }
+
+        public async Task<Company> CreateCompanyAsync(Company company)
+        {
+            var response = await _http.PostAsJsonAsync("Companies", company);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<Company>();
+        }
+
+        public async Task UpdateCompanyAsync(Company company)
+        {
+            var response = await _http.PutAsJsonAsync($"Companies/{company.Id}", company);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteCompanyAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"Companies/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+        #endregion
+
+        #region УПРАВЛЕНИЕ ЛИЦЕНЗИЯМИ (TENANT FEATURES)
+        public async Task<List<TenantFeature>> GetTenantFeaturesAsync()
+        {
+            try { return await _http.GetFromJsonAsync<List<TenantFeature>>("TenantFeatures") ?? new List<TenantFeature>(); }
+            catch { return new List<TenantFeature>(); }
+        }
+
+        public async Task UpdateTenantFeatureAsync(TenantFeature feature)
+        {
+            // Меняем feature.BranchId на feature.CompanyId
+            var response = await _http.PutAsJsonAsync($"TenantFeatures/{feature.CompanyId}", feature);
+            response.EnsureSuccessStatusCode();
+        }
+
+        // Опционально добавь метод удаления
+        public async Task DeleteTenantFeatureAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"TenantFeatures/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+        #endregion
+
+        // К Ролям (Roles) добавь методы Create, Update, Delete (GET у тебя уже есть)
+        public async Task<Role> CreateRoleAsync(Role role)
+        {
+            var response = await _http.PostAsJsonAsync("Roles", role);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<Role>();
+        }
+
+        public async Task UpdateRoleAsync(Role role)
+        {
+            var response = await _http.PutAsJsonAsync($"Roles/{role.Id}", role);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteRoleAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"Roles/{id}");
+            response.EnsureSuccessStatusCode();
+        }
 
         public class ClientStatsResponse
         {

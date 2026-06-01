@@ -17,7 +17,7 @@ namespace AccuratPanelCarWashing
         private readonly ApiService _apiService;
         private DateTime _selectedDate;
         
-        // 💥 ПОЛНЫЙ список сотрудников (оригинал, в котором хранятся выбранные галочки)
+        // ПОЛНЫЙ список сотрудников (оригинал, в котором хранятся выбранные галочки)
         private List<EmployeeSelection> _allEmployees = new List<EmployeeSelection>();
         
         // Отфильтрованный список (то, что мы видим на экране прямо сейчас)
@@ -71,7 +71,7 @@ namespace AccuratPanelCarWashing
             }
         }
 
-        // 💥 СОБЫТИЕ ПОИСКА
+        // СОБЫТИЕ ПОИСКА
         private void EmployeeSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             string filter = EmployeeSearchTextBox.Text.ToLower().Trim();
@@ -95,7 +95,7 @@ namespace AccuratPanelCarWashing
         {
             try
             {
-                // 💥 ВАЖНО: Берем выбранных из _allEmployees, а не из Employees!
+                // ВАЖНО: Берем выбранных из _allEmployees, а не из Employees!
                 // Так мы не потеряем тех, кого выбрали, а потом скрыли фильтром поиска.
                 var selectedIds = _allEmployees.Where(emp => emp.IsSelected).Select(emp => emp.Id).ToList();
 

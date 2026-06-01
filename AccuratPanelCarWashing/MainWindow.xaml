@@ -188,6 +188,10 @@
                         <TextBlock Text="Главная страница" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
                         <TextBlock Text=" | " FontSize="20" Foreground="#95A5A6" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="16" Foreground="#7F8C8D" VerticalAlignment="Center"/>
+                        <Button Content="👑 Панель Разработчика" Click="DevPanelButton_Click"
+                                Height="40" Margin="5" Padding="10,0"
+                                Background="#8E44AD" Foreground="White" FontWeight="Bold" Cursor="Hand"
+                                Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">

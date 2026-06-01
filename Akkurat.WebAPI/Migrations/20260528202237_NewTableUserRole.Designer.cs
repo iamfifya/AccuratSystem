@@ -743,7 +743,7 @@ namespace Accurat.WebAPI.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Akkurat.WebAPI.Models.TenantFeature", b =>
+            modelBuilder.Entity("Accurat.WebAPI.Models.TenantFeature", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

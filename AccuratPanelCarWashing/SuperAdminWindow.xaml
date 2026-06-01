@@ -1,0 +1,68 @@
+﻿<Window x:Class="AccuratPanelCarWashing.SuperAdminWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DEV PANEL: Управление БД" Height="700" Width="1200"
+        WindowStartupLocation="CenterScreen" Background="#F5F6FA">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#2C3E50">
+            <StackPanel>
+                <TextBlock Text="🗄️ ТАБЛИЦЫ БД" Foreground="White" FontWeight="Bold" Margin="15,20,15,10" FontSize="16"/>
+                <ListBox x:Name="TablesListBox" Background="Transparent" BorderThickness="0" 
+                         Foreground="White" SelectionChanged="TablesListBox_SelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="15,10"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#34495E"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBoxItem Content="Companies (Компании)" Tag="Companies"/>
+                    <ListBoxItem Content="Branches (Филиалы)" Tag="Branches"/>
+                    <ListBoxItem Content="Users (Сотрудники)" Tag="Users"/>
+                    <ListBoxItem Content="Services (Услуги)" Tag="Services"/>
+                    <ListBoxItem Content="Clients (Клиенты)" Tag="Clients"/>
+                    <ListBoxItem Content="Orders (Заказы)" Tag="Orders"/>
+                    <ListBoxItem Content="Roles (Роли)" Tag="Roles"/>
+                    <ListBoxItem Content="TenantFeatures (Лицензии)" Tag="TenantFeatures"/>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="CurrentTableTitle" Text="Выберите таблицу..." FontSize="22" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,15"/>
+
+            <DataGrid x:Name="DynamicDataGrid" Grid.Row="1" 
+                      AutoGenerateColumns="True" 
+                      MinColumnWidth="35"
+                      CanUserAddRows="True" 
+                      CanUserDeleteRows="True"
+                      Background="White" BorderBrush="#BDC3C7"
+                      AlternatingRowBackground="#ECF0F1"
+                      RowHeight="30" ColumnHeaderHeight="35"
+                      Margin="10" Padding="10"/>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+                <Button Content="🔄 Обновить" Click="RefreshTable_Click" Width="100" Height="35" Margin="5" Background="#3498DB" Foreground="White"/>
+                <Button Content="🗑 Удалить выделенное" Click="DeleteRow_Click" Width="160" Height="35" Margin="5" Background="#E74C3C" Foreground="White" FontWeight="Bold"/>
+                <Button Content="💾 Сохранить изменения" Click="SaveChanges_Click" Width="180" Height="35" Margin="5" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

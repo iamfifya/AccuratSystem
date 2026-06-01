@@ -23,37 +23,6 @@ namespace Accurat.WebAPI.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Accurat.WebAPI.Models.OutboxMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ErrorMessage")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ProcessedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OutboxMessages");
-                });
-
             modelBuilder.Entity("AccuratSystem.Contracts.DTOs.UpsellSuggestion", b =>
                 {
                     b.Property<int>("Id")
@@ -683,6 +652,34 @@ namespace Accurat.WebAPI.Migrations
                     b.ToTable("OrderWashers");
                 });
 
+            modelBuilder.Entity("AccuratSystem.Contracts.Models.OutboxMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EventType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ProcessedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OutboxMessages");
+                });
+
             modelBuilder.Entity("AccuratSystem.Contracts.Models.PaymentMethod", b =>
                 {
                     b.Property<int>("Id")
@@ -947,6 +944,65 @@ namespace Accurat.WebAPI.Migrations
                     b.ToTable("Shifts");
                 });
 
+            modelBuilder.Entity("AccuratSystem.Contracts.Models.TenantFeature", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsCrmMarketingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsStorageEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsTelegramBossEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsUpsellEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId")
+                        .IsUnique();
+
+                    b.ToTable("TenantFeatures");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CompanyId = 1,
+                            IsCrmMarketingEnabled = false,
+                            IsStorageEnabled = false,
+                            IsTelegramBossEnabled = false,
+                            IsUpsellEnabled = true
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CompanyId = 2,
+                            IsCrmMarketingEnabled = false,
+                            IsStorageEnabled = false,
+                            IsTelegramBossEnabled = false,
+                            IsUpsellEnabled = true
+                        });
+                });
+
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
@@ -1051,65 +1107,6 @@ namespace Accurat.WebAPI.Migrations
                             PasswordHash = "1",
                             Phone = "+79877063709",
                             RoleId = 2
-                        });
-                });
-
-            modelBuilder.Entity("Akkurat.WebAPI.Models.TenantFeature", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BranchId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsCrmMarketingEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsStorageEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsTelegramBossEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsUpsellEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BranchId")
-                        .IsUnique();
-
-                    b.ToTable("TenantFeatures");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            BranchId = 1,
-                            IsCrmMarketingEnabled = false,
-                            IsStorageEnabled = false,
-                            IsTelegramBossEnabled = false,
-                            IsUpsellEnabled = true
-                        },
-                        new
-                        {
-                            Id = 2,
-                            BranchId = 2,
-                            IsCrmMarketingEnabled = false,
-                            IsStorageEnabled = false,
-                            IsTelegramBossEnabled = false,
-                            IsUpsellEnabled = true
                         });
                 });
 
@@ -1255,6 +1252,17 @@ namespace Accurat.WebAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("AccuratSystem.Contracts.Models.TenantFeature", b =>
+                {
+                    b.HasOne("AccuratSystem.Contracts.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("AccuratSystem.Contracts.Models.Transaction", b =>

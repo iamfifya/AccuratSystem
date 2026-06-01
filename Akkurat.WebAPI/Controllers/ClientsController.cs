@@ -16,7 +16,7 @@ namespace Accurat.WebAPI.Controllers
             _context = context;
         }
 
-        // 💥 Читаем заголовок из WPF
+        // Читаем заголовок из WPF
         private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id)
             ? int.Parse(id)
             : 1;
@@ -51,7 +51,7 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Client>> CreateClient(Client client)
         {
-            // 💥 ЖЕСТКАЯ ПРИВЯЗКА: Привязываем клиента к компании того, кто его создал
+            // ЖЕСТКАЯ ПРИВЯЗКА: Привязываем клиента к компании того, кто его создал
             client.CompanyId = CurrentCompanyId == 0 ? 1 : CurrentCompanyId;
 
             client.RegistrationDate = DateTime.UtcNow;

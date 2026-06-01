@@ -1,6 +1,5 @@
 ﻿using Accurat.WebAPI.Data;
 using AccuratSystem.Contracts.DTOs;
-using Akkurat.WebAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -16,18 +15,23 @@ namespace Accurat.WebAPI.Controllers
         private readonly AppDbContext _context;
         public UpsellController(AppDbContext context) => _context = context;
 
+        // 💥 ДОБАВЛЯЕМ ЧТЕНИЕ ЗАГОЛОВКА
+        private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id) ? int.Parse(id) : 1;
+
         // === 1. УМНАЯ ВЫДАЧА СОВЕТА (Для кассира) ===
         [HttpGet("suggest")]
         public async Task<ActionResult<UpsellSuggestion>> GetSuggestion(
             [FromQuery] List<int> currentServices,
-            [FromQuery] int branchId)
+            [FromQuery] int branchId) // branchId оставляем для совместимости с WPF, но не используем для фич
         {
             if (currentServices == null || !currentServices.Any())
                 return NotFound();
 
-            // Проверяем, куплен ли модуль для этого филиала
-            var tenantFeature = await _context.TenantFeatures.FirstOrDefaultAsync(f => f.BranchId == branchId);
-            if (tenantFeature == null || !tenantFeature.IsUpsellEnabled)
+            // 💥 ИСПРАВЛЕНИЕ: Проверяем лицензию по компании из заголовка!
+            var tenantFeature = await _context.TenantFeatures.FirstOrDefaultAsync(f => f.CompanyId == CurrentCompanyId);
+
+            // Если Разработчик (CurrentCompanyId == 0), то модуль включен по умолчанию
+            if (CurrentCompanyId != 0 && (tenantFeature == null || !tenantFeature.IsUpsellEnabled))
                 return StatusCode(403, "Модуль 'Умный кассир' отключен.");
 
             // Ищем самое ВЫГОДНОЕ предложение (сортировка по бонусу)

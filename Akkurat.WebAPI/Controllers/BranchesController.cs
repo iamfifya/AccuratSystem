@@ -51,5 +51,28 @@ namespace Accurat.WebAPI.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBranch(int id, Branch branch)
+        {
+            if (id != branch.Id) return BadRequest(new { message = "ID в URL и объекте не совпадают" });
+
+            // Защита: редактировать чужие филиалы может только Разработчик
+            if (CurrentCompanyId != 0 && branch.CompanyId != CurrentCompanyId)
+                return Forbid();
+
+            _context.Entry(branch).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Branches.Any(b => b.Id == id)) return NotFound();
+                throw;
+            }
+
+            return NoContent();
+        }
     }
 }

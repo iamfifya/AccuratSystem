@@ -92,22 +92,23 @@ namespace Accurat.WebAPI.Controllers
             }
 
             TenantFeaturesDto features = new TenantFeaturesDto();
-            if (availableBranches.Any())
-            {
-                int primaryBranchId = availableBranches.First().Id;
-                var tenantFeature = await _context.TenantFeatures
-                    .FirstOrDefaultAsync(f => f.BranchId == primaryBranchId);
 
-                if (tenantFeature != null)
+            // Берем CompanyId у пользователя. 
+            // Если это разработчик (CompanyId == null/0), даем ему фичи первой компании (или заглушку)
+            int targetCompanyId = user.CompanyId ?? 1;
+
+            var tenantFeature = await _context.TenantFeatures
+                .FirstOrDefaultAsync(f => f.CompanyId == targetCompanyId);
+
+            if (tenantFeature != null)
+            {
+                features = new TenantFeaturesDto
                 {
-                    features = new TenantFeaturesDto
-                    {
-                        IsUpsellEnabled = tenantFeature.IsUpsellEnabled,
-                        IsStorageEnabled = tenantFeature.IsStorageEnabled,
-                        IsCrmMarketingEnabled = tenantFeature.IsCrmMarketingEnabled,
-                        IsTelegramBossEnabled = tenantFeature.IsTelegramBossEnabled
-                    };
-                }
+                    IsUpsellEnabled = tenantFeature.IsUpsellEnabled,
+                    IsStorageEnabled = tenantFeature.IsStorageEnabled,
+                    IsCrmMarketingEnabled = tenantFeature.IsCrmMarketingEnabled,
+                    IsTelegramBossEnabled = tenantFeature.IsTelegramBossEnabled
+                };
             }
 
             return Ok(new LoginResponseDto

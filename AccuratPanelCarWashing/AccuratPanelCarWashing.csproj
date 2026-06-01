@@ -403,6 +403,9 @@
     <Compile Include="Services\UserPermissions.cs" />
     <Compile Include="Services\UserSession.cs" />
     <Compile Include="StatusToColorConverter.cs" />
+    <Compile Include="SuperAdminWindow.xaml.cs">
+      <DependentUpon>SuperAdminWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UpsellManagementWindow.xaml.cs">
       <DependentUpon>UpsellManagementWindow.xaml</DependentUpon>
     </Compile>
@@ -496,6 +499,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\OrderCardTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SuperAdminWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
