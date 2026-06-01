@@ -1,4 +1,5 @@
 # Accurat System — Комплексная SaaS-платформа управления сетью автомоек и сервисов
+
 [![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Last Commit](https://badgen.net/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
@@ -14,6 +15,10 @@
 * **Мобильное приложение для управляющих и владельцев** (Кроссплатформенный .NET MAUI).
 * **Централизованный отказоустойчивый сервер** (ASP.NET Core REST API) с базой данных PostgreSQL.
 
+## 📸 Скриншоты интерфейса
+
+*(Здесь стоит добавить 2-3 скриншота или GIF-анимации: главное окно с боксами, окно графиков LiveCharts и экран мобильного приложения)*
+
 ## 📐 Архитектура системы
 
 Экосистема использует сквозную контекстную изоляцию. Клиентские приложения при аутентификации получают параметры тенанта, после чего статический пул `HttpClient` (Singleton) автоматически подмешивает во все запросы заголовок `X-Company-Id`. Серверное ядро выполняет валидацию и фильтрацию данных на лету, исключая утечку конфиденциальной информации (баз клиентов, прайс-листов, транзакций) между параллельными компаниями.
@@ -24,7 +29,7 @@ graph TD
     C[MAUI Mobile App] -->|REST + X-Company-Id Header| B
     B -->|EF Core / Tenant Isolation Filter| D[(PostgreSQL)]
     B --> E[Outbox Processor]
-    E --> F[Background Jobs]
+    B --> F[SignalR WebSockets]
 
 ```
 
@@ -60,7 +65,7 @@ graph TD
 * [x] **Core SaaS System:** Базовый учет, тенанты, сквозные заголовки контекста.
 * [x] **Smart Cashier (DLC):** Модуль умных подсказок (Upsell) и калькулятор апселл-бонусов.
 * [x] **Smart Staff Management:** Обновленный модуль запуска смен (`StartShiftWindow`) с интерактивным поиском и многовыборочным сохранением состояния фильтра.
-* [ ] **IsReputationEnabled Module (DLC):** Вызов краткой и развернутой сводки из сервисов для отзывов(Яндекс, Гугл, 2ГИС).
+* [ ] **Reputation Management Module (DLC):** Вызов краткой и развернутой сводки из сервисов для отзывов (Яндекс, Google, 2ГИС) с возможностью ответа из терминала.
 * [ ] **CRM-Marketing (DLC):** Автоматическая SMS/Telegram рассылка триггерных уведомлений по базе.
 * [ ] **Storage Module (DLC):** Складской учет автохимии, материалов, инвентаризация и калькуляция себестоимости.
 * [ ] **Telegram Boss (DLC):** Бот-агрегатор для отправки вечерних отчетов и P&L-метрик владельцам бизнеса.
@@ -68,7 +73,7 @@ graph TD
 ## 🛠 Технологический стек
 
 * **Backend:** C# 13, .NET 10, ASP.NET Core, EF Core, PostgreSQL (Npgsql), SignalR, Scalar/Swagger.
-* **Desktop Client:** C# 7.3, WPF (.NET Framework 4.8), ClosedXML, Newtonsoft.Json, SignalR Client.
+* **Desktop Client:** C# 7.3, WPF (.NET Framework 4.8), LiveCharts, ClosedXML, Newtonsoft.Json, SignalR Client.
 * **Mobile Client:** C# 13, .NET MAUI (.NET 10), MVVM Architecture.
 
 ## ⚙️ Требования к окружению и Запуск
@@ -114,9 +119,11 @@ dotnet run
 
 ## 👤 Автор
 
-**Dmitry Kuraedov** ([@iamfifya](https://github.com/iamfifya))
+**Dima Kuraedov** ([@iamfifya](https://www.google.com/search?q=https://github.com/iamfifya))
 
 * Telegram: [@iamfifya](https://www.google.com/search?q=https://t.me/iamfifya)
 * Email: dimakuraedov@gmail.com
 
 *Продукт спроектирован и разработан с использованием архитектурных рекомендаций больших языковых моделей ИИ.*
+
+```
