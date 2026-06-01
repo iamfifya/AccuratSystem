@@ -37,7 +37,7 @@ graph TD
 
 * **`AccuratPanelCarWashing/`** — Десктопный клиент (WPF). Основное рабочее место кассира-администратора. Управление живой очередью боксов, проводка кассовых операций, расчет апселл-бонусов, синхронизация по WebSockets (SignalR) и локальный экспорт аналитики.
 * **`AccuratPanelCWM/`** — Мобильный клиент (.NET MAUI). Оперативный кроссплатформенный пульт контроля с поддержкой динамической смены тем оформления и адаптивным дашбордом.
-* **`Akkurat.WebAPI/`** — Серверная часть (ASP.NET Core). Центральное REST API ядро системы. Инкапсулирует вычисления, финансовую математику, управление транзакциями и фоновые службы (Background Services).
+* **`Accurat.WebAPI/`** — Серверная часть (ASP.NET Core). Центральное REST API ядро системы. Инкапсулирует вычисления, финансовую математику, управление транзакциями и фоновые службы (Background Services).
 * **`AccuratSystem.Contracts/`** — Библиотека контрактов. Общие скомпилированные модели данных (`Order`, `User`, `Branch`), DTO-объекты авторизации/смены статусов и перечисления (`Enums`). Обеспечивает строгую типизацию и контрактную целостность между API и клиентами.
 
 ## 🌟 Основные возможности
@@ -95,7 +95,7 @@ graph TD
 3. Примените миграции для развертывания структуры базы данных:
 
 ```bash
-cd Akkurat.WebAPI
+cd Accurat.WebAPI
 dotnet ef database update
 
 ```
@@ -121,7 +121,7 @@ dotnet run
 
 **Dima Kuraedov** ([@iamfifya](https://www.google.com/search?q=https://github.com/iamfifya))
 
-* Telegram: [@iamfifya](https://www.google.com/search?q=https://t.me/iamfifya)
+* Telegram: [@iamfifya](https://t.me/iamfifya)
 * Email: dimakuraedov@gmail.com
 
 *Продукт спроектирован и разработан с использованием архитектурных рекомендаций больших языковых моделей ИИ.*
