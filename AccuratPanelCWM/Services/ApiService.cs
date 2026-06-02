@@ -1,4 +1,5 @@
-using AccuratPanelCWM.Models;
+using AccuratSystem.Contracts.Models;
+using AccuratSystem.Contracts.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,28 +13,17 @@ namespace AccuratPanelCWM.Services
     {
         private readonly HttpClient _http;
 
-        public ApiService()
+        // DI-контейнер MAUI сам передает нам готовый и настроенный HttpClient
+        public ApiService(IHttpClientFactory httpClientFactory)
         {
-
-            // Оборачиваем стандартный обработчик в наш "умный" Polly-перехватчик
-            var innerHandler = new HttpClientHandler();
-            var retryHandler = new HttpRetryHandler(innerHandler);
-
-            // Убедись, что порт совпадает с твоим API
-            _http = new HttpClient { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
-
-            // ДОБАВИМ ЭТУ СТРОКУ: Она говорит Microsoft "Я программа, не показывай мне HTML-предупреждение"
-            _http.DefaultRequestHeaders.Add("X-Tunnel-Skip-AntiPhishing-Page", "true");
+            _http = httpClientFactory.CreateClient("ApiClient");
         }
 
-        // ДОБАВЛЯЕМ МЕТОД ДЛЯ СМЕНЫ АДРЕСА НА ЛЕТУ
         public void UpdateBaseUrl(string newUrl)
         {
-            // Обязательно проверяем, чтобы адрес заканчивался на слэш, иначе HttpClient сломает пути
             if (!newUrl.EndsWith("/")) newUrl += "/";
-
             _http.BaseAddress = new Uri(newUrl);
-            Microsoft.Maui.Storage.Preferences.Default.Set("ServerUrl", newUrl); // Сохраняем навсегда
+            Microsoft.Maui.Storage.Preferences.Default.Set("ServerUrl", newUrl);
         }
 
         #region СМЕНЫ (SHIFTS)
@@ -62,15 +52,6 @@ namespace AccuratPanelCWM.Services
             var shifts = await GetShiftsAsync();
             return shifts.FirstOrDefault(s => !s.IsClosed);
         }
-
-        public class LoginRequest
-        {
-            public string Login { get; set; }
-            public string Password { get; set; }
-        }
-
-        
-
         #endregion
 
         #region УСЛУГИ (SERVICES)
@@ -143,26 +124,26 @@ namespace AccuratPanelCWM.Services
         #endregion
 
         #region ЗАКАЗЫ (ORDERS)
-        public async Task<List<CarWashOrder>> GetOrdersAsync()
+        public async Task<List<Order>> GetOrdersAsync() // Изменил CarWashOrder на Order
         {
-            try { return await _http.GetFromJsonAsync<List<CarWashOrder>>("Orders") ?? new List<CarWashOrder>(); }
+            try { return await _http.GetFromJsonAsync<List<Order>>("Orders") ?? new List<Order>(); }
             catch (HttpRequestException ex) { throw new Exception("Ошибка при получении списка заказов: " + ex.Message); }
         }
 
-        public async Task<List<CarWashOrder>> GetOrdersByClientIdAsync(int clientId)
+        public async Task<List<Order>> GetOrdersByClientIdAsync(int clientId)
         {
-            try { return await _http.GetFromJsonAsync<List<CarWashOrder>>($"Orders/client/{clientId}") ?? new List<CarWashOrder>(); }
+            try { return await _http.GetFromJsonAsync<List<Order>>($"Orders/client/{clientId}") ?? new List<Order>(); }
             catch (HttpRequestException ex) { throw new Exception($"История заказов клиента: {ex.Message}"); }
         }
 
-        public async Task<CarWashOrder> CreateOrderAsync(CarWashOrder order)
+        public async Task<Order> CreateOrderAsync(Order order)
         {
             var response = await _http.PostAsJsonAsync("Orders", order);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<CarWashOrder>();
+            return await response.Content.ReadFromJsonAsync<Order>();
         }
 
-        public async Task UpdateOrderAsync(CarWashOrder order)
+        public async Task UpdateOrderAsync(Order order)
         {
             var response = await _http.PutAsJsonAsync($"Orders/{order.Id}", order);
             response.EnsureSuccessStatusCode();
@@ -172,35 +153,28 @@ namespace AccuratPanelCWM.Services
         {
             try
             {
-                // Используем твой эндпоинт из ClientsController
                 var response = await _http.GetAsync($"Clients/number/{carNumber}");
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<Client>();
                 }
             }
-            catch { } // Если не нашли или ошибка — просто возвращаем null
+            catch { }
             return null;
         }
-
         #endregion
 
         #region ПРОВЕРКА ДОСТУПНОСТИ БОКСА
-        // Добавили branchId в параметры метода
         public async Task<bool> CheckBoxAvailabilityForAppointmentAsync(int branchId, int box, DateTime startTime, int durationMinutes, int excludeOrderId = 0)
         {
             try
             {
-                // Имена параметров в URL теперь ТОЧНО совпадают с параметрами метода Check в контроллере
                 var url = $"Orders/check-availability?branchId={branchId}&box={box}&start={startTime:O}&duration={durationMinutes}&excludeOrderId={excludeOrderId}";
-
-                var isAvailable = await _http.GetFromJsonAsync<bool>(url);
-                return isAvailable;
+                return await _http.GetFromJsonAsync<bool>(url);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Ошибка проверки доступности: {ex.Message}");
-                // Если сервер недоступен, возвращаем true, чтобы не блокировать работу (или false, если строгая логика)
                 return true;
             }
         }
@@ -213,27 +187,25 @@ namespace AccuratPanelCWM.Services
             catch { return new List<Branch>(); }
         }
 
-        public async Task<User> AuthenticateAsync(string login, string password)
+        public async Task<LoginResponseDto> AuthenticateAsync(string login, string password)
         {
             try
             {
-                var request = new LoginRequest { Login = login, Password = password };
+                var request = new LoginRequestDto { Login = login, Password = password };
                 var response = await _http.PostAsJsonAsync("Users/login", request);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<User>();
+                    return await response.Content.ReadFromJsonAsync<LoginResponseDto>();
                 }
                 else
                 {
-                    // Читаем текст ошибки от сервера, чтобы понять причину 400 Bad Request
                     string errorText = await response.Content.ReadAsStringAsync();
                     throw new Exception($"Ошибка сервера ({response.StatusCode}): {errorText}");
                 }
             }
             catch (Exception ex)
             {
-                // Перехватываем HttpRequestException (например, если нет связи)
                 throw new Exception($"Сбой подключения: {ex.Message}");
             }
         }
@@ -269,7 +241,7 @@ namespace AccuratPanelCWM.Services
         #endregion
 
         #region ОТЧЕТЫ (REPORTS)
-        //  ОБНОВЛЕНО: Добавлен параметр branchId
+        // ИСПОЛЬЗУЕМ КЛАССЫ ОТЧЕТОВ ИЗ КОНТРАКТОВ
         public async Task<List<ShiftReport>> GetShiftReportsAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<List<ShiftReport>>($"Reports/shifts?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ShiftReport>(); }
@@ -278,14 +250,12 @@ namespace AccuratPanelCWM.Services
 
         public class ClientStatsResponse { public int NewClients { get; set; } public int UniqueClients { get; set; } }
 
-        //  ОБНОВЛЕНО: Добавлен параметр branchId
         public async Task<ClientStatsResponse> GetClientsStatsAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={start:O}&end={end:O}") ?? new ClientStatsResponse(); }
             catch { return new ClientStatsResponse(); }
         }
 
-        //  ОБНОВЛЕНО: Добавлен параметр branchId
         public async Task<List<Transaction>> GetTransactionsByDateRangeAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<List<Transaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<Transaction>(); }
@@ -294,40 +264,38 @@ namespace AccuratPanelCWM.Services
         #endregion
 
         #region ГРАФИКИ (SCHEDULES) И КОНВЕРТАЦИЯ
-        public async Task<List<EmployeeSchedule>> GetScheduleAsync(int year, int month)
+        public async Task<List<AccuratSystem.Contracts.Models.EmployeeSchedule>> GetScheduleAsync(int year, int month)
         {
-            try { return await _http.GetFromJsonAsync<List<EmployeeSchedule>>($"Schedules/{year}/{month}") ?? new List<EmployeeSchedule>(); }
-            catch { return new List<EmployeeSchedule>(); }
+            try { return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.EmployeeSchedule>>($"Schedules/{year}/{month}") ?? new List<AccuratSystem.Contracts.Models.EmployeeSchedule>(); }
+            catch { return new List<AccuratSystem.Contracts.Models.EmployeeSchedule>(); }
         }
 
-        public async Task SaveScheduleAsync(int year, int month, List<EmployeeSchedule> scheduleData)
+        public async Task SaveScheduleAsync(int year, int month, List<AccuratSystem.Contracts.Models.EmployeeSchedule> scheduleData)
         {
             var response = await _http.PostAsJsonAsync($"Schedules/{year}/{month}", scheduleData);
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task<CarWashOrder> ConvertAppointmentToOrderAsync(int appointmentId, int shiftId, int washerId)
+        public async Task<Order> ConvertAppointmentToOrderAsync(int appointmentId, int shiftId, int washerId)
         {
             var response = await _http.PostAsync($"Appointments/{appointmentId}/convert?shiftId={shiftId}&washerId={washerId}", null);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<CarWashOrder>();
+            return await response.Content.ReadFromJsonAsync<Order>();
         }
         #endregion
 
-        // 1. Получить активные заказы для филиала (ИСПРАВЛЕНО: без Over-fetching)
-        public async Task<List<CarWashOrder>> GetActiveOrdersAsync(int branchId)
+        // 1. Получить активные заказы
+        public async Task<List<Order>> GetActiveOrdersAsync(int branchId)
         {
             try
             {
-                // Скачиваем ТОЛЬКО активные заказы, трафик минимален!
-                var activeOrders = await _http.GetFromJsonAsync<List<CarWashOrder>>($"orders/active/{branchId}");
-                return activeOrders ?? new List<CarWashOrder>();
+                var activeOrders = await _http.GetFromJsonAsync<List<Order>>($"orders/active/{branchId}");
+                return activeOrders ?? new List<Order>();
             }
             catch (Exception ex)
             {
-                // Логируем или выводим ошибку при необходимости, чтобы не молчало, если что-то упадет
                 Console.WriteLine($"Ошибка при получении активных заказов: {ex.Message}");
-                return new List<CarWashOrder>();
+                return new List<Order>();
             }
         }
 
@@ -336,21 +304,16 @@ namespace AccuratPanelCWM.Services
         {
             try
             {
-                // Формируем URL. Добавил (paymentMethod ?? "") для страховки от краша Uri.EscapeDataString
                 string url = $"Orders/{orderId}/complete?paymentMethod={Uri.EscapeDataString(paymentMethod ?? "")}";
-
-                // ИСПРАВЛЕНО: Никаких StringContent и PatchAsync! Отправляем чистый запрос через SendAsync
                 var request = new HttpRequestMessage(new HttpMethod("PATCH"), url);
                 var response = await _http.SendAsync(request);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    // Теперь, если будет ошибка, ты точно увидишь её в окне Вывод (Output) в Visual Studio
                     string error = await response.Content.ReadAsStringAsync();
-                    System.Diagnostics.Debug.WriteLine($"[API ERROR] CompleteOrder (Status: {response.StatusCode}): {error}");
+                    System.Diagnostics.Debug.WriteLine($"[API ERROR] CompleteOrder: {error}");
                     return false;
                 }
-
                 return true;
             }
             catch (Exception ex)

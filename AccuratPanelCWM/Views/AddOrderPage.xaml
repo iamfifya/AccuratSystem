@@ -4,71 +4,82 @@
              x:Class="AccuratPanelCWM.Views.AddOrderPage"
              Title="Новый заказ">
 
-    <ScrollView Padding="15">
-        <VerticalStackLayout Spacing="15">
+    <Grid>
+        <ScrollView Padding="15">
+            <VerticalStackLayout Spacing="15">
 
-            <!-- Инфо о боксе (ИСПРАВЛЕНО CornerRadius на StrokeShape) -->
-            <Border StrokeThickness="1" Padding="15" StrokeShape="RoundRectangle 8">
-                <Label x:Name="BoxInfoLabel" FontSize="16" FontAttributes="Bold" HorizontalOptions="Center" />
-            </Border>
+                <Border StrokeThickness="1" Padding="15" StrokeShape="RoundRectangle 8">
+                    <Label Text="{Binding BoxInfoText}" FontSize="16" FontAttributes="Bold" HorizontalOptions="Center" />
+                </Border>
 
-            <!-- АВТОМОБИЛЬ -->
-            <Label Text="🚘 Автомобиль" FontAttributes="Bold" FontSize="16" />
-            <Entry x:Name="CarNumberEntry" Placeholder="Госномер (например: А123АА)" TextTransform="Uppercase" TextChanged="OnCarNumberChanged" />
-            <Entry x:Name="CarModelEntry" Placeholder="Марка и модель (например: Kia Rio)" />
+                <!-- АВТОМОБИЛЬ -->
+                <Label Text="🚘 Автомобиль" FontAttributes="Bold" FontSize="16" />
+                <Entry Text="{Binding CarNumber}" Placeholder="Госномер (например: А123АА)" TextTransform="Uppercase" />
+                <Entry Text="{Binding CarModel}" Placeholder="Марка и модель (например: Kia Rio)" />
 
-            <Picker x:Name="BodyTypePicker" Title="Выберите тип кузова" SelectedIndexChanged="BodyTypePicker_SelectedIndexChanged">
-                <Picker.Items>
-                    <x:String>Категория 1 (Легковая)</x:String>
-                    <x:String>Категория 2 (Универсал)</x:String>
-                    <x:String>Категория 3 (Кроссовер)</x:String>
-                    <x:String>Категория 4 (Внедорожник)</x:String>
-                </Picker.Items>
-            </Picker>
+                <Picker Title="Выберите тип кузова" SelectedIndex="{Binding SelectedBodyTypeIndex}">
+                    <Picker.Items>
+                        <x:String>Категория 1 (Легковая)</x:String>
+                        <x:String>Категория 2 (Универсал)</x:String>
+                        <x:String>Категория 3 (Кроссовер)</x:String>
+                        <x:String>Категория 4 (Внедорожник)</x:String>
+                    </Picker.Items>
+                </Picker>
 
-            <!-- МОЙЩИК -->
-            <Label Text="👤 Исполнитель" FontAttributes="Bold" FontSize="16" Margin="0,10,0,0"/>
-            <Picker x:Name="WasherPicker" Title="Выберите мойщика..." ItemDisplayBinding="{Binding FullName}" />
+                <!-- МОЙЩИК -->
+                <Label Text="👤 Исполнитель" FontAttributes="Bold" FontSize="16" Margin="0,10,0,0"/>
+                <Picker Title="Выберите мойщика..." 
+                        ItemsSource="{Binding Washers}" 
+                        SelectedItem="{Binding SelectedWasher}" 
+                        ItemDisplayBinding="{Binding FullName}" />
 
-            <!-- УСЛУГИ -->
-            <Label Text="🛠️ Услуги" FontAttributes="Bold" FontSize="16" Margin="0,10,0,0"/>
-            <CollectionView x:Name="ServicesCollectionView" SelectionMode="Multiple" SelectionChanged="ServicesCollectionView_SelectionChanged" HeightRequest="250">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border> 
-                            <!-- Тут сделаем нейтральную тонкую рамочку для списка услуг -->
-                        <Grid Padding="10" ColumnDefinitions="*, Auto">
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup Name="CommonStates">
-                                    <VisualState Name="Normal">
-                                    </VisualState>
-                                    <VisualState Name="Selected">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="#D6EAF8" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
+                <!-- УСЛУГИ -->
+                <Label Text="🛠️ Услуги" FontAttributes="Bold" FontSize="16" Margin="0,10,0,0"/>
+                <CollectionView ItemsSource="{Binding AvailableServices}" 
+                                SelectedItems="{Binding SelectedServices, Mode=TwoWay}"
+                                SelectionMode="Multiple" 
+                                SelectionChangedCommand="{Binding CalculateTotalCommand}"
+                                HeightRequest="250">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 4" Stroke="#E0E0E0" StrokeThickness="1" Margin="0,0,0,5">
+                                <Grid Padding="10" ColumnDefinitions="*, Auto">
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup Name="CommonStates">
+                                            <VisualState Name="Normal" />
+                                            <VisualState Name="Selected">
+                                                <VisualState.Setters>
+                                                    <Setter Property="BackgroundColor" Value="#D6EAF8" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
 
-                            <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center"/>
-                            <Label Grid.Column="1" Text="{Binding DisplayPrice, StringFormat='{0} ₽'}" TextColor="#27AE60" FontAttributes="Bold" VerticalOptions="Center" />
-                        </Grid>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                                    <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center"/>
+                                    <Label Grid.Column="1" Text="{Binding DisplayPrice, StringFormat='{0:N0} ₽'}" TextColor="#27AE60" FontAttributes="Bold" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
-            <!-- ИТОГО (ИСПРАВЛЕНО CornerRadius на StrokeShape) -->
-            <Border BackgroundColor="#2C3E50" Padding="15" StrokeShape="RoundRectangle 8" Margin="0,15,0,0">
-                <Grid ColumnDefinitions="*, Auto">
-                    <Label Grid.Column="0" Text="ИТОГО:" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
-                    <Label Grid.Column="1" x:Name="TotalPriceLabel" Text="0 ₽" TextColor="#2ECC71" FontSize="22" FontAttributes="Bold" VerticalOptions="Center" />
-                </Grid>
-            </Border>
+                <!-- ИТОГО -->
+                <Border BackgroundColor="#2C3E50" Padding="15" StrokeShape="RoundRectangle 8" Margin="0,15,0,0">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Label Grid.Column="0" Text="ИТОГО:" FontSize="18" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding TotalPriceDisplay}" TextColor="#2ECC71" FontSize="22" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
 
-            <!-- КНОПКА СОХРАНЕНИЯ -->
-            <Button Text="Создать заказ" BackgroundColor="#27AE60" TextColor="White" FontAttributes="Bold" FontSize="16" CornerRadius="8" HeightRequest="50" Margin="0,10,0,30" Clicked="SaveOrderButton_Clicked" />
+                <!-- КНОПКА СОХРАНЕНИЯ -->
+                <Button Text="Создать заказ" Command="{Binding SaveOrderCommand}" 
+                        BackgroundColor="#27AE60" TextColor="White" FontAttributes="Bold" FontSize="16" CornerRadius="8" HeightRequest="50" Margin="0,10,0,30" />
 
-        </VerticalStackLayout>
-    </ScrollView>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Крутилка загрузки -->
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#27AE60" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="50" HeightRequest="50" />
+    </Grid>
+
 </ContentPage>

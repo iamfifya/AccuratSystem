@@ -12,13 +12,13 @@
             <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" Padding="15">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Адрес API (URL)" FontSize="12" TextColor="#7F8C8D"/>
-                    <Entry x:Name="ServerUrlEntry" 
+                    <Entry Text="{Binding ServerUrl}" 
                            Placeholder="https://твой-сервер.ru/api/" 
                            Keyboard="Url"
                            ClearButtonVisibility="WhileEditing"/>
 
                     <Button Text="Сохранить адрес" 
-                            Clicked="SaveUrlButton_Clicked"
+                            Command="{Binding SaveUrlCommand}"
                             BackgroundColor="#3498DB" 
                             TextColor="White" 
                             CornerRadius="8" 
@@ -32,9 +32,8 @@
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Тема оформления" FontSize="12" TextColor="#7F8C8D"/>
 
-                    <Picker x:Name="ThemePicker" 
-                            Title="Выберите тему"
-                            SelectedIndexChanged="ThemePicker_SelectedIndexChanged">
+                    <Picker Title="Выберите тему"
+                            SelectedIndex="{Binding SelectedThemeIndex}">
                         <Picker.ItemsSource>
                             <x:Array Type="{x:Type x:String}">
                                 <x:String>Как в системе</x:String>
@@ -49,7 +48,7 @@
             <Label Text="👤 Аккаунт" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
             <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" Padding="15">
                 <Button Text="🚪 Выйти из аккаунта" 
-                        Clicked="LogoutButton_Clicked"
+                        Command="{Binding LogoutCommand}"
                         BackgroundColor="#E74C3C" 
                         TextColor="White" 
                         FontAttributes="Bold"
@@ -59,5 +58,4 @@
 
         </VerticalStackLayout>
     </ScrollView>
-
 </ContentPage>

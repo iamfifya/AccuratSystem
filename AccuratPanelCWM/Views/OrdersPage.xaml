@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AccuratPanelCWM.ViewModels"
              x:Class="AccuratPanelCWM.Views.OrdersPage"
              Title="Работа">
 
@@ -8,17 +9,17 @@
 
         <!-- Выбор филиала наверху экрана -->
         <Border Grid.Row="0" Padding="10,0,10,0" StrokeThickness="0" Margin="0,0,0,5">
-            <Picker x:Name="BranchPicker" 
-                    Title="Выберите филиал..." 
-                    ItemDisplayBinding="{Binding BranchName}"
-                    SelectedIndexChanged="BranchPicker_SelectedIndexChanged"
+            <Picker Title="Выберите филиал..." 
+                    ItemsSource="{Binding Branches}"
+                    SelectedItem="{Binding SelectedBranch}"
+                    ItemDisplayBinding="{Binding Name}"
                     FontSize="16" FontAttributes="Bold"/>
         </Border>
 
         <!-- Основной контент со свайпом для обновления -->
-        <RefreshView Grid.Row="1" x:Name="OrdersRefreshView" Refreshing="RefreshView_Refreshing">
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadBoxesCommand}">
 
-            <CollectionView x:Name="BoxesCollectionView" Margin="10">
+            <CollectionView ItemsSource="{Binding Boxes}" Margin="10">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <!-- Карточка бокса -->
@@ -30,9 +31,11 @@
                                 <!-- ================= СВОБОДНЫЙ БОКС ================= -->
                                 <VerticalStackLayout IsVisible="{Binding IsFree}" Spacing="10">
                                     <Label Text="🟢 Свободен" FontSize="14" TextColor="#27AE60" FontAttributes="Bold" />
+                                    <!-- 💥 Магический биндинг для кнопки внутри коллекции -->
                                     <Button Text="➕ Добавить заказ" 
                                             BackgroundColor="#3498DB" TextColor="White" CornerRadius="8"
-                                            Clicked="AddOrderButton_Clicked" CommandParameter="{Binding}" />
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OrdersViewModel}}, Path=AddOrderCommand}"
+                                            CommandParameter="{Binding .}" />
                                 </VerticalStackLayout>
 
                                 <!-- ================= ЗАНЯТЫЙ БОКС ================= -->
@@ -40,9 +43,11 @@
                                     <Label Text="{Binding CurrentOrder.CarNumber, StringFormat='🚗 {0}'}" FontSize="16" FontAttributes="Bold" TextColor="#2C3E50"/>
                                     <Label Text="{Binding CurrentOrder.CarModel}" FontSize="14" TextColor="#7F8C8D" />
 
+                                    <!-- 💥 И тут тоже -->
                                     <Button Text="✅ Завершить работу" Margin="0,10,0,0"
                                             BackgroundColor="#27AE60" TextColor="White" CornerRadius="8"
-                                            Clicked="FinishOrderButton_Clicked" CommandParameter="{Binding}" />
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OrdersViewModel}}, Path=FinishOrderCommand}"
+                                            CommandParameter="{Binding .}" />
                                 </VerticalStackLayout>
 
                             </VerticalStackLayout>
@@ -53,4 +58,5 @@
 
         </RefreshView>
     </Grid>
+
 </ContentPage>

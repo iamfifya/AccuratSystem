@@ -5,79 +5,89 @@
              x:Class="AccuratPanelCWM.Views.ReportsPage"
              Title="Аналитика">
 
-    <Grid RowDefinitions="Auto, *" Padding="15">
+    <Grid>
+        <Grid RowDefinitions="Auto, *" Padding="15">
 
-        <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,0,0,15">
-            <Label Text="📅 Выберите период" FontAttributes="Bold" FontSize="14" />
-            <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
-                <DatePicker x:Name="StartDatePicker" Format="dd.MM.yyyy" Grid.Column="0" />
-                <DatePicker x:Name="EndDatePicker" Format="dd.MM.yyyy" Grid.Column="1" />
-            </Grid>
-            <Button Text="Сформировать отчет" Clicked="RefreshReport_Clicked" 
-                    BackgroundColor="#3498DB" TextColor="White" CornerRadius="8" HeightRequest="45" />
-        </VerticalStackLayout>
-
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Spacing="20">
-
-                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="10" RowSpacing="10">
-                    <Border Grid.Column="0" Grid.Row="0" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
-                        <VerticalStackLayout>
-                            <Label Text="Выручка" FontSize="12" TextColor="#7F8C8D" />
-                            <Label x:Name="TotalRevenueLabel" Text="0 ₽" FontSize="18" FontAttributes="Bold" TextColor="#27AE60" />
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <Border Grid.Column="1" Grid.Row="0" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
-                        <VerticalStackLayout>
-                            <Label Text="Новые клиенты" FontSize="12" TextColor="#7F8C8D" />
-                            <Label x:Name="NewClientsLabel" Text="0" FontSize="18" FontAttributes="Bold" TextColor="#3498DB" />
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <Border Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
-                        <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
-                            <Label Text="📈 Средний чек:" FontSize="14" VerticalOptions="Center" />
-                            <Label x:Name="AverageCheckLabel" Text="0 ₽" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                    </Border>
+            <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,0,0,15">
+                <Label Text="📅 Выберите период" FontAttributes="Bold" FontSize="14" />
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                    <!-- Биндинг дат -->
+                    <DatePicker Date="{Binding StartDate}" Format="dd.MM.yyyy" Grid.Column="0" />
+                    <DatePicker Date="{Binding EndDate}" Format="dd.MM.yyyy" Grid.Column="1" />
                 </Grid>
-
-                <Label Text="📊 Динамика выручки" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
-                <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" HeightRequest="250" Padding="10">
-                    <lvc:CartesianChart Series="{Binding RevenueSeries}" XAxes="{Binding XAxes}" />
-                </Border>
-
-                <Label Text="🍕 Доля направлений" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
-                <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" HeightRequest="250" Padding="10">
-                    <lvc:PieChart Series="{Binding ShareSeries}" LegendPosition="Bottom" />
-                </Border>
-
-                <Label Text="📋 Детализация по сменам" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
-                <CollectionView x:Name="ReportsCollectionView" EmptyView="Нет данных за выбранный период">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Border StrokeShape="RoundRectangle 8" StrokeThickness="0" Margin="0,0,0,10" Padding="12">
-                                <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
-                                        <Label Text="{Binding Date, StringFormat='{0:dd.MM}'}" FontAttributes="Bold" />
-                                        <Label Text="{Binding Date, StringFormat='{0:yyyy}'}" FontSize="10" TextColor="#7F8C8D" />
-                                    </VerticalStackLayout>
-
-                                    <VerticalStackLayout Grid.Column="1" Margin="15,0">
-                                        <Label Text="{Binding Notes}" FontSize="12" />
-                                        <Label Text="{Binding TotalCars, StringFormat='Машин: {0}'}" FontSize="11" TextColor="#7F8C8D" />
-                                    </VerticalStackLayout>
-
-                                    <Label Grid.Column="2" Text="{Binding TotalRevenue, StringFormat='{0:N0} ₽'}" 
-                                           FontAttributes="Bold" TextColor="#27AE60" VerticalOptions="Center" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-
+                <!-- Вызов команды -->
+                <Button Text="Сформировать отчет" Command="{Binding LoadReportCommand}" 
+                        BackgroundColor="#3498DB" TextColor="White" CornerRadius="8" HeightRequest="45" />
             </VerticalStackLayout>
-        </ScrollView>
+
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Spacing="20">
+
+                    <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="10" RowSpacing="10">
+                        <Border Grid.Column="0" Grid.Row="0" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
+                            <VerticalStackLayout>
+                                <Label Text="Выручка" FontSize="12" TextColor="#7F8C8D" />
+                                <Label Text="{Binding TotalRevenueDisplay}" FontSize="18" FontAttributes="Bold" TextColor="#27AE60" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="1" Grid.Row="0" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
+                            <VerticalStackLayout>
+                                <Label Text="Новые клиенты" FontSize="12" TextColor="#7F8C8D" />
+                                <Label Text="{Binding NewClientsDisplay}" FontSize="18" FontAttributes="Bold" TextColor="#3498DB" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
+                            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                <Label Text="📈 Средний чек:" FontSize="14" VerticalOptions="Center" />
+                                <Label Text="{Binding AverageCheckDisplay}" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Label Text="📊 Динамика выручки" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
+                    <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" HeightRequest="250" Padding="10">
+                        <!-- Графики -->
+                        <lvc:CartesianChart Series="{Binding RevenueSeries}" XAxes="{Binding XAxes}" />
+                    </Border>
+
+                    <Label Text="🍕 Доля направлений" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
+                    <Border StrokeShape="RoundRectangle 12" StrokeThickness="0" HeightRequest="250" Padding="10">
+                        <!-- Диаграмма -->
+                        <lvc:PieChart Series="{Binding ShareSeries}" LegendPosition="Bottom" />
+                    </Border>
+
+                    <Label Text="📋 Детализация по сменам" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
+                    <CollectionView ItemsSource="{Binding Reports}" EmptyView="Нет данных за выбранный период">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border StrokeShape="RoundRectangle 8" StrokeThickness="0" Margin="0,0,0,10" Padding="12">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                                            <Label Text="{Binding Date, StringFormat='{0:dd.MM}'}" FontAttributes="Bold" />
+                                            <Label Text="{Binding Date, StringFormat='{0:yyyy}'}" FontSize="10" TextColor="#7F8C8D" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1" Margin="15,0">
+                                            <Label Text="{Binding Notes}" FontSize="12" />
+                                            <Label Text="{Binding TotalCars, StringFormat='Машин: {0}'}" FontSize="11" TextColor="#7F8C8D" />
+                                        </VerticalStackLayout>
+
+                                        <Label Grid.Column="2" Text="{Binding TotalRevenue, StringFormat='{0:N0} ₽'}" 
+                                               FontAttributes="Bold" TextColor="#27AE60" VerticalOptions="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+        <!-- Крутилка загрузки поверх экрана -->
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#3498DB" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="50" HeightRequest="50" />
     </Grid>
+
 </ContentPage>

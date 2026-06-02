@@ -1,37 +1,57 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AccuratPanelCWM.ViewModels"
              x:Class="AccuratPanelCWM.Views.LoginPage"
              Title="Авторизация"
              NavigationPage.HasNavigationBar="False"
              BackgroundColor="{AppThemeBinding Light=#F5F6FA, Dark=#121212}">
 
-    <ScrollView>
-        <VerticalStackLayout Spacing="20" Padding="30,50,30,30" VerticalOptions="Center">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Spacing="20" Padding="30,50,30,30" VerticalOptions="Center">
 
-            <Label Text="ACCURAT" FontSize="42" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,30" 
-                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#E0E0E0}" />
+                <Label Text="ACCURAT" FontSize="42" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,0,0,30" 
+                       TextColor="{AppThemeBinding Light=#2C3E50, Dark=#E0E0E0}" />
 
-            <Label Text="Логин:" FontAttributes="Bold" Margin="0,0,0,-10"
-                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
-            <Entry x:Name="LoginEntry" Placeholder="Введите логин" 
-                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" 
-                   TextColor="{AppThemeBinding Light=Black, Dark=White}" />
+                <VerticalStackLayout Spacing="20" IsVisible="{Binding IsCredentialsStep}">
+                    <Label Text="Логин:" FontAttributes="Bold" Margin="0,0,0,-10" TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
+                    <Entry Text="{Binding Login}" Placeholder="Введите логин" 
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" TextColor="{AppThemeBinding Light=Black, Dark=White}" />
 
-            <Label Text="Пароль:" FontAttributes="Bold" Margin="0,0,0,-10"
-                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
-            <Entry x:Name="PasswordEntry" Placeholder="Введите пароль" IsPassword="True" 
-                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" 
-                   TextColor="{AppThemeBinding Light=Black, Dark=White}" />
+                    <Label Text="Пароль:" FontAttributes="Bold" Margin="0,0,0,-10" TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
+                    <Entry Text="{Binding Password}" Placeholder="Введите пароль" IsPassword="True" 
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" TextColor="{AppThemeBinding Light=Black, Dark=White}" />
 
-            <Label Text="Рабочая точка (Филиал):" FontAttributes="Bold" Margin="0,0,0,-10"
-                   TextColor="{AppThemeBinding Light=#2C3E50, Dark=#CCCCCC}"/>
-            <Picker x:Name="BranchPicker" Title="Выберите место работы" ItemDisplayBinding="{Binding Name}"
-                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" 
-                    TextColor="{AppThemeBinding Light=Black, Dark=White}"/>
+                    <Button Text="Далее" Command="{Binding LoginCommand}" 
+                            BackgroundColor="#3498DB" TextColor="White" FontAttributes="Bold" FontSize="18" CornerRadius="8" HeightRequest="50" Margin="0,10,0,0" />
+                </VerticalStackLayout>
 
-            <Button x:Name="LoginButton" Text="Войти" BackgroundColor="#27AE60" TextColor="White" FontAttributes="Bold" FontSize="18" CornerRadius="8" HeightRequest="50" Margin="0,20,0,0" Clicked="LoginButton_Clicked" />
+                <VerticalStackLayout Spacing="20" IsVisible="{Binding IsBranchStep}">
+                    <Label Text="✅ Успешно!" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#27AE60" />
+                    <Label Text="У вас доступно несколько филиалов. Куда заходим?" HorizontalOptions="Center" HorizontalTextAlignment="Center" TextColor="#7F8C8D" />
 
-        </VerticalStackLayout>
-    </ScrollView>
+                    <Border StrokeShape="RoundRectangle 8" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}">
+                        <Picker Title="Выберите место работы" 
+                                ItemsSource="{Binding Branches}" 
+                                SelectedItem="{Binding SelectedBranch}" 
+                                ItemDisplayBinding="{Binding Name}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}" Margin="10,0"/>
+                    </Border>
+
+                    <Button Text="Войти в систему" Command="{Binding LoginCommand}" 
+                            BackgroundColor="#27AE60" TextColor="White" FontAttributes="Bold" FontSize="18" CornerRadius="8" HeightRequest="50" Margin="0,10,0,0" />
+
+                    <Button Text="Назад к логину" Command="{Binding CancelBranchSelectionCommand}" 
+                            BackgroundColor="Transparent" TextColor="#E74C3C" FontAttributes="Bold" />
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Border IsVisible="{Binding IsBusy}" BackgroundColor="#90000000" StrokeThickness="0">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" Color="#3498DB" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="60" HeightRequest="60" />
+        </Border>
+    </Grid>
+
 </ContentPage>

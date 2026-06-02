@@ -80,11 +80,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="LiveChartsCore.SkiaSharpView.Maui" Version="2.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="Polly" Version="8.6.6" />
 		<PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -113,6 +115,10 @@
 
 	<ItemGroup>
 		<AndroidResource Include="Platforms\Android\Resources\xml\network_security_config.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\AccuratSystem.Contracts\AccuratSystem.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

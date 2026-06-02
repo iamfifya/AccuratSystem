@@ -4,66 +4,65 @@
              x:Class="AccuratPanelCWM.Views.CashboxPage"
              Title="Касса смены">
 
-    <Grid RowDefinitions="*, Auto" Padding="15">
+    <Grid>
+        <Grid RowDefinitions="*, Auto" Padding="15">
 
-        <ScrollView Grid.Row="0">
-            <VerticalStackLayout Spacing="20">
+            <ScrollView Grid.Row="0">
+                <VerticalStackLayout Spacing="20">
 
-                <!-- ФОРМА НОВОЙ ОПЕРАЦИИ -->
-                <Border StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="0">
-                    <VerticalStackLayout Spacing="15">
-                        <Label Text="➕ Новая операция" FontSize="18" FontAttributes="Bold" />
+                    <Border StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}">
+                        <VerticalStackLayout Spacing="15">
+                            <Label Text="➕ Новая операция" FontSize="18" FontAttributes="Bold" />
 
-                        <Label Text="Тип операции:" FontAttributes="Bold" FontSize="12" />
-                        <Picker x:Name="TypePicker" Title="Выберите тип..." SelectedIndexChanged="TypePicker_SelectedIndexChanged">
-                            <Picker.Items>
-                                <x:String>Приход</x:String>
-                                <x:String>Расход</x:String>
-                                <x:String>Аванс мойщику</x:String>
-                                <x:String>Инкассация</x:String>
-                                <x:String>Размен</x:String>
-                            </Picker.Items>
-                        </Picker>
+                            <Label Text="Тип операции:" FontAttributes="Bold" FontSize="12" />
+                            <Picker Title="Выберите тип..." 
+                                    ItemsSource="{Binding TransactionTypes}" 
+                                    SelectedItem="{Binding SelectedType}" />
 
-                        <!-- Выбор сотрудника (виден только для аванса) -->
-                        <VerticalStackLayout x:Name="EmployeeLayout" IsVisible="False">
-                            <Label Text="Кому выдаем аванс?" FontAttributes="Bold" FontSize="12" />
-                            <Picker x:Name="EmployeePicker" Title="Выберите сотрудника..." ItemDisplayBinding="{Binding FullName}" />
+                            <VerticalStackLayout Spacing="5" IsVisible="{Binding IsEmployeeVisible}">
+                                <Label Text="Кому выдаем аванс?" FontAttributes="Bold" FontSize="12" />
+                                <Picker Title="Выберите сотрудника..." 
+                                        ItemsSource="{Binding Employees}" 
+                                        SelectedItem="{Binding SelectedEmployee}" 
+                                        ItemDisplayBinding="{Binding FullName}" />
+                            </VerticalStackLayout>
+
+                            <Label Text="Сумма (₽):" FontAttributes="Bold" FontSize="12" />
+                            <Entry Text="{Binding AmountText}" Placeholder="0" Keyboard="Numeric" FontSize="18" />
+
+                            <Label Text="Комментарий:" FontAttributes="Bold" FontSize="12" />
+                            <Entry Text="{Binding CommentText}" Placeholder="На что потрачено / кто взял" />
+
+                            <Button Text="Провести операцию" Command="{Binding SaveTransactionCommand}" 
+                                    BackgroundColor="#3498DB" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="45" Margin="0,10,0,0"/>
                         </VerticalStackLayout>
+                    </Border>
 
-                        <Label Text="Сумма (₽):" FontAttributes="Bold" FontSize="12" />
-                        <Entry x:Name="AmountEntry" Placeholder="0" Keyboard="Numeric" FontSize="18" />
+                    <Label Text="📜 Лента операций" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
 
-                        <Label Text="Комментарий:" FontAttributes="Bold" FontSize="12" />
-                        <Entry x:Name="CommentEntry" Placeholder="На что потрачено / кто взял" />
+                    <CollectionView ItemsSource="{Binding Transactions}" HeightRequest="300" EmptyView="Лента пуста">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="10" ColumnDefinitions="40, *, Auto">
+                                    <Label Grid.Column="0" Text="{Binding Icon}" FontSize="20" VerticalOptions="Center"/>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="10,0">
+                                        <Label Text="{Binding BaseTrans.Type}" FontAttributes="Bold" FontSize="12"/>
+                                        <Label Text="{Binding BaseTrans.Comment}" FontSize="11" TextColor="#7F8C8D"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" Text="{Binding FormattedAmount}" FontAttributes="Bold" 
+                                           TextColor="{Binding ColorHex}" VerticalOptions="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
 
-                        <Button Text="Провести операцию" Clicked="Save_Clicked" 
-                                BackgroundColor="#3498DB" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="45" />
-                    </VerticalStackLayout>
-                </Border>
+                </VerticalStackLayout>
+            </ScrollView>
 
-                <!-- ЛЕНТА ОПЕРАЦИЙ (Как в WPF) -->
-                <Label Text="📜 Лента операций" FontAttributes="Bold" FontSize="16" Margin="5,10,0,0"/>
-                <CollectionView x:Name="TransactionsCollectionView" HeightRequest="300">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Padding="10" ColumnDefinitions="40, *, Auto">
-                                <Label Grid.Column="0" Text="{Binding Icon}" FontSize="20" VerticalOptions="Center"/>
-                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="10,0">
-                                    <Label Text="{Binding Type}" FontAttributes="Bold" FontSize="12"/>
-                                    <Label Text="{Binding Comment}" FontSize="11" TextColor="#7F8C8D"/>
-                                </VerticalStackLayout>
-                                <Label Grid.Column="2" Text="{Binding FormattedAmount}" FontAttributes="Bold" 
-                                       TextColor="{Binding ColorHex}" VerticalOptions="Center"/>
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+            <Button Grid.Row="1" Text="Закрыть" Command="{Binding CloseCommand}" Margin="0,10"
+                    BackgroundColor="#E74C3C" TextColor="White" CornerRadius="8" HeightRequest="45" />
+        </Grid>
 
-            </VerticalStackLayout>
-        </ScrollView>
-
-        <Button Grid.Row="1" Text="Закрыть" Clicked="Cancel_Clicked" Margin="0,10"
-                BackgroundColor="#E74C3C" TextColor="White" CornerRadius="8" HeightRequest="45" />
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#3498DB" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="50" HeightRequest="50" />
     </Grid>
 </ContentPage>

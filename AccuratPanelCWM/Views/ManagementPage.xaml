@@ -4,34 +4,29 @@
              x:Class="AccuratPanelCWM.Views.ManagementPage"
              Title="Управление сменой">
 
-    <ScrollView>
-        <!-- Свайп для обновления данных -->
-        <RefreshView x:Name="ShiftRefreshView" Refreshing="RefreshView_Refreshing">
+    <RefreshView IsRefreshing="{Binding IsBusy}" Command="{Binding LoadShiftDataCommand}">
+        <ScrollView>
             <VerticalStackLayout Spacing="20" Padding="15">
 
-                <!-- КАРТОЧКА СТАТУСА -->
-                <Border x:Name="StatusBorder" StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="0">
+                <Border StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="0">
                     <Border.Shadow>
                         <Shadow Brush="Black" Opacity="0.1" Offset="0,2" Radius="5" />
                     </Border.Shadow>
-
                     <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
-                        <Label x:Name="StatusIconLabel" Text="🔒" FontSize="48" HorizontalOptions="Center"/>
-                        <Label x:Name="StatusTitleLabel" Text="Смена закрыта" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center"/>
-                        <Label x:Name="StatusDescLabel" Text="Откройте смену, чтобы начать принимать заказы" FontSize="14" TextColor="#7F8C8D" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                        <Label Text="{Binding StatusIcon}" FontSize="48" HorizontalOptions="Center"/>
+                        <Label Text="{Binding StatusTitle}" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center"/>
+                        <Label Text="{Binding StatusDescription}" FontSize="14" TextColor="#7F8C8D" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- НОВЫЙ БЛОК: Выбор сотрудников (виден только при закрытой смене) -->
-                <VerticalStackLayout x:Name="EmployeeSelectionLayout" Spacing="10" IsVisible="True">
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding IsShiftClosed}">
                     <Label Text="👥 Выберите сотрудников на смену:" FontAttributes="Bold" FontSize="16" />
 
-                    <!-- Используем BindableLayout для списка с чекбоксами -->
-                    <VerticalStackLayout x:Name="EmployeesStack" Spacing="5">
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding SelectableEmployees}" Spacing="5">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
                                 <HorizontalStackLayout Spacing="10" Padding="5">
-                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"  VerticalOptions="Center" Color="#27AE60" />
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalOptions="Center" Color="#27AE60" />
                                     <Label Text="{Binding FullName}" VerticalOptions="Center" FontSize="14" />
                                 </HorizontalStackLayout>
                             </DataTemplate>
@@ -39,38 +34,32 @@
                     </VerticalStackLayout>
                 </VerticalStackLayout>
 
-                <!-- КАРТОЧКА СТАТИСТИКИ (Скрыта, если смена закрыта) -->
-                <VerticalStackLayout x:Name="StatsLayout" Spacing="15" IsVisible="False">
+                <VerticalStackLayout Spacing="15" IsVisible="{Binding IsShiftOpen}">
                     <Label Text="📊 Показатели текущей смены" FontSize="16" FontAttributes="Bold" Margin="5,10,0,0"/>
-
                     <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
-
-                        <!-- Выручка -->
                         <Border Grid.Column="0" StrokeShape="RoundRectangle 10" Padding="15" StrokeThickness="0">
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Выручка" FontSize="12"/>
-                                <Label x:Name="RevenueLabel" Text="0 ₽" FontSize="18" FontAttributes="Bold" TextColor="#27AE60" />
+                                <Label Text="{Binding RevenueDisplay}" FontSize="18" FontAttributes="Bold" TextColor="#27AE60" />
                             </VerticalStackLayout>
                         </Border>
-
-                        <!-- Наличные в кассе -->
                         <Border Grid.Column="1" StrokeShape="RoundRectangle 10" Padding="15" StrokeThickness="0">
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="В кассе (Наличные)" FontSize="12"/>
-                                <Label x:Name="CashInHandLabel" Text="0 ₽" FontSize="18" FontAttributes="Bold" TextColor="#3498DB" />
+                                <Label Text="{Binding CashInHandDisplay}" FontSize="18" FontAttributes="Bold" TextColor="#3498DB" />
                             </VerticalStackLayout>
                         </Border>
-
                     </Grid>
                 </VerticalStackLayout>
 
-                <!-- КНОПКИ -->
-                <!-- Появится только когда смена открыта -->
-                <Button x:Name="CashboxButton" Text="💰 Трансфер сумм" BackgroundColor="#3498DB" TextColor="White" FontAttributes="Bold" FontSize="16" CornerRadius="8" HeightRequest="50" Clicked="CashboxButton_Clicked" IsVisible="False"/>
+                <Button Text="💰 Трансфер сумм" BackgroundColor="#3498DB" TextColor="White" FontAttributes="Bold" FontSize="16" CornerRadius="8" HeightRequest="50" 
+                        Command="{Binding OpenCashboxCommand}" IsVisible="{Binding IsShiftOpen}"/>
 
-                <Button x:Name="ActionShiftButton" Text="Начать смену" BackgroundColor="#27AE60" TextColor="White" FontAttributes="Bold" FontSize="16" CornerRadius="8" HeightRequest="50" Clicked="ActionShiftButton_Clicked" Margin="0,15,0,0" />
+                <Button Text="{Binding ActionButtonText}" BackgroundColor="{Binding ActionButtonColor}" TextColor="White" FontAttributes="Bold" FontSize="16" CornerRadius="8" HeightRequest="50" 
+                        Command="{Binding ActionShiftCommand}" Margin="0,15,0,0" />
 
             </VerticalStackLayout>
-        </RefreshView>
-    </ScrollView>
+        </ScrollView>
+    </RefreshView>
+
 </ContentPage>

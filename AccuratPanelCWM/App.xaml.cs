@@ -1,13 +1,16 @@
-﻿namespace AccuratPanelCWM
+﻿using Microsoft.Maui.Controls;
+
+namespace AccuratPanelCWM
 {
     public partial class App : Application
     {
-        public App()
+        // 💥 Просим готовую страницу прямо в конструкторе!
+        public App(Views.LoginPage loginPage)
         {
             InitializeComponent();
 
-            // Приложение всегда должно начинаться с экрана логина!
-            MainPage = new Views.LoginPage();
+            // Приложение всегда должно начинаться с экрана логина
+            MainPage = loginPage;
 
             // Проверяем настройки темы при старте
             string savedTheme = Microsoft.Maui.Storage.Preferences.Default.Get("AppTheme", "System");
