@@ -188,10 +188,6 @@
                         <TextBlock Text="Главная страница" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
                         <TextBlock Text=" | " FontSize="20" Foreground="#95A5A6" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="16" Foreground="#7F8C8D" VerticalAlignment="Center"/>
-                        <Button Content="👑 Панель Разработчика" Click="DevPanelButton_Click"
-                                Height="40" Margin="5" Padding="10,0"
-                                Background="#8E44AD" Foreground="White" FontWeight="Bold" Cursor="Hand"
-                                Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -213,20 +209,45 @@
                 </Grid>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Button x:Name="AddButton" Content="➕ Добавить заказ" Click="AddButton_Click" Padding="15,8" Margin="0,0,10,0" Background="#3498DB" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="EmployeesButton" Content="👥 Сотрудники" Click="EmployeesButton_Click" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" Padding="15,8" Margin="0,0,5,0" Background="#9B59B6" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button Content="🛠️ Услуги" x:Name="ServicesButton" Click="ServicesButton_Click" Width="100" Margin="0,0,5,0" Background="#9B59B6" Foreground="White" Height="35"/>
-                    <Button Content="🛠️ Управление услугами" x:Name="UpsellButton" Click="UpsellButton_Click" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" Width="170" Margin="0,0,5,0" Background="#9B59B6" Foreground="White" Height="35"/>
-                    <Button x:Name="ClientsButton" Content="👥 Клиенты" Click="ClientsButton_Click" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" Padding="15,8" Margin="0,0,10,0" Background="#9B59B6" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="StartShiftButton" Content="📅 Начать смену" Click="StartShiftButton_Click" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" Padding="15,8" Margin="10,0,5,0" Background="#27AE60" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="CloseShiftButton" Content="🔒 Закрыть смену" Click="CloseShiftButton_Click" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" Padding="15,8" Margin="0,0,5,0" Background="#E74C3C" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="CashboxButton" Content="💰 Трансфер сумм" Click="CashboxButton_Click" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" Padding="15,8" Margin="0,0,10,0" Background="#3498DB" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="ReportsButton" Content="📊 Отчёты" Click="ReportsButton_Click" Padding="15,8" Margin="10,0,5,0" Background="#F39C12" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="AppointmentsBoardButton" Content="📋 Доска записей" Click="AppointmentsBoardButton_Click" Padding="15,8" Margin="0,0,5,0" Background="#F39C12" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="HistoryButton" Content="📊 История" Click="HistoryButton_Click" Padding="15,8" Margin="0,0,10,0" Background="#F39C12" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <TextBox x:Name="SearchFilterTextBox" Text="🔍 Поиск по гос. номеру или модели..." KeyUp="SearchFilterTextBox_KeyUp" GotFocus="SearchFilterTextBox_GotFocus" LostFocus="SearchFilterTextBox_LostFocus" Padding="10,8" MinWidth="250" Height="50" Margin="20,0,0,0" Background="White" BorderBrush="#BDC3C7" Foreground="#7F8C8D" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+                    <Button Content="👑 Панель Разработчика" Click="DevPanelButton_Click"
+                            Height="40" Margin="5" Padding="10,0"
+                            Background="#8E44AD" Foreground="White" FontWeight="Bold" Cursor="Hand"
+                            Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <Button x:Name="AddButton" Content="➕ Добавить заказ" Click="AddButton_Click" 
+                            Padding="15,8" Margin="0,0,10,0" Background="#3498DB" Foreground="White"
+                            BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <Button x:Name="ManagerDeskButton" Content="💼 Стол управляющего" Click="ManagerDeskButton_Click" 
+                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" 
+                            Padding="15,8" Margin="0,0,10,0" Background="#3498DB" 
+                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <Button x:Name="StartShiftButton" Content="📅 Начать смену" Click="StartShiftButton_Click" 
+                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" 
+                            Padding="15,8" Margin="10,0,5,0" Background="#27AE60" 
+                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <Button x:Name="CloseShiftButton" Content="🔒 Закрыть смену" Click="CloseShiftButton_Click" 
+                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Padding="15,8" Margin="0,0,5,0" Background="#E74C3C" 
+                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <Button x:Name="CashboxButton" Content="💰 Трансфер сумм" Click="CashboxButton_Click" 
+                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Padding="15,8" Margin="0,0,10,0" Background="#3498DB" 
+                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <Button x:Name="AppointmentsBoardButton" Content="📋 Доска записей" Click="AppointmentsBoardButton_Click" 
+                            Padding="15,8" Margin="0,0,5,0" Background="#F39C12" 
+                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <Button x:Name="HistoryButton" Content="📊 История" Click="HistoryButton_Click" 
+                            Padding="15,8" Margin="0,0,10,0" Background="#F39C12" 
+                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <TextBox x:Name="SearchFilterTextBox" Text="🔍 Поиск по гос. номеру или модели..." 
+                             KeyUp="SearchFilterTextBox_KeyUp" 
+                             GotFocus="SearchFilterTextBox_GotFocus" LostFocus="SearchFilterTextBox_LostFocus" 
+                             Padding="10,8" MinWidth="250" Height="50" Margin="20,0,0,0" 
+                             Background="White" BorderBrush="#BDC3C7" Foreground="#7F8C8D" 
+                             FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
                     <WrapPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,0,0">
-                        <Button x:Name="ExitButton" Content="🚪 Выход" Click="ExitButton_Click" Padding="15,8" Background="#E74C3C" Foreground="White" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" Height="35"/>
+                        <Button x:Name="ExitButton" Content="🚪 Выход" Click="ExitButton_Click" 
+                                Padding="15,8" Background="#E74C3C" Foreground="White" 
+                                BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" Height="35"/>
                     </WrapPanel>
                 </StackPanel>
             </Grid>
@@ -430,7 +451,16 @@
             </Grid>
         </Grid>
 
+        <!-- Оверлей окна записей -->
         <controls:AppointmentsOverlay x:Name="AppointmentsOverlay" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Panel.ZIndex="9999"/>
-        <controls:CashboxOverlay x:Name="CashboxPanel" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Panel.ZIndex="9999"/>
+
+        <!-- Оверлей Стола управляющего (подписались на событие CashboxRequested) -->
+        <controls:ManagerDeskOverlay x:Name="DeskOverlay" 
+                         CashboxRequested="DeskOverlay_CashboxRequested" 
+                         Visibility="Collapsed" Panel.ZIndex="150"/>
+
+        <!-- Оверлей Кассы -->
+        <controls:CashboxOverlay x:Name="CashboxPanel" 
+                     Visibility="Collapsed" Panel.ZIndex="160"/>
     </Grid>
 </Window>

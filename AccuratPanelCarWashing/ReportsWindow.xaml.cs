@@ -158,6 +158,7 @@ namespace AccuratPanelCarWashing
             // Передадим пользователя и сюда
             var customReportWin = new CustomReportWindow(_currentUser);
             customReportWin.ShowDialog();
+            this.Close();
         }
 
         private void ExportButton_Click(object sender, RoutedEventArgs args)

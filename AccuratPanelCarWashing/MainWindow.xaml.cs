@@ -820,6 +820,15 @@ namespace AccuratPanelCarWashing
         #region Обработчики кнопок и навигация
 
         /// <summary>
+        /// Открывает стол управляющего
+        /// </summary>
+        private void ManagerDeskButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Передаем текущую выручку смены
+            DeskOverlay.Show(_currentUser, TotalRevenue);
+        }
+
+        /// <summary>
         /// Открывает окно управления карточками сотрудников.
         /// </summary>
         private void EmployeesButton_Click(object sender, RoutedEventArgs e) => App.GetService<EmployeeCardWindow>().ShowDialog();
@@ -987,21 +996,6 @@ namespace AccuratPanelCarWashing
         }
 
         /// <summary>
-        /// Открывает окно управления модулем дополнительных продаж.
-        /// </summary>
-        private void UpsellButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Добавили проверку купленного модуля
-            if (!UserSession.IsFeatureEnabled(f => f.IsUpsellEnabled))
-            {
-                MessageBox.Show("Модуль 'Умный кассир' отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
-                return;
-            }
-
-            new UpsellManagementWindow().ShowDialog();
-        }
-
-        /// <summary>
         /// Открывает окно авторизации для смены текущего пользователя.
         /// </summary>
         private void ChangeUserButton_Click(object sender, RoutedEventArgs e)
@@ -1161,6 +1155,19 @@ namespace AccuratPanelCarWashing
                     await _apiService.UpdateOrderAsync(originalOrder);
                 }
             }
+        }
+
+        // Обработчик запроса кассы из Стола Управляющего
+        private void DeskOverlay_CashboxRequested(object sender, RoutedEventArgs e)
+        {
+            if (_currentShift == null || _currentShift.IsClosed)
+            {
+                MessageBox.Show("Сначала откройте смену!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Открываем кассу и передаем ей текущую смену
+            CashboxPanel.Show(_currentShift);
         }
 
         #endregion

@@ -401,6 +401,7 @@ namespace Accurat.WebAPI.Controllers
         {
             var activeOrders = await _context.Orders
                 .Include(o => o.OrderWashers)
+                    .ThenInclude(ow => ow.Washer) // Чтобы на карточках были имена мойщиков
                 .Where(o => o.BranchId == branchId && o.Status == "В работе")
                 .ToListAsync();
 
@@ -428,15 +429,25 @@ namespace Accurat.WebAPI.Controllers
             _context.OrderExpenses.Add(expense);
             await _context.SaveChangesAsync();
 
+            // Формируем текст для Ленты
+            string timelineMessage = $"Добавлен расход: {expense.Name} ({expense.ClientPrice * expense.Quantity:N0} ₽)";
+
+            // Если кассир ввел комментарий, просто приклеиваем его к сообщению Ленты!
+            if (!string.IsNullOrWhiteSpace(expense.Note))
+            {
+                timelineMessage += $". Примечание: {expense.Note}";
+            }
+
             var timelineEntry = new AccuratSystem.Contracts.Models.OrderTimelineEntry
             {
                 OrderId = id,
                 EntryType = TimelineEntryType.ExpenseAdded,
-                Message = $"Добавлен расход: {expense.Name} ({expense.ClientPrice * expense.Quantity:N0} ₽)",
+                Message = timelineMessage, // Передаем склеенный текст
                 CreatedBy = dto.CreatedByUser ?? "Система",
                 Timestamp = DateTime.UtcNow,
                 RelatedEntityId = expense.Id
             };
+
             _context.OrderTimelineEntries.Add(timelineEntry);
             await _context.SaveChangesAsync();
 

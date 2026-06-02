@@ -171,10 +171,19 @@ namespace AccuratPanelCarWashing
             ApplyFilter();
         }
 
-        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Открывает окно управления модулем дополнительных продаж.
+        /// </summary>
+        private void UpsellButton_Click(object sender, RoutedEventArgs e)
         {
-            _ = LoadServicesAsync();
-            MessageBox.Show("Список услуг обновлен", "Обновление", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Добавили проверку купленного модуля
+            if (!UserSession.IsFeatureEnabled(f => f.IsUpsellEnabled))
+            {
+                MessageBox.Show("Модуль 'Умный кассир' отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
+                return;
+            }
+
+            new UpsellManagementWindow().ShowDialog();
         }
 
         private void EditMenuItem_Click(object sender, RoutedEventArgs e)

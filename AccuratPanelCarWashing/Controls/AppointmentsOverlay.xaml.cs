@@ -101,6 +101,27 @@ namespace AccuratPanelCarWashing.Controls
             showAnimation?.Begin();
         }
 
+        public void Hide()
+        {
+            var hideAnimation = Resources["HideAnimation"] as Storyboard;
+            if (hideAnimation != null)
+            {
+                hideAnimation.Completed += (s, e) =>
+                {
+                    this.Visibility = Visibility.Collapsed;
+                    OverlayBackground.Visibility = Visibility.Collapsed;
+                    PopupPanel.Visibility = Visibility.Collapsed;
+                };
+                hideAnimation.Begin();
+            }
+            else
+            {
+                this.Visibility = Visibility.Collapsed;
+                OverlayBackground.Visibility = Visibility.Collapsed;
+                PopupPanel.Visibility = Visibility.Collapsed;
+            }
+        }
+
         private async Task LoadBranchesAndAppointmentsAsync()
         {
             try
@@ -160,27 +181,6 @@ namespace AccuratPanelCarWashing.Controls
                 tab.WashZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🚘 БОКС {i}", Department = "Wash" });
             for (int i = 1; i <= branch.ServiceLiftsCount; i++)
                 tab.ServiceZones.Add(new WorkZone { ZoneNumber = i, ZoneName = $"🔧 ПОДЪЕМНИК {i}", Department = "Service" });
-        }
-
-        public void Hide()
-        {
-            var hideAnimation = Resources["HideAnimation"] as Storyboard;
-            if (hideAnimation != null)
-            {
-                hideAnimation.Completed += (s, e) =>
-                {
-                    this.Visibility = Visibility.Collapsed;
-                    OverlayBackground.Visibility = Visibility.Collapsed;
-                    PopupPanel.Visibility = Visibility.Collapsed;
-                };
-                hideAnimation.Begin();
-            }
-            else
-            {
-                this.Visibility = Visibility.Collapsed;
-                OverlayBackground.Visibility = Visibility.Collapsed;
-                PopupPanel.Visibility = Visibility.Collapsed;
-            }
         }
 
         private async Task LoadAppointmentsAsync()

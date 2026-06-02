@@ -348,6 +348,9 @@
       <DependentUpon>CashboxOverlay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\CustomComboBox.cs" />
+    <Compile Include="Controls\ManagerDeskOverlay.xaml.cs">
+      <DependentUpon>ManagerDeskOverlay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DepartmentDisplayConverter.cs" />
     <Compile Include="CurrencyConverter.cs" />
     <Compile Include="CustomDatePicker.xaml.cs">
@@ -453,6 +456,10 @@
     <Page Include="Controls\CashboxOverlay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ManagerDeskOverlay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CustomDatePicker.xaml">
       <SubType>Designer</SubType>

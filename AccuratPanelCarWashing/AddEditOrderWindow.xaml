@@ -341,6 +341,21 @@
 
                                 <!-- Список расходов -->
                                 <ListBox Grid.Row="1" ItemsSource="{Binding OrderExpenses}" Margin="0,0,0,10" Background="Transparent" BorderThickness="0">
+                                    <!-- ВАЖНО: растягиваем ListBoxItem -->
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Border Background="#F8F9FA" CornerRadius="6" Padding="10" Margin="0,0,0,5">
@@ -425,23 +440,23 @@
 
                                                     <!-- Правая колонка: контент -->
                                                     <StackPanel Grid.Column="1">
-                                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,3">
-                                                            <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,5,0"/>
-                                                            <TextBlock Text="{Binding CreatedBy}" FontWeight="SemiBold" FontSize="12"/>
-                                                            <TextBlock Text="•" FontSize="12" Foreground="#BDC3C7" Margin="5,0"/>
-                                                            <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
+                                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,3" Grid.Row="0">
+                                                                <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,5,0"/>
+                                                                <TextBlock Text="{Binding CreatedBy}" FontWeight="SemiBold" FontSize="12"/>
+                                                                <TextBlock Text="•" FontSize="12" Foreground="#BDC3C7" Margin="5,0"/>
+                                                                <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
                                                                    FontSize="11" Foreground="#7F8C8D"/>
-                                                        </WrapPanel>
+                                                            </WrapPanel>
 
-                                                        <WrapPanel>
-                                                            <!-- TextBlock с переносом -->
-                                                            <TextBlock Text="{Binding Message}" 
+                                                            <WrapPanel>
+                                                                <!-- TextBlock с переносом -->
+                                                                <TextBlock Text="{Binding Message}" 
                                                                    FontSize="12" TextWrapping="Wrap" Foreground="#2C3E50"/>
-                                                            <TextBlock Text=" | "/>
-                                                            <TextBlock Text="{Binding RelatedEntityInfo}"
+                                                                <TextBlock Text=" | "/>
+                                                                <TextBlock Text="{Binding RelatedEntityInfo}"
                                                                    FontSize="12" Foreground="#95A5A6" FontStyle="Italic" 
                                                                    Visibility="{Binding RelatedEntityInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
-                                                        </WrapPanel>
+                                                            </WrapPanel>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
