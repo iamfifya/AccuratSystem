@@ -3,7 +3,6 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
-  <Folder Name="/IMG/" />
   <Project Path="AccuratPanelCarWashing/AccuratPanelCarWashing.csproj" Id="91065681-afbe-4ea9-867d-6d9885c61197">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
