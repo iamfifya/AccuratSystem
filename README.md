@@ -65,7 +65,7 @@ graph TD
 * [x] **Core SaaS System:** Базовый учет, тенанты, сквозные заголовки контекста.
 * [x] **Smart Cashier (DLC):** Модуль умных подсказок (Upsell) и калькулятор апселл-бонусов.
 * [x] **Smart Staff Management:** Обновленный модуль запуска смен (`StartShiftWindow`) с интерактивным поиском и многовыборочным сохранением состояния фильтра.
-* [x] **Престроить MAUI-проект под новую архитектуру:** Обновленное приложение для мобильных устройств с использованием контрактов и работы на бэкэнде.
+* [x] **Перестроить MAUI-проект под новую архитектуру:** Обновленное мобильное приложение с использованием чистых контрактов и MVVM-архитектуры.
 * [ ] **Reputation Management Module (DLC):** Вызов краткой и развернутой сводки из сервисов для отзывов (Яндекс, Google, 2ГИС) с возможностью ответа из терминала.
 * [ ] **CRM-Marketing (DLC):** Автоматическая SMS/Telegram рассылка триггерных уведомлений по базе.
 * [ ] **Storage Module (DLC):** Складской учет автохимии, материалов, инвентаризация и калькуляция себестоимости.
@@ -82,7 +82,7 @@ graph TD
 ### 1. Серверная часть (API)
 
 1. Установите .NET 10 SDK и СУБД PostgreSQL.
-2. Сконфигурируйте строку подключения в `Akkurat.WebAPI/appsettings.json`:
+2. Сконфигурируйте строку подключения в `Accurat.WebAPI/appsettings.json`:
 
 ```json
 {
@@ -116,15 +116,13 @@ dotnet run
 
 ## 📄 Лицензия
 
-Распространяется под лицензией MIT. Подробности см. в файле [LICENSE](https://www.google.com/search?q=LICENSE).
+Распространяется под лицензией [MIT](https://www.google.com/search?q=LICENSE).
 
 ## 👤 Автор
 
-**Dima Kuraedov** ([@iamfifya](https://www.google.com/search?q=https://github.com/iamfifya))
+**Dima Kuraedov** ([@iamfifya](https://github.com/iamfifya))
 
 * Telegram: [@iamfifya](https://t.me/iamfifya)
 * Email: dimakuraedov@gmail.com
 
 *Продукт спроектирован и разработан с использованием архитектурных рекомендаций больших языковых моделей ИИ.*
-
-```
