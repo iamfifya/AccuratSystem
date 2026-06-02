@@ -3,12 +3,13 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/IMG/" />
   <Project Path="AccuratPanelCarWashing/AccuratPanelCarWashing.csproj" Id="91065681-afbe-4ea9-867d-6d9885c61197">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="AccuratPanelCWM/AccuratPanelCWM.csproj" Id="75f04d99-b6aa-4ec6-86bf-b0018c14b6f4">
     <BuildDependency Project="AccuratSystem.Contracts/AccuratSystem.Contracts.csproj" />
-    <Deploy Solution="Debug|Any CPU" />
+    <Deploy Solution="*|Any CPU" />
   </Project>
   <Project Path="AccuratSystem.Contracts/AccuratSystem.Contracts.csproj" Id="93b59f5d-e4aa-4688-b131-606bc4d105ef" />
   <Project Path="Akkurat.WebAPI/Accurat.WebAPI.csproj" />
