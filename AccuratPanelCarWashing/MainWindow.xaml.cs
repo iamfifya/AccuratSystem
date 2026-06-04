@@ -836,7 +836,15 @@ namespace AccuratPanelCarWashing
         /// <summary>
         /// Открывает панель управления кассой для текущей смены.
         /// </summary>
-        private void CashboxButton_Click(object sender, RoutedEventArgs e) { if (_currentShift == null) { MessageBox.Show("Откройте смену!", "Внимание"); return; } CashboxPanel.Show(_currentShift); }
+        private void CashboxButton_Click(object sender, RoutedEventArgs e) 
+        { 
+            if (_currentShift == null) 
+            {
+                MessageBox.Show("Сначала откройте смену!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            } 
+            CashboxPanel.Show(_currentShift); 
+        }
 
         /// <summary>
         /// Открывает окно управления списком услуг.
