@@ -111,6 +111,7 @@ namespace AccuratPanelCarWashing
             AppSettings.CurrentBranchName = selectedBranch.Name;
             AppSettings.CurrentBranchWashBaysCount = selectedBranch.WashBaysCount;
             AppSettings.CurrentBranchServiceLiftsCount = selectedBranch.ServiceLiftsCount;
+            AppSettings.CurrentCompanyId = _loginResponse.User.CompanyId ?? 0;
 
             var contractsUser = _loginResponse.User;
             Logger.SetUserContext(contractsUser.FullName, contractsUser.Id);

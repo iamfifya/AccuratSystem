@@ -21,6 +21,7 @@ namespace AccuratPanelCarWashing.Models
         public static string CurrentBranchName { get; set; }
         public static int CurrentBranchWashBaysCount { get; set; }
         public static int CurrentBranchServiceLiftsCount { get; set; }
+        public static int CurrentCompanyId { get; set; }
 
         private static string SettingsPath => Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory, "settings.json");

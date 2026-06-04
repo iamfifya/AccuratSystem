@@ -126,6 +126,13 @@ namespace AccuratPanelCarWashing.Controls
             MessageBox.Show("Модуль управления репутацией (Яндекс, Google, 2ГИС) находится в разработке.\n\nСкоро здесь будет статистика отзывов!", "Ждите обновлений", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        private void BranchManagementBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new BranchManagementWindow();
+            window.Owner = Window.GetWindow(this); // Чтобы окно центрировалось относительно главного
+            window.ShowDialog();
+        }
+
         // Событие, на которое подпишется Главное окно
         public event RoutedEventHandler CashboxRequested;
 

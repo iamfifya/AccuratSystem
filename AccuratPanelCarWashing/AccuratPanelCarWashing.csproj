@@ -335,6 +335,9 @@
     <Compile Include="AppointmentToBackgroundConverter.cs" />
     <Compile Include="AppointmentToStyleConverter.cs" />
     <Compile Include="BoolToVisibilityConverter.cs" />
+    <Compile Include="BranchManagementWindow.xaml.cs">
+      <DependentUpon>BranchManagementWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ClientDetailsWindow.xaml.cs">
       <DependentUpon>ClientDetailsWindow.xaml</DependentUpon>
     </Compile>
@@ -438,6 +441,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="AddEditServiceWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="BranchManagementWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

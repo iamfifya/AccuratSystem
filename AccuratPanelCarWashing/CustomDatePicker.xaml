@@ -41,7 +41,7 @@
                         </Grid.ColumnDefinitions>
 
                         <Button Grid.Column="0" Content="◀" Width="30" Height="35" 
-                                Background="#ECF0F1" BorderThickness="0" Cursor="Hand"
+                                Background="#3498DB" Foreground="White" BorderThickness="0" Cursor="Hand"
                                 Click="PrevMonth_Click"/>
 
                         <TextBlock x:Name="MonthYearText" Grid.Column="1" 
@@ -49,7 +49,7 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         <Button Grid.Column="2" Content="▶" Width="30" Height="35" 
-                                Background="#ECF0F1" BorderThickness="0" Cursor="Hand"
+                                Background="#3498DB" Foreground="White" BorderThickness="0" Cursor="Hand"
                                 Click="NextMonth_Click"/>
                     </Grid>
 
@@ -69,8 +69,8 @@
                         <TextBlock Grid.Column="2" Text="Ср" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
                         <TextBlock Grid.Column="3" Text="Чт" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
                         <TextBlock Grid.Column="4" Text="Пт" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
-                        <TextBlock Grid.Column="5" Text="Сб" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
-                        <TextBlock Grid.Column="6" Text="Вс" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
+                        <TextBlock Grid.Column="5" Text="Сб" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11" Foreground="#E74C3C"/>
+                        <TextBlock Grid.Column="6" Text="Вс" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11" Foreground="#E74C3C"/>
                     </Grid>
 
                     <UniformGrid x:Name="CalendarGrid" Grid.Row="2" Columns="7" Rows="6"/>
