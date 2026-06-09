@@ -1,8 +1,9 @@
-﻿using AccuratSystem.Contracts.Models;
+﻿using Accurat.WebAPI.Data;
 using AccuratSystem.Contracts.DTOs;
+using AccuratSystem.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Accurat.WebAPI.Data;
+using System.Runtime.Intrinsics.X86;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -35,7 +36,16 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser(User user)
         {
-            user.CompanyId = CurrentCompanyId; // Привязываем новичка к компании
+            user.CompanyId = CurrentCompanyId;
+
+            // --- Хэшируем пароль перед сохранением ---
+            // Если пароль пришел, мы превращаем его в секретный хэш
+            if (!string.IsNullOrEmpty(user.PasswordHash))
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+            }
+            // ------------------------------------------------------
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return Ok(user);
@@ -79,11 +89,39 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto request)
         {
+            // 1. Ищем пользователя по логину
             var user = await _context.Users
                 .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Login == request.Login && u.PasswordHash == request.Password);
+                .FirstOrDefaultAsync(u => u.Login == request.Login);
 
-            if (user == null) return Unauthorized(new { message = "Неверный логин или пароль" });
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+                return Unauthorized(new { message = "Неверный логин или пароль" });
+
+            bool isPasswordCorrect = false;
+
+            try
+            {
+                // Пробуем проверить как хэш
+                isPasswordCorrect = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                // ЕСЛИ МЫ ТУТ: значит в базе лежит старый пароль (просто текст)
+                // Проверяем его обычным сравнением
+                if (user.PasswordHash == request.Password)
+                {
+                    isPasswordCorrect = true;
+
+                    // АВТО-ОБНОВЛЕНИЕ: Раз пароль подошел, давайте его захешируем прямо сейчас, чтобы в следующий раз не было ошибки
+                   
+                    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            if (!isPasswordCorrect)
+                return Unauthorized(new { message = "Неверный логин или пароль" });
 
             int? userCompanyId = user.CompanyId;
             var availableBranches = new List<Branch>();
