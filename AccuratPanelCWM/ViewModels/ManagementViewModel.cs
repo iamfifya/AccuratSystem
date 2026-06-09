@@ -4,15 +4,16 @@ using AccuratSystem.Contracts.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using Microsoft.Maui.Storage;
 
 namespace AccuratPanelCWM.ViewModels
 {
-    // Вспомогательный класс для чекбоксов выбора сотрудников
     public partial class EmployeeSelectionItem : ObservableObject
     {
         public int Id { get; set; }
         [ObservableProperty] private string _fullName;
         [ObservableProperty] private bool _isSelected;
+        public string RoleDisplay { get; set; }
     }
 
     public partial class ManagementViewModel : ObservableObject
@@ -20,22 +21,43 @@ namespace AccuratPanelCWM.ViewModels
         private readonly ApiService _apiService;
         private Shift _currentShift;
         private readonly IServiceProvider _serviceProvider;
+        private List<EmployeeSelectionItem> _allEmployeesCache = new();
 
         [ObservableProperty] private bool _isBusy;
-
-        // --- Свойства для привязки интерфейса ---
         [ObservableProperty] private bool _isShiftOpen;
-        public bool IsShiftClosed => !IsShiftOpen; // Инверсия для скрытия/показа блоков
+        public bool IsShiftClosed => !IsShiftOpen;
 
         [ObservableProperty] private string _statusIcon;
         [ObservableProperty] private string _statusTitle;
         [ObservableProperty] private string _statusDescription;
-
         [ObservableProperty] private string _actionButtonText;
         [ObservableProperty] private Color _actionButtonColor;
-
         [ObservableProperty] private string _revenueDisplay = "0 ₽";
         [ObservableProperty] private string _cashInHandDisplay = "0 ₽";
+
+        // ИСПОЛЬЗУЕМ ОБЫЧНЫЕ СВОЙСТВА ВМЕСТО ГЕНЕРАТОРА ДЛЯ СЛОЖНОЙ ЛОГИКИ
+        private DateTime _selectedShiftDate = DateTime.Today;
+        public DateTime SelectedShiftDate
+        {
+            get => _selectedShiftDate;
+            set
+            {
+                _selectedShiftDate = value;
+                OnPropertyChanged(nameof(SelectedShiftDate));
+            }
+        }
+
+        private string _employeeSearchText;
+        public string EmployeeSearchText
+        {
+            get => _employeeSearchText;
+            set
+            {
+                _employeeSearchText = value;
+                OnPropertyChanged(nameof(EmployeeSearchText));
+                FilterEmployees(value); // Вызываем фильтрацию напрямую
+            }
+        }
 
         public ObservableCollection<EmployeeSelectionItem> SelectableEmployees { get; } = new();
 
@@ -46,31 +68,39 @@ namespace AccuratPanelCWM.ViewModels
             LoadShiftDataCommand.Execute(null);
         }
 
-        [RelayCommand]
-        private async Task LoadShiftDataAsync()
+        // Исправленный метод фильтрации (решает ошибку CS0019)
+        private void FilterEmployees(string filter)
         {
-            if (IsBusy) return;
-            IsBusy = true;
+            string search = filter?.ToLower().Trim() ?? "";
 
+            var filtered = string.IsNullOrWhiteSpace(search)
+                ? _allEmployeesCache
+                : _allEmployeesCache.Where(e =>
+                    (e.FullName?.ToLower().Contains(search) ?? false) ||
+                    (e.RoleDisplay?.ToLower().Contains(search) ?? false)).ToList();
+
+            SelectableEmployees.Clear();
+            foreach (var emp in filtered) SelectableEmployees.Add(emp);
+        }
+
+        // 1. Создаем приватный метод для самой загрузки (без проверки IsBusy)
+        private async Task InternalLoadDataAsync()
+        {
             try
             {
                 int currentBranchId = Preferences.Default.Get("CurrentBranchId", 0);
-
                 var shifts = await _apiService.GetShiftsAsync();
                 _currentShift = shifts.FirstOrDefault(s => !s.IsClosed && s.BranchId == currentBranchId);
 
                 if (_currentShift != null)
                 {
-                    // === СМЕНА ОТКРЫТА ===
                     IsShiftOpen = true;
                     StatusIcon = "🟢";
                     StatusTitle = $"Смена от {_currentShift.Date:dd.MM.yyyy}";
                     StatusDescription = $"Начата в {_currentShift.StartTime:HH:mm}";
-
                     ActionButtonText = "Закрыть смену";
-                    ActionButtonColor = Color.FromArgb("#E74C3C"); // Красный
+                    ActionButtonColor = Color.FromArgb("#E74C3C");
 
-                    // Грузим финансы
                     var cashbox = await _apiService.GetShiftCashboxSummaryAsync(_currentShift.Id);
                     CashInHandDisplay = $"{cashbox.CashInHand:N0} ₽";
 
@@ -80,32 +110,48 @@ namespace AccuratPanelCWM.ViewModels
                 }
                 else
                 {
-                    // === СМЕНА ЗАКРЫТА ===
                     IsShiftOpen = false;
                     StatusIcon = "🔒";
                     StatusTitle = "Смена закрыта";
                     StatusDescription = "Откройте смену, чтобы начать принимать заказы";
-
                     ActionButtonText = "Начать смену";
-                    ActionButtonColor = Color.FromArgb("#27AE60"); // Зеленый
+                    ActionButtonColor = Color.FromArgb("#27AE60");
 
-                    // Грузим сотрудников для выбора
                     var allUsers = await _apiService.GetUsersAsync();
-                    SelectableEmployees.Clear();
-                    foreach (var u in allUsers.Where(u => u.IsActive))
+                    _allEmployeesCache = allUsers.Where(u => u.IsActive).Select(u => new EmployeeSelectionItem
                     {
-                        SelectableEmployees.Add(new EmployeeSelectionItem { Id = u.Id, FullName = u.FullName, IsSelected = false });
-                    }
-                }
+                        Id = u.Id,
+                        FullName = u.FullName,
+                        RoleDisplay = u.Role?.Name ?? "Сотрудник",
+                        IsSelected = false
+                    }).ToList();
 
-                // Уведомляем UI, что IsShiftClosed тоже изменилось
+                    SelectableEmployees.Clear();
+                    foreach (var emp in _allEmployeesCache) SelectableEmployees.Add(emp);
+                }
                 OnPropertyChanged(nameof(IsShiftClosed));
             }
             catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Ошибка", $"Сбой сети: {ex.Message}", "ОК");
+                // Логгируем ошибку, но не блокируем интерфейс
+                System.Diagnostics.Debug.WriteLine($"Ошибка обновления смены: {ex.Message}");
             }
-            finally { IsBusy = false; }
+        }
+
+        // 2. Публичная команда для RefreshView (с проверкой IsBusy)
+        [RelayCommand]
+        private async Task LoadShiftDataAsync()
+        {
+            if (IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                await InternalLoadDataAsync();
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
@@ -113,76 +159,122 @@ namespace AccuratPanelCWM.ViewModels
         {
             if (_currentShift == null)
             {
-                // ОТКРЫТИЕ СМЕНЫ
-                var selectedIds = SelectableEmployees.Where(x => x.IsSelected).Select(x => x.Id).ToList();
+                // 1. Проверяем, выбраны ли сотрудники
+                var selectedIds = _allEmployeesCache.Where(x => x.IsSelected).Select(x => x.Id).ToList();
                 if (!selectedIds.Any())
                 {
                     await Application.Current.MainPage.DisplayAlert("Внимание", "Выберите хотя бы одного сотрудника!", "OK");
                     return;
                 }
 
-                bool confirm = await Application.Current.MainPage.DisplayAlert("Открытие", "Начать новую смену?", "Да", "Отмена");
-                if (confirm)
+                // 2. Получаем ID текущего филиала
+                int branchId = Preferences.Default.Get("CurrentBranchId", 0);
+                if (branchId == 0)
                 {
-                    IsBusy = true;
-                    try
-                    {
-                        var newShift = new Shift
-                        {
-                            BranchId = Preferences.Default.Get("CurrentBranchId", 0),
-                            Date = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc),
-                            StartTime = DateTime.UtcNow,
-                            IsClosed = false,
-                            EmployeeIds = selectedIds,
-                            Notes = ""
-                        };
+                    await Application.Current.MainPage.DisplayAlert("Ошибка", "Филиал не выбран. Пожалуйста, выберите филиал в настройках или на главной странице.", "ОК");
+                    return;
+                }
 
-                        await _apiService.OpenShiftAsync(newShift);
-                        await LoadShiftDataAsync(); // Перезагружаем интерфейс
+                // 3. Проверка на уже открытую смену (Логика из WPF)
+                var shifts = await _apiService.GetShiftsAsync();
+                var openShift = shifts.FirstOrDefault(s => !s.IsClosed && s.BranchId == branchId);
+                if (openShift != null)
+                {
+                    bool confirm = await Application.Current.MainPage.DisplayAlert(
+                        "Конфликт смен",
+                        $"На выбранном филиале уже есть открытая смена от {openShift.Date:dd.MM.yyyy}. Закрыть её перед открытием новой?",
+                        "Да, закрыть", "Отмена");
+
+                    if (confirm)
+                    {
+                        await _apiService.CloseShiftAsync(openShift.Id);
                     }
-                    catch (Exception ex) { await Application.Current.MainPage.DisplayAlert("Ошибка", ex.Message, "OK"); }
-                    finally { IsBusy = false; }
+                    else return;
+                }
+
+                // 4. Финальное подтверждение
+                bool finalConfirm = await Application.Current.MainPage.DisplayAlert(
+                    "Открытие",
+                    $"Начать новую смену от {SelectedShiftDate:dd.MM.yyyy}?",
+                    "Да", "Отмена");
+
+                if (!finalConfirm) return;
+
+                IsBusy = true;
+                try
+                {
+                    // !!! ВАЖНО: ЗАПОЛНЯЕМ ВСЕ ПОЛЯ ОБЪЕКТА !!!
+                    var newShift = new Shift
+                    {
+                        BranchId = branchId,                             // Исправляет ошибку FK_Shifts_Branches_BranchId
+                        Date = DateTime.SpecifyKind(SelectedShiftDate.Date, DateTimeKind.Utc),
+                        StartTime = DateTime.UtcNow,
+                        IsClosed = false,
+                        EmployeeIds = selectedIds,
+                        Notes = ""
+                    };
+
+                    await _apiService.OpenShiftAsync(newShift);
+
+                    // Обновляем данные на экране без повторной проверки IsBusy
+                    await InternalLoadDataAsync();
+
+                    await Application.Current.MainPage.DisplayAlert("Успех", "Смена успешно открыта!", "ОК");
+                }
+                catch (Exception ex)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Ошибка", $"Не удалось открыть смену: {ex.Message}", "ОК");
+                }
+                finally
+                {
+                    IsBusy = false;
                 }
             }
             else
             {
-                // ЗАКРЫТИЕ СМЕНЫ
-                bool confirm = await Application.Current.MainPage.DisplayAlert("Осторожно", "Вы уверены, что хотите закрыть смену? Это действие нельзя отменить.", "Закрыть", "Отмена");
+                // --- ЛОГИКА ЗАКРЫТИЯ СМЕНЫ ---
+                bool confirm = await Application.Current.MainPage.DisplayAlert(
+                    "Осторожно",
+                    "Вы уверены, что хотите закрыть смену? Это действие нельзя отменить.",
+                    "Закрыть", "Отмена");
+
                 if (confirm)
                 {
                     IsBusy = true;
                     try
                     {
+                        // Проверка на активные заказы (как в WPF)
                         var orders = await _apiService.GetOrdersAsync();
                         if (orders.Any(o => o.ShiftId == _currentShift.Id && o.Status == "В работе"))
                         {
-                            await Application.Current.MainPage.DisplayAlert("Внимание", "Нельзя закрыть смену! Завершите или отмените все активные заказы.", "ОК");
+                            await Application.Current.MainPage.DisplayAlert("Внимание", "Нельзя закрыть смену! Есть активные заказы в работе.", "ОК");
                             return;
                         }
 
                         await _apiService.CloseShiftAsync(_currentShift.Id);
-                        await LoadShiftDataAsync(); // Перезагружаем интерфейс
-                        await Application.Current.MainPage.DisplayAlert("Успех", "Смена успешно закрыта!", "ОК");
+                        await InternalLoadDataAsync();
+                        await Application.Current.MainPage.DisplayAlert("Успех", "Смена закрыта!", "ОK");
                     }
-                    catch (Exception ex) { await Application.Current.MainPage.DisplayAlert("Ошибка", ex.Message, "ОК"); }
-                    finally { IsBusy = false; }
+                    catch (Exception ex)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Ошибка", ex.Message, "ОK");
+                    }
+                    finally
+                    {
+                        IsBusy = false;
+                    }
                 }
             }
         }
+
 
         [RelayCommand]
         private async Task OpenCashboxAsync()
         {
             if (_currentShift == null) return;
-
-            // Просим DI-контейнер собрать страницу
             var cashboxPage = _serviceProvider.GetRequiredService<CashboxPage>();
-
-            // Передаем ID смены
             var vm = (CashboxViewModel)cashboxPage.BindingContext;
             vm.Initialize(_currentShift.Id);
-
-            // Открываем модально
             await Application.Current.MainPage.Navigation.PushModalAsync(cashboxPage);
         }
     }
