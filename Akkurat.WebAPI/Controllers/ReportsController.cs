@@ -126,25 +126,22 @@ namespace Accurat.WebAPI.Controllers
                     decimal empRevenue = 0;
                     int carsProcessed = 0;
 
-                    if (emp.RoleId == 3) // 🛠️ МOЙЩИК
+                    // ИСПРАВЛЕНИЕ: Теперь и Мойщики (3), и Сотрудники сервиса (4) считаются по факту выполненных работ
+                    if (emp.RoleId == 3 || emp.RoleId == 4)
                     {
                         var myTasks = orders.SelectMany(o => o.OrderWashers.Where(ow => ow.UserId == empId), (o, ow) => new { Order = o, OrderWasher = ow }).ToList();
                         carsProcessed = myTasks.Count;
                         empRevenue = myTasks.Sum(x => x.Order.FinalPrice * x.OrderWasher.SplitShare);
 
-                        // ИСПРАВЛЕНИЕ: Передаем allUsers в метод!
+                        // Считаем зарплату через сервис
                         empTotalEarnings = myTasks.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
-
-                        // Расчет грязной прибыли для компании по департаментам
-                        var washTasks = myTasks.Where(x => x.Order.Department == "Wash");
-                        var serviceTasks = myTasks.Where(x => x.Order.Department == "Service");
-                        totalWashCompanyEarnings += washTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
-                        totalServiceCompanyEarnings += serviceTasks.Sum(x => (x.Order.FinalPrice * x.OrderWasher.SplitShare) - Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
                     }
-                    else // 👑 АДМИН
+                    else // 👑 АДМИН / ДИРЕКТОР
                     {
+                        // Для руководства "Кол-во заказов" в отчете обычно означает общий объем смены, которой они управляли
                         carsProcessed = orders.Count;
                         empRevenue = report.TotalRevenue;
+
                         decimal baseSalary = emp.BaseSalaryPerShift;
                         decimal percentEarnings = empRevenue * (emp.BaseWagePercentage / 100m);
                         decimal personalUpsellBonus = orders.Where(o => o.AdminId == emp.Id).Sum(o => ExtractUpsellBonus(o.Notes));
