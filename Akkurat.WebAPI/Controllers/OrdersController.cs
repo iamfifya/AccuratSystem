@@ -88,14 +88,34 @@ namespace Accurat.WebAPI.Controllers
 
         // 1. Получить все заказы
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
+        public async Task<ActionResult<IEnumerable<Order>>> GetOrders([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
         {
-            var orders = await _context.Orders
-                .Include(o => o.OrderWashers)
-                // Если Разработчик (0) — берем всё. Иначе берем только заказы своей компании.
-                .Where(o => CurrentCompanyId == 0 || _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id).Contains(o.BranchId))
-                .ToListAsync();
+            // 1. Устанавливаем временное окно. 
+            // Если даты не передали, берем период: от "вчера" до "через месяц" 
+            // (чтобы захватить и старые заказы смены, и будущие записи)
+            DateTime start = startDate ?? DateTime.UtcNow.AddDays(-1);
+            DateTime end = endDate ?? DateTime.UtcNow.AddDays(30);
 
+            // 2. Создаем запрос. 
+            // ВАЖНО: используем AsQueryable(), чтобы фильтрация прошла в самой базе данных, а не в памяти сервера
+            var query = _context.Orders.AsQueryable();
+
+            // Изоляция тенанта (SaaS)
+            if (CurrentCompanyId != 0)
+            {
+                var myBranchIds = _context.Branches
+                    .Where(b => b.CompanyId == CurrentCompanyId)
+                    .Select(b => b.Id);
+                query = query.Where(o => myBranchIds.Contains(o.BranchId));
+            }
+
+            // ФИЛЬТР ПО ДАТЕ (То самое спасение от "Смерти от данных")
+            query = query.Where(o => o.Time >= start && o.Time <= end);
+
+            // Теперь выгружаем только отфильтрованный список
+            var orders = await query.Include(o => o.OrderWashers).ToListAsync();
+
+            // Добавляем время последнего статуса (оставляем как было)
             foreach (var order in orders)
             {
                 var latestHistory = await _context.OrderStatusHistories

@@ -144,18 +144,24 @@ namespace AccuratPanelCarWashing
         {
             try
             {
-                var allShifts = await _apiService.GetShiftsAsync();
-                var allOrders = await _apiService.GetOrdersAsync();
-                var allServices = await _apiService.GetServicesAsync();
-                var allUsers = await _apiService.GetUsersAsync(); // Возвращает List<ContractsUser>
+                // 1. Определяем границы дня: от 00:00:00 до 23:59:59
+                DateTime startOfDay = date.Date;
+                DateTime endOfDay = date.Date.AddDays(1).AddTicks(-1);
 
-                // Грузим статусы, чтобы достать их цвета
+                // 2. ЗАПРАШИВАЕМ ТОЛЬКО ЗА ЭТОТ ДЕНЬ!
+                // Теперь сервер отдаст нам, например, 20 заказов вместо 10 000
+                var allOrders = await _apiService.GetOrdersAsync(startOfDay, endOfDay);
+
+                var allServices = await _apiService.GetServicesAsync();
+                var allUsers = await _apiService.GetUsersAsync();
                 var allStatuses = await _apiService.GetOrderStatusesAsync(AppSettings.CurrentBranchId);
 
+                // 3. Получаем смены (здесь можно оставить как есть, смен обычно немного)
+                var allShifts = await _apiService.GetShiftsAsync();
                 var closedShiftsOnDate = allShifts.Where(s => s.Date.Date == date.Date && s.IsClosed).ToList();
                 var shiftIdsOnDate = closedShiftsOnDate.Select(s => s.Id).ToList();
 
-                // ИСПРАВЛЕНО: Проверяем ShiftId != 0 вместо .HasValue, так как в контракте это int, а не int?
+                // Фильтруем полученные заказы (оставляем только те, что привязаны к сменам этого дня или являются записями на этот день)
                 var ordersOnDate = allOrders.Where(o =>
                     (o.ShiftId != 0 && shiftIdsOnDate.Contains(o.ShiftId)) ||
                     (o.IsAppointment && o.Time.Date == date.Date)
@@ -163,7 +169,6 @@ namespace AccuratPanelCarWashing
 
                 if (!ordersOnDate.Any())
                 {
-                    // Очищаем списки во всех зонах
                     foreach (var tab in BranchTabs)
                         foreach (var zone in tab.BranchWorkZones)
                             zone.Orders.Clear();

@@ -188,11 +188,22 @@ namespace AccuratPanelCarWashing.Services
         #endregion
 
         #region ЗАКАЗЫ (ORDERS)
-        public async Task<List<ContractsOrder>> GetOrdersAsync()
+        public async Task<List<ContractsOrder>> GetOrdersAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsOrder>>("Orders") ?? new List<ContractsOrder>(); }
+            try
+            {
+                // Если даты не переданы (например, из Главного окна), 
+                // используем стандартный "безопасный" диапазон (вчера -> +30 дней)
+                DateTime start = startDate ?? DateTime.UtcNow.AddDays(-1);
+                DateTime end = endDate ?? DateTime.UtcNow.AddDays(30);
+
+                string url = $"Orders?startDate={start:O}&endDate={end:O}";
+
+                return await _http.GetFromJsonAsync<List<ContractsOrder>>(url) ?? new List<ContractsOrder>();
+            }
             catch (HttpRequestException ex) { throw new Exception("Ошибка при получении списка заказов: " + ex.Message); }
         }
+
 
         public async Task<List<ContractsOrder>> GetOrdersByClientIdAsync(int clientId)
         {
