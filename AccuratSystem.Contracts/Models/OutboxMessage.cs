@@ -10,5 +10,6 @@ namespace AccuratSystem.Contracts.Models
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? ProcessedAtUtc { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
+        public int RetryCount { get; set; } = 0; // Сколько раз мы пытались выполнить задачу
     }
 }

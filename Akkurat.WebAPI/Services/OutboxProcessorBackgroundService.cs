@@ -46,9 +46,9 @@ namespace Accurat.WebAPI.Services
             {
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                // Берем 20 самых старых невыполненных задач
+                // Теперь берем только те, которые еще не выполнены И у которых меньше 5 попыток
                 var messages = context.OutboxMessages
-                    .Where(m => m.ProcessedAtUtc == null)
+                    .Where(m => m.ProcessedAtUtc == null && m.RetryCount < 5)
                     .OrderBy(m => m.CreatedAtUtc)
                     .Take(20)
                     .ToList();
@@ -81,10 +81,23 @@ namespace Accurat.WebAPI.Services
                     }
                     catch (Exception ex)
                     {
-                        // Если SMS не отправилась, записываем ошибку, но не крашим весь цикл
+                        // 1. Увеличиваем счетчик попыток
+                        message.RetryCount++;
+
+                        // 2. Записываем ошибку
                         message.ErrorMessage = ex.Message;
-                        _logger.LogError(ex, $"Ошибка при выполнении задачи {message.Id}");
+
+                        // 3. Если попыток стало 5, логируем, что задача официально «мертва»
+                        if (message.RetryCount >= 5)
+                        {
+                            _logger.LogError($"[OUTBOX] Задача {message.Id} признана невыполнимой после 5 попыток. Ошибка: {ex.Message}");
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"[OUTBOX] Ошибка при выполнении задачи {message.Id}. Попытка {message.RetryCount}/5. Будет повторена через 10 сек.");
+                        }
                     }
+
                 }
 
                 // Сохраняем изменения в статусах задач
