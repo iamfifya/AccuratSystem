@@ -172,41 +172,55 @@
             </TabControl>
 
             <!-- 2. ВЕРХНЯЯ ПАНЕЛЬ -->
-            <Grid Grid.Row="1" Margin="15,0,15,15">
+            <Grid Grid.Row="1" Margin="10,0,10,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.5*"/>
-                        <ColumnDefinition Width="0.5*"/>
-                    </Grid.ColumnDefinitions>
+                <Border CornerRadius="20" Padding="10" Background="Transparent" BorderBrush="#DCDDE1" BorderThickness="1">
+                    <Grid Grid.Row="0" Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.5*"/>
+                            <ColumnDefinition Width="0.5*"/>
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Главная страница" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
-                        <TextBlock Text=" | " FontSize="20" Foreground="#95A5A6" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="16" Foreground="#7F8C8D" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Border Background="#3498DB" CornerRadius="20" Width="40" Height="40" Margin="0,0,10,0">
-                            <TextBlock Text="👤" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <StackPanel VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding ActiveUserInfo}" FontSize="13" FontWeight="SemiBold" Foreground="#2C3E50"/>
-                                <!-- КНОПКА СМЕНЫ ПОЛЬЗОВАТЕЛЯ -->
-                                <Button Content="🔄" Click="ChangeUserButton_Click" 
-                    Margin="5,0,0,0" Background="Transparent" Foreground="#3498DB" 
-                    BorderThickness="0" Cursor="Hand" FontWeight="Bold" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <TextBlock Text="{Binding CurrentBranchDisplay}" FontSize="11" Foreground="#7F8C8D"/>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Главная страница" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
+                            <TextBlock Text=" | " FontSize="20" Foreground="#95A5A6" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="16" Foreground="#7F8C8D" VerticalAlignment="Center"/>
                         </StackPanel>
-                    </StackPanel>
 
-                </Grid>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Border CornerRadius="20"  Background="Transparent" BorderBrush="#DCDDE1" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <WrapPanel Grid.Column="0">
+                                        <Border Background="#3498DB" CornerRadius="20" Width="40" Height="40" Margin="10">
+                                            <TextBlock Text="👤" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding ActiveUserInfo}" FontSize="13" FontWeight="SemiBold" Foreground="#2C3E50"/>
+                                            <TextBlock Text="{Binding CurrentBranchDisplay}" FontSize="11" Foreground="#7F8C8D"/>
+                                        </StackPanel>
+                                    </WrapPanel>
+
+                                    <!-- КНОПКА СМЕНЫ ПОЛЬЗОВАТЕЛЯ -->
+                                    <Button Content="🔄" Click="ChangeUserButton_Click" Grid.Column="1"
+                                        Background="Transparent" Foreground="#3498DB" FontSize="24"
+                                        Cursor="Hand" FontWeight="Bold" 
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        Width="Auto" Height="45"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Button Content="👑 Панель Разработчика" Click="DevPanelButton_Click"
@@ -214,12 +228,13 @@
                             Background="#8E44AD" Foreground="White" FontWeight="Bold" Cursor="Hand"
                             Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <Button x:Name="AddButton" Content="➕ Добавить заказ" Click="AddButton_Click" 
-                            Padding="15,8" Margin="0,0,10,0" Background="#3498DB" Foreground="White"
+                            Padding="15,8" Margin="0,0,5,0" Background="#3498DB" Foreground="White"
                             BorderThickness="0" Cursor="Hand" Height="35"/>
                     <Button x:Name="ManagerDeskButton" Content="💼 Стол управляющего" Click="ManagerDeskButton_Click" 
                             Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" 
-                            Padding="15,8" Margin="0,0,10,0" Background="#3498DB" 
+                            Padding="15,8" Margin="0,0,5,0" Background="#3498DB" 
                             Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+
                     <Button x:Name="StartShiftButton" Content="📅 Начать смену" Click="StartShiftButton_Click" 
                             Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" 
                             Padding="15,8" Margin="10,0,5,0" Background="#27AE60" 
@@ -230,10 +245,13 @@
                             Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
                     <Button x:Name="CashboxButton" Content="💰 Трансфер сумм" Click="CashboxButton_Click" 
                             Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Padding="15,8" Margin="0,0,5,0" Background="#3498DB" 
+                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <Button x:Name="CalcButton" Content="🧮 Калькулятор" Click="CalcButton_Click" 
                             Padding="15,8" Margin="0,0,10,0" Background="#3498DB" 
                             Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
                     <Button x:Name="AppointmentsBoardButton" Content="📋 Доска записей" Click="AppointmentsBoardButton_Click" 
-                            Padding="15,8" Margin="0,0,5,0" Background="#F39C12" 
+                            Padding="15,8" Margin="5,0,5,0" Background="#F39C12" 
                             Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
                     <Button x:Name="HistoryButton" Content="📊 История" Click="HistoryButton_Click" 
                             Padding="15,8" Margin="0,0,10,0" Background="#F39C12" 
@@ -253,13 +271,15 @@
             </Grid>
 
             <!-- 3. РАБОЧАЯ ОБЛАСТЬ -->
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="2" Margin="0,0,10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto" MinWidth="300"/>
                 </Grid.ColumnDefinitions>
 
-                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,15,0">
+                <ScrollViewer Grid.Column="0" Padding="10"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
                         <!-- МОЕЧНАЯ ЗОНА -->
                         <StackPanel Visibility="{Binding SelectedBranchTab.HasWashZones, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,20">
@@ -329,7 +349,7 @@
                 <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15" Margin="20,0,0,0">
                     <DockPanel>
                         <StackPanel Orientation="Vertical" Width="280" Margin="15,0,0,0" Background="White" VerticalAlignment="Top">
-                            <TextBlock Text="👥 Статистика мойщиков:" FontSize="14" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,10"/>
+                            <TextBlock Text="👥 Статистика сотрудников:" FontSize="14" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,10"/>
                             <ItemsControl ItemsSource="{Binding WashersStats}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -431,7 +451,7 @@
 
                             <Separator Margin="0,10,0,10" Height="1" Background="#BDC3C7"/>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                <TextBlock Text="🏢 Компания (65%): " FontSize="13" FontWeight="Bold" Foreground="#2C3E50"/>
+                                <TextBlock Text="🏢 Компания: " FontSize="13" FontWeight="Bold" Foreground="#2C3E50"/>
                                 <TextBlock Text="{Binding CompanyEarnings, StringFormat={}{0:N0} ₽}" FontSize="13" FontWeight="Bold" Foreground="#27AE60"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
@@ -462,5 +482,10 @@
         <!-- Оверлей Кассы -->
         <controls:CashboxOverlay x:Name="CashboxPanel" 
                      Visibility="Collapsed" Panel.ZIndex="160"/>
+
+        <!-- Оверлей Калькулятора  -->
+            <controls:CalculatorOverlay x:Name="CalculatorOverlay" 
+                                        Visibility="Collapsed" Panel.ZIndex="200"/>
+
     </Grid>
 </Window>

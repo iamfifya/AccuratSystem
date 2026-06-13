@@ -205,7 +205,8 @@
         <!-- Кнопка закрытия -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
             <Button Content="🔧 Проверить" Click="CheckIntegrityButton_Click" Width="130" Height="35" 
-                    Margin="5" Background="#F39C12" Foreground="White"/>
+                    Margin="5" Background="#F39C12" Foreground="White"
+                    Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
             <Button Content="✖ Закрыть" Click="CloseButton_Click" Width="100" Height="35" 
                     Margin="5" Background="#E74C3C" Foreground="White"/>
         </StackPanel>

@@ -9,7 +9,7 @@
         Title="Добавление/Редактирование услуги"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="700" Height="800"
+        Width="700" Height="850"
         Background="#F5F6FA"
         BorderBrush="Black"
         BorderThickness="1"
@@ -42,22 +42,22 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Margin="5">
-                        <Label Content="Категория 1 (Легковая)" FontSize="10"/>
+                        <Label Content="Категория 1" FontSize="10"/>
                         <TextBox x:Name="PriceCategory1TextBox" Height="50" Padding="5" Text="0"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="5">
-                        <Label Content="Категория 2 (Универсал)" FontSize="10"/>
+                        <Label Content="Категория 2" FontSize="10"/>
                         <TextBox x:Name="PriceCategory2TextBox" Height="50" Padding="5" Text="0"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="5">
-                        <Label Content="Категория 3 (Кроссовер)" FontSize="10"/>
+                        <Label Content="Категория 3" FontSize="10"/>
                         <TextBox x:Name="PriceCategory3TextBox" Height="50" Padding="5" Text="0"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="3" Margin="5">
-                        <Label Content="Категория 4 (Внедорожник)" FontSize="10"/>
+                        <Label Content="Категория 4" FontSize="10"/>
                         <TextBox x:Name="PriceCategory4TextBox" Height="50" Padding="5" Text="0"/>
                     </StackPanel>
                 </Grid>

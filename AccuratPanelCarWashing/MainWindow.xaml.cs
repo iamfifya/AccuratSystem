@@ -158,7 +158,7 @@ namespace AccuratPanelCarWashing
         /// <summary>
         /// Признак того, что текущий пользователь является администратором или директором.
         /// </summary>
-        public bool IsAdminOrDirector => UserPermissions.IsManagement(_currentUser);
+        public bool IsAdminOrDirector => UserPermissions.IsManagement(_currentUser) || _currentUser?.RoleId == 0 || _currentUser?.Role?.Name == "Разработчик";
 
         /// <summary>
         /// Коллекция вкладок филиалов для отображения в интерфейсе.
@@ -1176,6 +1176,14 @@ namespace AccuratPanelCarWashing
 
             // Открываем кассу и передаем ей текущую смену
             CashboxPanel.Show(_currentShift);
+        }
+
+        /// <summary>
+        /// Обработка кнопки для вызова калькулятора.
+        /// </summary>
+        private void CalcButton_Click(object sender, RoutedEventArgs e)
+        {
+            CalculatorOverlay.Show();
         }
 
         #endregion

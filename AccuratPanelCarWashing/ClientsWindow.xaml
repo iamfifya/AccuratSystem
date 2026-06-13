@@ -90,68 +90,61 @@
         <!-- Заголовок таблицы (отдельно, вне ScrollViewer) -->
         <Border Grid.Row="2" Background="#2C3E50" Height="45" CornerRadius="4,4,0,0">
             <Grid x:Name="HeaderGrid">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.6*" MinWidth="40"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="1.8*" MinWidth="100"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="1.2*" MinWidth="80"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="1.5*" MinWidth="100"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="1.0*" MinWidth="70"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="0.7*" MinWidth="50"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="1.0*" MinWidth="80"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="0.8*" MinWidth="70"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="1.0*" MinWidth="80"/>
-                </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.8*" MinWidth="100"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1.5*" MinWidth="100"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1.0*" MinWidth="70"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="0.7*" MinWidth="50"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="0.8*" MinWidth="70"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBlock Text="ID" Style="{StaticResource HeaderCellStyle}" 
-                           HorizontalAlignment="Center" Padding="10,8"/>
+                    <TextBlock Text="ФИО" Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="0"/>
 
                 <GridSplitter Grid.Column="1" Style="{StaticResource GridSplitterStyle}"/>
 
-                <TextBlock Text="ФИО" Style="{StaticResource HeaderCellStyle}" 
+                <TextBlock Text="Телефон" Style="{StaticResource HeaderCellStyle}" 
                            HorizontalAlignment="Center" Padding="10,8" Grid.Column="2"/>
 
                 <GridSplitter Grid.Column="3" Style="{StaticResource GridSplitterStyle}"/>
 
-                <TextBlock Text="Телефон" Style="{StaticResource HeaderCellStyle}" 
+                <TextBlock Text="Марка/Модель" Style="{StaticResource HeaderCellStyle}" 
                            HorizontalAlignment="Center" Padding="10,8" Grid.Column="4"/>
 
                 <GridSplitter Grid.Column="5" Style="{StaticResource GridSplitterStyle}"/>
 
-                <TextBlock Text="Марка/Модель" Style="{StaticResource HeaderCellStyle}" 
+                <TextBlock Text="Госномер" Style="{StaticResource HeaderCellStyle}" 
                            HorizontalAlignment="Center" Padding="10,8" Grid.Column="6"/>
 
                 <GridSplitter Grid.Column="7" Style="{StaticResource GridSplitterStyle}"/>
 
-                <TextBlock Text="Госномер" Style="{StaticResource HeaderCellStyle}" 
+                <TextBlock Text="Визитов" Style="{StaticResource HeaderCellStyle}" 
                            HorizontalAlignment="Center" Padding="10,8" Grid.Column="8"/>
 
                 <GridSplitter Grid.Column="9" Style="{StaticResource GridSplitterStyle}"/>
 
-                <TextBlock Text="Визитов" Style="{StaticResource HeaderCellStyle}" 
+                <TextBlock Text="Сумма" Style="{StaticResource HeaderCellStyle}" 
                            HorizontalAlignment="Center" Padding="10,8" Grid.Column="10"/>
 
                 <GridSplitter Grid.Column="11" Style="{StaticResource GridSplitterStyle}"/>
 
-                <TextBlock Text="Сумма" Style="{StaticResource HeaderCellStyle}" 
+                <TextBlock Text="Ср. чек" Style="{StaticResource HeaderCellStyle}" 
                            HorizontalAlignment="Center" Padding="10,8" Grid.Column="12"/>
 
                 <GridSplitter Grid.Column="13" Style="{StaticResource GridSplitterStyle}"/>
 
-                <TextBlock Text="Ср. чек" Style="{StaticResource HeaderCellStyle}" 
-                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="14"/>
-
-                <GridSplitter Grid.Column="15" Style="{StaticResource GridSplitterStyle}"/>
-
                 <TextBlock Text="Посл. визит" Style="{StaticResource HeaderCellStyle}" 
-                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="16"/>
+                           HorizontalAlignment="Center" Padding="10,8" Grid.Column="14"/>
             </Grid>
         </Border>
 
@@ -238,82 +231,75 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Border x:Name="RowBorder" Style="{StaticResource TableRowStyle}">
-                                <Grid> 
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="0.6*" MinWidth="40"/>
-                                        <ColumnDefinition Width="1.8*" MinWidth="100"/>
-                                        <ColumnDefinition Width="1.2*" MinWidth="80"/>
-                                        <ColumnDefinition Width="1.5*" MinWidth="100"/>
-                                        <ColumnDefinition Width="1.0*" MinWidth="70"/>
-                                        <ColumnDefinition Width="0.7*" MinWidth="50"/>
-                                        <ColumnDefinition Width="1.0*" MinWidth="80"/>
-                                        <ColumnDefinition Width="0.8*" MinWidth="70"/>
-                                        <ColumnDefinition Width="1.0*" MinWidth="80"/>
-                                    </Grid.ColumnDefinitions>
+                                <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.8*" MinWidth="100"/>
+                                            <ColumnDefinition Width="1.2*" MinWidth="80"/>
+                                            <ColumnDefinition Width="1.5*" MinWidth="100"/>
+                                            <ColumnDefinition Width="1.0*" MinWidth="70"/>
+                                            <ColumnDefinition Width="0.7*" MinWidth="50"/>
+                                            <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                                            <ColumnDefinition Width="0.8*" MinWidth="70"/>
+                                            <ColumnDefinition Width="1.0*" MinWidth="80"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="{Binding Id}" 
+                                        <TextBlock Text="{Binding FullName}" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
-                                               TextTrimming="CharacterEllipsis"/>
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               Grid.Column="0"/>
 
-                                    <TextBlock Text="{Binding FullName}" 
-                                               HorizontalAlignment="Left" 
+                                    <TextBlock Text="{Binding Phone}" 
+                                               HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
-                                               TextWrapping="Wrap"
                                                TextTrimming="CharacterEllipsis"
                                                Grid.Column="1"/>
 
-                                    <TextBlock Text="{Binding Phone}" 
-                                               HorizontalAlignment="Left" 
-                                               VerticalAlignment="Center" 
-                                               Padding="10,8"
-                                               TextTrimming="CharacterEllipsis"
-                                               Grid.Column="2"/>
-
                                     <TextBlock Text="{Binding CarModel}" 
-                                               HorizontalAlignment="Left" 
+                                               HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                TextWrapping="Wrap"
                                                TextTrimming="CharacterEllipsis"
-                                               Grid.Column="3"/>
+                                               Grid.Column="2"/>
 
                                     <TextBlock Text="{Binding CarNumber}" 
-                                               HorizontalAlignment="Left" 
+                                               HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                TextTrimming="CharacterEllipsis"
-                                               Grid.Column="4"/>
+                                               Grid.Column="3"/>
 
                                     <TextBlock Text="{Binding VisitsCount}" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
-                                               Grid.Column="5"/>
+                                               Grid.Column="4"/>
 
                                     <TextBlock Text="{Binding TotalSpent, StringFormat={}{0:N0} ₽}" 
-                                               HorizontalAlignment="Right" 
+                                               HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                Foreground="#27AE60"
                                                TextTrimming="CharacterEllipsis"
-                                               Grid.Column="6"/>
+                                               Grid.Column="5"/>
 
                                     <TextBlock Text="{Binding AverageCheck, StringFormat={}{0:N0} ₽}" 
-                                               HorizontalAlignment="Right" 
+                                               HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                TextTrimming="CharacterEllipsis"
-                                               Grid.Column="7"/>
+                                               Grid.Column="5"/>
 
                                     <TextBlock Text="{Binding LastVisitDate, StringFormat=dd.MM.yyyy}" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                TextTrimming="CharacterEllipsis"
-                                               Grid.Column="8"/>
+                                               Grid.Column="7"/>
                                 </Grid>
                             </Border>
                             <DataTemplate.Triggers>

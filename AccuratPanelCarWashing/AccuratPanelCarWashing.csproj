@@ -347,6 +347,9 @@
     <Compile Include="Controls\AppointmentsOverlay.xaml.cs">
       <DependentUpon>AppointmentsOverlay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CalculatorOverlay.xaml.cs">
+      <DependentUpon>CalculatorOverlay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\CashboxOverlay.xaml.cs">
       <DependentUpon>CashboxOverlay.xaml</DependentUpon>
     </Compile>
@@ -377,6 +380,7 @@
     <Compile Include="Models\AppointmentDisplayItem.cs" />
     <Compile Include="Models\AppSettings.cs" />
     <Compile Include="Models\BranchTabItem.cs" />
+    <Compile Include="Models\MonetDenomination.cs" />
     <Compile Include="Models\OrderDisplayItem.cs" />
     <Compile Include="Models\Schedule.cs" />
     <Compile Include="Models\User.cs" />
@@ -457,6 +461,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\AppointmentsOverlay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\CalculatorOverlay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
