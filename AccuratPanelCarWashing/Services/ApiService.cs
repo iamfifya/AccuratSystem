@@ -35,7 +35,8 @@ namespace AccuratPanelCarWashing.Services
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
 
-            _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
+            _http = new HttpClient(handler) { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
+            // Для работы по сети _http = new HttpClient(handler) { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
         }
 
         public ApiService()
