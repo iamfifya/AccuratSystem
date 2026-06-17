@@ -18,25 +18,7 @@ namespace Accurat.WebAPI.Controllers
         private readonly AppDbContext _context;
         public ReportsController(AppDbContext context) => _context = context;
 
-        // ЧИТАЕМ ЗАГОЛОВОК ТЕНАНТА
         private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id) ? int.Parse(id) : 1;
-
-        private decimal ExtractUpsellBonus(string notes)
-        {
-            if (string.IsNullOrEmpty(notes) || !notes.Contains("бонус: +")) return 0;
-            try
-            {
-                int startIndex = notes.IndexOf("бонус: +") + "бонус: +".Length;
-                int endIndex = notes.IndexOf(" ₽", startIndex);
-                if (endIndex > startIndex)
-                {
-                    string bonusStr = notes.Substring(startIndex, endIndex - startIndex).Trim();
-                    if (decimal.TryParse(bonusStr, out decimal bonus)) return bonus;
-                }
-            }
-            catch { }
-            return 0;
-        }
 
         [HttpGet("shifts")]
         public async Task<ActionResult<IEnumerable<ShiftReport>>> GetShiftReports(int branchId, DateTime start, DateTime end)
@@ -63,20 +45,15 @@ namespace Accurat.WebAPI.Controllers
 
             var allUsers = await _context.Users.Where(u => CurrentCompanyId == 0 || u.CompanyId == CurrentCompanyId).ToListAsync();
             var allServices = await _context.Services.Where(s => CurrentCompanyId == 0 || s.CompanyId == CurrentCompanyId).ToListAsync();
-
-            // ДОБАВЛЕНО: Загружаем настройки компании для расчетов ЗП
             var settings = await _context.CompanySettings.FindAsync(CurrentCompanyId == 0 ? 1 : CurrentCompanyId);
 
             foreach (var shift in shifts)
             {
                 var orders = await _context.Orders
                     .Include(o => o.OrderWashers)
-                        .ThenInclude(ow => ow.Washer)
                     .Where(o => o.ShiftId == shift.Id && (o.Status == "Выполнен" || o.Status == "Завершен")).ToListAsync();
-                var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
 
-                var washOrders = orders.Where(o => o.Department == "Wash").ToList();
-                var serviceOrders = orders.Where(o => o.Department == "Service").ToList();
+                var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
 
                 var report = new ShiftReport
                 {
@@ -97,11 +74,11 @@ namespace Accurat.WebAPI.Controllers
                     QrCount = orders.Count(o => o.PaymentMethod == "QR-код"),
                     TotalExpenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount),
                     TotalAdvances = transactions.Where(t => t.Type == "Аванс мойщику").Sum(t => t.Amount),
-                    WashTotalCars = washOrders.Count,
-                    WashTotalRevenue = washOrders.Sum(o => o.FinalPrice),
+                    WashTotalCars = orders.Count(o => o.Department == "Wash"),
+                    WashTotalRevenue = orders.Where(o => o.Department == "Wash").Sum(o => o.FinalPrice),
                     WashTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Wash").Sum(t => t.Amount),
-                    ServiceTotalCars = serviceOrders.Count,
-                    ServiceTotalRevenue = serviceOrders.Sum(o => o.FinalPrice),
+                    ServiceTotalCars = orders.Count(o => o.Department == "Service"),
+                    ServiceTotalRevenue = orders.Where(o => o.Department == "Service").Sum(o => o.FinalPrice),
                     ServiceTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Service").Sum(t => t.Amount)
                 };
 
@@ -116,50 +93,31 @@ namespace Accurat.WebAPI.Controllers
                     var emp = allUsers.FirstOrDefault(u => u.Id == empId);
                     if (emp == null) continue;
 
-                    decimal empTotalEarnings = 0;
-                    decimal empRevenue = 0;
-                    int carsProcessed = 0;
-
-                    // Используем ЕДИНЫЙ центр расчетов OrderMath для всех ролей
-                    // Передаем все необходимые данные: заказы смены, услуги, всех юзеров, тип смены и настройки компании
-                    var stats = OrderMath.CalculateShiftStats(
-                        orders, // Список заказов этого филиала за смену
-                        allServices,
-                        emp,
-                        shift.Type,
-                        allUsers,
-                        settings,
-                        transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount)
-                    );
-
-                    empTotalEarnings = stats.TotalEarned;
-
-                    if (emp.RoleId == 3 || emp.RoleId == 4)
-                    {
-                        var myTasks = orders.SelectMany(o => o.OrderWashers.Where(ow => ow.UserId == empId), (o, ow) => new { Order = o, OrderWasher = ow }).ToList();
-                        carsProcessed = myTasks.Count;
-                        empRevenue = myTasks.Sum(x => x.Order.FinalPrice * x.OrderWasher.SplitShare);
-                    }
-                    else
-                    {
-                        carsProcessed = orders.Count;
-                        empRevenue = report.TotalRevenue;
-                    }
-
+                    decimal empEarnings = 0;
                     decimal empAdvances = transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
-                    totalFOT += empTotalEarnings;
+
+                    if (emp.RoleId == 3 || emp.RoleId == 4) // Мойщики и Сервис: Берем ЗАМОРОЖЕННЫЕ данные
+                    {
+                        empEarnings = await _context.OrderWashers
+                            .Where(ow => ow.UserId == empId &&
+                                         _context.Orders.Any(o => o.Id == ow.OrderId && o.ShiftId == shift.Id))
+                            .SumAsync(ow => ow.EarnedAmount);
+                    }
+                    else // Админы: расчет живой (от оборота смены)
+                    {
+                        var adminStats = OrderMath.CalculateShiftStats(orders, allServices, emp, shift.Type, allUsers, settings);
+                        empEarnings = adminStats.TotalEarned;
+                    }
 
                     report.EmployeesWork.Add(new EmployeeReport
                     {
                         EmployeeId = emp.Id,
                         EmployeeName = emp.FullName,
-                        CarsWashed = carsProcessed,
-                        TotalAmount = empRevenue,
-                        Earnings = empTotalEarnings,
+                        Earnings = empEarnings,
                         Advances = empAdvances
                     });
+                    totalFOT += empEarnings;
                 }
-
 
                 report.TotalWasherEarnings = totalFOT;
                 report.TotalCompanyEarnings = report.TotalRevenue - totalFOT;
@@ -169,29 +127,22 @@ namespace Accurat.WebAPI.Controllers
             return Ok(reports);
         }
 
-
         [HttpGet("clients-stats")]
         public async Task<ActionResult<object>> GetClientsStats(int branchId, DateTime start, DateTime end)
         {
             var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
             var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
-
             var newClientsQuery = _context.Clients.Where(c => c.RegistrationDate >= startUtc && c.RegistrationDate <= endUtc);
             var uniqueClientsQuery = _context.Orders.Where(o => o.Time >= startUtc && o.Time <= endUtc && o.ClientId != null);
 
-            // БРОНЕЖИЛЕТ
             if (CurrentCompanyId != 0)
             {
                 newClientsQuery = newClientsQuery.Where(c => c.CompanyId == CurrentCompanyId);
-
                 var myBranchIds = _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id);
                 uniqueClientsQuery = uniqueClientsQuery.Where(o => myBranchIds.Contains(o.BranchId));
             }
 
-            if (branchId > 0)
-            {
-                uniqueClientsQuery = uniqueClientsQuery.Where(o => o.BranchId == branchId);
-            }
+            if (branchId > 0) uniqueClientsQuery = uniqueClientsQuery.Where(o => o.BranchId == branchId);
 
             int newClients = await newClientsQuery.CountAsync();
             int uniqueClients = await uniqueClientsQuery.Select(o => o.ClientId).Distinct().CountAsync();

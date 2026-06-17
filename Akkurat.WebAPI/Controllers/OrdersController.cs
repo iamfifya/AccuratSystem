@@ -281,7 +281,6 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    // Вот этот блок "бронежилета" должен быть только в одном экземпляре!
                     var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
                     if (existingOrder == null) return NotFound();
 
@@ -291,6 +290,7 @@ namespace Accurat.WebAPI.Controllers
                     order.FinishedAt = existingOrder.FinishedAt;
                     order.GeneralNotes = existingOrder.GeneralNotes;
 
+                    // 1. Обработка истории статусов
                     if (existingOrder.Status != order.Status)
                     {
                         var currentHistory = await _context.OrderStatusHistories
@@ -306,32 +306,46 @@ namespace Accurat.WebAPI.Controllers
                         _context.OrderStatusHistories.Add(newHistory);
                     }
 
+                    // 2. РАСЧЕТ ЦЕНЫ И ЗАМОРОЗКА ЗП (Критически важный блок!)
                     var branch = await _context.Branches.FindAsync(order.BranchId);
                     var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
-                    var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
+                    var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync(); // ОШИБКА ТУТ БЫЛА (ServiceIds)
+
+                    // ПРАВИЛЬНЫЙ ЗАПРОС УСЛУГ:
+                    var actualServices = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
                     var washers = await _context.Users.Where(u => order.OrderWashers.Select(ow => ow.UserId).Contains(u.Id)).ToListAsync();
 
-                    var finalCalc = OrderMath.Calculate(order, services, washers, settings);
+                    // Считаем математику
+                    var finalCalc = OrderMath.Calculate(order, actualServices, washers, settings);
                     order.FinalPrice = finalCalc.FinalPrice;
 
-                    // Вручную перезаписываем вложенную коллекцию мойщиков!
-                    // Удаляем старые привязки из БД
+                    // !!! ВОТ ТУТ ПРОИСХОДИТ ЗАМОРОЗКА !!!
+                    // Если заказ переходит в статус "Выполнен" или уже в нем находится
+                    if (order.Status == "Выполнен" || order.Status == "Завершен")
+                    {
+                        if (order.OrderWashers != null)
+                        {
+                            foreach (var ow in order.OrderWashers)
+                            {
+                                ow.EarnedAmount = finalCalc.WasherEarnings * ow.SplitShare;
+                            }
+                        }
+                    }
+
+                    // 3. Обновление мойщиков
                     var oldWashers = await _context.OrderWashers.Where(ow => ow.OrderId == id).ToListAsync();
                     _context.OrderWashers.RemoveRange(oldWashers);
 
-                    // И записываем те, что прислал WPF-клиент
                     if (order.OrderWashers != null && order.OrderWashers.Any())
                     {
                         foreach (var ow in order.OrderWashers)
                         {
-                            ow.OrderId = id; // Жестко привязываем к текущему заказу
-                                             // Важно: обнуляем навигационное свойство Washer, чтобы EF не пытался создать нового юзера
+                            ow.OrderId = id;
                             ow.Washer = null;
                             _context.OrderWashers.Add(ow);
                         }
                     }
 
-                    // И только потом обновляем сам заказ
                     _context.Entry(order).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                     transaction.Commit();
@@ -347,6 +361,7 @@ namespace Accurat.WebAPI.Controllers
             }
         }
 
+
         [HttpPatch("{id}/complete")]
         public async Task<IActionResult> CompleteOrder(int id, [FromQuery] string paymentMethod)
         {
@@ -354,24 +369,37 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    var order = await _context.Orders.FindAsync(id);
+                    var order = await _context.Orders
+                        .Include(o => o.OrderWashers)
+                        .FirstOrDefaultAsync(o => o.Id == id);
+
                     if (order == null) return NotFound();
 
-                    order.Status = "Выполнен";
+                    var branch = await _context.Branches.FindAsync(order.BranchId);
+                    var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+                    var services = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
+                    var washers = await _context.Users.Where(u => order.OrderWashers.Select(ow => ow.UserId).Contains(u.Id)).ToListAsync();
 
+                    var finalCalc = OrderMath.Calculate(order, services, washers, settings);
+
+                    // ЗАМОРОЗКА: Записываем заработок каждому мойщику в момент выполнения
+                    foreach (var ow in order.OrderWashers)
+                    {
+                        ow.EarnedAmount = finalCalc.WasherEarnings * ow.SplitShare;
+                    }
+
+                    order.Status = "Выполнен";
                     if (!string.IsNullOrWhiteSpace(paymentMethod))
                     {
                         order.PaymentMethod = paymentMethod;
                     }
 
-                    var payload = new { OrderId = order.Id, ClientId = order.ClientId, Total = order.FinalPrice };
-
+                    // ИСПРАВЛЕНО: Создаем объект outboxMsg перед использованием
                     var outboxMsg = new OutboxMessage
                     {
                         EventType = "OrderCompleted",
-                        PayloadJson = System.Text.Json.JsonSerializer.Serialize(payload),
-                        CreatedAtUtc = DateTime.UtcNow,
-                        ErrorMessage = ""
+                        PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { OrderId = order.Id, Total = order.FinalPrice }),
+                        CreatedAtUtc = DateTime.UtcNow
                     };
 
                     _context.OutboxMessages.Add(outboxMsg);
@@ -379,7 +407,6 @@ namespace Accurat.WebAPI.Controllers
                     transaction.Commit();
 
                     await _hubContext.Clients.All.SendAsync("UpdateData");
-
                     return Ok(order);
                 }
                 catch (Exception ex)
@@ -389,6 +416,7 @@ namespace Accurat.WebAPI.Controllers
                 }
             }
         }
+
 
         [HttpGet("client/{clientId}")]
         public async Task<ActionResult<IEnumerable<Order>>> GetByClient(int clientId)

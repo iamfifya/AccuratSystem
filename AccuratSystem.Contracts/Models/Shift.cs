@@ -12,6 +12,9 @@ namespace AccuratSystem.Contracts.Models
         public DateTime? StartTime { get; set; }
         public DateTime? EndTime { get; set; }
         public bool IsClosed { get; set; }
+
+        // НОВОЕ ПОЛЕ: Снапшот заработка админа за эту смену
+        public decimal AdminEarningsSnapshot { get; set; } 
         public string Notes { get; set; } = string.Empty;
         public List<int> EmployeeIds { get; set; } = new List<int>();
         public ShiftType Type { get; set; } = ShiftType.Day;

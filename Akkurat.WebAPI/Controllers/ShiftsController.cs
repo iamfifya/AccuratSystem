@@ -96,6 +96,40 @@ namespace Accurat.WebAPI.Controllers
                 });
             }
 
+            // ========================================================================
+            // БЛОК ЗАМОРОЗКИ ФИНАНСОВ (ДОБАВЛЕНО)
+            // ========================================================================
+            var branch = await _context.Branches.FindAsync(shift.BranchId);
+            var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+
+            // Загружаем всё, что нужно для расчета ЗП админа
+            var completedOrders = await _context.Orders
+                .Where(o => o.ShiftId == id && (o.Status == "Выполнен" || o.Status == "Завершен"))
+                .ToListAsync();
+
+            var allUsers = await _context.Users.ToListAsync();
+            var allServices = await _context.Services.ToListAsync();
+
+            // Считаем общую сумму, которую заработали ВСЕ админы этой смены
+            // (включая оклады, проценты от оборота и апселлы)
+            decimal totalAdminPayForShift = 0;
+
+            var adminsInShift = shift.EmployeeIds?.Where(uid => {
+                var u = allUsers.FirstOrDefault(x => x.Id == uid);
+                return u != null && (u.RoleId == 1 || u.RoleId == 2);
+            }).ToList() ?? new List<int>();
+
+            foreach (var adminId in adminsInShift)
+            {
+                var admin = allUsers.First(u => u.Id == adminId);
+                var stats = OrderMath.CalculateShiftStats(completedOrders, allServices, admin, shift.Type, allUsers, settings);
+                totalAdminPayForShift += stats.TotalEarned;
+            }
+
+            // ЗАПИСЫВАЕМ ЦИФРУ В БАЗУ (теперь она не изменится, даже если ты поменяешь оклад в профиле)
+            shift.AdminEarningsSnapshot = totalAdminPayForShift;
+            // ========================================================================
+
             // 2. Ищем следующую открытую смену в этом филиале
             var nextShift = await _context.Shifts
                 .FirstOrDefaultAsync(s =>
@@ -103,37 +137,28 @@ namespace Accurat.WebAPI.Controllers
                     s.Id != id &&
                     !s.IsClosed);
 
-            // 3. Находим сервисные заказы "В работе", привязанные к закрываемой смене
+            // 3. Перенос сервисных заказов (без изменений)
             var serviceOrdersToTransfer = await _context.Orders
-                .Where(o =>
-                    o.ShiftId == id &&
-                    o.Department == "Service" &&
-                    o.Status == "В работе")
+                .Where(o => o.ShiftId == id && o.Department == "Service" && o.Status == "В работе")
                 .ToListAsync();
 
             var transferredCount = 0;
-
             if (nextShift != null && serviceOrdersToTransfer.Any())
             {
-                // Переносим заказы в новую смену
                 foreach (var order in serviceOrdersToTransfer)
                 {
                     order.ShiftId = nextShift.Id;
-
-                    // Добавляем запись в ленту о переносе
                     _context.OrderTimelineEntries.Add(new OrderTimelineEntry
                     {
                         OrderId = order.Id,
                         EntryType = TimelineEntryType.ShiftTransferred,
-                        Message = $"Заказ автоматически перенесён в смену от {nextShift.Date:dd.MM.yyyy} в связи с закрытием предыдущей смены",
+                        Message = $"Заказ автоматически перенесён в смену от {nextShift.Date:dd.MM.yyyy}",
                         CreatedBy = "Система",
                         Timestamp = DateTime.UtcNow,
                         RelatedEntityId = nextShift.Id
                     });
-
                     transferredCount++;
                 }
-
                 await _context.SaveChangesAsync();
             }
 
@@ -143,9 +168,8 @@ namespace Accurat.WebAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            // 5. SignalR: уведомляем клиентов
-            await _hubContext.Clients.Group($"branch_{shift.BranchId}")
-                .SendAsync("UpdateData");
+            // 5. SignalR
+            await _hubContext.Clients.All.SendAsync("UpdateData");
 
             return Ok(new
             {
@@ -155,6 +179,7 @@ namespace Accurat.WebAPI.Controllers
                 nextShiftId = nextShift?.Id
             });
         }
+
 
         [HttpGet("{id}/cashbox")]
         public async Task<ActionResult<CashboxSummary>> GetCashboxSummary(int id)

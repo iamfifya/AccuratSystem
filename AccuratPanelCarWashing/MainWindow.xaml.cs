@@ -378,6 +378,8 @@ namespace AccuratPanelCarWashing
                 _cachedUsers = await _apiService.GetUsersAsync();
                 _cachedServices = await _apiService.GetServicesAsync();
                 var allOrdersFromApi = await _apiService.GetOrdersAsync();
+                _companySettings = await _apiService.GetCompanySettingsAsync(savedBranchId);
+                System.Diagnostics.Debug.WriteLine($"[SETTINGS] Загружены настройки: %Компании = {_companySettings?.CompanySharePercentage}");
 
                 //  Просто сохраняем ВСЕ заказы с сервера в локальный кэш!
                 // Нам не нужно их тут жестко резать, так как методы ApplyFilterAndDisplay() 
