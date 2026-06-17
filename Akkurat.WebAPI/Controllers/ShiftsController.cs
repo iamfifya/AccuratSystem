@@ -170,7 +170,11 @@ namespace Accurat.WebAPI.Controllers
 
             var transactions = await _context.Transactions.Where(t => t.ShiftId == id).ToListAsync();
             var allServices = await _context.Services.ToListAsync();
-            var allUsers = await _context.Users.ToListAsync(); // ДОБАВИЛИ ЗАГРУЗКУ ЮЗЕРОВ
+            var allUsers = await _context.Users.ToListAsync();
+
+            // ДОБАВЛЕНО: Достаем настройки компании для этой смены
+            var branch = await _context.Branches.FindAsync(shift.BranchId);
+            var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
 
             // 2. Считаем выручку
             decimal cashRevenue = orders.Sum(o => o.FinalPrice);
@@ -181,21 +185,21 @@ namespace Accurat.WebAPI.Controllers
             decimal expenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
             decimal withdrawals = transactions.Where(t => t.Type == "Инкассация").Sum(t => t.Amount);
 
-            // 4. Считаем ЗП через наш новый сервис
+            // 4. Считаем ЗП
             decimal totalTopUp = 0;
             var orderWasherPairs = orders
-            .Where(o => o.OrderWashers != null)
-            .SelectMany(o => o.OrderWashers,
-                    (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId })
-            .ToList();
+                .Where(o => o.OrderWashers != null)
+                .SelectMany(o => o.OrderWashers,
+                        (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId })
+                .ToList();
 
             foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
             {
-                // Вызываем ядро и передаем allUsers!
+                // ИСПРАВЛЕНО: Передаем тип смены (shift.Type) и настройки (settings)
                 decimal basePay = group.Sum(x =>
-                    Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
+                    Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers, shift.Type, settings));
 
-                totalTopUp += basePay; // У тебя эта строка в контроллере потерялась, я ее вернул, иначе NetCashProfit посчитается криво!
+                totalTopUp += basePay;
             }
 
             // 5. Итоговые цифры
@@ -203,8 +207,9 @@ namespace Accurat.WebAPI.Controllers
             {
                 CashInHand = cashRevenue + deposits - (advances + expenses + withdrawals),
                 TotalExpenses = expenses + advances,
-                NetCashProfit = (cashRevenue * 0.65m) - expenses - totalTopUp
+                NetCashProfit = (cashRevenue * (settings?.CompanySharePercentage ?? 65m) / 100m) - expenses - totalTopUp
             };
         }
+
     }
 }

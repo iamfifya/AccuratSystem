@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using AccuratSystem.Contracts.Enums;
+using System.Collections.Generic;
 
 namespace AccuratSystem.Contracts.DTOs
 {
@@ -12,5 +13,6 @@ namespace AccuratSystem.Contracts.DTOs
         public decimal DiscountPercent { get; set; }
         public decimal DiscountAmount { get; set; }
         public string Notes { get; set; } = string.Empty;
+        public ShiftType ShiftType { get; set; }
     }
 }

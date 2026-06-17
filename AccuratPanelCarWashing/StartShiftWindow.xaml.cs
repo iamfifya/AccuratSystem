@@ -1,6 +1,7 @@
-using AccuratSystem.Contracts.Models;
-using AccuratPanelCarWashing.Services;
 using AccuratPanelCarWashing.Models;
+using AccuratPanelCarWashing.Services;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,7 +17,10 @@ namespace AccuratPanelCarWashing
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
         private DateTime _selectedDate;
-        
+
+        // ДОБАВЛЕНО: храним выбранный тип смены
+        private ShiftType _selectedShiftType = ShiftType.Day;
+
         // ПОЛНЫЙ список сотрудников (оригинал, в котором хранятся выбранные галочки)
         private List<EmployeeSelection> _allEmployees = new List<EmployeeSelection>();
         
@@ -70,6 +74,39 @@ namespace AccuratPanelCarWashing
                 MessageBox.Show($"Ошибка загрузки сотрудников: {ex.Message}");
             }
         }
+
+        // --- НОВАЯ ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ ---
+
+        private void ShiftType_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = sender as Button;
+            if (btn == null) return;
+
+            // Определяем тип смены по тексту кнопки или имени
+            if (btn.Name == "DayShiftBtn")
+                _selectedShiftType = ShiftType.Day;
+            else
+                _selectedShiftType = ShiftType.Night;
+
+            // Визуальный фидбек: подсвечиваем выбранную кнопку
+            DayShiftBtn.Background = _selectedShiftType == ShiftType.Day ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2980B9")) : new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3498DB"));
+            NightShiftBtn.Background = _selectedShiftType == ShiftType.Night ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1C2833")) : new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2C3E50"));
+
+            // Разблокируем кнопку "Далее"
+            ContinueToEmployeesBtn.IsEnabled = true;
+        }
+
+        private void ContinueToEmployees_Click(object sender, RoutedEventArgs e)
+        {
+            // Переключаем видимость панелей
+            ShiftTypePanel.Visibility = Visibility.Collapsed;
+            EmployeeSelectionPanel.Visibility = Visibility.Visible;
+
+            // Показываем кнопку "Начать смену" вместо кнопки "Далее"
+            StartShiftButton.Visibility = Visibility.Visible;
+        }
+
+        // -----------------------------------------
 
         // СОБЫТИЕ ПОИСКА
         private void EmployeeSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)

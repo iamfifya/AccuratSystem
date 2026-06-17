@@ -112,6 +112,11 @@ namespace AccuratPanelCarWashing
         private List<ContractsUser> _cachedUsers = new List<ContractsUser>();
 
         /// <summary>
+        /// Добавляем локальный кэш настроек компании, чтобы не дергать API каждый раз при расчете прибыли и отображении информации.
+        /// </summary>
+        private CompanySettings _companySettings;
+
+        /// <summary>
         /// Статистика работы мойщиков.
         /// </summary>
         private List<WasherStat> _washersStats;
@@ -588,7 +593,8 @@ namespace AccuratPanelCarWashing
                 var completedOrders = branchOrders.Where(o => o.Status == "Выполнен" || o.Status == "Завершен").ToList();
                 TotalRevenue = completedOrders.Sum(o => o.FinalPrice);
 
-                var totalWasherEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).WasherEarnings);
+                var totalWasherEarnings = completedOrders.Sum(o =>
+                OrderMath.Calculate(o, _cachedServices, _cachedUsers, _companySettings, _currentShift.Type).WasherEarnings);
 
                 // Считаем только СВОИ бонусы из заказов, которые создал Я
                 decimal myUpsellShare = completedOrders
@@ -605,7 +611,9 @@ namespace AccuratPanelCarWashing
                 var myTotalEarnings = adminShiftPercentEarnings + myUpsellShare;
 
                 // Из прибыли компании вычитаем процент админа и ВСЕ выплаченные за смену бонусы кассиров
-                CompanyEarnings = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).CompanyEarnings) - adminShiftPercentEarnings - totalShiftUpsellBonuses;
+                CompanyEarnings = completedOrders.Sum(o =>
+                OrderMath.Calculate(o, _cachedServices, _cachedUsers, _companySettings, _currentShift.Type).CompanyEarnings)
+                    - adminShiftPercentEarnings - totalShiftUpsellBonuses;
 
                 var inProgressCount = branchOrders.Count(o => o.Status == "В работе");
                 var cancelledCount = branchOrders.Count(o => o.Status == "Отменен");
@@ -677,21 +685,30 @@ namespace AccuratPanelCarWashing
             }
 
             var completedOrders = branchOrders.Where(o => o.Status == "Выполнен").ToList();
-            var totalShiftRevenue = completedOrders.Sum(o => OrderMath.Calculate(o, _cachedServices).FinalPrice);
+
+            // ИСПРАВЛЕНО: Добавлены настройки и тип смены
+            var totalShiftRevenue = completedOrders.Sum(o =>
+                OrderMath.Calculate(o, _cachedServices, _cachedUsers, _companySettings, _currentShift.Type).FinalPrice);
 
             WashersStats = completedOrders.Where(o => o.GetWasherId() > 0).GroupBy(o => o.GetWasherId()).Select(g =>
             {
-                var washerRevenue = g.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).FinalPrice);
+                // ИСПРАВЛЕНО: Добавлены настройки и тип смены
+                var washerRevenue = g.Sum(o =>
+                    OrderMath.Calculate(o, _cachedServices, _cachedUsers, _companySettings, _currentShift.Type).FinalPrice);
+
                 return new WasherStat
                 {
                     WasherName = GetWasherName(g.Key),
                     CarsCount = g.Count(),
-                    Earnings = g.Sum(o => OrderMath.Calculate(o, _cachedServices, _cachedUsers, null).WasherEarnings),
+                    // ИСПРАВЛЕНО: Добавлены настройки и тип смены
+                    Earnings = g.Sum(o =>
+                        OrderMath.Calculate(o, _cachedServices, _cachedUsers, _companySettings, _currentShift.Type).WasherEarnings),
                     TotalRevenue = washerRevenue,
                     Percentage = totalShiftRevenue > 0 ? (washerRevenue / totalShiftRevenue) * 100m : 0m
                 };
             }).OrderByDescending(s => s.Earnings).ToList();
         }
+
 
         #endregion
 

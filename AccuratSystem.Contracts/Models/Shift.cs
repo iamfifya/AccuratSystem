@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AccuratSystem.Contracts.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace AccuratSystem.Contracts.Models
@@ -13,6 +14,8 @@ namespace AccuratSystem.Contracts.Models
         public bool IsClosed { get; set; }
         public string Notes { get; set; } = string.Empty;
         public List<int> EmployeeIds { get; set; } = new List<int>();
+        public ShiftType Type { get; set; } = ShiftType.Day;
+
 
         // Навигационное свойство (без ? для C# 7.3)
         public Branch Branch { get; set; }

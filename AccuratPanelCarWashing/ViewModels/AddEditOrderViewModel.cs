@@ -141,7 +141,10 @@ namespace AccuratPanelCarWashing.ViewModels
                 ExtraCost = CurrentOrder.ExtraCost,
                 DiscountPercent = CurrentOrder.DiscountPercent,
                 DiscountAmount = CurrentOrder.DiscountAmount,
-                Notes = CurrentOrder.Notes ?? ""
+                Notes = CurrentOrder.Notes ?? "",
+
+                // ДОБАВЛЕНО: передаем тип смены из объекта _currentShift
+                ShiftType = _currentShift?.Type ?? ShiftType.Day
             };
 
             var calcResult = await _apiService.CalculateOrderPreviewAsync(request);

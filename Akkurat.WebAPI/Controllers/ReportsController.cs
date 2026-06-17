@@ -47,7 +47,6 @@ namespace Accurat.WebAPI.Controllers
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
 
-            // БРОНЕЖИЛЕТ: Директор видит "Всю сеть" ТОЛЬКО СВОЕЙ КОМПАНИИ
             if (CurrentCompanyId != 0)
             {
                 var myBranchIds = _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id);
@@ -61,15 +60,18 @@ namespace Accurat.WebAPI.Controllers
 
             var shifts = await shiftsQuery.ToListAsync();
             var reports = new List<ShiftReport>();
-            // Тянем только нужных юзеров и сервисы для производительности
+
             var allUsers = await _context.Users.Where(u => CurrentCompanyId == 0 || u.CompanyId == CurrentCompanyId).ToListAsync();
             var allServices = await _context.Services.Where(s => CurrentCompanyId == 0 || s.CompanyId == CurrentCompanyId).ToListAsync();
+
+            // ДОБАВЛЕНО: Загружаем настройки компании для расчетов ЗП
+            var settings = await _context.CompanySettings.FindAsync(CurrentCompanyId == 0 ? 1 : CurrentCompanyId);
 
             foreach (var shift in shifts)
             {
                 var orders = await _context.Orders
                     .Include(o => o.OrderWashers)
-                        .ThenInclude(ow => ow.Washer) // ВОТ ОН, ФИКС №1! Подтягиваем профиль мойщика
+                        .ThenInclude(ow => ow.Washer)
                     .Where(o => o.ShiftId == shift.Id && (o.Status == "Выполнен" || o.Status == "Завершен")).ToListAsync();
                 var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
 
@@ -83,7 +85,6 @@ namespace Accurat.WebAPI.Controllers
                     StartTime = shift.StartTime ?? shift.Date,
                     EndTime = shift.EndTime,
                     Notes = shift.Notes,
-
                     TotalCars = orders.Count,
                     TotalRevenue = orders.Sum(o => o.FinalPrice),
                     CashAmount = orders.Where(o => o.PaymentMethod == "Наличные").Sum(o => o.FinalPrice),
@@ -94,24 +95,17 @@ namespace Accurat.WebAPI.Controllers
                     TransferCount = orders.Count(o => o.PaymentMethod == "Перевод"),
                     QrAmount = orders.Where(o => o.PaymentMethod == "QR-код").Sum(o => o.FinalPrice),
                     QrCount = orders.Count(o => o.PaymentMethod == "QR-код"),
-
                     TotalExpenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount),
                     TotalAdvances = transactions.Where(t => t.Type == "Аванс мойщику").Sum(t => t.Amount),
-
                     WashTotalCars = washOrders.Count,
                     WashTotalRevenue = washOrders.Sum(o => o.FinalPrice),
                     WashTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Wash").Sum(t => t.Amount),
-
                     ServiceTotalCars = serviceOrders.Count,
                     ServiceTotalRevenue = serviceOrders.Sum(o => o.FinalPrice),
                     ServiceTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Service").Sum(t => t.Amount)
                 };
 
-                decimal totalShiftUpsellBonuses = orders.Sum(o => ExtractUpsellBonus(o.Notes));
                 decimal totalFOT = 0;
-                decimal totalWashCompanyEarnings = 0;
-                decimal totalServiceCompanyEarnings = 0;
-
                 var shiftEmployeeIds = shift.EmployeeIds?.ToList() ?? new List<int>();
                 var washerIds = orders.SelectMany(o => o.OrderWashers?.Select(ow => ow.UserId) ?? new List<int>());
                 var allEmployeeIds = shiftEmployeeIds.Union(washerIds).Distinct().ToList();
@@ -126,22 +120,19 @@ namespace Accurat.WebAPI.Controllers
                     decimal empRevenue = 0;
                     int carsProcessed = 0;
 
-                    // ИСПРАВЛЕНИЕ: Теперь и Мойщики (3), и Сотрудники сервиса (4) считаются по факту выполненных работ
                     if (emp.RoleId == 3 || emp.RoleId == 4)
                     {
                         var myTasks = orders.SelectMany(o => o.OrderWashers.Where(ow => ow.UserId == empId), (o, ow) => new { Order = o, OrderWasher = ow }).ToList();
                         carsProcessed = myTasks.Count;
                         empRevenue = myTasks.Sum(x => x.Order.FinalPrice * x.OrderWasher.SplitShare);
 
-                        // Считаем зарплату через сервис
-                        empTotalEarnings = myTasks.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers));
+                        // ИСПРАВЛЕНО: Передаем тип смены (shift.Type) и настройки (settings)
+                        empTotalEarnings = myTasks.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers, shift.Type, settings));
                     }
-                    else // 👑 АДМИН / ДИРЕКТОР
+                    else
                     {
-                        // Для руководства "Кол-во заказов" в отчете обычно означает общий объем смены, которой они управляли
                         carsProcessed = orders.Count;
                         empRevenue = report.TotalRevenue;
-
                         decimal baseSalary = emp.BaseSalaryPerShift;
                         decimal percentEarnings = empRevenue * (emp.BaseWagePercentage / 100m);
                         decimal personalUpsellBonus = orders.Where(o => o.AdminId == emp.Id).Sum(o => ExtractUpsellBonus(o.Notes));
@@ -164,14 +155,12 @@ namespace Accurat.WebAPI.Controllers
 
                 report.TotalWasherEarnings = totalFOT;
                 report.TotalCompanyEarnings = report.TotalRevenue - totalFOT;
-                report.WashCompanyEarnings = totalWashCompanyEarnings;
-                report.ServiceCompanyEarnings = totalServiceCompanyEarnings;
-
                 reports.Add(report);
             }
 
             return Ok(reports);
         }
+
 
         [HttpGet("clients-stats")]
         public async Task<ActionResult<object>> GetClientsStats(int branchId, DateTime start, DateTime end)

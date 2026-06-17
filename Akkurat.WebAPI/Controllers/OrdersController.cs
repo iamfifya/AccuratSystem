@@ -75,8 +75,8 @@ namespace Accurat.WebAPI.Controllers
                     };
                 }
 
-                // 5. Вызываем расчет на стороне сервера
-                var calculation = OrderMath.Calculate(virtualOrder, services, washers, settings);
+                // 5. ВЫЗОВ РАСЧЕТА: теперь передаем request.ShiftType
+                var calculation = OrderMath.Calculate(virtualOrder, services, washers, settings, request.ShiftType);
 
                 return Ok(calculation);
             }

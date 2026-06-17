@@ -1,3 +1,4 @@
+using AccuratSystem.Contracts.Enums;
 using AccuratSystem.Contracts.Models;
 using System;
 using System.Collections.Generic;
@@ -25,12 +26,14 @@ namespace AccuratSystem.Contracts.Models // ОБЩИЙ НЕЙМСПЕЙС
             return 0;
         }
 
-        public static OrderCalculation Calculate(Order order, List<Service> allServices, List<User> washers = null, CompanySettings settings = null)
+        public static OrderCalculation Calculate(Order order, List<Service> allServices, List<User> washers = null, CompanySettings settings = null, ShiftType shiftType = ShiftType.Day)
         {
             var calc = new OrderCalculation();
             if (order == null) return calc;
 
             decimal companySharePercent = settings?.CompanySharePercentage ?? 65m;
+
+            // Определяем базовый процент мойщика
             int? washerId = order.OrderWashers?.FirstOrDefault()?.UserId;
             var washer = washers?.FirstOrDefault(w => w.Id == washerId);
             decimal basePercentage = washer?.BaseWagePercentage ?? 35m;
@@ -38,6 +41,7 @@ namespace AccuratSystem.Contracts.Models // ОБЩИЙ НЕЙМСПЕЙС
             decimal servicesTotal = 0;
             decimal washerEarnings = 0;
 
+            // --- ЛОГИКА РАСЧЕТА ЗП МОЙЩИКА ---
             if (order.ServiceIds != null && allServices != null)
             {
                 foreach (var sid in order.ServiceIds)
@@ -47,15 +51,34 @@ namespace AccuratSystem.Contracts.Models // ОБЩИЙ НЕЙМСПЕЙС
                     {
                         decimal price = svc.PriceByBodyType.TryGetValue(order.BodyTypeCategory, out var p) ? p : (svc.PriceByBodyType.TryGetValue(1, out var def) ? def : 0);
                         servicesTotal += price;
-                        decimal activePercentage = svc.CustomWagePercentage ?? basePercentage;
-                        washerEarnings += price * (activePercentage / 100m);
+
+                        if (shiftType == ShiftType.Night)
+                        {
+                            // В ночную смену: берем фиксированный % из настроек компании (например 50%)
+                            decimal nightPercent = settings?.NightShiftWasherPercentage ?? 50m;
+                            washerEarnings += price * (nightPercent / 100m);
+                        }
+                        else
+                        {
+                            // В дневную смену: индивидуальный % или % услуги
+                            decimal activePercentage = svc.CustomWagePercentage ?? basePercentage;
+                            washerEarnings += price * (activePercentage / 100m);
+                        }
                     }
                 }
             }
 
             calc.ServicesTotal = servicesTotal;
             decimal baseAmount = servicesTotal + order.ExtraCost;
-            if (order.ExtraCost > 0) washerEarnings += order.ExtraCost * (basePercentage / 100m);
+
+            // Доплата за ExtraCost
+            if (order.ExtraCost > 0)
+            {
+                decimal extraPercent = (shiftType == ShiftType.Night)
+                    ? (settings?.NightShiftWasherPercentage ?? 50m)
+                    : basePercentage;
+                washerEarnings += order.ExtraCost * (extraPercent / 100m);
+            }
 
             decimal actualDiscount = 0;
             if (order.DiscountPercent > 0) actualDiscount = baseAmount * (order.DiscountPercent / 100m);
@@ -63,30 +86,44 @@ namespace AccuratSystem.Contracts.Models // ОБЩИЙ НЕЙМСПЕЙС
 
             calc.FinalPrice = baseAmount - actualDiscount;
             calc.UpsellBonus = ExtractUpsellBonus(order.Notes);
-            calc.WasherEarnings = washerEarnings;
+            calc.WasherEarnings = washerEarnings; // Теперь тут будет либо 50%, либо индивидуальный %
             calc.CompanyGrossEarnings = calc.FinalPrice * (companySharePercent / 100m);
             calc.CompanyNetEarnings = calc.CompanyGrossEarnings - calc.UpsellBonus;
 
             return calc;
         }
 
-        public static EmployeeShiftStats CalculateShiftStats(IEnumerable<Order> branchOrdersForShift, List<Service> allServices, User currentEmployee, List<User> allUsers = null, CompanySettings settings = null, decimal advancesTaken = 0m)
+        public static EmployeeShiftStats CalculateShiftStats(IEnumerable<Order> branchOrdersForShift, List<Service> allServices, User currentEmployee, ShiftType shiftType, List<User> allUsers = null, CompanySettings settings = null, decimal advancesTaken = 0m)
         {
             var stats = new EmployeeShiftStats();
             if (currentEmployee == null) return stats;
 
             stats.AdvancesTotal = advancesTaken;
-            if (currentEmployee.RoleId == 3)
+
+            if (currentEmployee.RoleId == 3 || currentEmployee.RoleId == 4) // МОЙЩИКИ / СЕРВИС
             {
                 var myOrders = branchOrdersForShift.Where(o => o.OrderWashers?.FirstOrDefault()?.UserId == currentEmployee.Id).ToList();
-                stats.PieceworkEarnings = myOrders.Sum(o => Calculate(o, allServices, allUsers, settings).WasherEarnings);
+                // Используем обновленный Calculate с учетом типа смены!
+                stats.PieceworkEarnings = myOrders.Sum(o => Calculate(o, allServices, allUsers, settings, shiftType).WasherEarnings);
             }
-            else
+            else // 👑 АДМИН / ДИРЕКТОР
             {
                 stats.FixedSalary = currentEmployee.BaseSalaryPerShift;
                 var completedOrders = branchOrdersForShift.Where(o => o.Status == "Выполнен" || o.Status == "Завершен").ToList();
                 decimal totalRevenue = completedOrders.Sum(o => o.FinalPrice);
-                stats.PieceworkEarnings = totalRevenue * (currentEmployee.BaseWagePercentage / 100m);
+
+                if (shiftType == ShiftType.Day)
+                {
+                    // ТЕ САМЫЕ 2.5% от общего оборота за день
+                    decimal adminDayPercent = settings?.DayShiftAdminPercentage ?? 2.5m;
+                    stats.PieceworkEarnings = totalRevenue * (adminDayPercent / 100m);
+                }
+                else
+                {
+                    // Ночью админ может получать либо 0, либо свою базовую ставку (зависит от договоренности)
+                    stats.PieceworkEarnings = totalRevenue * (currentEmployee.BaseWagePercentage / 100m);
+                }
+
                 stats.UpsellBonusTotal = completedOrders.Sum(o => ExtractUpsellBonus(o.Notes));
             }
             return stats;
