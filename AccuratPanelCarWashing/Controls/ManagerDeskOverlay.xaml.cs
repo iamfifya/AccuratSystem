@@ -1,12 +1,12 @@
-﻿using AccuratPanelCarWashing.Models;
-using AccuratPanelCarWashing.Controls;
+﻿using AccuratPanelCarWashing.Controls;
+using AccuratPanelCarWashing.Models;
+using AccuratPanelCarWashing.Services;
 using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-
 using WpfUser = AccuratPanelCarWashing.Models.User;
 
 namespace AccuratPanelCarWashing.Controls
@@ -146,6 +146,30 @@ namespace AccuratPanelCarWashing.Controls
 
             // 2. Сигнализируем Главному окну, что нужно открыть кассу
             CashboxRequested?.Invoke(this, e);
+        }
+
+        private void UpsellBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Добавили проверку купленного модуля
+            if (!UserSession.IsFeatureEnabled(f => f.IsUpsellEnabled))
+            {
+                MessageBox.Show("Модуль Умный кассир, который предлагает дополнительные услуги при продаже отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
+                return;
+            }
+
+            new UpsellManagementWindow().ShowDialog();
+        }
+
+        private void DiscountRulesBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Добавили проверку купленного модуля
+            if (!UserSession.IsFeatureEnabled(f => f.IsDiscountRulesEnabled))
+            {
+                MessageBox.Show("Модуль Правила скидок, который позволяет создавать и управлять правилами скидок для клиентов отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
+                return;
+            }
+
+            new DiscountRulesManagementWindow().ShowDialog();
         }
     }
 }

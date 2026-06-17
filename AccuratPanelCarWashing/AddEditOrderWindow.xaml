@@ -213,28 +213,37 @@
                                      Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
                 <Label Content="🎁 Скидка:" Margin="0,10,0,0" FontWeight="SemiBold"/>
-                <Grid Margin="0,5,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <StackPanel Margin="0,5,0,10">
+                    <!-- 1. Выбор правила из БД -->
+                    <controls:CustomComboBox 
+                        Placeholder="Применить правило (например, Дождь...)" 
+                        ItemsSource="{Binding DiscountRules}" 
+                        SelectedItem="{Binding SelectedDiscountRule}"
+                        DisplayMemberPath="Name"
+                        SelectedValuePath="Id"
+                        Height="40" Margin="0,0,0,10"/>
 
-                    <TextBox x:Name="DiscountPercentTextBox" 
-                             Text="{Binding DiscountPercent, 
-                                UpdateSourceTrigger=PropertyChanged, 
-                                TargetNullValue=0, 
-                                FallbackValue=0,
-                                ValidatesOnExceptions=False,
-                                Converter={StaticResource DecimalToEmptyZeroConverter}}"
-                             Grid.Column="0" Height="50" Padding="5" />
+                    <!-- 2. Поля ручной корректировки -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="1" Text=" % " VerticalAlignment="Center" Margin="5,0" FontSize="14"/>
+                        <TextBox x:Name="DiscountPercentTextBox" 
+                                 Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToEmptyZeroConverter}}"
+                                 Grid.Column="0" Height="40" Padding="5" />
 
-                    <TextBox x:Name="DiscountAmountTextBox" 
-                             Grid.Column="2" Height="50" Padding="5" 
-                             Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToEmptyZeroConverter}}"/>
-                </Grid>
+                        <TextBlock Grid.Column="1" Text=" % " VerticalAlignment="Center" Margin="5,0" FontSize="14" FontWeight="Bold"/>
+
+                        <TextBox x:Name="DiscountAmountTextBox" 
+                                 Grid.Column="2" Height="40" Padding="5" 
+                                 Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToEmptyZeroConverter}}"/>
+                    </Grid>
+                    <TextBlock Text="Или введите значения вручную" FontSize="10" Foreground="#95A5A6" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                </StackPanel>
+
 
                 <Label Content="💳 Способ оплаты:" Margin="0,10,0,0" FontWeight="SemiBold"
                        Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>

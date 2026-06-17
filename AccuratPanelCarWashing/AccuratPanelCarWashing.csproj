@@ -334,6 +334,7 @@
     </Compile>
     <Compile Include="AppointmentToBackgroundConverter.cs" />
     <Compile Include="AppointmentToStyleConverter.cs" />
+    <Compile Include="BooleanToDiscountTypeConverter.cs" />
     <Compile Include="BoolToVisibilityConverter.cs" />
     <Compile Include="BranchManagementWindow.xaml.cs">
       <DependentUpon>BranchManagementWindow.xaml</DependentUpon>
@@ -367,6 +368,9 @@
     </Compile>
     <Compile Include="DecimalToEmptyZeroConverter.cs" />
     <Compile Include="DepartmentToZoneLabelConverter.cs" />
+    <Compile Include="DiscountRulesManagementWindow.xaml.cs">
+      <DependentUpon>DiscountRulesManagementWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ExcelExporter.cs" />
     <Compile Include="HexToBrushConverter.cs" />
     <Compile Include="HistoryWindow.xaml.cs">
@@ -481,6 +485,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CustomReportWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DiscountRulesManagementWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

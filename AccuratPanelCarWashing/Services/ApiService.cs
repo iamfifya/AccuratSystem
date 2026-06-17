@@ -660,6 +660,36 @@ namespace AccuratPanelCarWashing.Services
         }
         #endregion
 
+        #region СКИДКИ (DISCOUNT RULES)
+        public async Task<List<DiscountRule>> GetDiscountRulesAsync()
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<DiscountRule>>("DiscountRules") ?? new List<DiscountRule>();
+            }
+            catch (Exception ex) { throw new Exception($"Ошибка загрузки правил скидок: {ex.Message}"); }
+        }
+
+        public async Task CreateDiscountRuleAsync(DiscountRule rule)
+        {
+            var response = await _http.PostAsJsonAsync("DiscountRules", rule);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task UpdateDiscountRuleAsync(DiscountRule rule)
+        {
+            var response = await _http.PutAsJsonAsync($"DiscountRules/{rule.Id}", rule);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteDiscountRuleAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"DiscountRules/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+        #endregion
+
+
         // К Ролям (Roles) добавь методы Create, Update, Delete (GET у тебя уже есть)
         public async Task<Role> CreateRoleAsync(Role role)
         {

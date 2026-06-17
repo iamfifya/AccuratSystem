@@ -120,23 +120,30 @@ namespace Accurat.WebAPI.Controllers
                     decimal empRevenue = 0;
                     int carsProcessed = 0;
 
+                    // Используем ЕДИНЫЙ центр расчетов OrderMath для всех ролей
+                    // Передаем все необходимые данные: заказы смены, услуги, всех юзеров, тип смены и настройки компании
+                    var stats = OrderMath.CalculateShiftStats(
+                        orders, // Список заказов этого филиала за смену
+                        allServices,
+                        emp,
+                        shift.Type,
+                        allUsers,
+                        settings,
+                        transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount)
+                    );
+
+                    empTotalEarnings = stats.TotalEarned;
+
                     if (emp.RoleId == 3 || emp.RoleId == 4)
                     {
                         var myTasks = orders.SelectMany(o => o.OrderWashers.Where(ow => ow.UserId == empId), (o, ow) => new { Order = o, OrderWasher = ow }).ToList();
                         carsProcessed = myTasks.Count;
                         empRevenue = myTasks.Sum(x => x.Order.FinalPrice * x.OrderWasher.SplitShare);
-
-                        // ИСПРАВЛЕНО: Передаем тип смены (shift.Type) и настройки (settings)
-                        empTotalEarnings = myTasks.Sum(x => Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers, shift.Type, settings));
                     }
                     else
                     {
                         carsProcessed = orders.Count;
                         empRevenue = report.TotalRevenue;
-                        decimal baseSalary = emp.BaseSalaryPerShift;
-                        decimal percentEarnings = empRevenue * (emp.BaseWagePercentage / 100m);
-                        decimal personalUpsellBonus = orders.Where(o => o.AdminId == emp.Id).Sum(o => ExtractUpsellBonus(o.Notes));
-                        empTotalEarnings = baseSalary + percentEarnings + personalUpsellBonus;
                     }
 
                     decimal empAdvances = transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
@@ -152,6 +159,7 @@ namespace Accurat.WebAPI.Controllers
                         Advances = empAdvances
                     });
                 }
+
 
                 report.TotalWasherEarnings = totalFOT;
                 report.TotalCompanyEarnings = report.TotalRevenue - totalFOT;

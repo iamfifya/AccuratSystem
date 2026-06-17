@@ -9,5 +9,8 @@
         public bool IsServicesEnabled { get; set; }
         public bool IsCrmMarketingEnabled { get; set; }
         public bool IsTelegramBossEnabled { get; set; }
+        public bool IsReputationEnabled { get; set; }
+        public bool IsDiscountRulesEnabled { get; set; }
     }
+
 }

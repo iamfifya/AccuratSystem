@@ -38,6 +38,7 @@ namespace Accurat.WebAPI.Data
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
         public DbSet<AccuratSystem.Contracts.Models.OrderStatus> OrderStatuses { get; set; }
         public DbSet<CompanySettings> CompanySettings { get; set; }
+        public DbSet<DiscountRule> DiscountRules { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

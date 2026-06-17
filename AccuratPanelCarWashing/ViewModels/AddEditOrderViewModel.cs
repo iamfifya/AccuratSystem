@@ -32,6 +32,7 @@ namespace AccuratPanelCarWashing.ViewModels
         private readonly ApiService _apiService;
         private List<ContractsService> _allServicesCache = new List<ContractsService>();
         private string _currentDepartment = "Wash";
+        public List<DiscountRule> DiscountRules { get; set; } = new List<DiscountRule>();
 
         public string CurrentDepartment
         {
@@ -101,6 +102,33 @@ namespace AccuratPanelCarWashing.ViewModels
 
                 Recalculate();
                 CurrentSuggestion = null;
+            }
+        }
+
+        private DiscountRule _selectedDiscountRule;
+        public DiscountRule SelectedDiscountRule
+        {
+            get => _selectedDiscountRule;
+            set
+            {
+                if (_selectedDiscountRule != value)
+                {
+                    _selectedDiscountRule = value;
+                    OnPropertyChanged(nameof(SelectedDiscountRule));
+
+                    // При применении правила обновляем значения в заказе
+                    if (value != null)
+                    {
+                        if (value.IsPercentage)
+                        {
+                            DiscountPercent = value.Value; // Установит % и обнулит сумму (благодаря сеттеру)
+                        }
+                        else
+                        {
+                            DiscountAmount = value.Value; // Установит сумму и обнулит %
+                        }
+                    }
+                }
             }
         }
 
@@ -199,6 +227,13 @@ namespace AccuratPanelCarWashing.ViewModels
             InitializeOrder();
             _ = LoadWashersAsync();
             _ = LoadServicesAsync();
+            _ = LoadDiscountRulesAsync();
+        }
+
+        public async Task LoadDiscountRulesAsync()
+        {
+            DiscountRules = await _apiService.GetDiscountRulesAsync();
+            OnPropertyChanged(nameof(DiscountRules));
         }
 
         public void OnPropertyChanged(string propertyName) =>

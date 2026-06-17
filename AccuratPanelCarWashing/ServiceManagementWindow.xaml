@@ -76,7 +76,7 @@
                     Margin="5" Background="#3498DB" Foreground="White"/>
             <Button Content="🗑️ Удалить" Click="DeleteButton_Click" Width="100" Height="35" 
                     Margin="5" Background="#E74C3C" Foreground="White"/>
-            <Button Content="🛠️ Управление доп:продажами" x:Name="UpsellButton" 
+            <Button Content="🛠️ Управление доп.продажами" x:Name="UpsellButton" 
                     Click="UpsellButton_Click" 
                     Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" 
                     Margin="0,0,5,0" Background="#9B59B6"

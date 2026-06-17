@@ -179,7 +179,7 @@ namespace AccuratPanelCarWashing
             // Добавили проверку купленного модуля
             if (!UserSession.IsFeatureEnabled(f => f.IsUpsellEnabled))
             {
-                MessageBox.Show("Модуль 'Умный кассир' отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
+                MessageBox.Show("Модуль Умный кассир, который предлагает дополнительные услуги при продаже отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
                 return;
             }
 
@@ -205,7 +205,6 @@ namespace AccuratPanelCarWashing
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            // 3. УБРАЛИ передачу _SqliteDataService
             var addWin = new AddEditServiceWindow(null);
             if (addWin.ShowDialog() == true)
             {

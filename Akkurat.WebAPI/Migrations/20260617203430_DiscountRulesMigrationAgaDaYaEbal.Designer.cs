@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Accurat.WebAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Accurat.WebAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260617203430_DiscountRulesMigrationAgaDaYaEbal")]
+    partial class DiscountRulesMigrationAgaDaYaEbal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1040,9 +1043,9 @@ namespace Accurat.WebAPI.Migrations
                             Id = 1,
                             CompanyId = 1,
                             IsCrmMarketingEnabled = false,
-                            IsDiscountRulesEnabled = false,
+                            IsDiscountRulesEnabled = true,
                             IsReputationEnabled = false,
-                            IsServicesEnabled = false,
+                            IsServicesEnabled = true,
                             IsTelegramBossEnabled = false,
                             IsUpsellEnabled = true
                         },
@@ -1051,9 +1054,9 @@ namespace Accurat.WebAPI.Migrations
                             Id = 2,
                             CompanyId = 2,
                             IsCrmMarketingEnabled = false,
-                            IsDiscountRulesEnabled = false,
+                            IsDiscountRulesEnabled = true,
                             IsReputationEnabled = false,
-                            IsServicesEnabled = false,
+                            IsServicesEnabled = true,
                             IsTelegramBossEnabled = false,
                             IsUpsellEnabled = true
                         });
