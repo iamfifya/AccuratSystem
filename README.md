@@ -19,7 +19,7 @@
 
 ### Главное окно на ПК:
 ![MainWindow](./img/MainWindow.png)
-### Стол управляющего:
+### Стол управляющего(обновлено 01.06.2026):
 ![ManagerDeskOverlay](./img/ManagerDeskOverlay.png)
 ### Интервальный отчет:
 ![CustomReportWindow](./img/CustomReportWindow.png)
