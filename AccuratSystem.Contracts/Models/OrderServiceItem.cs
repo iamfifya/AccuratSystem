@@ -12,5 +12,8 @@ namespace AccuratSystem.Contracts.Models
         public string PriceNote { get; set; } = string.Empty;
         public string Status { get; set; } = "Pending";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // ←‑‑ Добавляем количество единиц услуги
+        public int Quantity { get; set; } = 1;
     }
 }

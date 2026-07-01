@@ -298,13 +298,13 @@ namespace Accurat.WebAPI.Controllers
         {
             if (id != order.Id) return BadRequest("ID не совпадают");
 
-            // ЗАЩИТА ОТ ВОРОВСТВА: Запрещаем редактировать выполненные/завершенные заказы
+            // 1. Проверяем статус (используем существующий поиск)
             var existingOrder = await _context.Orders.FindAsync(id);
             if (existingOrder == null) return NotFound();
 
             if (existingOrder.Status == "Выполнен" || existingOrder.Status == "Завершен")
             {
-                return BadRequest("Нельзя редактировать выполненный или завершенный заказ. Сделайте возврат или корректировку через историю.");
+                return BadRequest("Нельзя редактировать выполненный или завершенный заказ.");
             }
 
             if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
@@ -318,14 +318,16 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
-                    if (existingOrder == null) return NotFound();
+                    // ИСПРАВЛЕНО: Меняем имя переменной с existingOrder на originalOrder
+                    var originalOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
+                    if (originalOrder == null) return NotFound();
 
-                    order.BranchId = existingOrder.BranchId;
-                    order.ShiftId = existingOrder.ShiftId;
-                    order.AdminId = existingOrder.AdminId;
-                    order.FinishedAt = existingOrder.FinishedAt;
-                    order.GeneralNotes = existingOrder.GeneralNotes;
+                    // Теперь используем originalOrder для защиты данных
+                    order.BranchId = originalOrder.BranchId;
+                    order.ShiftId = originalOrder.ShiftId;
+                    order.AdminId = originalOrder.AdminId;
+                    order.FinishedAt = originalOrder.FinishedAt;
+                    order.GeneralNotes = originalOrder.GeneralNotes;
 
                     // 1. Обработка истории статусов
                     if (existingOrder.Status != order.Status)

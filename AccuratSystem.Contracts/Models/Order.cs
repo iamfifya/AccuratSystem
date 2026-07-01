@@ -44,6 +44,7 @@ namespace AccuratSystem.Contracts.Models
         public Branch Branch { get; set; }
 
         public List<OrderWasher> OrderWashers { get; set; } = new List<OrderWasher>();
+        public List<OrderServiceItem> OrderServiceItems { get; set; } = new List<OrderServiceItem>();
 
         // НОВЫЕ ПОЛЯ ДЛЯ СЕРВИСА
         public string GeneralNotes { get; set; } = string.Empty;
