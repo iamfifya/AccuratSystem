@@ -127,6 +127,8 @@ namespace AccuratPanelCarWashing.Services
 
         public async Task<List<AccuratSystem.Contracts.Models.CarCategory>> GetCarCategoriesAsync(int branchId)
         {
+            System.Diagnostics.Debug.WriteLine($"[API CALL] Fetching categories for BranchId: {branchId}");
+
             try
             {
                 return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.CarCategory>>($"CarCategories/by-branch/{branchId}")

@@ -103,7 +103,21 @@ namespace AccuratPanelCarWashing
                 _allBranches = await _apiService.GetBranchesAsync(); // Загружаем филиалы
 
                 // Загружаем категории кузовов для текущего филиала
-                int currentBranchId = order?.BranchId > 0 ? order.BranchId : AppSettings.CurrentBranchId;
+                // 1. Если мы редактируем существующий заказ, берем его филиал
+                // 2. Если заказ новый, но есть активная смена — берем филиал смены (самый надежный вариант)
+                // 3. В крайнем случае — берем из настроек
+                int currentBranchId = 0;
+
+                if (order != null && order.BranchId > 0)
+                    currentBranchId = order.BranchId;
+                else if (_currentShift != null)
+                    currentBranchId = _currentShift.BranchId;
+                else
+                    currentBranchId = AppSettings.CurrentBranchId;
+
+                // Добавь лог, чтобы в будущем видеть это в консоли (если включишь Debug)
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Loading dictionaries for BranchId: {currentBranchId}");
+
                 var carCategories = await _apiService.GetCarCategoriesAsync(currentBranchId);
 
                 // Привязываем к UI

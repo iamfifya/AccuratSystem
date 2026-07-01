@@ -33,13 +33,22 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Branch>> CreateBranch(Branch branch)
         {
-            // Принудительно привязываем новый филиал к текущей компании!
-            branch.CompanyId = CurrentCompanyId;
+            // Если пользователь — обычный сотрудник/директор (не 0), 
+            // мы ЖЕСТКО привязываем филиал к его компании.
+            if (CurrentCompanyId != 0)
+            {
+                branch.CompanyId = CurrentCompanyId;
+            }
+            // Если же CurrentCompanyId == 0 (Разработчик), 
+            // мы НЕ ПЕРЕЗАПИСЫВАЕМ branch.CompanyId, 
+            // позволяя сохранить тот ID, который был выбран в WPF.
 
             _context.Branches.Add(branch);
             await _context.SaveChangesAsync();
             return Ok(branch);
         }
+
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBranch(int id)

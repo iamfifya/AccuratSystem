@@ -36,20 +36,25 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser(User user)
         {
-            user.CompanyId = CurrentCompanyId;
+            // Если текущий пользователь НЕ разработчик, то принудительно 
+            // привязываем нового сотрудника к компании того, кто его создает.
+            // Если разработчик (0) — оставляем тот CompanyId, который прислал WPF.
+            if (CurrentCompanyId != 0)
+            {
+                user.CompanyId = CurrentCompanyId;
+            }
 
             // --- Хэшируем пароль перед сохранением ---
-            // Если пароль пришел, мы превращаем его в секретный хэш
             if (!string.IsNullOrEmpty(user.PasswordHash))
             {
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
             }
-            // ------------------------------------------------------
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return Ok(user);
         }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, User user)
