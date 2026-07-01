@@ -156,36 +156,25 @@
                            Text="{Binding Name}" HorizontalAlignment="Center"
                            Foreground="#2C3E50" TextWrapping="Wrap" TextAlignment="Center"/>
 
-                        <StackPanel Grid.Row="1" Margin="0,10,0,0">
-                            <TextBlock FontSize="11" Foreground="#27AE60" HorizontalAlignment="Center">
-                                <TextBlock.Text>
-                                    <MultiBinding StringFormat="Седан: {0:N0}₽">
-                                        <Binding Path="PriceByBodyType" ConverterParameter="1" Converter="{StaticResource SafePriceConverter}"/>
-                                    </MultiBinding>
-                                </TextBlock.Text>
-                            </TextBlock>
-                            <TextBlock FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center">
-                                <TextBlock.Text>
-                                    <MultiBinding StringFormat="Хэтчбек: {0:N0}₽">
-                                        <Binding Path="PriceByBodyType" ConverterParameter="2" Converter="{StaticResource SafePriceConverter}"/>
-                                    </MultiBinding>
-                                </TextBlock.Text>
-                            </TextBlock>
-                            <TextBlock FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center">
-                                <TextBlock.Text>
-                                    <MultiBinding StringFormat="Универсал: {0:N0}₽">
-                                        <Binding Path="PriceByBodyType" ConverterParameter="3" Converter="{StaticResource SafePriceConverter}"/>
-                                    </MultiBinding>
-                                </TextBlock.Text>
-                            </TextBlock>
-                            <TextBlock FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center">
-                                <TextBlock.Text>
-                                    <MultiBinding StringFormat="Внедорожник: {0:N0}₽">
-                                        <Binding Path="PriceByBodyType" ConverterParameter="4" Converter="{StaticResource SafePriceConverter}"/>
-                                    </MultiBinding>
-                                </TextBlock.Text>
-                            </TextBlock>
-                        </StackPanel>
+                        <!-- ВАЖНО: Добавили ItemsSource="{Binding PriceByBodyType}", 
+                        чтобы контрол видел словарь с ценами -->
+                        <ItemsControl Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding PriceByBodyType}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center">
+                                        <TextBlock.Text>
+                                            <!-- Используем ОДИН MultiBinding для всей строки.
+                                            {0} - это Key (ID категории), {1} - это Value (Цена) -->
+                                            <MultiBinding StringFormat="Кат. {0}: {1:N0}₽">
+                                                <Binding Path="Key" />
+                                                <Binding Path="Value" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
 
                         <TextBlock Grid.Row="2" FontSize="11" 
                            Text="{Binding DurationMinutes, StringFormat=⏱️ Длительность: {0} мин}" 

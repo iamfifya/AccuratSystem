@@ -145,20 +145,20 @@
                             <TextBlock Text="Отчеты и Аналитика" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                    <Button Style="{StaticResource TileButtonStyle}" x:Name="CompanyManagementBtn" Click="CompanyManagementBtn_Click">
+                        <StackPanel>
+                            <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="⚙" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"/>
+                            </WrapPanel>
+                            <TextBlock Text="Управление компанией" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="BranchManagementBtn" Click="BranchManagementBtn_Click">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="🏢" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"/>
                             </WrapPanel>
                             <TextBlock Text="Управление филиалами" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{StaticResource TileButtonStyle}" x:Name="EmptyBtn">
-                        <StackPanel>
-                            <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text=" " FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"/>
-                            </WrapPanel>
-                            <TextBlock Text=" " HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="EmptyBtn1">

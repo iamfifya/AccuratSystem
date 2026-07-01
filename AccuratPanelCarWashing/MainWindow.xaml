@@ -476,16 +476,22 @@
 
         <!-- Оверлей Стола управляющего (подписались на событие CashboxRequested) -->
         <controls:ManagerDeskOverlay x:Name="DeskOverlay" 
-                         CashboxRequested="DeskOverlay_CashboxRequested" 
-                         Visibility="Collapsed" Panel.ZIndex="150"/>
+                                     CashboxRequested="DeskOverlay_CashboxRequested" 
+                                     CompanySettingsRequested="DeskOverlay_CompanySettingsRequested" 
+                                     Visibility="Collapsed" Panel.ZIndex="150"/>
 
         <!-- Оверлей Кассы -->
         <controls:CashboxOverlay x:Name="CashboxPanel" 
                      Visibility="Collapsed" Panel.ZIndex="160"/>
 
         <!-- Оверлей Калькулятора  -->
-            <controls:CalculatorOverlay x:Name="CalculatorOverlay" 
+        <controls:CalculatorOverlay x:Name="CalculatorOverlay" 
                                         Visibility="Collapsed" Panel.ZIndex="200"/>
+        
+        <!-- Оверлей Настроек Компании  -->
+        <controls:CompanyManagementOverlay x:Name="CompanySettingsPanel" 
+                                    Visibility="Collapsed" Panel.ZIndex="200"/>
+
 
     </Grid>
 </Window>

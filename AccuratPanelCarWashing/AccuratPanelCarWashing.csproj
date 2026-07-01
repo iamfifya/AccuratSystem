@@ -354,6 +354,9 @@
     <Compile Include="Controls\CashboxOverlay.xaml.cs">
       <DependentUpon>CashboxOverlay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CompanyManagementOverlay.xaml.cs">
+      <DependentUpon>CompanyManagementOverlay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\CustomComboBox.cs" />
     <Compile Include="Controls\ManagerDeskOverlay.xaml.cs">
       <DependentUpon>ManagerDeskOverlay.xaml</DependentUpon>
@@ -427,6 +430,7 @@
       <DependentUpon>UpsellManagementWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\AddEditOrderViewModel.cs" />
+    <Compile Include="ViewModels\PriceEntryViewModel.cs" />
     <Compile Include="ViewModels\ServiceViewModel.cs" />
     <Compile Include="StartShiftWindow.xaml.cs">
       <DependentUpon>StartShiftWindow.xaml</DependentUpon>
@@ -475,6 +479,10 @@
     <Page Include="Controls\CashboxOverlay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\CompanyManagementOverlay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ManagerDeskOverlay.xaml">
       <SubType>Designer</SubType>

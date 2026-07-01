@@ -171,5 +171,14 @@ namespace AccuratPanelCarWashing.Controls
 
             new DiscountRulesManagementWindow().ShowDialog();
         }
+
+        // Событие для открытия настроек компании
+        public event RoutedEventHandler CompanySettingsRequested;
+
+        private void CompanyManagementBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Мы не открываем панель сами, а просим Главное окно сделать это
+            CompanySettingsRequested?.Invoke(this, e);
+        }
     }
 }

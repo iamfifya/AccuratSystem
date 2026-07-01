@@ -1197,6 +1197,18 @@ namespace AccuratPanelCarWashing
             CashboxPanel.Show(_currentShift);
         }
 
+        // Обработчик запроса настроек компании из Стола Управляющего
+        private void DeskOverlay_CompanySettingsRequested(object sender, RoutedEventArgs e)
+        {
+            // Скрываем стол управляющего
+            DeskOverlay.Hide();
+
+            // Открываем панель настроек (используем имя из XAML: CompanySettingsPanel)
+            CompanySettingsPanel.Show();
+        }
+
+
+
         /// <summary>
         /// Обработка кнопки для вызова калькулятора.
         /// </summary>

@@ -36,7 +36,7 @@ namespace AccuratPanelCarWashing.Services
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
 
             _http = new HttpClient(handler) { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
-            // Для работы по сети _http = new HttpClient(handler) { BaseAddress = new Uri("https://192qb7z7-7165.euw.devtunnels.ms/api/") };
+            // Для работы через локалхост  _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
         }
 
         public ApiService()
@@ -123,22 +123,6 @@ namespace AccuratPanelCarWashing.Services
         {
             try { return await _http.GetFromJsonAsync<List<Role>>("Roles") ?? new List<Role>(); }
             catch (HttpRequestException ex) { throw new Exception($"Ошибка получения должностей: {ex.Message}"); }
-        }
-
-        public async Task<List<AccuratSystem.Contracts.Models.CarCategory>> GetCarCategoriesAsync(int branchId)
-        {
-            System.Diagnostics.Debug.WriteLine($"[API CALL] Fetching categories for BranchId: {branchId}");
-
-            try
-            {
-                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.CarCategory>>($"CarCategories/by-branch/{branchId}")
-                       ?? new List<AccuratSystem.Contracts.Models.CarCategory>();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки категорий авто: {ex.Message}");
-                return new List<AccuratSystem.Contracts.Models.CarCategory>();
-            }
         }
 
         public async Task<List<AccuratSystem.Contracts.Models.PaymentMethod>> GetPaymentMethodsAsync(int branchId)
@@ -526,7 +510,41 @@ namespace AccuratPanelCarWashing.Services
         }
         #endregion
 
-        // === ДОБАВИТЬ В КОНЕЦ КЛАССА ===
+        #region КАТЕГОРИИ АВТО
+
+        public async Task<List<AccuratSystem.Contracts.Models.CarCategory>> GetCarCategoriesAsync(int branchId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.CarCategory>>($"CarCategories/by-branch/{branchId}")
+                       ?? new List<AccuratSystem.Contracts.Models.CarCategory>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки категорий авто: {ex.Message}");
+                return new List<AccuratSystem.Contracts.Models.CarCategory>();
+            }
+        }
+
+        public async Task CreateCategoryAsync(AccuratSystem.Contracts.Models.CarCategory category)
+        {
+            var response = await _http.PostAsJsonAsync("CarCategories", category);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task UpdateCategoryAsync(AccuratSystem.Contracts.Models.CarCategory category)
+        {
+            var response = await _http.PutAsJsonAsync($"CarCategories/{category.Id}", category);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteCategoryAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"CarCategories/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+
+        #endregion
 
         #region РАСХОДЫ И ЛЕНТА (СЕРВИС)
 

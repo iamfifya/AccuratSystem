@@ -1,0 +1,172 @@
+﻿<UserControl x:Class="AccuratPanelCarWashing.Controls.CompanyManagementOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AccuratPanelCarWashing"
+             xmlns:controls="clr-namespace:AccuratPanelCarWashing.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900">
+
+    <UserControl.Resources>
+        <Style x:Key="TabItemStyle" TargetType="TabItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#7F8C8D"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="15,10"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="#2C3E50"/>
+                    <Setter Property="Background" Value="#EBF5FB"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Storyboard x:Key="ShowAnimation">
+            <!-- Анимация прозрачности для фона -->
+            <DoubleAnimation Storyboard.TargetName="OverlayBackground" 
+                     Storyboard.TargetProperty="Opacity"
+                     From="0" To="1" Duration="0:0:0.25"/>
+            <!-- Анимация масштаба для popup панели -->
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                     From="0.8" To="1" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                     From="0.8" To="1" Duration="0:0:0.25"/>
+            <!-- Анимация прозрачности для popup панели -->
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                     Storyboard.TargetProperty="Opacity"
+                     From="0" To="1" Duration="0:0:0.2"/>
+        </Storyboard>
+
+        <!-- Анимация скрытия -->
+        <Storyboard x:Key="HideAnimation">
+            <DoubleAnimation Storyboard.TargetName="OverlayBackground" 
+                     Storyboard.TargetProperty="Opacity"
+                     From="1" To="0" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                     From="1" To="0.9" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                     From="1" To="0.9" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                     Storyboard.TargetProperty="Opacity"
+                     From="1" To="0" Duration="0:0:0.15"/>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid x:Name="OverlayBackground" Background="#A6000000" MouseLeftButtonDown="Overlay_MouseLeftButtonDown" Opacity="0"/>
+
+        <Border x:Name="PopupPanel" Background="#F5F6FA" CornerRadius="20" 
+                Width="1000" Height="800" 
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Opacity="0">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="15" Opacity="0.3"/>
+            </Border.Effect>
+
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                    <TextBlock Text="⚙️ Настройки компании" FontSize="26" FontWeight="Black" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Управление справочниками и базовыми параметрами" FontSize="14" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+                    <!-- Вкладка 1: Категории авто -->
+                    <TabItem Header="🚗 Категории авто" Style="{StaticResource TabItemStyle}">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <ListBox x:Name="CategoriesList" Grid.Column="0" DisplayMemberPath="Name" Margin="0,0,10,0" 
+                                     SelectionChanged="CategoriesList_SelectionChanged"/>
+                            <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15">
+                                <StackPanel>
+                                    <TextBlock Text="Редактирование" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <TextBox x:Name="CatNameText" Height="40" Margin="0,0,0,10" Padding="5"/>
+                                    <TextBox x:Name="CatOrderText" Height="40" Margin="0,0,0,10" Padding="5"/>
+                                    <Button Content="Сохранить" Click="SaveCategory_Click" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
+                                    <Button Content="Удалить" Click="DeleteCategory_Click" Height="40" Margin="0,5,0,0" Background="#E74C3C" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- Вкладка 2: Способы оплаты -->
+                    <TabItem Header="💳 Способы оплаты" Style="{StaticResource TabItemStyle}">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <ListBox x:Name="PaymentsList" Grid.Column="0" DisplayMemberPath="Name" Margin="0,0,10,0" 
+                                     SelectionChanged="PaymentsList_SelectionChanged"/>
+                            <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15">
+                                <StackPanel>
+                                    <TextBlock Text="Редактирование" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <TextBox x:Name="PayNameText" Height="40" Margin="0,0,0,10" Padding="5"/>
+                                    <CheckBox x:Name="PayActiveCheck" Content="Активен" Margin="0,0,0,10" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="PayOrderText" Height="40" Margin="0,0,0,10" Padding="5"/>
+                                    <Button Content="Сохранить" Click="SavePayment_Click" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
+                                    <Button Content="Удалить" Click="DeletePayment_Click" Height="40" Margin="0,5,0,0" Background="#E74C3C" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- Вкладка 3: Роли -->
+                    <TabItem Header="👥 Роли" Style="{StaticResource TabItemStyle}">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <ListBox x:Name="RolesList" Grid.Column="0" DisplayMemberPath="Name" Margin="0,0,10,0" 
+                                     SelectionChanged="RolesList_SelectionChanged"/>
+                            <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15">
+                                <StackPanel>
+                                    <TextBlock Text="Редактирование" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <TextBox x:Name="RoleNameText" Height="40" Margin="0,0,0,10" Padding="5"/>
+                                    <Button Content="Сохранить" Click="SaveRole_Click" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
+                                    <Button Content="Удалить" Click="DeleteRole_Click" Height="40" Margin="0,5,0,0" Background="#E74C3C" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- Вкладка 4: Общие настройки -->
+                    <TabItem Header="⚙️ Общие настройки" Style="{StaticResource TabItemStyle}">
+                        <StackPanel Margin="50,20,50,0" HorizontalAlignment="Center" Width="400">
+                            <TextBlock Text="Финансовые параметры" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                            <Label Content="Доля компании (%)" Foreground="Black" FontWeight="SemiBold"/>
+                            <TextBox x:Name="SettingCompanyShare" Height="40" Padding="5" Margin="0,0,0,15"/>
+                            <Label Content="Оклад админа за смену (₽)" Foreground="Black" FontWeight="SemiBold"/>
+                            <TextBox x:Name="SettingAdminBase" Height="40" Padding="5" Margin="0,0,0,15"/>
+                            <Label Content="Процент админа от оборота (%)" Foreground="Black" FontWeight="SemiBold"/>
+                            <TextBox x:Name="SettingAdminPercent" Height="40" Padding="5" Margin="0,0,0,15"/>
+                            <Label Content="Процент мойщика (ночь %)" Foreground="Black" FontWeight="SemiBold"/>
+                            <TextBox x:Name="SettingNightPercent" Height="40" Padding="5" Margin="0,0,0,20"/>
+                            <Button Content="Сохранить все настройки" Click="SaveSettings_Click" Height="50" Background="#27AE60" Foreground="White" FontWeight="Bold" FontSize="16"/>
+                        </StackPanel>
+                    </TabItem>
+                </TabControl>
+
+                <Button Grid.Row="2" Content="✖ Закрыть" Click="CloseButton_Click" 
+                        Width="150" Height="40" Background="#34495E" Foreground="White" 
+                        FontWeight="Bold" FontSize="14" BorderThickness="0" Cursor="Hand"
+                        HorizontalAlignment="Center" Margin="0,20,0,0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
