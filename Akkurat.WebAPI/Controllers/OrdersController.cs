@@ -178,7 +178,35 @@ namespace Accurat.WebAPI.Controllers
                         StartTime = DateTime.UtcNow,
                         UserId = order.OrderWashers.FirstOrDefault()?.UserId
                     };
-                    _context.OrderStatusHistories.Add(firstHistory);
+                    
+                    // 1. Инициализируем коллекцию, если она пуста
+                    if (order.OrderServiceItems == null)
+                        order.OrderServiceItems = new List<OrderServiceItem>();
+
+                    // 2. Очищаем старые снапшоты (если это обновление)
+                    _context.OrderServiceItems.RemoveRange(_context.OrderServiceItems.Where(osi => osi.OrderId == order.Id));
+
+                    // 3. Создаем новые снапшоты с ТЕКУЩИМИ ценами из прайса
+                    foreach (var serviceId in order.ServiceIds)
+                    {
+                        var service = await _context.Services.FindAsync(serviceId);
+                        if (service != null)
+                        {
+                            // Берем цену для текущего типа кузова (или дефолтную)
+                            decimal currentPrice = service.PriceByBodyType.TryGetValue(order.BodyTypeCategory, out var p) ? p :
+                                                   (service.PriceByBodyType.TryGetValue(1, out var def) ? def : 0);
+
+                            order.OrderServiceItems.Add(new OrderServiceItem
+                            {
+                                OrderId = order.Id, // EF сам подставит после SaveChanges, если Id=0
+                                ServiceId = serviceId,
+                                ActualPrice = currentPrice, // ЗАМОРАЖИВАЕМ ЦЕНУ НА МОМЕНТ ПРОДАЖИ
+                                Quantity = 1
+                            });
+                        }
+                    }
+
+                    _context.Orders.Add(order);
                     await _context.SaveChangesAsync();
 
                     transaction.Commit();
@@ -268,7 +296,16 @@ namespace Accurat.WebAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateOrder(int id, Order order)
         {
-            if (id != order.Id) return BadRequest();
+            if (id != order.Id) return BadRequest("ID не совпадают");
+
+            // ЗАЩИТА ОТ ВОРОВСТВА: Запрещаем редактировать выполненные/завершенные заказы
+            var existingOrder = await _context.Orders.FindAsync(id);
+            if (existingOrder == null) return NotFound();
+
+            if (existingOrder.Status == "Выполнен" || existingOrder.Status == "Завершен")
+            {
+                return BadRequest("Нельзя редактировать выполненный или завершенный заказ. Сделайте возврат или корректировку через историю.");
+            }
 
             if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
             {
