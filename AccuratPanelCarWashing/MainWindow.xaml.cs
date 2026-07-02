@@ -1140,13 +1140,20 @@ namespace AccuratPanelCarWashing
             if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe)
             {
                 var order = fe.DataContext as OrderDisplayItem;
-                if (order != null)
+
+                // --- ДОБАВЬТЕ ЭТУ ПРОВЕРКУ ---
+                if (order == null || order.IsCompleted)
                 {
-                    DataObject data = new DataObject("OrderItem", order);
-                    DragDrop.DoDragDrop(this, data, DragDropEffects.Move);
+                    // Если заказ выполнен, мы просто не начинаем операцию перетаскивания
+                    return;
                 }
+                // -----------------------------
+
+                DataObject data = new DataObject("OrderItem", order);
+                DragDrop.DoDragDrop(this, data, DragDropEffects.Move);
             }
         }
+
 
         /// <summary>
         /// Обрабатывает событие сброса карточки заказа в новую рабочую зону.
@@ -1156,7 +1163,6 @@ namespace AccuratPanelCarWashing
             var droppedOrder = e.Data.GetData("OrderItem") as OrderDisplayItem;
             if (droppedOrder == null) return;
 
-            // Определяем, в какой бокс бросили (DataContext ListBox - это WorkZone)
             if (sender is ListBox lb && lb.DataContext is WorkZone targetZone)
             {
                 // Визуальный перенос (мгновенный отклик)
@@ -1177,12 +1183,25 @@ namespace AccuratPanelCarWashing
                 var originalOrder = _allOrders.FirstOrDefault(o => o.Id == droppedOrder.Id);
                 if (originalOrder != null)
                 {
-                    originalOrder.BoxNumber = targetZone.ZoneNumber;
-                    originalOrder.Department = targetZone.Department;
-                    await _apiService.UpdateOrderAsync(originalOrder);
+                    try
+                    {
+                        originalOrder.BoxNumber = targetZone.ZoneNumber;
+                        originalOrder.Department = targetZone.Department;
+                        await _apiService.UpdateOrderAsync(originalOrder);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Если сервер запретил перенос (например, заказ выполнен), 
+                        // возвращаем карточку назад или просто уведомляем
+                        MessageBox.Show($"Не удалось переместить заказ: {ex.Message}", "Ошибка");
+
+                        // Важно: здесь можно добавить логику возврата карточки в исходную зону, 
+                        // если хотите идеальный UX.
+                    }
                 }
             }
         }
+
 
         // Обработчик запроса кассы из Стола Управляющего
         private void DeskOverlay_CashboxRequested(object sender, RoutedEventArgs e)

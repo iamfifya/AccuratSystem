@@ -152,8 +152,18 @@ namespace Accurat.WebAPI.Controllers
             {
                 try
                 {
-                    if (order.OrderWashers == null) order.OrderWashers = new List<OrderWasher>();
-                    foreach (var ow in order.OrderWashers) { ow.OrderId = order.Id; }
+                    var washersFromClient = order.OrderWashers?.ToList() ?? new List<OrderWasher>();
+                    order.OrderWashers = new List<OrderWasher>();
+
+                    foreach (var ow in washersFromClient)
+                    {
+                        order.OrderWashers.Add(new OrderWasher
+                        {
+                            UserId = ow.UserId,
+                            SplitShare = ow.SplitShare
+                            // OrderId проставится автоматически при SaveChanges
+                        });
+                    }
 
                     var endTime = order.Time.AddMinutes(order.DurationMinutes > 0 ? order.DurationMinutes : 60);
 
@@ -282,72 +292,123 @@ namespace Accurat.WebAPI.Controllers
         {
             if (id != order.Id) return BadRequest("ID не совпадают");
 
-            // БЕЗОПАСНОСТЬ: Проверка владения заказом
-            var existingOrder = await VerifyOrderAccess(id);
-            if (existingOrder == null) return (CurrentCompanyId != 0) ? Forbid() : NotFound();
+            // 1. Загружаем существующий заказ ВМЕСТЕ с мойщиками (Include)
+            var existingOrder = await _context.Orders
+                .Include(o => o.OrderWashers)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (existingOrder == null) return NotFound();
 
             if (existingOrder.Status == "Выполнен" || existingOrder.Status == "Завершен")
-                return BadRequest("Нельзя редактировать выполненный заказ.");
+                return BadRequest("Нельзя редактировать выполненный или завершенный заказ.");
 
             if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
-                return BadRequest("Для выполненного заказа укажите способ оплаты.");
+                return BadRequest("Для выполненного заказа требуется указать способ оплаты.");
 
             order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                try
+                var oldStatus = existingOrder.Status;
+
+                // Сохраняем поля, которые запрещено менять с клиента
+                var dbBranchId = existingOrder.BranchId;
+                var dbShiftId = existingOrder.ShiftId;
+                var dbAdminId = existingOrder.AdminId;
+                var dbFinishedAt = existingOrder.FinishedAt;
+                var dbGeneralNotes = existingOrder.GeneralNotes;
+
+                // Копируем скалярные свойства из пришедшего order
+                _context.Entry(existingOrder).CurrentValues.SetValues(order);
+
+                // Возвращаем защищенные поля
+                existingOrder.BranchId = dbBranchId;
+                existingOrder.ShiftId = dbShiftId;
+                existingOrder.AdminId = dbAdminId;
+                existingOrder.FinishedAt = dbFinishedAt;
+                existingOrder.GeneralNotes = dbGeneralNotes;
+
+                // 2. Обработка истории статусов
+                if (oldStatus != existingOrder.Status)
                 {
-                    // Защищаем системные поля
-                    order.BranchId = existingOrder.BranchId;
-                    order.ShiftId = existingOrder.ShiftId;
-                    order.AdminId = existingOrder.AdminId;
-                    order.FinishedAt = existingOrder.FinishedAt;
-                    order.GeneralNotes = existingOrder.GeneralNotes;
+                    var currentHistory = await _context.OrderStatusHistories
+                        .FirstOrDefaultAsync(h => h.OrderId == id && h.EndTime == null);
+                    if (currentHistory != null) currentHistory.EndTime = DateTime.UtcNow;
 
-                    if (existingOrder.Status != order.Status)
+                    _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistory
                     {
-                        var currentHistory = await _context.OrderStatusHistories.FirstOrDefaultAsync(h => h.OrderId == id && h.EndTime == null);
-                        if (currentHistory != null) currentHistory.EndTime = DateTime.UtcNow;
-                        _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistory { OrderId = id, Status = order.Status, StartTime = DateTime.UtcNow });
-                    }
+                        OrderId = id,
+                        Status = existingOrder.Status,
+                        StartTime = DateTime.UtcNow,
+                        UserId = existingOrder.AdminId
+                    });
 
-                    var branch = await _context.Branches.FindAsync(order.BranchId);
-                    var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
-                    var actualServices = await _context.Services.Where(s => order.ServiceIds.Contains(s.Id)).ToListAsync();
-                    var washers = await _context.Users.Where(u => order.OrderWashers.Select(ow => ow.UserId).Contains(u.Id)).ToListAsync();
-
-                    var finalCalc = OrderMath.Calculate(order, actualServices, washers, settings);
-                    order.FinalPrice = finalCalc.FinalPrice;
-
-                    if (order.Status == "Выполнен" || order.Status == "Завершен")
+                    _context.OrderTimelineEntries.Add(new AccuratSystem.Contracts.Models.OrderTimelineEntry
                     {
-                        if (order.OrderWashers != null)
+                        OrderId = id,
+                        EntryType = TimelineEntryType.StatusChanged,
+                        Message = $"Статус изменен на: {existingOrder.Status}",
+                        CreatedBy = "Система",
+                        Timestamp = DateTime.UtcNow
+                    });
+                }
+
+                // 3. Обновление мойщиков (ИСПРАВЛЕНИЕ ОШИБКИ PK_OrderWashers)
+                // Clear() сам пометит старые записи как Deleted в ChangeTracker
+                existingOrder.OrderWashers.Clear();
+
+                if (order.OrderWashers != null && order.OrderWashers.Any())
+                {
+                    foreach (var ow in order.OrderWashers)
+                    {
+                        // Создаем новые объекты, чтобы избежать конфликта трекинга и PK
+                        existingOrder.OrderWashers.Add(new OrderWasher
                         {
-                            foreach (var ow in order.OrderWashers) ow.EarnedAmount = finalCalc.WasherEarnings * ow.SplitShare;
-                        }
+                            OrderId = id,
+                            UserId = ow.UserId,
+                            SplitShare = ow.SplitShare,
+                            EarnedAmount = 0
+                        });
                     }
-
-                    var oldWashers = await _context.OrderWashers.Where(ow => ow.OrderId == id).ToListAsync();
-                    _context.OrderWashers.RemoveRange(oldWashers);
-                    if (order.OrderWashers != null)
-                    {
-                        foreach (var ow in order.OrderWashers) { ow.OrderId = id; ow.Washer = null; _context.OrderWashers.Add(ow); }
-                    }
-
-                    _context.Entry(order).State = EntityState.Modified;
-                    await _context.SaveChangesAsync();
-                    transaction.Commit();
-                    await _hubContext.Clients.All.SendAsync("UpdateData");
-                    return NoContent();
                 }
-                catch (Exception ex)
+
+                // 4. РАСЧЕТ ЦЕНЫ И ЗАМОРОЗКА ЗП
+                var branch = await _context.Branches.FindAsync(existingOrder.BranchId);
+                var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+                var actualServices = await _context.Services.Where(s => existingOrder.ServiceIds.Contains(s.Id)).ToListAsync();
+                var washers = await _context.Users.Where(u => existingOrder.OrderWashers.Select(ow => ow.UserId).Contains(u.Id)).ToListAsync();
+
+                var finalCalc = OrderMath.Calculate(existingOrder, actualServices, washers, settings);
+                existingOrder.FinalPrice = finalCalc.FinalPrice;
+
+                // Обновляем промежуточные цены, если они есть в модели
+                existingOrder.TotalPrice = finalCalc.ServicesTotal;
+                existingOrder.OriginalTotalPrice = finalCalc.ServicesTotal;
+
+                if (existingOrder.Status == "Выполнен" || existingOrder.Status == "Завершен")
                 {
-                    transaction.Rollback();
-                    return StatusCode(500, "Ошибка обновления: " + ex.Message);
+                    foreach (var ow in existingOrder.OrderWashers)
+                    {
+                        ow.EarnedAmount = finalCalc.WasherEarnings * ow.SplitShare;
+                    }
                 }
+
+                // Вызывать _context.Orders.Update() НЕ НУЖНО! 
+                // existingOrder уже отслеживается, EF Core сам увидит изменения.
+                await _context.SaveChangesAsync();
+                transaction.Commit();
+
+                await _hubContext.Clients.All.SendAsync("UpdateData");
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                return StatusCode(500, "Ошибка обновления: " + ex.Message);
             }
         }
+
 
         [HttpPatch("{id}/complete")]
         public async Task<IActionResult> CompleteOrder(int id, [FromQuery] string paymentMethod)
@@ -554,7 +615,6 @@ namespace Accurat.WebAPI.Controllers
                     if (currentHistory != null) currentHistory.EndTime = DateTime.UtcNow;
 
                     order.Status = dto.NewStatus;
-                    _context.Orders.Update(order);
 
                     _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistory
                     {

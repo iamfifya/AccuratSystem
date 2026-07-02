@@ -96,17 +96,32 @@ namespace Accurat.WebAPI.Controllers
                     decimal empEarnings = 0;
                     decimal empAdvances = transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
 
-                    if (emp.RoleId == 3 || emp.RoleId == 4) // Мойщики и Сервис: Берем ЗАМОРОЖЕННЫЕ данные
+                    if (emp.RoleId == 3 || emp.RoleId == 4) // МОЙЩИКИ И СЕРВИС
                     {
-                        empEarnings = await _context.OrderWashers
-                            .Where(ow => ow.UserId == empId &&
-                                         _context.Orders.Any(o => o.Id == ow.OrderId && o.ShiftId == shift.Id))
-                            .SumAsync(ow => ow.EarnedAmount);
+                        // ИСПРАВЛЕНИЕ: Используем JOIN вместо .Any(), чтобы точно достать замороженные суммы
+                        empEarnings = await (from ow in _context.OrderWashers
+                                             join o in _context.Orders on ow.OrderId equals o.Id
+                                             where ow.UserId == empId && o.ShiftId == shift.Id
+                                             select ow.EarnedAmount).SumAsync();
                     }
-                    else // Админы: расчет живой (от оборота смены)
+                    else // АДМИНЫ И ДИРЕКТОРА
                     {
-                        var adminStats = OrderMath.CalculateShiftStats(orders, allServices, emp, shift.Type, allUsers, settings);
-                        empEarnings = adminStats.TotalEarned;
+                        // БЕЗОПАСНОСТЬ: Если смена закрыта, берем снапшот из Shift, а не пересчитываем!
+                        if (shift.IsClosed && shift.AdminEarningsSnapshot > 0)
+                        {
+                            // Распределяем общий снапшот админов между теми, кто был в смене
+                            var adminsInShiftCount = shift.EmployeeIds?.Count(uid =>
+                                allUsers.FirstOrDefault(u => u.Id == uid)?.RoleId == 1 ||
+                                allUsers.FirstOrDefault(u => u.Id == uid)?.RoleId == 2) ?? 1;
+
+                            empEarnings = shift.AdminEarningsSnapshot / (adminsInShiftCount > 0 ? adminsInShiftCount : 1);
+                        }
+                        else
+                        {
+                            // Если смена еще открыта — считаем живой расчет
+                            var adminStats = OrderMath.CalculateShiftStats(orders, allServices, emp, shift.Type, allUsers, settings);
+                            empEarnings = adminStats.TotalEarned;
+                        }
                     }
 
                     report.EmployeesWork.Add(new EmployeeReport
