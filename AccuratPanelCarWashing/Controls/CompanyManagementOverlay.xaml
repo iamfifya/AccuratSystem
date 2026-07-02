@@ -151,8 +151,8 @@
                             <TextBlock Text="Финансовые параметры" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
                             <Label Content="Доля компании (%)" Foreground="Black" FontWeight="SemiBold"/>
                             <TextBox x:Name="SettingCompanyShare" Height="40" Padding="5" Margin="0,0,0,15"/>
-                            <Label Content="Оклад админа за смену (₽)" Foreground="Black" FontWeight="SemiBold"/>
-                            <TextBox x:Name="SettingAdminBase" Height="40" Padding="5" Margin="0,0,0,15"/>
+                            <Label Content="Минимальный интервал между записями (минуты)" Foreground="Black" FontWeight="SemiBold"/>
+                            <TextBox x:Name="SettingAppointmentDuration" Height="40" Padding="5" Margin="0,0,0,15"/>
                             <Label Content="Процент админа от оборота (%)" Foreground="Black" FontWeight="SemiBold"/>
                             <TextBox x:Name="SettingAdminPercent" Height="40" Padding="5" Margin="0,0,0,15"/>
                             <Label Content="Процент мойщика (ночь %)" Foreground="Black" FontWeight="SemiBold"/>

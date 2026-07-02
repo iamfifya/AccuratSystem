@@ -22,21 +22,60 @@ namespace Accurat.WebAPI.Controllers
             _hubContext = hubContext;
         }
 
-        // === ДОБАВЛЕНО: Чтение ID компании из заголовка (SaaS защита) ===
         private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id)
             ? int.Parse(id)
             : 1;
 
+        #region Хелперы безопасности
+
+        // Проверяет, принадлежит ли смена текущей компании
+        private async Task<Shift?> VerifyShiftAccess(int shiftId)
+        {
+            if (CurrentCompanyId == 0) return await _context.Shifts.FindAsync(shiftId);
+
+            var shift = await _context.Shifts
+                .Include(s => s.Branch)
+                .FirstOrDefaultAsync(s => s.Id == shiftId);
+
+            if (shift == null || shift.Branch == null || shift.Branch.CompanyId != CurrentCompanyId)
+                return null;
+
+            return shift;
+        }
+
+        // Проверяет, принадлежит ли филиал текущей компании
+        private async Task<bool> VerifyBranchAccess(int branchId)
+        {
+            if (CurrentCompanyId == 0) return true;
+            var branch = await _context.Branches.FindAsync(branchId);
+            return branch != null && branch.CompanyId == CurrentCompanyId;
+        }
+        #endregion
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Shift>>> GetShifts()
         {
-            return await _context.Shifts.ToListAsync();
+            var query = _context.Shifts.AsQueryable();
+
+            // ИЗОЛЯЦИЯ: Возвращаем только смены своих филиалов
+            if (CurrentCompanyId != 0)
+            {
+                var myBranchIds = _context.Branches
+                    .Where(b => b.CompanyId == CurrentCompanyId)
+                    .Select(b => b.Id);
+                query = query.Where(s => myBranchIds.Contains(s.BranchId));
+            }
+
+            return await query.ToListAsync();
         }
 
-        // Открыть смену
         [HttpPost]
         public async Task<ActionResult<Shift>> OpenShift(Shift shift)
         {
+            // БЕЗОПАСНОСТЬ: Проверяем, имеет ли пользователь право открывать смену в этом филиале
+            if (!await VerifyBranchAccess(shift.BranchId))
+                return Forbid("Вы не имеете прав на открытие смены в данном филиале.");
+
             DateTime targetDate = DateTime.SpecifyKind(shift.Date.Date, DateTimeKind.Utc);
 
             Shift existingShift = await _context.Shifts
@@ -66,12 +105,13 @@ namespace Accurat.WebAPI.Controllers
             }
         }
 
-        // Закрыть смену
         [HttpPatch("{id}/close")]
         public async Task<IActionResult> CloseShift(int id)
         {
-            var shift = await _context.Shifts.FindAsync(id);
-            if (shift == null) return NotFound("Смена не найдена");
+            // БЕЗОПАСНОСТЬ: Проверяем владение сменой
+            var shift = await VerifyShiftAccess(id);
+            if (shift == null) return (CurrentCompanyId != 0) ? Forbid() : NotFound("Смена не найдена");
+
             if (shift.IsClosed) return BadRequest("Смена уже закрыта");
 
             var activeWashOrders = await _context.Orders
@@ -88,8 +128,8 @@ namespace Accurat.WebAPI.Controllers
                 });
             }
 
-            var branch = await _context.Branches.FindAsync(shift.BranchId);
-            var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+            // Здесь branch уже подгружен через VerifyShiftAccess
+            var settings = await _context.CompanySettings.FindAsync(shift.Branch?.CompanyId ?? 0);
 
             var completedOrders = await _context.Orders
                 .Where(o => o.ShiftId == id && (o.Status == "Выполнен" || o.Status == "Завершен"))
@@ -162,18 +202,9 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("{id}/cashbox")]
         public async Task<ActionResult<CashboxSummary>> GetCashboxSummary(int id)
         {
-            // ИСПРАВЛЕНО: Используем Include(s => s.Branch), чтобы Branch не был null
-            var shift = await _context.Shifts
-                .Include(s => s.Branch)
-                .FirstOrDefaultAsync(s => s.Id == id);
-
-            if (shift == null) return NotFound();
-
-            // Теперь CurrentCompanyId определен в начале класса, и ошибка исчезнет
-            if (CurrentCompanyId != 0 && shift.Branch != null && shift.Branch.CompanyId != CurrentCompanyId)
-            {
-                return Forbid("Вы не имеете доступа к кассе другого филиала!");
-            }
+            // БЕЗОПАСНОСТЬ: Используем наш хелпер
+            var shift = await VerifyShiftAccess(id);
+            if (shift == null) return (CurrentCompanyId != 0) ? Forbid() : NotFound();
 
             var orders = await _context.Orders
                 .Include(o => o.OrderWashers)
@@ -184,8 +215,7 @@ namespace Accurat.WebAPI.Controllers
             var allServices = await _context.Services.ToListAsync();
             var allUsers = await _context.Users.ToListAsync();
 
-            var branch = await _context.Branches.FindAsync(shift.BranchId);
-            var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
+            var settings = await _context.CompanySettings.FindAsync(shift.Branch?.CompanyId ?? 0);
 
             decimal cashRevenue = orders.Sum(o => o.FinalPrice);
             decimal deposits = transactions.Where(t => t.Type == "Приход" || t.Type == "Размен").Sum(t => t.Amount);

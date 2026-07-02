@@ -75,7 +75,7 @@ namespace AccuratPanelCarWashing.Controls
                 if (settings != null)
                 {
                     SettingCompanyShare.Text = settings.CompanySharePercentage.ToString();
-                    SettingAdminBase.Text = "0";
+                    SettingAppointmentDuration.Text = settings.DefaultAppointmentDuration.ToString();
                     SettingAdminPercent.Text = settings.DayShiftAdminPercentage.ToString();
                     SettingNightPercent.Text = settings.NightShiftWasherPercentage.ToString();
                 }
