@@ -285,6 +285,7 @@ namespace Accurat.WebAPI.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.TriggerServiceId);
+                entity.HasIndex(e => e.CompanyId); // ДОБАВЛЕНО: Индекс для быстрой фильтрации по компаниям
             });
 
             // Добавляем твои 4 стандартных способа оплаты (плюс "Не указано" для дефолта)

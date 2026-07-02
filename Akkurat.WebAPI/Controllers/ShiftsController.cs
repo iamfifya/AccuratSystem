@@ -22,6 +22,11 @@ namespace Accurat.WebAPI.Controllers
             _hubContext = hubContext;
         }
 
+        // === ДОБАВЛЕНО: Чтение ID компании из заголовка (SaaS защита) ===
+        private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id)
+            ? int.Parse(id)
+            : 1;
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Shift>>> GetShifts()
         {
@@ -32,26 +37,15 @@ namespace Accurat.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Shift>> OpenShift(Shift shift)
         {
-            // СТАЛО:
-            // Убираем эту строку — Branch теперь есть в модели, но при создании смены
-            // клиент не должен передавать вложенный объект Branch, только BranchId
-
-            // Приводим дату к UTC без времени для точного поиска
             DateTime targetDate = DateTime.SpecifyKind(shift.Date.Date, DateTimeKind.Utc);
 
-            // Ищем уже существующую смену на этот день и филиал
             Shift existingShift = await _context.Shifts
                 .FirstOrDefaultAsync(s => s.BranchId == shift.BranchId && s.Date == targetDate);
 
             if (existingShift != null)
             {
-                // Смена уже была — ВОЗОБНОВЛЯЕМ ЕЁ
                 existingShift.IsClosed = false;
-
-                // Обновляем список сотрудников на случай, если вышли другие люди
                 existingShift.EmployeeIds = shift.EmployeeIds;
-
-                // Обязательно затираем время закрытия, так как смена снова в работе
                 existingShift.EndTime = null;
 
                 _context.Shifts.Update(existingShift);
@@ -61,7 +55,6 @@ namespace Accurat.WebAPI.Controllers
             }
             else
             {
-                // Смены сегодня еще не было — СОЗДАЕМ НОВУЮ
                 shift.StartTime = DateTime.UtcNow;
                 shift.Date = targetDate;
                 shift.IsClosed = false;
@@ -81,7 +74,6 @@ namespace Accurat.WebAPI.Controllers
             if (shift == null) return NotFound("Смена не найдена");
             if (shift.IsClosed) return BadRequest("Смена уже закрыта");
 
-            // 1. ПРОВЕРКА: блокируем, если есть активные заказы в мойке
             var activeWashOrders = await _context.Orders
                 .Where(o => o.ShiftId == id && o.Department == "Wash" && o.Status == "В работе")
                 .Select(o => new { o.Id, o.CarNumber })
@@ -96,13 +88,9 @@ namespace Accurat.WebAPI.Controllers
                 });
             }
 
-            // ========================================================================
-            // БЛОК ЗАМОРОЗКИ ФИНАНСОВ (ДОБАВЛЕНО)
-            // ========================================================================
             var branch = await _context.Branches.FindAsync(shift.BranchId);
             var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
 
-            // Загружаем всё, что нужно для расчета ЗП админа
             var completedOrders = await _context.Orders
                 .Where(o => o.ShiftId == id && (o.Status == "Выполнен" || o.Status == "Завершен"))
                 .ToListAsync();
@@ -110,8 +98,6 @@ namespace Accurat.WebAPI.Controllers
             var allUsers = await _context.Users.ToListAsync();
             var allServices = await _context.Services.ToListAsync();
 
-            // Считаем общую сумму, которую заработали ВСЕ админы этой смены
-            // (включая оклады, проценты от оборота и апселлы)
             decimal totalAdminPayForShift = 0;
 
             var adminsInShift = shift.EmployeeIds?.Where(uid => {
@@ -126,18 +112,14 @@ namespace Accurat.WebAPI.Controllers
                 totalAdminPayForShift += stats.TotalEarned;
             }
 
-            // ЗАПИСЫВАЕМ ЦИФРУ В БАЗУ (теперь она не изменится, даже если ты поменяешь оклад в профиле)
             shift.AdminEarningsSnapshot = totalAdminPayForShift;
-            // ========================================================================
 
-            // 2. Ищем следующую открытую смену в этом филиале
             var nextShift = await _context.Shifts
                 .FirstOrDefaultAsync(s =>
                     s.BranchId == shift.BranchId &&
                     s.Id != id &&
                     !s.IsClosed);
 
-            // 3. Перенос сервисных заказов (без изменений)
             var serviceOrdersToTransfer = await _context.Orders
                 .Where(o => o.ShiftId == id && o.Department == "Service" && o.Status == "В работе")
                 .ToListAsync();
@@ -162,13 +144,10 @@ namespace Accurat.WebAPI.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // 4. Закрываем текущую смену
             shift.IsClosed = true;
             shift.EndTime = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-
-            // 5. SignalR
             await _hubContext.Clients.All.SendAsync("UpdateData");
 
             return Ok(new
@@ -180,14 +159,22 @@ namespace Accurat.WebAPI.Controllers
             });
         }
 
-
         [HttpGet("{id}/cashbox")]
         public async Task<ActionResult<CashboxSummary>> GetCashboxSummary(int id)
         {
-            var shift = await _context.Shifts.FindAsync(id);
+            // ИСПРАВЛЕНО: Используем Include(s => s.Branch), чтобы Branch не был null
+            var shift = await _context.Shifts
+                .Include(s => s.Branch)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             if (shift == null) return NotFound();
 
-            // 1. Грузим всё необходимое из базы
+            // Теперь CurrentCompanyId определен в начале класса, и ошибка исчезнет
+            if (CurrentCompanyId != 0 && shift.Branch != null && shift.Branch.CompanyId != CurrentCompanyId)
+            {
+                return Forbid("Вы не имеете доступа к кассе другого филиала!");
+            }
+
             var orders = await _context.Orders
                 .Include(o => o.OrderWashers)
                 .Where(o => o.ShiftId == id && o.Status == "Выполнен" && o.PaymentMethod == "Наличные")
@@ -197,20 +184,15 @@ namespace Accurat.WebAPI.Controllers
             var allServices = await _context.Services.ToListAsync();
             var allUsers = await _context.Users.ToListAsync();
 
-            // ДОБАВЛЕНО: Достаем настройки компании для этой смены
             var branch = await _context.Branches.FindAsync(shift.BranchId);
             var settings = await _context.CompanySettings.FindAsync(branch?.CompanyId ?? 0);
 
-            // 2. Считаем выручку
             decimal cashRevenue = orders.Sum(o => o.FinalPrice);
-
-            // 3. Считаем движения по кассе
             decimal deposits = transactions.Where(t => t.Type == "Приход" || t.Type == "Размен").Sum(t => t.Amount);
             decimal advances = transactions.Where(t => t.Type == "Аванс мойщику").Sum(t => t.Amount);
             decimal expenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
             decimal withdrawals = transactions.Where(t => t.Type == "Инкассация").Sum(t => t.Amount);
 
-            // 4. Считаем ЗП
             decimal totalTopUp = 0;
             var orderWasherPairs = orders
                 .Where(o => o.OrderWashers != null)
@@ -220,14 +202,12 @@ namespace Accurat.WebAPI.Controllers
 
             foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
             {
-                // ИСПРАВЛЕНО: Передаем тип смены (shift.Type) и настройки (settings)
                 decimal basePay = group.Sum(x =>
                     Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers, shift.Type, settings));
 
                 totalTopUp += basePay;
             }
 
-            // 5. Итоговые цифры
             return new CashboxSummary
             {
                 CashInHand = cashRevenue + deposits - (advances + expenses + withdrawals),
@@ -235,6 +215,5 @@ namespace Accurat.WebAPI.Controllers
                 NetCashProfit = (cashRevenue * (settings?.CompanySharePercentage ?? 65m) / 100m) - expenses - totalTopUp
             };
         }
-
     }
 }

@@ -15,59 +15,61 @@ namespace Accurat.WebAPI.Controllers
         private readonly AppDbContext _context;
         public UpsellController(AppDbContext context) => _context = context;
 
-        // ДОБАВЛЯЕМ ЧТЕНИЕ ЗАГОЛОВКА
         private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id) ? int.Parse(id) : 1;
 
-        // === 1. УМНАЯ ВЫДАЧА СОВЕТА (Для кассира) ===
+        // 1. УМНАЯ ВЫДАЧА СОВЕТА
         [HttpGet("suggest")]
-        public async Task<ActionResult<UpsellSuggestion>> GetSuggestion(
-            [FromQuery] List<int> currentServices,
-            [FromQuery] int branchId) // branchId оставляем для совместимости с WPF, но не используем для фич
+        public async Task<ActionResult<UpsellSuggestion>> GetSuggestion([FromQuery] List<int> currentServices, [FromQuery] int branchId)
         {
-            if (currentServices == null || !currentServices.Any())
-                return NotFound();
+            if (currentServices == null || !currentServices.Any()) return NotFound();
 
-            // Проверяем лицензию по компании из заголовка!
+            // Проверяем лицензию модуля для ТЕКУЩЕЙ компании
             var tenantFeature = await _context.TenantFeatures.FirstOrDefaultAsync(f => f.CompanyId == CurrentCompanyId);
-
-            // Если Разработчик (CurrentCompanyId == 0), то модуль включен по умолчанию
             if (CurrentCompanyId != 0 && (tenantFeature == null || !tenantFeature.IsUpsellEnabled))
                 return StatusCode(403, "Модуль 'Умный кассир' отключен.");
 
-            // Ищем самое ВЫГОДНОЕ предложение (сортировка по бонусу)
+            // Ищем правило ТОЛЬКО для текущей компании
             var suggestion = await _context.UpsellSuggestions
-                .Where(s => currentServices.Contains(s.TriggerServiceId)
-                         && !currentServices.Contains(s.SuggestedServiceId))
+                .Where(s => s.CompanyId == CurrentCompanyId) // ДОБАВЛЕНО: Фильтр по компании
+                .Where(s => currentServices.Contains(s.TriggerServiceId) && !currentServices.Contains(s.SuggestedServiceId))
                 .OrderByDescending(s => s.BonusAmount)
                 .FirstOrDefaultAsync();
 
             if (suggestion == null) return NotFound();
-
             return Ok(suggestion);
         }
 
-        // === 2. ПОЛУЧИТЬ ВСЕ ПРАВИЛА (Для директора) ===
+        // 2. ПОЛУЧИТЬ ВСЕ ПРАВИЛА (только свои)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UpsellSuggestion>>> GetAllRules()
         {
-            return await _context.UpsellSuggestions.ToListAsync();
+            // Возвращаем только правила текущей компании
+            return await _context.UpsellSuggestions
+                .Where(s => s.CompanyId == CurrentCompanyId) // ДОБАВЛЕНО: Фильтр по компании
+                .ToListAsync();
         }
 
-        // === 3. ДОБАВИТЬ ПРАВИЛО (Для директора) ===
+        // 3. ДОБАВИТЬ ПРАВИЛО
         [HttpPost]
         public async Task<ActionResult<UpsellSuggestion>> CreateRule(UpsellSuggestion rule)
         {
+            // Жестко привязываем правило к компании того, кто его создает
+            rule.CompanyId = CurrentCompanyId;
+
             _context.UpsellSuggestions.Add(rule);
             await _context.SaveChangesAsync();
             return Ok(rule);
         }
 
-        // === 4. УДАЛИТЬ ПРАВИЛО (Для директора) ===
+        // 4. УДАЛИТЬ ПРАВИЛО
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRule(int id)
         {
             var rule = await _context.UpsellSuggestions.FindAsync(id);
             if (rule == null) return NotFound();
+
+            // ЗАЩИТА: Запрещаем удалять чужие правила
+            if (rule.CompanyId != CurrentCompanyId) return Forbid();
 
             _context.UpsellSuggestions.Remove(rule);
             await _context.SaveChangesAsync();
