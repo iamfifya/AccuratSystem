@@ -35,7 +35,7 @@ namespace AccuratPanelCWD.Services
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
 
-            _http = new HttpClient(handler) { BaseAddress = new Uri("https://cp4zpdt4-7165.uks1.devtunnels.ms/") };
+            _http = new HttpClient(handler) { BaseAddress = new Uri("https://cp4zpdt4-7165.uks1.devtunnels.ms/api/") };
             // Для работы через локалхост  _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
         }
 
@@ -740,11 +740,23 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<T>(url);
+                var response = await _http.GetAsync(url);
+
+                // Если сервер вернул 404, это значит "данные не найдены", а не "сервер упал"
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[404] Endpoint not found or empty: {url}");
+                    return default;
+                }
+
+                // Для всех остальных ошибок (500, 401 и т.д.) выбрасываем исключение
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<T>();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"API Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"API Error at {url}: {ex.Message}");
                 return default;
             }
         }

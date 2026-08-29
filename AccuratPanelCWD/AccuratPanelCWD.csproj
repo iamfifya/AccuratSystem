@@ -6,16 +6,9 @@
 		<Nullable>disable</Nullable>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<RootNamespace>AccuratPanelCWD</RootNamespace>
+		<RootNamespace>AccuratPanelCarWashing</RootNamespace>
 		<AssemblyName>ACCURAT - Панель управления</AssemblyName>
 	</PropertyGroup>
-	<ItemGroup>
-	  <Compile Remove="packages\**" />
-	  <EmbeddedResource Remove="packages\**" />
-	  <None Remove="packages\**" />
-	  <Page Remove="packages\**" />
-	</ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="MaterialDesignThemes" Version="5.3.1" />
 		<PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
@@ -27,8 +20,15 @@
 		<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
 	</ItemGroup>
-
 	<ItemGroup>
 		<ProjectReference Include="..\AccuratSystem.Contracts\AccuratSystem.Contracts.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Resource Include="Resources\**\*" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 </Project>
