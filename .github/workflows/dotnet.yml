@@ -46,7 +46,7 @@ jobs:
       run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
 
     - name: Build Web API
-      run: dotnet build Akkurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
+      run: dotnet build Accurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
 
     - name: Build WPF Client
       run: msbuild AccuratPanelCarWashing\AccuratPanelCarWashing.csproj /p:Configuration=${{ matrix.configuration }}
