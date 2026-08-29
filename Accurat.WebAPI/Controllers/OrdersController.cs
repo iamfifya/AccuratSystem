@@ -6,8 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Accurat.WebAPI.Data;
 using Accurat.WebAPI.Hubs;
 using Microsoft.AspNetCore.SignalR;
-using Accurat.WebAPI.Services;
-using Microsoft.AspNet.SignalR.Hubs;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -16,7 +14,6 @@ namespace Accurat.WebAPI.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IHub laHubContext; // Исправлено имя для ясности
         private readonly IHubContext<AppHub> _hubContext;
 
         private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id)

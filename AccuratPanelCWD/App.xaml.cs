@@ -1,0 +1,111 @@
+﻿using AccuratPanelCWD;
+using AccuratPanelCWD.Controls;
+using AccuratPanelCWD.Models;
+using AccuratPanelCWD.ViewModels;
+using System.Configuration;
+using System.Data;
+using System.Windows;
+using System;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AccuratPanelCWD
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
+    {
+        public static User CurrentUser { get; set; }
+        private ServiceProvider _serviceProvider;
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            // 1. ВАЖНО: Переключаем режим завершения на "Явный"
+            // Теперь приложение НЕ закроется само, даже если все окна закрыты.
+            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            // Глобальная обработка ошибок (оставляем как есть)
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) => { /* ... */ };
+            DispatcherUnhandledException += (sender, args) => { /* ... */ };
+
+            // Настройка DI
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            _serviceProvider = services.BuildServiceProvider();
+
+            var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
+
+            if (loginWindow.ShowDialog() == true)
+            {
+                try
+                {
+                    var authenticatedUser = loginWindow.AuthenticatedUser;
+                    if (authenticatedUser == null)
+                    {
+                        Shutdown();
+                        return;
+                    }
+
+                    var mainWin = new MainWindow(authenticatedUser);
+
+                    // Назначаем главным окном
+                    Application.Current.MainWindow = mainWin;
+
+                    mainWin.Show();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка запуска: {ex.Message}");
+                    Shutdown();
+                }
+            }
+            else
+            {
+                // Если пользователь закрыл окно логина — выключаем всё
+                Shutdown();
+            }
+        }
+
+        private void ConfigureServices(IServiceCollection services)
+        {
+
+            // Регистрируем ViewModels как Transient (новый экземпляр при каждом запросе)
+            services.AddTransient<AddEditOrderViewModel>();
+
+            // Регистрируем окна как Transient
+            services.AddTransient<LoginWindow>();
+            services.AddTransient<MainWindow>();
+            services.AddTransient<AddEditOrderWindow>();
+            services.AddTransient<EmployeeCardWindow>();
+            services.AddTransient<AddEditEmployeeWindow>();
+            services.AddTransient<ServiceManagementWindow>();
+            services.AddTransient<AddEditServiceWindow>();
+            services.AddTransient<ReportsWindow>();
+            services.AddTransient<CustomReportWindow>();
+            services.AddTransient<StartShiftWindow>();
+            services.AddTransient<ClientsWindow>();
+            services.AddTransient<AddEditClientWindow>();
+            services.AddTransient<ScheduleWindow>();
+            services.AddTransient<AppointmentsOverlay>();
+            services.AddTransient<WasherSelectionDialog>();
+            services.AddTransient<UpsellManagementWindow>();
+        }
+
+        public static T GetService<T>() where T : class
+        {
+            if (Current is App app && app._serviceProvider != null)
+                return app._serviceProvider.GetRequiredService<T>();
+
+            throw new InvalidOperationException("ServiceProvider is not initialized");
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            _serviceProvider?.Dispose();
+            base.OnExit(e);
+        }
+    }
+
+}
