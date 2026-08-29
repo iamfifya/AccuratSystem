@@ -9,59 +9,54 @@
         Title="{Binding WindowTitle}"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="700" Height="850"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Width="700" Height="950"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
         WindowStyle="SingleBorderWindow"
-        Foreground="Black">
+        Foreground="{DynamicResource TextMain}">
 
-    <Window.Resources>
-        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <local:IntToBoolConverter x:Key="IntToBoolConverter"/>
-        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
-        <local:DecimalToEmptyZeroConverter x:Key="DecimalToEmptyZeroConverter"/>
-        <local:DepartmentDisplayConverter x:Key="DepartmentDisplayConverter"/>
-        <local:DepartmentToZoneLabelConverter x:Key="DepartmentToZoneLabelConverter"/>
-        <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
-
-        <Style x:Key="PlaceholderTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Background" Value="White"/>
-            <Style.Triggers>
-                <Trigger Property="Text" Value="">
-                    <Setter Property="Foreground" Value="#95A5A6"/>
-                </Trigger>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="Foreground" Value="Black"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Resources>
-
-    <Grid Margin="0,15,0,15">
+    <Grid Margin="0,20,0,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
+
         <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" Padding="25,0,10,0">
             <StackPanel Margin="0,0,10,20">
-                <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" 
-                           Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                <!-- Заголовок -->
+                <TextBlock Text="{Binding WindowTitle}" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource TextMain}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,25"/>
 
-                <Label Content="🏢 Филиал (определяется сменой):" Margin="0,5,0,0" FontWeight="SemiBold"
-                       Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                <controls:CustomComboBox x:Name="BranchComboBox" Margin="0,5,0,10" Height="50"
-                                         DisplayMemberPath="Name" SelectedValuePath="Id"
+                <!-- Филиал (только для записей) -->
+                <TextBlock Text="🏢 Филиал (определяется сменой)" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"
+                           Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <controls:CustomComboBox x:Name="BranchComboBox" 
+                                         Margin="0,0,0,20" 
+                                         Height="45"
+                                         DisplayMemberPath="Name" 
+                                         SelectedValuePath="Id"
                                          SelectedValue="{Binding CurrentOrder.BranchId, Mode=TwoWay}"
                                          SelectionChanged="BranchComboBox_SelectionChanged"
                                          Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                <Label Content="📂 Департамент:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Департамент -->
+                <TextBlock Text="📂 Департамент" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <controls:CustomComboBox x:Name="DepartmentComboBox" 
-                                         Margin="0,5,0,10" Height="50"
+                                         Margin="0,0,0,20" 
+                                         Height="45"
                                          Placeholder="Выберите департамент"
                                          SelectedValue="{Binding CurrentDepartment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          SelectedValuePath="Tag">
@@ -71,9 +66,14 @@
                     </controls:CustomComboBox.Items>
                 </controls:CustomComboBox>
 
-                <Label Content="👤 Клиент:" Margin="0,5,0,0" FontWeight="SemiBold"
-                       Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-                <Grid Margin="0,5,0,10"
+                <!-- Клиент -->
+                <TextBlock Text="👤 Клиент" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"
+                           Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <Grid Margin="0,0,0,20"
                       Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -81,65 +81,122 @@
                     </Grid.ColumnDefinitions>
 
                     <controls:CustomComboBox x:Name="ClientComboBox" 
-                                             Grid.Column="0" Height="50"
+                                             Grid.Column="0" 
+                                             Height="45"
                                              DisplayMemberPath="DisplayInfo"
                                              SelectedValuePath="Id"
                                              SelectedItem="{Binding SelectedClient, Mode=TwoWay}"
                                              IsEditable="True"
-                                             Placeholder="Выборите постоянника"/>
-                    <Button Grid.Column="1" Content="➕" Click="AddNewClient_Click" 
-                            Width="35" Height="50" Margin="5,0,0,0"
-                            Background="#27AE60" Foreground="White" FontSize="16"/>
+                                             Placeholder="Выберите постоянника"/>
+                    <Button Grid.Column="1" 
+                            Content="➕" 
+                            Click="AddNewClient_Click" 
+                            Style="{StaticResource SuccessBtn}"
+                            Margin="8,0,0,0"/>
                 </Grid>
 
-                <Label Content="Марка и модель авто:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Марка и модель авто -->
+                <TextBlock Text="Марка и модель авто" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CarModel, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Государственный номер:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Государственный номер -->
+                <TextBlock Text="Государственный номер" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CarNumber, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5,0,10" Height="50" Padding="5" Foreground="Black"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Категория кузова:" Margin="0,5,0,0" FontWeight="SemiBold"/>
-                <controls:CustomComboBox x:Name="BodyTypeComboBox" Margin="0,5,0,10" Height="50"
+                <!-- Категория кузова -->
+                <TextBlock Text="Категория кузова" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <controls:CustomComboBox x:Name="BodyTypeComboBox" 
+                                         Margin="0,0,0,20" 
+                                         Height="45"
                                          SelectedValue="{Binding SelectedBodyTypeCategory}"
                                          Placeholder="Выберите категорию"/>
 
-                <Label Content="⏰ Время заезда:" Margin="0,5,0,0" FontWeight="SemiBold"/>
-                <Grid Margin="0,5,0,10" Height="50">
+                <!-- Время заезда -->
+                <TextBlock Text="⏰ Время заезда" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <Grid Margin="0,0,0,20" Height="45">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
-                    <local:CustomDatePicker x:Name="OrderDatePicker" Grid.Column="0" Height="50"/>
-                    <TextBlock Grid.Column="1" Text=" " VerticalAlignment="Center"/>
-                    <TextBox x:Name="OrderTimeTextBox" Grid.Column="2" TextAlignment="Center" Height="50" Width="80" Text="12:00"/>
+                    <local:CustomDatePicker x:Name="OrderDatePicker" 
+                                            Grid.Column="0" 
+                                            Height="45"/>
+                    <TextBox x:Name="OrderTimeTextBox" 
+                             Grid.Column="1" 
+                             TextAlignment="Center" 
+                             Height="45" 
+                             Text="12:00"
+                             FontSize="14"
+                             FontWeight="Bold"
+                             Margin="10,0,0,0"/>
                 </Grid>
 
-                <Label Content="⏱️ Длительность (минуты):" Margin="0,5,0,0" FontWeight="SemiBold"
-                   Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                <TextBox x:Name="DurationTextBox" Margin="0,5,0,10" Height="50" Padding="5" Text="60"
-                     Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <!-- Длительность (только для записей) -->
+                <TextBlock Text="⏱️ Длительность (минуты)" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"
+                           Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <TextBox x:Name="DurationTextBox" 
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0" 
+                         Text="60"
+                         FontSize="14"
+                         Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <!-- Выбор рабочей зоны -->
-                <Label Content="{Binding CurrentOrder.Department,
+                <TextBlock Text="{Binding CurrentOrder.Department,
                     Converter={StaticResource DepartmentToZoneLabelConverter},
-                    FallbackValue='🚘 Выберите зону:'}" 
-                       Margin="0,5,0,0" FontWeight="SemiBold"/>
-
+                    FallbackValue='🚘 Выберите зону'}" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <controls:CustomComboBox x:Name="ZoneComboBox"
-                                         Margin="0,5,0,10" 
-                                         Height="50"
+                                         Margin="0,0,0,20" 
+                                         Height="45"
                                          ItemsSource="{Binding AvailableZones}"
                                          SelectedValuePath="BoxNumber"
                                          DisplayMemberPath="Name"
                                          SelectedValue="{Binding CurrentOrder.BoxNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Placeholder="Выберите рабочую зону"/>
 
-                <Label Content="👤 Выберите сотрудника:" Margin="0,5,0,0" FontWeight="SemiBold"
-                       Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-                <controls:CustomComboBox x:Name="WasherComboBox" Margin="0,5,0,10" Height="50"
+                <!-- Сотрудник -->
+                <TextBlock Text="👤 Выберите сотрудника" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"
+                           Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <controls:CustomComboBox x:Name="WasherComboBox" 
+                                         Margin="0,0,0,20" 
+                                         Height="45"
                                          ItemsSource="{Binding Washers}"
                                          SelectedValue="{Binding SelectedWasherId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          SelectedValuePath="Id"
@@ -148,31 +205,60 @@
                                          IsEditable="True"
                                          Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-
-
-                    <!-- Поиск по услугам -->
-                <Label Content="🔍 Поиск услуги:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Поиск по услугам -->
+                <TextBlock Text="🔍 Поиск услуги" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox x:Name="ServiceSearchTextBox"
-                         Margin="0,5,0,10" Height="40" Padding="5"
+                         Margin="0,0,0,20" 
+                         Height="40" 
+                         Padding="15,0"
                          TextChanged="ServiceSearchTextBox_TextChanged"
                          Tag="Введите название услуги..."/>
 
-                <Label Content="🛠️ Выберите услуги:" Margin="0,10,0,5" FontWeight="SemiBold"/>
-                <ListBox x:Name="ServicesListBox" MinHeight="120" MaxHeight="180" Margin="0,5,0,10"
-                         ItemsSource="{Binding Services}" SelectionMode="Multiple"
+                <!-- Выбор услуг -->
+                <TextBlock Text="🛠️ Выберите услуги" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,5,0,8"/>
+                <ListBox x:Name="ServicesListBox" 
+                         MinHeight="120" 
+                         MaxHeight="180" 
+                         Margin="0,0,0,20"
+                         ItemsSource="{Binding Services}" 
+                         SelectionMode="Multiple"
                          SelectionChanged="ServicesListBox_SelectionChanged">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="8,8"/>
-                            <Setter Property="MinHeight" Value="40"/>
+                            <Setter Property="Padding" Value="12,10"/>
+                            <Setter Property="MinHeight" Value="45"/>
                             <Setter Property="VerticalContentAlignment" Value="Center"/>
                             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#3498DB"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </Trigger>
-                            </Style.Triggers>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Border" 
+                                                Background="{DynamicResource BgCard}"
+                                                BorderBrush="{DynamicResource BorderColor}"
+                                                BorderThickness="1"
+                                                CornerRadius="6"
+                                                Padding="{TemplateBinding Padding}"
+                                                Margin="0,2">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource AccentBlue}"/>
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
@@ -182,48 +268,105 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Name}" Grid.Column="0" 
-                                           VerticalAlignment="Center" TextWrapping="Wrap" Foreground="Black"/>
-                                <TextBlock Text="{Binding Price, StringFormat={}{0:N0} ₽}" Grid.Column="1" 
-                                           Foreground="#27AE60" VerticalAlignment="Center" Margin="10,0,0,0"/>
+
+                                <TextBlock Text="{Binding Name}" 
+                       Grid.Column="0" 
+                       VerticalAlignment="Center" 
+                       TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <TextBlock Text="{Binding Price, StringFormat={}{0:N0} ₽}" 
+                       Grid.Column="1" 
+                       VerticalAlignment="Center" 
+                       Margin="10,0,0,0" 
+                       FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentGreen}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <Label Content="💰 Дополнительная стоимость:" Margin="0,10,0,0" FontWeight="SemiBold"/>
+                <!-- Дополнительная стоимость -->
+                <TextBlock Text="💰 Дополнительная стоимость" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,5,0,8"/>
                 <TextBox Text="{Binding ExtraCost, 
                              UpdateSourceTrigger=PropertyChanged, 
                              TargetNullValue=0, 
                              FallbackValue=0,
                              ValidatesOnExceptions=False,
                              Converter={StaticResource DecimalToEmptyZeroConverter}}"
-                         Margin="0,5,0,10" Height="50" Padding="5"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="📝 Причина дополнительной стоимости:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Причина дополнительной стоимости -->
+                <TextBlock Text="📝 Причина дополнительной стоимости" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentOrder.ExtraCostReason, UpdateSourceTrigger=PropertyChanged}" 
-                     Margin="0,5,0,10" Height="50" Padding="5" 
-                     TextWrapping="Wrap" AcceptsReturn="True"/>
+                         Margin="0,0,0,20" 
+                         Height="80" 
+                         Padding="15,10" 
+                         TextWrapping="Wrap" 
+                         AcceptsReturn="True"
+                         FontSize="13"/>
 
-                <Label Content="📋 Статус заказа:" Margin="0,5,0,0" FontWeight="SemiBold"
-                   Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-                <controls:CustomComboBox x:Name="StatusComboBox" Grid.Row="30" Margin="0,5,0,10" Height="50"
-                                     SelectedValue="{Binding CurrentOrder.Status}"
-                                     SelectedValuePath="Value"
-                                     Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <!-- Статус заказа -->
+                <TextBlock Text="📋 Статус заказа" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"
+                           Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <controls:CustomComboBox x:Name="StatusComboBox" 
+                                         Margin="0,0,0,20" 
+                                         Height="45"
+                                         SelectedValue="{Binding CurrentOrder.Status}"
+                                         SelectedValuePath="Value"
+                                         Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-                <Label Content="🎁 Скидка:" Margin="0,10,0,0" FontWeight="SemiBold"/>
-                <StackPanel Margin="0,5,0,10">
-                    <!-- 1. Выбор правила из БД -->
+                <!-- Скидка -->
+                <TextBlock Text="🎁 Скидка" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,5,0,8"/>
+                <StackPanel Margin="0,0,0,20">
                     <controls:CustomComboBox 
                         Placeholder="Применить правило (например, Дождь...)" 
                         ItemsSource="{Binding DiscountRules}" 
                         SelectedItem="{Binding SelectedDiscountRule}"
                         DisplayMemberPath="Name"
                         SelectedValuePath="Id"
-                        Height="40" Margin="0,0,0,10"/>
+                        Height="40" 
+                        Margin="0,0,0,10"/>
 
-                    <!-- 2. Поля ручной корректировки -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -233,33 +376,55 @@
 
                         <TextBox x:Name="DiscountPercentTextBox" 
                                  Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToEmptyZeroConverter}}"
-                                 Grid.Column="0" Height="40" Padding="5" />
+                                 Grid.Column="0" 
+                                 Height="40" 
+                                 Padding="10,0"
+                                 FontSize="14"/>
 
-                        <TextBlock Grid.Column="1" Text=" % " VerticalAlignment="Center" Margin="5,0" FontSize="14" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1" 
+                                   Text=" % " 
+                                   VerticalAlignment="Center" 
+                                   Margin="8,0" 
+                                   FontSize="16" 
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextMain}"/>
 
                         <TextBox x:Name="DiscountAmountTextBox" 
-                                 Grid.Column="2" Height="40" Padding="5" 
+                                 Grid.Column="2" 
+                                 Height="40" 
+                                 Padding="10,0"
+                                 FontSize="14"
                                  Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DecimalToEmptyZeroConverter}}"/>
                     </Grid>
-                    <TextBlock Text="Или введите значения вручную" FontSize="10" Foreground="#95A5A6" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    <TextBlock Text="Или введите значения вручную" 
+                               FontSize="10" 
+                               Foreground="{DynamicResource TextMuted}" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,5,0,0"/>
                 </StackPanel>
 
+                <!-- Способ оплаты -->
+                <TextBlock Text="💳 Способ оплаты" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,5,0,8"
+                           Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                <controls:CustomComboBox x:Name="PaymentMethodComboBox" 
+                                         Margin="0,0,0,20" 
+                                         Height="45"
+                                         SelectedValue="{Binding CurrentOrder.PaymentMethod}"
+                                         SelectedValuePath="Value"
+                                         Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-                <Label Content="💳 Способ оплаты:" Margin="0,10,0,0" FontWeight="SemiBold"
-                       Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-                <controls:CustomComboBox x:Name="PaymentMethodComboBox" Margin="0,5,0,10" Height="50"
-                                     SelectedValue="{Binding CurrentOrder.PaymentMethod}"
-                                     SelectedValuePath="Value"
-                                     Visibility="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-
-                <!-- БАННЕР УМНОГО КАССИРА (UPSYELL) -->
-                <Border Background="#FFF9C4" 
-                        BorderBrush="#FBC02D" 
+                <!-- БАННЕР УМНОГО КАССИРА (UPSELL) -->
+                <Border Background="{DynamicResource UpsellBannerBg}" 
+                        BorderBrush="{DynamicResource UpsellBannerBorder}" 
                         BorderThickness="2" 
-                        CornerRadius="10" 
-                        Padding="15" Margin="0,10" 
+                        CornerRadius="6" 
+                        Padding="15" 
+                        Margin="0,10,0,20" 
                         Visibility="{Binding CurrentSuggestion, Converter={StaticResource ZeroToVisibilityConverter}}">
-                    <!-- Если есть конвертер, иначе убери -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -267,25 +432,36 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="💡 СОВЕТ:" FontWeight="Bold" Foreground="#F57F17" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Grid.Column="0" 
+                                   Text="💡 СОВЕТ:" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource UpsellBannerText}" 
+                                   VerticalAlignment="Center" 
+                                   Margin="0,0,10,0"/>
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="{Binding CurrentSuggestion.Message}" 
-                       FontSize="14" FontWeight="SemiBold" Foreground="#424242" TextWrapping="Wrap"/>
+                                       FontSize="14" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="{DynamicResource TextMain}" 
+                                       TextWrapping="Wrap"/>
                             <TextBlock Text="{Binding CurrentSuggestion.BonusAmount, StringFormat='Ваш бонус: {0:N0} ₽'}" 
-                       FontSize="12" Foreground="#2E7D32" FontWeight="Bold"/>
+                                       FontSize="12" 
+                                       Foreground="{DynamicResource UpsellBonusText}" 
+                                       FontWeight="Bold"/>
                         </StackPanel>
 
-                        <Button Grid.Column="2" Content="Добавить" 
+                        <Button Grid.Column="2" 
+                                Content="Добавить" 
                                 Click="ApplyUpsell_Click" 
-                                Padding="15,5" Background="#27AE60" Foreground="White" 
-                                FontWeight="Bold" Cursor="Hand" BorderThickness="0"/>
+                                Style="{StaticResource SuccessBtn}"
+                                Padding="20,8"
+                                Margin="10,0,0,0"/>
                     </Grid>
                 </Border>
 
-
-                <!-- === ВКЛАДКИ: РАСХОДЫ И ЛЕНТА === -->
-                <TabControl Margin="0,10,0,10" Background="Transparent" BorderThickness="0">
+                <!-- ВКЛАДКИ: РАСХОДЫ И ЛЕНТА -->
+                <TabControl Margin="0,10,0,20" Background="Transparent" BorderThickness="0">
                     <TabControl.ItemContainerStyle>
                         <Style TargetType="TabItem">
                             <Setter Property="Background" Value="Transparent"/>
@@ -293,11 +469,13 @@
                             <Setter Property="Padding" Value="15,8"/>
                             <Setter Property="FontSize" Value="13"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Foreground" Value="#7F8C8D"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+                            <Setter Property="Cursor" Value="Hand"/>
                             <Setter Property="Visibility" Value="{Binding IsAppointment, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Foreground" Value="#2C3E50"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -305,7 +483,12 @@
 
                     <!-- Вкладка: Расходы -->
                     <TabItem Header="💰 Расходы">
-                        <Border Background="White" CornerRadius="8" Padding="10" Margin="5">
+                        <Border Background="{DynamicResource TabContentBg}" 
+                                CornerRadius="6" 
+                                Padding="15" 
+                                Margin="5"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="1">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -314,43 +497,82 @@
                                 </Grid.RowDefinitions>
 
                                 <!-- Форма добавления расхода -->
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="➕ Добавить расход" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                                <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                                    <TextBlock Text="➕ Добавить расход" 
+                                               FontSize="14" 
+                                               FontWeight="Bold" 
+                                               Foreground="{DynamicResource TextMain}"
+                                               Margin="0,0,0,10"/>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="ExpenseNameTextBox" Height="40" Padding="5" Margin="0,0,5,0" ToolTip="Название (масло, запчасть...)" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                                        <Button Grid.Column="1" Content="Добавить" Click="AddExpenseButton_Click" Width="100" Height="40" Background="#27AE60" Foreground="White"/>
+                                        <TextBox x:Name="ExpenseNameTextBox" 
+                                                 Height="40" 
+                                                 Padding="10,0" 
+                                                 Margin="0,0,8,0" 
+                                                 ToolTip="Название (масло, запчасть...)"/>
+                                        <Button Grid.Column="1" 
+                                                Content="Добавить" 
+                                                Click="AddExpenseButton_Click" 
+                                                Style="{StaticResource SuccessBtn}"
+                                                Width="120" 
+                                                Height="40"
+                                                Margin="0,0,8,0"/>
                                     </Grid>
-                                    <Grid Margin="0,5,0,0">
+                                    <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="ExpenseCostPriceTextBox" Grid.Column="0" Height="40" Padding="5" Margin="0,0,2,0" ToolTip="Себестоимость ₽" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                                        <TextBox x:Name="ExpenseClientPriceTextBox" Grid.Column="1" Height="40" Padding="5" Margin="2,0,2,0" ToolTip="Цена для клиента ₽" Style="{StaticResource PlaceholderTextBoxStyle}"/>
-                                        <TextBox x:Name="ExpenseQuantityTextBox" Grid.Column="2" Height="40" Padding="5" Margin="2,0,0,0" ToolTip="Кол-во" Text="1" Style="{StaticResource PlaceholderTextBoxStyle}"/>
+                                        <TextBox x:Name="ExpenseCostPriceTextBox" 
+                                                 Grid.Column="0" 
+                                                 Height="40" 
+                                                 Padding="10,0" 
+                                                 Margin="0,0,4,0" 
+                                                 ToolTip="Себестоимость ₽"/>
+                                        <TextBox x:Name="ExpenseClientPriceTextBox" 
+                                                 Grid.Column="1" 
+                                                 Height="40" 
+                                                 Padding="10,0" 
+                                                 Margin="4,0,4,0" 
+                                                 ToolTip="Цена для клиента ₽"/>
+                                        <TextBox x:Name="ExpenseQuantityTextBox" 
+                                                 Grid.Column="2" 
+                                                 Height="40" 
+                                                 Padding="10,0" 
+                                                 Margin="4,0,0,0" 
+                                                 ToolTip="Кол-во" 
+                                                 Text="1"/>
                                     </Grid>
-                                    <!-- Категория расхода (кастомный комбобокс) -->
                                     <controls:CustomComboBox x:Name="ExpenseCategoryComboBox" 
-                                                         Height="40" Margin="0,5,0,0" 
-                                                         Placeholder="Выберите категорию"
-                                                         SelectedValuePath="Tag">
+                                                             Height="40" 
+                                                             Margin="0,8,0,0" 
+                                                             Placeholder="Выберите категорию"
+                                                             SelectedValuePath="Tag">
                                         <controls:CustomComboBox.Items>
                                             <ComboBoxItem Content="🔧 Запчасти" Tag="Parts"/>
                                             <ComboBoxItem Content="🧴 Расходники" Tag="Consumables"/>
                                             <ComboBoxItem Content="🤝 Сторонние работы" Tag="ExternalWork"/>
                                         </controls:CustomComboBox.Items>
                                     </controls:CustomComboBox>
-                                    <TextBox x:Name="ExpenseNoteTextBox" Height="60" Margin="0,5,0,0" Padding="5" ToolTip="Комментарий..." TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource PlaceholderTextBoxStyle}"/>
+                                    <TextBox x:Name="ExpenseNoteTextBox" 
+                                             Height="60" 
+                                             Margin="0,8,0,0" 
+                                             Padding="10,8" 
+                                             ToolTip="Комментарий..." 
+                                             TextWrapping="Wrap" 
+                                             AcceptsReturn="True"/>
                                 </StackPanel>
 
                                 <!-- Список расходов -->
-                                <ListBox Grid.Row="1" ItemsSource="{Binding OrderExpenses}" Margin="0,0,0,10" Background="Transparent" BorderThickness="0">
-                                    <!-- ВАЖНО: растягиваем ListBoxItem -->
+                                <ListBox Grid.Row="1" 
+                                         ItemsSource="{Binding OrderExpenses}" 
+                                         Margin="0,0,0,15" 
+                                         Background="Transparent" 
+                                         BorderThickness="0">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
                                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -367,20 +589,37 @@
                                     </ListBox.ItemContainerStyle>
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#F8F9FA" CornerRadius="6" Padding="10" Margin="0,0,0,5">
+                                            <Border Background="{DynamicResource ExpenseCardBg}" 
+                                                    CornerRadius="6" 
+                                                    Padding="12" 
+                                                    Margin="0,0,0,8">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel Grid.Column="0">
-                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13"/>
-                                                        <TextBlock Text="{Binding Category, StringFormat='📂 {0}'}" FontSize="11" Foreground="#7F8C8D"/>
-                                                        <TextBlock Text="{Binding Note}" FontSize="11" Foreground="#95A5A6" TextWrapping="Wrap" Visibility="{Binding Note, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                                                        <TextBlock Text="{Binding Name}" 
+                                                                   FontWeight="Bold" 
+                                                                   FontSize="13"
+                                                                   Foreground="{DynamicResource TextMain}"/>
+                                                        <TextBlock Text="{Binding Category, StringFormat='📂 {0}'}" 
+                                                                   FontSize="11" 
+                                                                   Foreground="{DynamicResource TextMuted}"/>
+                                                        <TextBlock Text="{Binding Note}" 
+                                                                   FontSize="11" 
+                                                                   Foreground="{DynamicResource TextLightMuted}" 
+                                                                   TextWrapping="Wrap" 
+                                                                   Visibility="{Binding Note, Converter={StaticResource ZeroToVisibilityConverter}}"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                                        <TextBlock Text="{Binding ClientPrice, StringFormat={}{0:N0} ₽}" FontWeight="Bold" Foreground="#27AE60"/>
-                                                        <TextBlock Text="{Binding Quantity, StringFormat='×{0}'}" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding ClientPrice, StringFormat={}{0:N0} ₽}" 
+                                                                   FontWeight="Bold" 
+                                                                   Foreground="{DynamicResource AccentGreen}"/>
+                                                        <TextBlock Text="{Binding Quantity, StringFormat='×{0}'}" 
+                                                                   FontSize="11" 
+                                                                   Foreground="{DynamicResource TextMuted}" 
+                                                                   HorizontalAlignment="Right"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
@@ -389,28 +628,38 @@
                                 </ListBox>
 
                                 <!-- Итого по расходам -->
-                                <Border Grid.Row="2" Background="#E8F6F3" CornerRadius="6" Padding="10">
-                                    <TextBlock Text="{Binding TotalExpensesAmount, StringFormat='💰 Итого расходов: {0:N0} ₽'}" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
+                                <Border Grid.Row="2" 
+                                        Background="{DynamicResource ExpenseTotalBg}" 
+                                        CornerRadius="6" 
+                                        Padding="12">
+                                    <TextBlock Text="{Binding TotalExpensesAmount, StringFormat='💰 Итого расходов: {0:N0} ₽'}" 
+                                               FontWeight="Bold" 
+                                               Foreground="{DynamicResource AccentGreen}" 
+                                               HorizontalAlignment="Center"/>
                                 </Border>
                             </Grid>
                         </Border>
                     </TabItem>
 
-                    <!-- Вкладка: Лента событий -->
+                    <!-- Вкладка: Лента -->
                     <TabItem Header="📋 Лента">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  Padding="5">
-                            <Border Background="White" CornerRadius="8" Padding="10" Margin="5">
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Padding="5">
+                            <Border Background="{DynamicResource TabContentBg}" 
+                                    CornerRadius="6" 
+                                    Padding="15" 
+                                    Margin="5"
+                                    BorderBrush="{DynamicResource BorderColor}"
+                                    BorderThickness="1">
                                 <ListBox ItemsSource="{Binding OrderTimeline}" 
-                                     Background="Transparent" 
-                                     BorderThickness="0"
-                                     VirtualizingPanel.IsVirtualizing="True"
-                                     VirtualizingPanel.VirtualizationMode="Recycling"
-                                     HorizontalContentAlignment="Stretch"
-                                     VerticalContentAlignment="Stretch">
+                                         Background="Transparent" 
+                                         BorderThickness="0"
+                                         VirtualizingPanel.IsVirtualizing="True"
+                                         VirtualizingPanel.VirtualizationMode="Recycling"
+                                         HorizontalContentAlignment="Stretch"
+                                         VerticalContentAlignment="Stretch">
 
-                                    <!-- ВАЖНО: растягиваем ListBoxItem -->
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
                                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -428,44 +677,56 @@
 
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="0,0,0,8" BorderBrush="#F1F2F6" BorderThickness="1" CornerRadius="8" Padding="10,5">
+                                            <Border Margin="0,0,0,10" 
+                                                    BorderBrush="{DynamicResource TimelineCardBorder}" 
+                                                    BorderThickness="1" 
+                                                    CornerRadius="6" 
+                                                    Padding="12,8">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <!-- Левая колонка: дата/время -->
-                                                    <WrapPanel Grid.Column="0" Margin="0,0,10,0" 
-                                                           HorizontalAlignment="Stretch" MinWidth="50">
+                                                    <WrapPanel Grid.Column="0" Margin="0,0,12,0" 
+                                                               HorizontalAlignment="Stretch" MinWidth="50">
                                                         <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM}}" 
-                                                               FontSize="11" Foreground="#2C3E50" 
-                                                               HorizontalAlignment="Center"/>
-                                                        <TextBlock Text=" | " FontSize="9"/>
+                                                                   FontSize="11" 
+                                                                   Foreground="{DynamicResource TextMain}" 
+                                                                   HorizontalAlignment="Center"/>
+                                                        <TextBlock Text=" | " FontSize="9" Foreground="{DynamicResource TextMuted}"/>
                                                         <TextBlock Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}" 
-                                                               FontSize="11" FontWeight="Bold" Foreground="#2C3E50" 
-                                                               HorizontalAlignment="Center"/>
+                                                                   FontSize="11" 
+                                                                   FontWeight="Bold" 
+                                                                   Foreground="{DynamicResource TextMain}" 
+                                                                   HorizontalAlignment="Center"/>
                                                     </WrapPanel>
 
-                                                    <!-- Правая колонка: контент -->
                                                     <StackPanel Grid.Column="1">
-                                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,3" Grid.Row="0">
-                                                                <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,5,0"/>
-                                                                <TextBlock Text="{Binding CreatedBy}" FontWeight="SemiBold" FontSize="12"/>
-                                                                <TextBlock Text="•" FontSize="12" Foreground="#BDC3C7" Margin="5,0"/>
-                                                                <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
-                                                                   FontSize="11" Foreground="#7F8C8D"/>
-                                                            </WrapPanel>
+                                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                            <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="{Binding CreatedBy}" 
+                                                                       FontWeight="SemiBold" 
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource TextMain}"/>
+                                                            <TextBlock Text="•" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="6,0"/>
+                                                            <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
+                                                                       FontSize="11" 
+                                                                       Foreground="{DynamicResource TextMuted}"/>
+                                                        </WrapPanel>
 
-                                                            <WrapPanel>
-                                                                <!-- TextBlock с переносом -->
-                                                                <TextBlock Text="{Binding Message}" 
-                                                                   FontSize="12" TextWrapping="Wrap" Foreground="#2C3E50"/>
-                                                                <TextBlock Text=" | "/>
-                                                                <TextBlock Text="{Binding RelatedEntityInfo}"
-                                                                   FontSize="12" Foreground="#95A5A6" FontStyle="Italic" 
-                                                                   Visibility="{Binding RelatedEntityInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
-                                                            </WrapPanel>
+                                                        <WrapPanel>
+                                                            <TextBlock Text="{Binding Message}" 
+                                                                       FontSize="12" 
+                                                                       TextWrapping="Wrap" 
+                                                                       Foreground="{DynamicResource TextMain}"/>
+                                                            <TextBlock Text=" | " Foreground="{DynamicResource TextMuted}"/>
+                                                            <TextBlock Text="{Binding RelatedEntityInfo}"
+                                                                       FontSize="12" 
+                                                                       Foreground="{DynamicResource TextLightMuted}" 
+                                                                       FontStyle="Italic" 
+                                                                       Visibility="{Binding RelatedEntityInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                                                        </WrapPanel>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
@@ -477,39 +738,70 @@
                     </TabItem>
                 </TabControl>
 
-
-                <Border Background="#F0F8FF" CornerRadius="5" Padding="10" Margin="0,10">
+                <!-- Итоговая панель -->
+                <Border Background="{DynamicResource SummaryPanelBg}" 
+                        CornerRadius="6" 
+                        Padding="15" 
+                        Margin="0,10,0,0"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="1">
                     <StackPanel>
-                        <TextBlock FontSize="12" Foreground="#7F8C8D" 
-                                   HorizontalAlignment="Center" Text="{Binding ServicesTotal, StringFormat=💰 Услуги: {0:N0} ₽}"/>
-                        <TextBlock FontSize="12" Foreground="#E67E22" 
-                                   HorizontalAlignment="Center" Text="{Binding ExtraCost, StringFormat=➕ Дополнительно: {0:N0} ₽}"/>
-                        <TextBlock FontSize="12" Foreground="#E74C3C" 
-                                   HorizontalAlignment="Center" Text="{Binding DiscountAmount, StringFormat=🎁 Скидка: {0:N0} ₽}"
+                        <TextBlock FontSize="13" 
+                                   Foreground="{DynamicResource TextMuted}" 
+                                   HorizontalAlignment="Center" 
+                                   Text="{Binding ServicesTotal, StringFormat=💰 Услуги: {0:N0} ₽}"/>
+                        <TextBlock FontSize="13" 
+                                   Foreground="{DynamicResource AccentOrange}" 
+                                   HorizontalAlignment="Center" 
+                                   Text="{Binding ExtraCost, StringFormat=➕ Дополнительно: {0:N0} ₽}"/>
+                        <TextBlock FontSize="13" 
+                                   Foreground="{DynamicResource AccentRed}" 
+                                   HorizontalAlignment="Center" 
+                                   Text="{Binding DiscountAmount, StringFormat=🎁 Скидка: {0:N0} ₽}"
                                    Visibility="{Binding DiscountAmount, Converter={StaticResource ZeroToVisibilityConverter}}"/>
-                        <TextBlock FontSize="16" FontWeight="Bold" Foreground="#27AE60"
-                                   HorizontalAlignment="Center" Text="{Binding FinalTotal, StringFormat=💰 Итого: {0:N0} ₽}"/>
-                        <TextBlock FontSize="10" Foreground="#7F8C8D" 
-                                   HorizontalAlignment="Center" Text="{Binding WasherEarningsDisplay, StringFormat='👤 Мойщику: {0:N0} ₽'}"/>
-                        <TextBlock FontSize="10" Foreground="#7F8C8D" 
-                                   HorizontalAlignment="Center" Text="{Binding CompanyEarningsDisplay, StringFormat='🏢 Компании: {0:N0} ₽'}"/>
+                        <TextBlock FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource AccentGreen}"
+                                   HorizontalAlignment="Center" 
+                                   Text="{Binding FinalTotal, StringFormat=💰 Итого: {0:N0} ₽}"
+                                   Margin="0,5,0,0"/>
+                        <TextBlock FontSize="11" 
+                                   Foreground="{DynamicResource TextMuted}" 
+                                   HorizontalAlignment="Center" 
+                                   Text="{Binding WasherEarningsDisplay, StringFormat='👤 Мойщику: {0:N0} ₽'}"
+                                   Margin="0,8,0,0"/>
+                        <TextBlock FontSize="11" 
+                                   Foreground="{DynamicResource TextMuted}" 
+                                   HorizontalAlignment="Center" 
+                                   Text="{Binding CompanyEarningsDisplay, StringFormat='🏢 Компании: {0:N0} ₽'}"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>
 
-
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,20">
-            <Button x:Name="ConvertToOrderButton" Content="📅 Преобразовать в заказ" Click="ConvertToOrderButton_Click" 
-                        Width="185" Height="35" Margin="0,5" Background="#9B59B6" Foreground="White"
-                        Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            <Button Content="🖨 Акт выполненных работ" Click="PrintActButton_Click" 
-                        Width="180" Height="35" Margin="5" 
-                        Background="#34495E" Foreground="White"/>
-            <Button Content="✅ Сохранить" Click="SaveButton_Click" Width="120" Height="35" 
-                        Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
-            <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
-                        Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+        <!-- Кнопки действий -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20,0,25">
+            <Button x:Name="ConvertToOrderButton" 
+                    Content="📅 Преобразовать в заказ" 
+                    Click="ConvertToOrderButton_Click" 
+                    Style="{StaticResource PurpleBtn}"
+                    Margin="0,0,10,0"
+                    Visibility="{Binding IsAppointment, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            <Button Content="🖨 Акт выполненных работ" 
+                    Click="PrintActButton_Click" 
+                    Style="{StaticResource PrimaryBtn}"
+                    Margin="0,0,10,0"/>
+            <Button Content="✅ Сохранить" 
+                    Click="SaveButton_Click" 
+                    Style="{StaticResource SuccessBtn}"
+                    Margin="0,0,10,0"/>
+            <Button Content="✖ Отмена" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"
+                    Margin="0,0,10,0"/>
         </StackPanel>
     </Grid>
 </Window>

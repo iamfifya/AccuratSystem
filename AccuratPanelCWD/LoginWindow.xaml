@@ -8,47 +8,101 @@
         mc:Ignorable="d"
         Title="Авторизация"
         WindowStartupLocation="CenterScreen"
-        Height="600" Width="400"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Height="600" Width="450"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
-        WindowStyle="None">
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ResizeMode="NoResize">
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Border Background="{DynamicResource BgCard}" 
+            CornerRadius="6" 
+            Padding="30"
+            Margin="20"
+            BorderBrush="{DynamicResource BorderColor}"
+            BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.15" Color="#000000"/>
+        </Border.Effect>
 
-        <TextBlock Text="ACCURAT" FontSize="48" 
-               Foreground="Black" HorizontalAlignment="Center" Margin="0,0,0,20" Grid.Row="0" 
-               FontFamily="Cascadia Mono Light"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <StackPanel x:Name="LoginPanel" Grid.Row="1" VerticalAlignment="Center" Visibility="Visible">
-            <Label Content="Логин:" Margin="0,5" FontWeight="SemiBold"/>
-            <TextBox x:Name="LoginTextBox" Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
+            <!-- Заголовок -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,30">
+                <TextBlock Text="AccuratSystem" 
+                           FontSize="42" 
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextMain}" 
+                           HorizontalAlignment="Center" 
+                           FontFamily="Segoe UI"/>
+                <TextBlock Text="Система управления автомойкой" 
+                           FontSize="13" 
+                           Foreground="{DynamicResource TextMuted}" 
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
 
-            <Label Content="Пароль:" Margin="0,5" FontWeight="SemiBold"/>
-            <PasswordBox x:Name="PasswordBox" Margin="0,5" Height="50" Padding="5" 
-                     VerticalContentAlignment="Center" Foreground="Black"/>
-        </StackPanel>
+            <!-- Панель логина -->
+            <StackPanel x:Name="LoginPanel" Grid.Row="1" VerticalAlignment="Center" Visibility="Visible">
+                <TextBlock Text="Логин" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="LoginTextBox" 
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"
+                         VerticalContentAlignment="Center"/>
 
-        <StackPanel x:Name="BranchSelectionPanel" Grid.Row="1" VerticalAlignment="Center" Visibility="Collapsed">
-            <Label Content="Рабочая точка (Филиал):" Margin="0,5" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-            <controls:CustomComboBox x:Name="BranchComboBox" 
-                                 Margin="0,15,0,10" 
-                                 Height="50"
-                                 Placeholder="Выберите место работы"
-                                 DisplayMemberPath="Name"
-                                 SelectedValuePath="Id"/>
-        </StackPanel>
+                <TextBlock Text="Пароль" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <PasswordBox x:Name="PasswordBox" 
+                             Margin="0,0,0,20" 
+                             Height="45" 
+                             Padding="15,0"
+                             FontSize="14"
+                             VerticalContentAlignment="Center"/>
+            </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,20">
-            <Button x:Name="ActionBtn" Content="Войти" Click="ActionBtn_Click" Width="120" Height="40" 
-                Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand" FontWeight="Bold" IsDefault="True"/>
-            <Button Content="Выход" Click="ExitButton_Click" Width="120" Height="40" 
-                Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand" FontWeight="Bold"/>
-        </StackPanel>
-    </Grid>
+            <!-- Панель выбора филиала -->
+            <StackPanel x:Name="BranchSelectionPanel" Grid.Row="1" VerticalAlignment="Center" Visibility="Collapsed">
+                <TextBlock Text="Выберите рабочую точку" 
+                           FontSize="15" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,20"/>
+
+                <controls:CustomComboBox x:Name="BranchComboBox" 
+                                         Margin="0,0,0,20" 
+                                         Height="45"
+                                         Placeholder="Выберите место работы"
+                                         DisplayMemberPath="Name"
+                                         SelectedValuePath="Id"/>
+            </StackPanel>
+
+            <!-- Кнопки действий -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                <Button x:Name="ActionBtn" 
+                        Content="Войти" 
+                        Click="ActionBtn_Click" 
+                        Style="{StaticResource SuccessBtn}"
+                        IsDefault="True"/>
+                <Button Content="Выход" 
+                        Click="ExitButton_Click" 
+                        Style="{StaticResource DangerBtn}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </Window>

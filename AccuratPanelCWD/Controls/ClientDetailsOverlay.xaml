@@ -1,0 +1,212 @@
+<UserControl x:Class="AccuratPanelCWD.Controls.ClientDetailsOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <Storyboard x:Key="ShowAnimation">
+            <DoubleAnimation Storyboard.TargetName="OverlayBackground" 
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                             From="0.8" To="1" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                             From="0.8" To="1" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.2"/>
+        </Storyboard>
+
+        <Storyboard x:Key="HideAnimation">
+            <DoubleAnimation Storyboard.TargetName="OverlayBackground" 
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                             From="1" To="0.9" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                             From="1" To="0.9" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" 
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.15"/>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid>
+        <Border x:Name="OverlayBackground" 
+                Background="#80000000" 
+                Visibility="Collapsed"
+                Opacity="0">
+            <Button Background="Transparent" BorderThickness="0" Click="Close_Click"/>
+        </Border>
+
+        <Border x:Name="PopupPanel"
+                Background="{DynamicResource BgMain}" 
+                CornerRadius="6" 
+                Width="850" 
+                Height="600" 
+                VerticalAlignment="Center" 
+                HorizontalAlignment="Center"
+                BorderBrush="{DynamicResource BorderColor}" 
+                BorderThickness="1"
+                Visibility="Collapsed" 
+                Opacity="0">
+
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.3"/>
+            </Border.Effect>
+
+            <Border.RenderTransform>
+                <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+            </Border.RenderTransform>
+
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок с информацией о клиенте -->
+                <Grid Grid.Row="0" Margin="0,0,0,15">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="50" 
+                                Height="50" 
+                                CornerRadius="6" 
+                                Background="{DynamicResource AccentBlue}">
+                            <TextBlock Text="👤" 
+                                       FontSize="20" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center" 
+                                       Foreground="White"/>
+                        </Border>
+                        <StackPanel Margin="15,0,0,0">
+                            <TextBlock Text="{Binding SelectedClient.FullName}" 
+                                       FontSize="20" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}"/>
+                            <TextBlock Text="{Binding CarInfo}" 
+                                       FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Button Content="✕" 
+                            HorizontalAlignment="Right" 
+                            VerticalAlignment="Top" 
+                            Width="35" 
+                            Height="35" 
+                            Background="Transparent" 
+                            BorderThickness="0"
+                            FontSize="18" 
+                            Foreground="{DynamicResource TextMuted}" 
+                            Cursor="Hand" 
+                            Click="Close_Click"/>
+                </Grid>
+
+                <!-- Основной контент -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.8*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- График выручки -->
+                    <Border Grid.Column="0" 
+                            Background="{DynamicResource BgCard}" 
+                            CornerRadius="6" 
+                            Padding="15" 
+                            Margin="0,0,15,0"
+                            BorderBrush="{DynamicResource BorderColor}"
+                            BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="📈 Выручка по месяцам" 
+                                       FontSize="16" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}" 
+                                       Margin="0,0,0,10"/>
+                            <lvc:CartesianChart Series="{Binding ChartSeries}" Height="280">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Labels="{Binding ChartLabels}" 
+                                              Foreground="{DynamicResource TextMain}"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="₽" 
+                                              LabelFormatter="{Binding YFormatter}"
+                                              Foreground="{DynamicResource TextMain}"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Правая колонка -->
+                    <StackPanel Grid.Column="1">
+                        <!-- Топ услуг -->
+                        <Border Background="{DynamicResource BgCard}" 
+                                CornerRadius="6" 
+                                Padding="15" 
+                                Margin="0,0,0,15"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="⭐ Топ услуг" 
+                                           FontSize="16" 
+                                           FontWeight="Bold" 
+                                           Foreground="{DynamicResource TextMain}" 
+                                           Margin="0,0,0,10"/>
+                                <ItemsControl ItemsSource="{Binding TopServices}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,8">
+                                                <TextBlock Text="{Binding ServiceName}" 
+                                                           FontSize="13" 
+                                                           Foreground="{DynamicResource TextMain}" 
+                                                           TextTrimming="CharacterEllipsis" 
+                                                           Margin="0,0,60,0"/>
+                                                <TextBlock Text="{Binding Count, StringFormat={}{0} раз}" 
+                                                           FontSize="12" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="{DynamicResource AccentOrange}" 
+                                                           HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Итоговая статистика -->
+                        <Border Background="{DynamicResource TextMain}" 
+                                CornerRadius="6" 
+                                Padding="15"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="📊 Итого" 
+                                           FontSize="16" 
+                                           FontWeight="Bold" 
+                                           Foreground="{DynamicResource BgCard}" 
+                                           Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding SelectedClient.TotalSpent, StringFormat=Сумма: {0:N0} ₽}" 
+                                           Foreground="{DynamicResource BgCard}" 
+                                           FontSize="14"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding SelectedClient.VisitsCount, StringFormat=Визитов: {0}}" 
+                                           Foreground="{DynamicResource BgCard}" 
+                                           FontSize="14"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding SelectedClient.AverageCheck, StringFormat=Средний чек: {0:N0} ₽}" 
+                                           Foreground="{DynamicResource AccentGreen}" 
+                                           FontWeight="Bold"
+                                           FontSize="15"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

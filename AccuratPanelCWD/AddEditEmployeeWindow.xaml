@@ -6,86 +6,180 @@
         Title="Редактирование сотрудника"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize" 
-        Width="700" Height="750" 
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Width="700" Height="850" 
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
-        WindowStyle="None"
-        Foreground="Black">
+        WindowStyle="SingleBorderWindow"
+        Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="15">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
-            <!-- 1. Область со скроллом (занимает всё свободное место) -->
             <RowDefinition Height="*"/>
-            <!-- 2. Область с кнопками (всегда прижата к низу) -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- С КРОЛЛВОЙЕРОМ -->
+        <!-- Область со скроллом -->
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <!-- Используем StackPanel вместо Grid с 20 строками. 
-                 Теперь элементы просто идут друг за другом! -->
             <StackPanel Margin="0,0,10,20">
 
-                <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" 
-                           Margin="0,0,0,15" HorizontalAlignment="Center"/>
+                <!-- Заголовок -->
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,25" 
+                           HorizontalAlignment="Center"/>
 
-                <Label Content="ФИО:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- ФИО -->
+                <TextBlock Text="ФИО" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentEmployee.FullName, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="📱 Телефон:" Margin="0,5" FontWeight="SemiBold"/>
-                <TextBox x:Name="PhoneTextBox" Text="{Binding CurrentEmployee.Phone, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="50" Padding="5" Foreground="Black"
+                <!-- Телефон -->
+                <TextBlock Text="📱 Телефон" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="PhoneTextBox" 
+                         Text="{Binding CurrentEmployee.Phone, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,0,0,5" 
+                         Height="45" 
+                         Padding="15,0" 
+                         FontSize="14"
                          PreviewTextInput="PhoneTextBox_PreviewTextInput"
-                         TextChanged="PhoneTextBox_TextChanged" MaxLength="20"/>
-                <TextBlock Text="   формат: 89996094363" Foreground="#95A5A6" 
-                           Margin="0,0,0,10" FontSize="11" HorizontalAlignment="Left"/>
+                         TextChanged="PhoneTextBox_TextChanged" 
+                         MaxLength="20"/>
+                <TextBlock Text="Формат: 89996094363" 
+                           Foreground="{DynamicResource TextMuted}" 
+                           Margin="0,0,0,20" 
+                           FontSize="11" 
+                           HorizontalAlignment="Left"/>
 
-                <Label Content="Логин:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- Логин -->
+                <TextBlock Text="Логин" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentEmployee.Login, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="50" Padding="5" Foreground="Black"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Пароль:" Margin="0,5" FontWeight="SemiBold"/>
-                <PasswordBox x:Name="PasswordBox" Margin="0,5" Height="50" Padding="5" Foreground="Black" VerticalContentAlignment="Center"/>
+                <!-- Пароль -->
+                <TextBlock Text="Пароль" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <PasswordBox x:Name="PasswordBox" 
+                             Margin="0,0,0,20" 
+                             Height="45" 
+                             Padding="15,0" 
+                             FontSize="14"
+                             VerticalContentAlignment="Center"/>
 
-                <Label Content="Должность:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Должность -->
+                <TextBlock Text="Должность" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <controls:CustomComboBox x:Name="RoleComboBox" 
-                         Margin="0,5" 
-                         Height="40" 
-                         Placeholder="Выберите должность"
-                         DisplayMemberPath="Name" 
-                         SelectedValuePath="Id"
-                         SelectedValue="{Binding CurrentEmployee.RoleId, UpdateSourceTrigger=PropertyChanged}"/>
+                                         Margin="0,0,0,20" 
+                                         Height="45" 
+                                         Placeholder="Выберите должность"
+                                         DisplayMemberPath="Name" 
+                                         SelectedValuePath="Id"
+                                         SelectedValue="{Binding CurrentEmployee.RoleId, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <Label Content="Ставка зарплаты (%):" Margin="0,5,0,0" FontWeight="SemiBold"/>
-                <TextBox Text="{Binding CurrentEmployee.BaseWagePercentage, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="40" Padding="5" Foreground="Black"/>
+                <!-- Секция зарплаты -->
+                <Border Background="{DynamicResource BgCard}" 
+                        CornerRadius="6" 
+                        Padding="20" 
+                        Margin="0,5,0,20"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="💰 Параметры оплаты"
+                                   FontSize="16" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMain}" 
+                                   Margin="0,0,0,15"/>
 
-                <Label Content="💰 Фиксированный оклад за смену (выход):" FontWeight="SemiBold" Margin="0,10,0,0"/>
-                <TextBox x:Name="SalaryTextBox" Height="40" Padding="5" VerticalContentAlignment="Center"
-                         Text="{Binding CurrentEmployee.BaseSalaryPerShift, UpdateSourceTrigger=PropertyChanged, FallbackValue=0}"/>
+                        <!-- Ставка зарплаты -->
+                        <TextBlock Text="Ставка зарплаты (%)" 
+                                   FontSize="13" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMain}"
+                                   Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding CurrentEmployee.BaseWagePercentage, UpdateSourceTrigger=PropertyChanged}" 
+                                 Margin="0,0,0,15" 
+                                 Height="45" 
+                                 Padding="15,0"
+                                 FontSize="14"/>
 
-                <Label Content="📂 Филиал привязки:" Margin="0,10,0,0" FontWeight="SemiBold"/>
+                        <!-- Фиксированный оклад -->
+                        <TextBlock Text="Фиксированный оклад за смену (₽)" 
+                                   FontSize="13" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMain}"
+                                   Margin="0,0,0,8"/>
+                        <TextBox x:Name="SalaryTextBox" 
+                                 Height="45" 
+                                 Padding="15,0" 
+                                 VerticalContentAlignment="Center"
+                                 FontSize="14"
+                                 Text="{Binding CurrentEmployee.BaseSalaryPerShift, UpdateSourceTrigger=PropertyChanged, FallbackValue=0}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Филиал привязки -->
+                <TextBlock Text="📂 Филиал привязки" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <controls:CustomComboBox x:Name="BranchComboBox" 
-                                         Margin="0,5" 
-                                         Height="40" 
+                                         Margin="0,0,0,20" 
+                                         Height="45" 
                                          Placeholder="Выберите филиал"
                                          DisplayMemberPath="Name" 
                                          SelectedValuePath="Id"
                                          SelectedValue="{Binding CurrentEmployee.BranchId, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <CheckBox Content="Трудоустроен" IsChecked="{Binding CurrentEmployee.IsActive}" 
-                          Margin="0,15" HorizontalAlignment="Left" Foreground="Black"/>
+                <!-- Чекбокс трудоустройства -->
+                <CheckBox Content="Трудоустроен" 
+                          IsChecked="{Binding CurrentEmployee.IsActive}" 
+                          Margin="0,10,0,0" 
+                          HorizontalAlignment="Left" 
+                          Foreground="{DynamicResource TextMain}"
+                          FontSize="14"
+                          FontWeight="SemiBold"/>
             </StackPanel>
         </ScrollViewer>
 
-        <!-- КНОПКИ (вне скролла, всегда видны) -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
-            <Button Content="✓ Сохранить" Click="SaveButton_Click" Width="100" Height="35" 
-                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
-            <Button Content="✗ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
-                    Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+        <!-- Кнопки действий -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20">
+            <Button Content="✓ Сохранить" 
+                    Click="SaveButton_Click" 
+                    Style="{StaticResource SuccessBtn}"/>
+            <Button Content="✗ Отмена" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>

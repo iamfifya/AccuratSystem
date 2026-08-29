@@ -5,31 +5,15 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Styles/OrderCardTemplate.xaml"/>
+                <!-- Конвертеры (загружаются ПЕРВЫМИ!) -->
+                <ResourceDictionary Source="/Styles/Converters.xaml"/>
+                <!-- Базовые стили -->
                 <ResourceDictionary Source="/Styles/AppStyles.xaml"/>
+                <!-- Тема по умолчанию (светлая) -->
+                <ResourceDictionary Source="/Styles/LightTheme.xaml"/>
+                <ResourceDictionary Source="/Styles/OrderCardTemplate.xaml"/>
                 <ResourceDictionary Source="/Styles/CustomComboBoxStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
-            <!-- Конвертеры -->
-            <local:IntToBoolConverter x:Key="IntToBoolConverter"/>
-            <local:PercentageConverter x:Key="PercentageConverter"/>
-            <local:ActiveToStatusConverter x:Key="ActiveToStatusConverter"/>
-            <local:ActiveToColorConverter x:Key="ActiveToColorConverter"/>
-            <local:ActiveToBackgroundConverter x:Key="ActiveToBackgroundConverter"/>
-            <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
-            <local:StatusToColorConverter x:Key="StatusToColorConverter"/>
-            <local:AppointmentToStyleConverter x:Key="AppointmentToStyleConverter"/>
-            <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-            <local:AppointmentToBackgroundConverter x:Key="AppointmentToBackgroundConverter"/>
-            <local:ItemStyleConverter x:Key="ItemStyleConverter"/>
-            <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
-            <local:SafePriceConverter x:Key="SafePriceConverter"/>
-            <local:CurrencyConverter x:Key="CurrencyConverter"/>
-            <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
-            <local:DecimalToEmptyZeroConverter x:Key="DecimalToEmptyZeroConverter"/>
-            <local:DepartmentDisplayConverter x:Key="DepartmentDisplayConverter"/>
-            <local:DepartmentToZoneLabelConverter x:Key="DepartmentToZoneLabelConverter"/>
-            <local:HexToBrushConverter x:Key="HexToBrushConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

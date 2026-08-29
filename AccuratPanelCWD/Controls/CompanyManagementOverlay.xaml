@@ -11,63 +11,79 @@
     <UserControl.Resources>
         <Style x:Key="TabItemStyle" TargetType="TabItem">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#7F8C8D"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Foreground" Value="#2C3E50"/>
-                    <Setter Property="Background" Value="#EBF5FB"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                    <Setter Property="Background" Value="{DynamicResource BgSelected}"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource BgSelected}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
+        <!-- Стиль для ListBox во вкладках -->
+        <Style x:Key="SettingsListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="{DynamicResource BgCard}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+
+        <!-- Анимация появления -->
         <Storyboard x:Key="ShowAnimation">
-            <!-- Анимация прозрачности для фона -->
             <DoubleAnimation Storyboard.TargetName="OverlayBackground" 
-                     Storyboard.TargetProperty="Opacity"
-                     From="0" To="1" Duration="0:0:0.25"/>
-            <!-- Анимация масштаба для popup панели -->
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.25"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
-                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                     From="0.8" To="1" Duration="0:0:0.25"/>
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                             From="0.8" To="1" Duration="0:0:0.25"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
-                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                     From="0.8" To="1" Duration="0:0:0.25"/>
-            <!-- Анимация прозрачности для popup панели -->
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                             From="0.8" To="1" Duration="0:0:0.25"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
-                     Storyboard.TargetProperty="Opacity"
-                     From="0" To="1" Duration="0:0:0.2"/>
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.2"/>
         </Storyboard>
 
         <!-- Анимация скрытия -->
         <Storyboard x:Key="HideAnimation">
             <DoubleAnimation Storyboard.TargetName="OverlayBackground" 
-                     Storyboard.TargetProperty="Opacity"
-                     From="1" To="0" Duration="0:0:0.2"/>
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.2"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
-                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
-                     From="1" To="0.9" Duration="0:0:0.2"/>
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                             From="1" To="0.9" Duration="0:0:0.2"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
-                     Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                     From="1" To="0.9" Duration="0:0:0.2"/>
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                             From="1" To="0.9" Duration="0:0:0.2"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
-                     Storyboard.TargetProperty="Opacity"
-                     From="1" To="0" Duration="0:0:0.15"/>
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.15"/>
         </Storyboard>
     </UserControl.Resources>
 
     <Grid>
         <Grid x:Name="OverlayBackground" Background="#A6000000" MouseLeftButtonDown="Overlay_MouseLeftButtonDown" Opacity="0"/>
 
-        <Border x:Name="PopupPanel" Background="#F5F6FA" CornerRadius="20" 
+        <Border x:Name="PopupPanel" 
+                Background="{DynamicResource BgMain}" 
+                CornerRadius="6" 
                 Width="1000" Height="800" 
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 Opacity="0">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="30" ShadowDepth="15" Opacity="0.3"/>
             </Border.Effect>
+            <Border.RenderTransform>
+                <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
+            </Border.RenderTransform>
 
             <Grid Margin="20">
                 <Grid.RowDefinitions>
@@ -76,11 +92,21 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- Заголовок -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                    <TextBlock Text="⚙️ Настройки компании" FontSize="26" FontWeight="Black" Foreground="#2C3E50" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Управление справочниками и базовыми параметрами" FontSize="14" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="⚙️ Настройки компании" 
+                               FontSize="26" 
+                               FontWeight="Black" 
+                               Foreground="{DynamicResource TextMain}" 
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Управление справочниками и базовыми параметрами" 
+                               FontSize="14" 
+                               Foreground="{DynamicResource TextMuted}" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,5,0,0"/>
                 </StackPanel>
 
+                <!-- Табы -->
                 <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
                     <!-- Вкладка 1: Категории авто -->
                     <TabItem Header="🚗 Категории авто" Style="{StaticResource TabItemStyle}">
@@ -89,15 +115,44 @@
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
-                            <ListBox x:Name="CategoriesList" Grid.Column="0" DisplayMemberPath="Name" Margin="0,0,10,0" 
+                            <ListBox x:Name="CategoriesList" 
+                                     Grid.Column="0" 
+                                     DisplayMemberPath="Name" 
+                                     Margin="0,0,10,0" 
+                                     Style="{StaticResource SettingsListBoxStyle}"
                                      SelectionChanged="CategoriesList_SelectionChanged"/>
-                            <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15">
+                            <Border Grid.Column="1" 
+                                    Background="{DynamicResource BgCard}" 
+                                    CornerRadius="6" 
+                                    Padding="15"
+                                    BorderBrush="{DynamicResource BorderColor}"
+                                    BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Редактирование" FontWeight="Bold" Margin="0,0,0,10"/>
-                                    <TextBox x:Name="CatNameText" Height="40" Margin="0,0,0,10" Padding="5"/>
-                                    <TextBox x:Name="CatOrderText" Height="40" Margin="0,0,0,10" Padding="5"/>
-                                    <Button Content="Сохранить" Click="SaveCategory_Click" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
-                                    <Button Content="Удалить" Click="DeleteCategory_Click" Height="40" Margin="0,5,0,0" Background="#E74C3C" Foreground="White"/>
+                                    <TextBlock Text="Редактирование" 
+                                               FontWeight="Bold" 
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMain}"
+                                               Margin="0,0,0,10"/>
+                                    <TextBlock Text="Название" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="CatNameText" Height="40" Margin="0,0,0,10" Padding="10,0"/>
+                                    <TextBlock Text="Порядок сортировки" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="CatOrderText" Height="40" Margin="0,0,0,10" Padding="10,0"/>
+                                    <Button Content="Сохранить" 
+                                            Click="SaveCategory_Click" 
+                                            Style="{StaticResource SuccessBtn}"
+                                            Height="40" 
+                                            Margin="0,5,0,0"/>
+                                    <Button Content="Удалить" 
+                                            Click="DeleteCategory_Click" 
+                                            Style="{StaticResource DangerBtn}"
+                                            Height="40" 
+                                            Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -110,16 +165,49 @@
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
-                            <ListBox x:Name="PaymentsList" Grid.Column="0" DisplayMemberPath="Name" Margin="0,0,10,0" 
+                            <ListBox x:Name="PaymentsList" 
+                                     Grid.Column="0" 
+                                     DisplayMemberPath="Name" 
+                                     Margin="0,0,10,0" 
+                                     Style="{StaticResource SettingsListBoxStyle}"
                                      SelectionChanged="PaymentsList_SelectionChanged"/>
-                            <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15">
+                            <Border Grid.Column="1" 
+                                    Background="{DynamicResource BgCard}" 
+                                    CornerRadius="6" 
+                                    Padding="15"
+                                    BorderBrush="{DynamicResource BorderColor}"
+                                    BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Редактирование" FontWeight="Bold" Margin="0,0,0,10"/>
-                                    <TextBox x:Name="PayNameText" Height="40" Margin="0,0,0,10" Padding="5"/>
-                                    <CheckBox x:Name="PayActiveCheck" Content="Активен" Margin="0,0,0,10" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="PayOrderText" Height="40" Margin="0,0,0,10" Padding="5"/>
-                                    <Button Content="Сохранить" Click="SavePayment_Click" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
-                                    <Button Content="Удалить" Click="DeletePayment_Click" Height="40" Margin="0,5,0,0" Background="#E74C3C" Foreground="White"/>
+                                    <TextBlock Text="Редактирование" 
+                                               FontWeight="Bold" 
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMain}"
+                                               Margin="0,0,0,10"/>
+                                    <TextBlock Text="Название" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="PayNameText" Height="40" Margin="0,0,0,10" Padding="10,0"/>
+                                    <CheckBox x:Name="PayActiveCheck" 
+                                              Content="Активен" 
+                                              Margin="0,0,0,10" 
+                                              VerticalAlignment="Center"
+                                              Foreground="{DynamicResource TextMain}"/>
+                                    <TextBlock Text="Порядок сортировки" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="PayOrderText" Height="40" Margin="0,0,0,10" Padding="10,0"/>
+                                    <Button Content="Сохранить" 
+                                            Click="SavePayment_Click" 
+                                            Style="{StaticResource SuccessBtn}"
+                                            Height="40" 
+                                            Margin="0,5,0,0"/>
+                                    <Button Content="Удалить" 
+                                            Click="DeletePayment_Click" 
+                                            Style="{StaticResource DangerBtn}"
+                                            Height="40" 
+                                            Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -132,14 +220,39 @@
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
-                            <ListBox x:Name="RolesList" Grid.Column="0" DisplayMemberPath="Name" Margin="0,0,10,0" 
+                            <ListBox x:Name="RolesList" 
+                                     Grid.Column="0" 
+                                     DisplayMemberPath="Name" 
+                                     Margin="0,0,10,0" 
+                                     Style="{StaticResource SettingsListBoxStyle}"
                                      SelectionChanged="RolesList_SelectionChanged"/>
-                            <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15">
+                            <Border Grid.Column="1" 
+                                    Background="{DynamicResource BgCard}" 
+                                    CornerRadius="6" 
+                                    Padding="15"
+                                    BorderBrush="{DynamicResource BorderColor}"
+                                    BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Редактирование" FontWeight="Bold" Margin="0,0,0,10"/>
-                                    <TextBox x:Name="RoleNameText" Height="40" Margin="0,0,0,10" Padding="5"/>
-                                    <Button Content="Сохранить" Click="SaveRole_Click" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
-                                    <Button Content="Удалить" Click="DeleteRole_Click" Height="40" Margin="0,5,0,0" Background="#E74C3C" Foreground="White"/>
+                                    <TextBlock Text="Редактирование" 
+                                               FontWeight="Bold" 
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMain}"
+                                               Margin="0,0,0,10"/>
+                                    <TextBlock Text="Название роли" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,0,0,5"/>
+                                    <TextBox x:Name="RoleNameText" Height="40" Margin="0,0,0,10" Padding="10,0"/>
+                                    <Button Content="Сохранить" 
+                                            Click="SaveRole_Click" 
+                                            Style="{StaticResource SuccessBtn}"
+                                            Height="40" 
+                                            Margin="0,5,0,0"/>
+                                    <Button Content="Удалить" 
+                                            Click="DeleteRole_Click" 
+                                            Style="{StaticResource DangerBtn}"
+                                            Height="40" 
+                                            Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -147,25 +260,63 @@
 
                     <!-- Вкладка 4: Общие настройки -->
                     <TabItem Header="⚙️ Общие настройки" Style="{StaticResource TabItemStyle}">
-                        <StackPanel Margin="50,20,50,0" HorizontalAlignment="Center" Width="400">
-                            <TextBlock Text="Финансовые параметры" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
-                            <Label Content="Доля компании (%)" Foreground="Black" FontWeight="SemiBold"/>
-                            <TextBox x:Name="SettingCompanyShare" Height="40" Padding="5" Margin="0,0,0,15"/>
-                            <Label Content="Минимальный интервал между записями (минуты)" Foreground="Black" FontWeight="SemiBold"/>
-                            <TextBox x:Name="SettingAppointmentDuration" Height="40" Padding="5" Margin="0,0,0,15"/>
-                            <Label Content="Процент админа от оборота (%)" Foreground="Black" FontWeight="SemiBold"/>
-                            <TextBox x:Name="SettingAdminPercent" Height="40" Padding="5" Margin="0,0,0,15"/>
-                            <Label Content="Процент мойщика (ночь %)" Foreground="Black" FontWeight="SemiBold"/>
-                            <TextBox x:Name="SettingNightPercent" Height="40" Padding="5" Margin="0,0,0,20"/>
-                            <Button Content="Сохранить все настройки" Click="SaveSettings_Click" Height="50" Background="#27AE60" Foreground="White" FontWeight="Bold" FontSize="16"/>
-                        </StackPanel>
+                        <Border Background="{DynamicResource BgCard}" 
+                                CornerRadius="6" 
+                                Padding="30"
+                                Margin="50,20,50,0"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="1">
+                            <StackPanel HorizontalAlignment="Center" Width="500">
+                                <TextBlock Text="Финансовые параметры" 
+                                           FontSize="18" 
+                                           FontWeight="Bold" 
+                                           Foreground="{DynamicResource TextMain}"
+                                           Margin="0,0,0,20"/>
+
+                                <TextBlock Text="Доля компании (%)" 
+                                           Foreground="{DynamicResource TextMain}" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,5"/>
+                                <TextBox x:Name="SettingCompanyShare" Height="40" Padding="10,0" Margin="0,0,0,15"/>
+
+                                <TextBlock Text="Минимальный интервал между записями (минуты)" 
+                                           Foreground="{DynamicResource TextMain}" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,5"/>
+                                <TextBox x:Name="SettingAppointmentDuration" Height="40" Padding="10,0" Margin="0,0,0,15"/>
+
+                                <TextBlock Text="Процент админа от оборота (%)" 
+                                           Foreground="{DynamicResource TextMain}" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,5"/>
+                                <TextBox x:Name="SettingAdminPercent" Height="40" Padding="10,0" Margin="0,0,0,15"/>
+
+                                <TextBlock Text="Процент мойщика (ночь %)" 
+                                           Foreground="{DynamicResource TextMain}" 
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,5"/>
+                                <TextBox x:Name="SettingNightPercent" Height="40" Padding="10,0" Margin="0,0,0,25"/>
+
+                                <Button Content="Сохранить все настройки" 
+                                        Click="SaveSettings_Click" 
+                                        Style="{StaticResource SuccessBtn}"
+                                        Height="50" 
+                                        FontSize="16"/>
+                            </StackPanel>
+                        </Border>
                     </TabItem>
                 </TabControl>
 
-                <Button Grid.Row="2" Content="✖ Закрыть" Click="CloseButton_Click" 
-                        Width="150" Height="40" Background="#34495E" Foreground="White" 
-                        FontWeight="Bold" FontSize="14" BorderThickness="0" Cursor="Hand"
-                        HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                <!-- Кнопка закрытия -->
+                <Button Grid.Row="2" 
+                        Content="✖ Закрыть" 
+                        Click="CloseButton_Click" 
+                        Style="{StaticResource DangerBtn}"
+                        Width="200" 
+                        Height="45" 
+                        FontSize="14"
+                        HorizontalAlignment="Center" 
+                        Margin="0,20,0,0"/>
             </Grid>
         </Border>
     </Grid>

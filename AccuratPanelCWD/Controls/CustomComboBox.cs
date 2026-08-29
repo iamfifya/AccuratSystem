@@ -71,7 +71,7 @@ namespace AccuratPanelCWD.Controls
 
         public static readonly DependencyProperty CornerRadiusProperty =
             DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(new CornerRadius(5)));
+                new FrameworkPropertyMetadata(new CornerRadius(6)));
 
         public static readonly RoutedEvent SelectionChangedEvent =
             EventManager.RegisterRoutedEvent(nameof(SelectionChanged), RoutingStrategy.Bubble,

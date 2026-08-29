@@ -12,8 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using EmployeeSchedule = AccuratSystem.Contracts.Models.EmployeeSchedule;
-using WpfUser = AccuratPanelCWD.Models.User; // ДОБАВЬТЕ ЭТУ СТРОКУ
-
+using WpfUser = AccuratPanelCWD.Models.User;
 
 namespace AccuratPanelCWD
 {
@@ -21,14 +20,13 @@ namespace AccuratPanelCWD
     {
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
-        private readonly WpfUser _currentUser; // Нужно для проверки прав (Директор)
+        private readonly WpfUser _currentUser;
         private DateTime _currentDate;
         private List<EmployeeSchedule> _scheduleData;
         private Dictionary<int, Border> _dayHeaders = new Dictionary<int, Border>();
         private Dictionary<string, Border> _cells = new Dictionary<string, Border>();
         private bool _isDataModified = false;
 
-        // Вкладки филиалов
         private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
         public ObservableCollection<BranchTabItem> BranchTabs
         {
@@ -44,7 +42,6 @@ namespace AccuratPanelCWD
             {
                 _selectedBranchTab = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
-                // При смене вкладки загружаем данные для нового филиала
                 if (_selectedBranchTab != null)
                 {
                     _ = LoadScheduleAsync();
@@ -54,7 +51,7 @@ namespace AccuratPanelCWD
 
         public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
 
-        public ScheduleWindow(WpfUser user) // Теперь принимаем пользователя
+        public ScheduleWindow(WpfUser user)
         {
             InitializeComponent();
             _apiService = new ApiService();
@@ -65,6 +62,14 @@ namespace AccuratPanelCWD
             _ = InitializeTabsAsync();
         }
 
+        /// <summary>
+        /// Безопасно получает Brush из ресурсов темы с фолбэком.
+        /// </summary>
+        private Brush GetThemeBrush(string key, Brush fallback = null)
+        {
+            return TryFindResource(key) as Brush ?? fallback ?? Brushes.Transparent;
+        }
+
         private async Task InitializeTabsAsync()
         {
             try
@@ -72,8 +77,6 @@ namespace AccuratPanelCWD
                 var branches = await _apiService.GetBranchesAsync();
                 BranchTabs.Clear();
 
-                // Убрали вкладку "Все филиалы" (BranchId = 0)
-                // График работы не может быть глобальным, он всегда создается для конкретной мойки
                 foreach (var b in branches)
                     BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
 
@@ -95,7 +98,6 @@ namespace AccuratPanelCWD
             if (_scheduleData == null || !_scheduleData.Any())
             {
                 _scheduleData = new List<EmployeeSchedule>();
-                // Убрал MessageBox отсюда, чтобы он не спамил при переключении вкладок
             }
 
             MonthYearText.Text = _currentDate.ToString("MMMM yyyy");
@@ -104,36 +106,8 @@ namespace AccuratPanelCWD
             UpdateSaveButtonState();
             this.IsEnabled = true;
         }
-        private string _currentBanchText() => _currentDate.ToString("MMMM yyyy");
 
         private void UpdateSaveButtonState() => SaveButton.IsEnabled = _isDataModified && _scheduleData.Any();
-
-        private void Cell_Click(object sender, MouseButtonEventArgs e)
-        {
-            var border = sender as Border;
-            if (border?.Tag == null) return;
-
-            dynamic tag = border.Tag;
-            int employeeId = tag.EmployeeId;
-            int day = tag.Day;
-            string currentStatus = tag.Status;
-
-            string newStatus = currentStatus == "р" ? "в" : "р";
-
-            var employeeSchedule = _scheduleData.FirstOrDefault(s => s.EmployeeId == employeeId);
-            if (employeeSchedule != null)
-            {
-                employeeSchedule.Days[day] = newStatus;
-                border.Tag = new { EmployeeId = employeeId, Day = day, Status = newStatus };
-
-                if (!_isDataModified)
-                {
-                    _isDataModified = true;
-                    UpdateSaveButtonState();
-                }
-            }
-            e.Handled = true;
-        }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
@@ -191,7 +165,6 @@ namespace AccuratPanelCWD
             int branchId = SelectedBranchTab.BranchId;
             var allEmployees = await _apiService.GetUsersAsync();
 
-            // Берем сотрудников ЭТОГО филиала + Директоров/Управляющих (у которых BranchId = null)
             var employees = allEmployees
                 .Where(u => u.BranchId == branchId || u.RoleId == 1 || u.RoleId == 2)
                 .ToList();
@@ -286,7 +259,6 @@ namespace AccuratPanelCWD
             }
         }
 
-        // === МЕТОДЫ ОТРИСОВКИ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ ИЗ ТВОЕГО КОДА ===
         private void BuildScheduleTable()
         {
             ScheduleGrid.Children.Clear();
@@ -299,16 +271,25 @@ namespace AccuratPanelCWD
             _dayHeaders.Clear();
             _cells.Clear();
 
+            var gridBorderBrush = GetThemeBrush("ScheduleGridBorder", Brushes.LightGray);
+            var weekendTextColor = GetThemeBrush("ScheduleWeekendText", new SolidColorBrush(Color.FromRgb(231, 76, 60)));
+            var cellTextColor = GetThemeBrush("ScheduleCellText", Brushes.DarkSlateGray);
+
             for (int day = 1; day <= daysInMonth; day++)
             {
                 HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-                Border dayBorder = new Border { BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34495E")), BorderThickness = new Thickness(1, 0, 0, 0), Background = Brushes.Transparent };
+                Border dayBorder = new Border { BorderBrush = gridBorderBrush, BorderThickness = new Thickness(1, 0, 0, 0), Background = Brushes.Transparent };
                 DateTime date = new DateTime(_currentDate.Year, _currentDate.Month, day);
                 bool isWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
 
-                TextBlock dayText = new TextBlock { Text = day.ToString(), Style = (Style)FindResource("DayHeaderCellStyle"), Foreground = isWeekend ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E74C3C")) : Brushes.White };
+                TextBlock dayText = new TextBlock
+                {
+                    Text = day.ToString(),
+                    Style = (Style)FindResource("DayHeaderCellStyle"),
+                    Foreground = isWeekend ? weekendTextColor : Brushes.White
+                };
 
                 dayBorder.Child = dayText;
                 Grid.SetColumn(dayBorder, day);
@@ -318,11 +299,19 @@ namespace AccuratPanelCWD
 
             for (int i = 0; i < _scheduleData.Count; i++)
             {
-                ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
+                ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(45) });
                 var emp = _scheduleData[i];
 
-                Border nameBorder = new Border { BorderBrush = Brushes.LightGray, BorderThickness = new Thickness(0, 0, 1, 1), Background = Brushes.White };
-                TextBlock nameText = new TextBlock { Text = emp.EmployeeName, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0), FontWeight = FontWeights.Medium, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C3E50")) };
+                Border nameBorder = new Border { BorderBrush = gridBorderBrush, BorderThickness = new Thickness(0, 0, 1, 1), Background = GetThemeBrush("BgCard", Brushes.White) };
+                TextBlock nameText = new TextBlock
+                {
+                    Text = emp.EmployeeName,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10, 0, 0, 0),
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = GetThemeBrush("TextMain", Brushes.Black),
+                    FontSize = 13
+                };
                 nameBorder.Child = nameText;
                 Grid.SetRow(nameBorder, i);
                 Grid.SetColumn(nameBorder, 0);
@@ -333,8 +322,23 @@ namespace AccuratPanelCWD
                     string cellKey = $"{emp.EmployeeId}_{day}";
                     string dayValue = emp.Days.ContainsKey(day) ? emp.Days[day] : "";
 
-                    Border cellBorder = new Border { BorderBrush = Brushes.LightGray, BorderThickness = new Thickness(0, 0, 1, 1), Background = GetColorForShift(dayValue), Cursor = Cursors.Hand, Tag = cellKey };
-                    TextBlock cellText = new TextBlock { Text = dayValue, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontWeight = FontWeights.Bold, Foreground = Brushes.DarkSlateGray };
+                    Border cellBorder = new Border
+                    {
+                        BorderBrush = gridBorderBrush,
+                        BorderThickness = new Thickness(0, 0, 1, 1),
+                        Background = GetColorForShift(dayValue),
+                        Cursor = Cursors.Hand,
+                        Tag = cellKey
+                    };
+                    TextBlock cellText = new TextBlock
+                    {
+                        Text = dayValue,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = cellTextColor,
+                        FontSize = 14
+                    };
 
                     cellBorder.Child = cellText;
                     cellBorder.MouseLeftButtonDown += Cell_MouseLeftButtonDown;
@@ -353,10 +357,17 @@ namespace AccuratPanelCWD
         {
             switch (shiftType?.ToUpper())
             {
-                case "Р": return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A9DFBF"));
-                case "В": return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FAD7A1"));
-                case "П": return new SolidColorBrush(Color.FromArgb(60, 231, 76, 60));
-                default: return Brushes.White;
+                case "Р": return GetThemeBrush("ScheduleWorkDay", new SolidColorBrush(Color.FromRgb(169, 223, 191)));
+                case "В": return GetThemeBrush("ScheduleDayOff", new SolidColorBrush(Color.FromRgb(250, 215, 161)));
+                case "П":
+                    var skipColor = GetThemeBrush("ScheduleSkip", new SolidColorBrush(Color.FromRgb(231, 76, 60)));
+                    // Делаем полупрозрачным для пропуска
+                    if (skipColor is SolidColorBrush solidBrush)
+                    {
+                        return new SolidColorBrush(Color.FromArgb(60, solidBrush.Color.R, solidBrush.Color.G, solidBrush.Color.B));
+                    }
+                    return skipColor;
+                default: return GetThemeBrush("BgCard", Brushes.White);
             }
         }
 
@@ -404,7 +415,7 @@ namespace AccuratPanelCWD
                 emp.Days[day] = "";
 
                 if (border.Child is TextBlock textBlock) textBlock.Text = "";
-                border.Background = Brushes.White;
+                border.Background = GetColorForShift("");
             }
         }
 

@@ -1,0 +1,88 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ЦВЕТОВАЯ ПАЛИТРА (Темная тема) -->
+    <SolidColorBrush x:Key="BgMain" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="BgCard" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="BorderColor" Color="#3F3F46"/>
+
+    <SolidColorBrush x:Key="TextMain" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="TextMuted" Color="#A0A0A0"/>
+    <SolidColorBrush x:Key="TextLightMuted" Color="#808080"/>
+
+    <SolidColorBrush x:Key="AccentBlue" Color="#5BA9E6"/>
+    <SolidColorBrush x:Key="AccentGreen" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="AccentRed" Color="#F44336"/>
+    <SolidColorBrush x:Key="AccentOrange" Color="#FF9800"/>
+    <SolidColorBrush x:Key="AccentYellow" Color="#FFC107"/>
+    <SolidColorBrush x:Key="AccentPurple" Color="#9C27B0"/>
+
+    <!-- Дополнительные цвета для контролов -->
+    <SolidColorBrush x:Key="InputBackground" Color="#3F3F46"/>
+    <SolidColorBrush x:Key="InputBorder" Color="#555555"/>
+    <SolidColorBrush x:Key="InputText" Color="#E0E0E0"/>
+
+    <!-- Состояния карточек -->
+    <SolidColorBrush x:Key="BgSelected" Color="#22344A"/>
+    <SolidColorBrush x:Key="BgAppointment" Color="#3B3320"/>
+    <SolidColorBrush x:Key="BorderAppointment" Color="#C9A227"/>
+    <SolidColorBrush x:Key="BgAppointmentSelected" Color="#46391F"/>
+    <SolidColorBrush x:Key="SeparatorColor" Color="#3F3F46"/>
+
+    <!-- Калькулятор -->
+    <SolidColorBrush x:Key="CalcOperatorBg" Color="#1F3A52"/>
+    <SolidColorBrush x:Key="CalcClearBg" Color="#4A2828"/>
+    <SolidColorBrush x:Key="CalcBg" Color="#2A2A2D"/>
+
+    <!-- Окно заказа -->
+    <SolidColorBrush x:Key="UpsellBannerBg" Color="#4A4220"/>
+    <SolidColorBrush x:Key="UpsellBannerBorder" Color="#C9A227"/>
+    <SolidColorBrush x:Key="UpsellBannerText" Color="#FFD700"/>
+    <SolidColorBrush x:Key="UpsellBonusText" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="ExpenseCardBg" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="ExpenseTotalBg" Color="#1F3A3A"/>
+    <SolidColorBrush x:Key="TimelineCardBorder" Color="#3F3F46"/>
+    <SolidColorBrush x:Key="SummaryPanelBg" Color="#1F3A52"/>
+    <SolidColorBrush x:Key="TabContentBg" Color="#2D2D30"/>
+
+    <!-- Таблица клиентов -->
+    <SolidColorBrush x:Key="TableHeaderBg" Color="#1A1A1D"/>
+    <SolidColorBrush x:Key="TableRowHover" Color="#22344A"/>
+    <SolidColorBrush x:Key="TableRowSelected" Color="#1F3A52"/>
+    <SolidColorBrush x:Key="TableRowSelectedBorder" Color="#3498DB"/>
+    <SolidColorBrush x:Key="GridSplitterColor" Color="#3F3F46"/>
+    <SolidColorBrush x:Key="TableRowBorder" Color="#2D2D30"/>
+
+    <!-- Отчеты -->
+    <SolidColorBrush x:Key="ReportNetProfitBg" Color="#1F3A52"/>
+    <SolidColorBrush x:Key="ReportNetProfitText" Color="#A0A0A0"/>
+    <SolidColorBrush x:Key="ReportNetProfitValue" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="ReportWashProfit" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="ReportServiceProfit" Color="#5BA9E6"/>
+    <SolidColorBrush x:Key="ReportToPayText" Color="#9C27B0"/>
+
+    <!-- Правила скидок -->
+    <SolidColorBrush x:Key="DiscountRuleCardBg" Color="#1F3A52"/>
+    <SolidColorBrush x:Key="DiscountRuleCardBorder" Color="#5BA9E6"/>
+
+    <!-- Статусы сотрудников -->
+    <SolidColorBrush x:Key="StatusActive" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="StatusInactive" Color="#F44336"/>
+
+    <!-- График работы -->
+    <SolidColorBrush x:Key="ScheduleWorkDay" Color="#2E7D32"/>
+    <SolidColorBrush x:Key="ScheduleDayOff" Color="#E65100"/>
+    <SolidColorBrush x:Key="ScheduleSkip" Color="#C62828"/>
+    <SolidColorBrush x:Key="ScheduleWeekendText" Color="#F44336"/>
+    <SolidColorBrush x:Key="ScheduleCellText" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="ScheduleGridBorder" Color="#3F3F46"/>
+
+    <!-- Админ-панель (DEV) -->
+    <SolidColorBrush x:Key="AdminSidebarBg" Color="#1A1A1D"/>
+    <SolidColorBrush x:Key="AdminSidebarText" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="AdminSidebarSelected" Color="#2A3E52"/>
+    <SolidColorBrush x:Key="AdminGridAltRow" Color="#252528"/>
+    <SolidColorBrush x:Key="AdminGridBg" Color="#1E1E21"/>
+    <SolidColorBrush x:Key="AdminGridHeaderBg" Color="#1A1A1D"/>
+
+</ResourceDictionary>

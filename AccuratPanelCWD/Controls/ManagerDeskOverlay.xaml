@@ -11,11 +11,11 @@
 
     <UserControl.Resources>
         <Style x:Key="TileButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="#2C3E50"/>
+            <Setter Property="Background" Value="{DynamicResource BgCard}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderBrush" Value="#BDC3C7"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Margin" Value="10"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -25,7 +25,7 @@
                         <Border x:Name="Border" Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="12">
+                                CornerRadius="6">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="8" ShadowDepth="3" Opacity="0.15"/>
                             </Border.Effect>
@@ -33,12 +33,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#E3F2FD"/>
-                                <Setter TargetName="Border" Property="BorderBrush" Value="#3498DB"/>
-                                <Setter Property="Foreground" Value="#3498DB"/>
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BgSelected}"/>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#D6EAF8"/>
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BgSelected}"/>
+                                <Setter TargetName="Border" Property="Opacity" Value="0.8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -96,11 +97,14 @@
     <Grid>
         <Grid x:Name="OverlayBackground" Background="#A6000000" MouseLeftButtonDown="Overlay_MouseLeftButtonDown" Opacity="0"/>
 
-        <Border x:Name="PopupPanel" Background="#F5F6FA" CornerRadius="16" 
+        <Border x:Name="PopupPanel" 
+                Background="{DynamicResource BgMain}" 
+                CornerRadius="6" 
                 Width="850" Height="600" 
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 MouseLeftButtonDown="Card_MouseLeftButtonDown"
-                RenderTransformOrigin="0.5,0.5" Opacity="0">
+                RenderTransformOrigin="0.5,0.5" 
+                Opacity="0">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="25" ShadowDepth="10" Opacity="0.4"/>
             </Border.Effect>
@@ -115,34 +119,60 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- Заголовок -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                    <TextBlock Text="💼 Стол управляющего" FontSize="26" FontWeight="Black" Foreground="#2C3E50" HorizontalAlignment="Center"/>
-                    <TextBlock Text="{Binding ActiveUserInfo, FallbackValue='Загрузка...'}" FontSize="14" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="💼 Стол управляющего" 
+                               FontSize="26" 
+                               FontWeight="Black" 
+                               Foreground="{DynamicResource TextMain}" 
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding ActiveUserInfo, FallbackValue='Загрузка...'}" 
+                               FontSize="14" 
+                               Foreground="{DynamicResource TextMuted}" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,5,0,0"/>
                 </StackPanel>
 
+                <!-- Плитки -->
                 <UniformGrid Grid.Row="1" Columns="4" Rows="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="600" Height="400">
                     <Button Style="{StaticResource TileButtonStyle}" Click="EmployeesButton_Click">
                         <StackPanel>
                             <TextBlock Text="👥" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                            <TextBlock Text="Сотрудники и Графики" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Сотрудники и Графики" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" Click="ServicesButton_Click">
                         <StackPanel>
                             <TextBlock Text="🛠️" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                            <TextBlock Text="Управление услугами" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Управление услугами" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" Click="ClientsButton_Click">
                         <StackPanel>
                             <TextBlock Text="📁" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                            <TextBlock Text="Клиентская база" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Клиентская база" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" Click="ReportsButton_Click">
                         <StackPanel>
                             <TextBlock Text="📊" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                            <TextBlock Text="Отчеты и Аналитика" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Отчеты и Аналитика" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="CompanyManagementBtn" Click="CompanyManagementBtn_Click">
@@ -150,7 +180,11 @@
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="⚙" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"/>
                             </WrapPanel>
-                            <TextBlock Text="Управление компанией" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Управление компанией" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="BranchManagementBtn" Click="BranchManagementBtn_Click">
@@ -158,7 +192,11 @@
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="🏢" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"/>
                             </WrapPanel>
-                            <TextBlock Text="Управление филиалами" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Управление филиалами" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="EmptyBtn1">
@@ -172,29 +210,42 @@
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="CashboxButton" Click="CashboxButton_Click">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="₽ " FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
-                                           Foreground="#27AE60"/>
-                                <TextBlock Text="{Binding TodayRevenueDisplay, FallbackValue='0'}" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="₽ " HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
+                                           Foreground="{DynamicResource AccentGreen}"/>
+                                <TextBlock Text="{Binding TodayRevenueDisplay, FallbackValue='0'}" HorizontalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AccentGreen}"/>
                             </WrapPanel>
-                            <TextBlock Text="Выручка за текущую смену" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Выручка за текущую смену" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="UpsellBtn" Click="UpsellBtn_Click">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="🛠️" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
-                                           Foreground="#27AE60"/>
+                                           Foreground="{DynamicResource AccentGreen}"/>
                             </WrapPanel>
-                            <TextBlock Text="Правила доп.продаж" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Правила доп.продаж" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="DiscountRulesBtn" Click="DiscountRulesBtn_Click">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="%" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
-                                           Foreground="#27AE60"/>
+                                           Foreground="{DynamicResource AccentGreen}"/>
                             </WrapPanel>
-                            <TextBlock Text="Правила  скидок" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Правила скидок" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="ReputationButton" Click="ReputationButton_Click">
@@ -202,32 +253,41 @@
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="★" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
                                            Foreground="#FFD700"/>
-                                <TextBlock Text="5.0" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="5.0" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="#FFD700"/>
                             </WrapPanel>
-                            <TextBlock Text="Рейтинг филиала" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Рейтинг филиала" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="EmptyBtn3">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text=":)" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
-                                           Foreground="#27AE60"/>
+                                           Foreground="{DynamicResource AccentGreen}"/>
                             </WrapPanel>
-                            <TextBlock Text="тут пусто :)" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="тут пусто :)" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                 </UniformGrid>
 
-                <Button Grid.Row="2" Content="✖ Вернуться в терминал" Click="CloseButton_Click" 
-                        Width="220" Height="40" Background="#34495E" Foreground="White" 
-                        FontWeight="Bold" FontSize="14" BorderThickness="0" Cursor="Hand"
-                        HorizontalAlignment="Center" Margin="0,20,0,0">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
+                <!-- Кнопка закрытия -->
+                <Button Grid.Row="2" 
+                        Content="✖ Вернуться в терминал" 
+                        Click="CloseButton_Click" 
+                        Style="{StaticResource DangerBtn}"
+                        Width="280" 
+                        Height="45" 
+                        FontSize="14"
+                        HorizontalAlignment="Center" 
+                        Margin="0,20,0,0"/>
             </Grid>
         </Border>
     </Grid>

@@ -114,12 +114,12 @@ namespace AccuratPanelCWD
                 WashRevenueText.Text = $"Выручка: {periodReports.Sum(r => r.WashTotalRevenue):N0} ₽";
                 WashCarsText.Text = $"Заказов: {periodReports.Sum(r => r.WashTotalCars)}";
                 WashProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.WashNetProfit):N0} ₽";
-                WashProfitText.Foreground = new SolidColorBrush(Colors.Green);
+                WashProfitText.Foreground = TryFindResource("ReportWashProfit") as Brush ?? new SolidColorBrush(Colors.Green);
 
                 ServiceRevenueText.Text = $"Выручка: {periodReports.Sum(r => r.ServiceTotalRevenue):N0} ₽";
                 ServiceCarsText.Text = $"Заказов: {periodReports.Sum(r => r.ServiceTotalCars)}";
                 ServiceProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.ServiceNetProfit):N0} ₽";
-                ServiceProfitText.Foreground = new SolidColorBrush(Colors.DarkBlue);
+                ServiceProfitText.Foreground = TryFindResource("ReportServiceProfit") as Brush ?? new SolidColorBrush(Color.FromRgb(26, 82, 118));
 
                 // ЗАПОЛНЯЕМ СПОСОБЫ ОПЛАТЫ
                 CashTotalText.Text = $"{periodReports.Sum(r => r.CashAmount):N0} ₽ ({periodReports.Sum(r => r.CashCount)} шт.)";
@@ -184,7 +184,10 @@ namespace AccuratPanelCWD
                         }).ToList()
                 };
 
-                // ВОТ ЭТА СТРОЧКА ПОТЕРЯЛАСЬ! Отдаем данные в таблицу:
+                ApplyThemeToCharts();
+                ReportContent.Visibility = Visibility.Visible;
+
+                // Отдаем данные в таблицу:
                 EmployeesSalaryList.ItemsSource = _lastGeneratedReport.EmployeesWork;
 
                 ReportContent.Visibility = Visibility.Visible;
@@ -193,6 +196,40 @@ namespace AccuratPanelCWD
             finally { this.IsEnabled = true; }
         }
 
+        private void ApplyThemeToCharts()
+        {
+            // Темизация линейного графика
+            if (RevenueSeries != null && RevenueSeries.Count > 0)
+            {
+                var lineSeries = RevenueSeries[0] as LineSeries;
+                if (lineSeries != null)
+                {
+                    var accentGreen = TryFindResource("AccentGreen") as Brush ?? new SolidColorBrush(Color.FromRgb(39, 174, 96));
+                    lineSeries.Fill = accentGreen;
+                    lineSeries.StrokeThickness = 3;
+                    lineSeries.PointForeground = Brushes.White;
+                }
+            }
+
+            // Темизация круговой диаграммы
+            if (ShareSeries != null)
+            {
+                var colors = new[] {
+            TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush(Color.FromRgb(52, 152, 219)),
+            TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Color.FromRgb(230, 126, 34))
+        };
+
+                for (int i = 0; i < ShareSeries.Count && i < colors.Length; i++)
+                {
+                    var pieSeries = ShareSeries[i] as PieSeries;
+                    if (pieSeries != null)
+                    {
+                        pieSeries.Fill = colors[i];
+                        pieSeries.Foreground = TryFindResource("TextMain") as Brush ?? Brushes.Black;
+                    }
+                }
+            }
+        }
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
         private void ExportButton_Click(object sender, RoutedEventArgs e)
         {

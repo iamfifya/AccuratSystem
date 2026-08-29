@@ -9,77 +9,152 @@
         Title="Добавление/Редактирование услуги"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="700" Height="850"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Width="700" Height="950"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
-        WindowStyle="None">
+        WindowStyle="SingleBorderWindow"
+        Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="15">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
+
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            
+
             <StackPanel Margin="0,0,10,20">
-                <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="Bold" 
-                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                <!-- Заголовок -->
+                <TextBlock Text="{Binding WindowTitle}" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource TextMain}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,25"/>
 
-                <Label Content="Название услуги:" Grid.Row="1" Margin="0,5" FontWeight="SemiBold"/>
-                <TextBox x:Name="NameTextBox" Text="{Binding CurrentService.Name, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="50" Padding="5"/>
+                <!-- Название услуги -->
+                <TextBlock Text="Название услуги" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="NameTextBox" 
+                         Text="{Binding CurrentService.Name, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Цены по категориям кузова:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- Цены по категориям кузова -->
+                <TextBlock Text="Цены по категориям кузова" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
 
-                <ItemsControl x:Name="PriceCategoriesControl" Margin="0,5">
+                <ItemsControl x:Name="PriceCategoriesControl" Margin="0,0,0,20">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                            <Border Background="{DynamicResource BgCard}" 
+                                    CornerRadius="6" 
+                                    Padding="15" 
+                                    Margin="0,0,0,8"
+                                    BorderBrush="{DynamicResource BorderColor}"
+                                    BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <TextBlock Text="{Binding CategoryName}" 
-                           VerticalAlignment="Center" 
-                           FontSize="12" Foreground="#7F8C8D"/>
+                                    <TextBlock Text="{Binding CategoryName}" 
+                                               VerticalAlignment="Center" 
+                                               FontSize="13" 
+                                               Foreground="{DynamicResource TextMain}"
+                                               FontWeight="SemiBold"/>
 
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Width="150">
-                                    <TextBox Text="{Binding Price, UpdateSourceTrigger=PropertyChanged}" 
-                             Width="100" Height="35" Padding="5" VerticalAlignment="Center"/>
-                                    <TextBlock Text=" ₽" VerticalAlignment="Center" FontWeight="Bold" Margin="5,0,0,0"/>
-                                </StackPanel>
-                            </Grid>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Width="180">
+                                        <TextBox Text="{Binding Price, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Width="120" 
+                                                 Height="40" 
+                                                 Padding="10,0" 
+                                                 VerticalAlignment="Center"
+                                                 FontSize="14"
+                                                 FontWeight="Bold"
+                                                 HorizontalContentAlignment="Center"/>
+                                        <TextBlock Text=" ₽" 
+                                                   VerticalAlignment="Center" 
+                                                   FontWeight="Bold" 
+                                                   Margin="8,0,0,0"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource TextMain}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <Label Content="Длительность (минуты):" Margin="0,5" FontWeight="SemiBold"/>
-                <TextBox x:Name="DurationTextBox" Text="{Binding CurrentService.DurationMinutes, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="50" Padding="5"/>
+                <!-- Длительность -->
+                <TextBlock Text="Длительность (минуты)" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="DurationTextBox" 
+                         Text="{Binding CurrentService.DurationMinutes, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Описание:" Margin="0,5" FontWeight="SemiBold"/>
-                <TextBox x:Name="DescriptionTextBox" Text="{Binding CurrentService.Description, UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="80" Padding="5" TextWrapping="Wrap" AcceptsReturn="True"/>
+                <!-- Описание -->
+                <TextBlock Text="Описание" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="DescriptionTextBox" 
+                         Text="{Binding CurrentService.Description, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,0,0,20" 
+                         Height="80" 
+                         Padding="15,10" 
+                         TextWrapping="Wrap" 
+                         AcceptsReturn="True"
+                         FontSize="13"/>
 
-                <Label Content="Индивидуальный % зарплаты за услугу:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <!-- Индивидуальный процент зарплаты -->
+                <TextBlock Text="Индивидуальный % зарплаты за услугу" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox x:Name="CustomWageTextBox" 
                          Text="{Binding CurrentService.CustomWagePercentage, TargetNullValue='', UpdateSourceTrigger=PropertyChanged}" 
-                         Margin="0,5" Height="40" Padding="5" 
+                         Margin="0,0,0,5" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"
                          ToolTip="Оставьте пустым, чтобы использовать базовую ставку сотрудника"/>
                 <TextBlock Text="Если указать здесь процент, он перекроет базовую ставку мойщика для этой услуги." 
-                           Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                           Foreground="{DynamicResource TextMuted}" 
+                           FontSize="11" 
+                           TextWrapping="Wrap" 
+                           Margin="0,0,0,20"/>
 
                 <!-- Категория услуги -->
-                <Label Content="📂 Категория услуги:" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                <TextBlock Text="📂 Категория услуги" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <controls:CustomComboBox x:Name="CategoryComboBox" 
-                         Margin="0,5" 
-                         Height="50"
-                         Placeholder="Выберите категорию услуги"
-                         SelectedValue="{Binding CurrentService.ServiceCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         SelectedValuePath="Tag">
+                                         Margin="0,0,0,20" 
+                                         Height="45"
+                                         Placeholder="Выберите категорию услуги"
+                                         SelectedValue="{Binding CurrentService.ServiceCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         SelectedValuePath="Tag">
                     <controls:CustomComboBox.Items>
                         <ComboBoxItem Content="💦 Мойка (автомойка)" Tag="0"/>
                         <ComboBoxItem Content="🔧 Сервис (ремонт/ТО)" Tag="1"/>
@@ -90,11 +165,18 @@
 
         </ScrollViewer>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1" Margin="0,15">
-                <Button Content="✅ Сохранить" Click="SaveButton_Click" Width="120" Height="35" 
-                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
-                <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
-                    Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
-            </StackPanel>
+        <!-- Кнопки действий (без Width/Height — размеры из AppStyles) -->
+        <StackPanel Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Grid.Row="1" 
+                    Margin="0,20">
+            <Button Content="✅ Сохранить" 
+                    Click="SaveButton_Click" 
+                    Style="{StaticResource SuccessBtn}"
+                    Margin="0,0,10,0"/>
+            <Button Content="✖ Отмена" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
+        </StackPanel>
     </Grid>
 </Window>

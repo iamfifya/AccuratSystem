@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="50" d:DesignWidth="400">
+             d:DesignHeight="45" d:DesignWidth="400">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -12,20 +12,84 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <TextBox x:Name="DateTextBox" Grid.Column="0" Height="50" Width="300" Padding="0" 
-                 IsReadOnly="True" Background="White" Cursor="Hand"
+        <!-- Поле отображения даты -->
+        <TextBox x:Name="DateTextBox" 
+                 Grid.Column="0" 
+                 Height="45" 
+                 Padding="15,0" 
+                 IsReadOnly="True" 
+                 Background="{DynamicResource InputBackground}"
+                 Foreground="{DynamicResource InputText}"
+                 Cursor="Hand"
                  MouseDown="DateTextBox_MouseDown"
-                 BorderBrush="#BDC3C7" BorderThickness="1"
-                 HorizontalContentAlignment="Center"/>
-        
-        <Button Grid.Column="1" Width="30" Height="35" Content="📅" 
-                Background="#3498DB" Foreground="White" BorderThickness="0"
-                Cursor="Hand" Click="CalendarButton_Click"/>
+                 BorderBrush="{DynamicResource InputBorder}" 
+                 BorderThickness="1"
+                 HorizontalContentAlignment="Left"
+                 VerticalContentAlignment="Center"
+                 FontSize="14"
+                 CaretBrush="{DynamicResource InputText}">
+            <TextBox.Template>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6,0,0,6">
+                        <ScrollViewer x:Name="PART_ContentHost" 
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </TextBox.Template>
+        </TextBox>
 
-        <Popup x:Name="CalendarPopup" PlacementTarget="{Binding ElementName=DateTextBox}" 
-               Placement="Bottom" StaysOpen="False" PopupAnimation="Slide">
-            <Border Background="White" BorderBrush="#BDC3C7" BorderThickness="1" 
-                    CornerRadius="5" Padding="10">
+        <!-- Кнопка открытия календаря -->
+        <Button Grid.Column="1" 
+                Width="45" 
+                Height="45" 
+                Content="📅" 
+                Background="{DynamicResource AccentBlue}" 
+                Foreground="White" 
+                BorderThickness="0"
+                Cursor="Hand" 
+                Click="CalendarButton_Click"
+                FontSize="16">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="0,6,6,0">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Opacity" Value="0.85"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+
+        <!-- Popup с календарём -->
+        <Popup x:Name="CalendarPopup" 
+               PlacementTarget="{Binding ElementName=DateTextBox}" 
+               Placement="Bottom" 
+               StaysOpen="False" 
+               PopupAnimation="Slide"
+               AllowsTransparency="True">
+            <Border Background="{DynamicResource BgCard}" 
+                    BorderBrush="{DynamicResource BorderColor}" 
+                    BorderThickness="1" 
+                    CornerRadius="6" 
+                    Padding="15"
+                    Margin="10">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="#000000"/>
+                </Border.Effect>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -33,27 +97,79 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <!-- Навигация по месяцам -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <Button Grid.Column="0" Content="◀" Width="30" Height="35" 
-                                Background="#3498DB" Foreground="White" BorderThickness="0" Cursor="Hand"
-                                Click="PrevMonth_Click"/>
+                        <Button Grid.Column="0" 
+                                Content="◀" 
+                                Width="35" 
+                                Height="35" 
+                                Background="{DynamicResource AccentBlue}" 
+                                Foreground="White" 
+                                BorderThickness="0" 
+                                Cursor="Hand"
+                                Click="PrevMonth_Click"
+                                FontSize="14"
+                                FontWeight="Bold">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Border"
+                                            Background="{TemplateBinding Background}"
+                                            CornerRadius="6">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Border" Property="Opacity" Value="0.85"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
 
-                        <TextBlock x:Name="MonthYearText" Grid.Column="1" 
-                                   FontSize="14" FontWeight="Bold" 
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="MonthYearText" 
+                                   Grid.Column="1" 
+                                   FontSize="15" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMain}"
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center"/>
 
-                        <Button Grid.Column="2" Content="▶" Width="30" Height="35" 
-                                Background="#3498DB" Foreground="White" BorderThickness="0" Cursor="Hand"
-                                Click="NextMonth_Click"/>
+                        <Button Grid.Column="2" 
+                                Content="▶" 
+                                Width="35" 
+                                Height="35" 
+                                Background="{DynamicResource AccentBlue}" 
+                                Foreground="White" 
+                                BorderThickness="0" 
+                                Cursor="Hand"
+                                Click="NextMonth_Click"
+                                FontSize="14"
+                                FontWeight="Bold">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Border"
+                                            Background="{TemplateBinding Background}"
+                                            CornerRadius="6">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Border" Property="Opacity" Value="0.85"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </Grid>
 
-                    <Grid Grid.Row="1" Margin="0,0,0,5">
+                    <!-- Дни недели -->
+                    <Grid Grid.Row="1" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
@@ -64,15 +180,16 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="Пн" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
-                        <TextBlock Grid.Column="1" Text="Вт" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
-                        <TextBlock Grid.Column="2" Text="Ср" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
-                        <TextBlock Grid.Column="3" Text="Чт" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
-                        <TextBlock Grid.Column="4" Text="Пт" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11"/>
-                        <TextBlock Grid.Column="5" Text="Сб" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11" Foreground="#E74C3C"/>
-                        <TextBlock Grid.Column="6" Text="Вс" HorizontalAlignment="Center" FontWeight="Bold" FontSize="11" Foreground="#E74C3C"/>
+                        <TextBlock Grid.Column="0" Text="Пн" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock Grid.Column="1" Text="Вт" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock Grid.Column="2" Text="Ср" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock Grid.Column="3" Text="Чт" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock Grid.Column="4" Text="Пт" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock Grid.Column="5" Text="Сб" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource AccentRed}"/>
+                        <TextBlock Grid.Column="6" Text="Вс" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource AccentRed}"/>
                     </Grid>
 
+                    <!-- Сетка дней -->
                     <UniformGrid x:Name="CalendarGrid" Grid.Row="2" Columns="7" Rows="6"/>
                 </Grid>
             </Border>

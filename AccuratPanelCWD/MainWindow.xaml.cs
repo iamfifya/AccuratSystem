@@ -725,7 +725,7 @@ namespace AccuratPanelCWD
             if (SearchFilterTextBox.Text == "🔍 Поиск по гос. номеру или модели...")
             {
                 SearchFilterTextBox.Text = "";
-                SearchFilterTextBox.Foreground = Brushes.Black;
+                SearchFilterTextBox.Foreground = TryFindResource("InputText") as Brush ?? Brushes.Black;
             }
         }
 
@@ -737,7 +737,8 @@ namespace AccuratPanelCWD
             if (string.IsNullOrWhiteSpace(SearchFilterTextBox.Text))
             {
                 SearchFilterTextBox.Text = "🔍 Поиск по гос. номеру или модели...";
-                SearchFilterTextBox.Foreground = new SolidColorBrush(Color.FromRgb(127, 140, 141));
+                SearchFilterTextBox.Foreground = TryFindResource("TextMuted") as Brush
+                                                 ?? new SolidColorBrush(Color.FromRgb(127, 140, 141));
                 _searchFilter = "";
                 ApplyFilterAndDisplay();
             }
@@ -1064,6 +1065,45 @@ namespace AccuratPanelCWD
             new SuperAdminWindow(_currentUser).ShowDialog();
         }
 
+        private void ToggleThemeButton_Click(object sender, RoutedEventArgs e)
+        {
+            ThemeManager.ToggleTheme();
+        }
+
+        // Обработчик запроса кассы из Стола Управляющего
+        private void DeskOverlay_CashboxRequested(object sender, RoutedEventArgs e)
+        {
+            if (_currentShift == null || _currentShift.IsClosed)
+            {
+                MessageBox.Show("Сначала откройте смену!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Открываем кассу и передаем ей текущую смену
+            CashboxPanel.Show(_currentShift);
+        }
+
+        // Обработчик запроса настроек компании из Стола Управляющего
+        private void DeskOverlay_CompanySettingsRequested(object sender, RoutedEventArgs e)
+        {
+            // Скрываем стол управляющего
+            DeskOverlay.Hide();
+
+            // Открываем панель настроек (используем имя из XAML: CompanySettingsPanel)
+            CompanySettingsPanel.Show();
+        }
+
+
+
+        /// <summary>
+        /// Обработка кнопки для вызова калькулятора.
+        /// </summary>
+        private void CalcButton_Click(object sender, RoutedEventArgs e)
+        {
+            CalculatorOverlay.Show();
+        }
+
+
         #endregion
 
         #region Real-time обновления и таймеры
@@ -1133,28 +1173,6 @@ namespace AccuratPanelCWD
 
         #region Перетаскивание элементов (Drag and Drop)
 
-        /// <summary>
-        /// Инициирует процесс перетаскивания карточки заказа при зажатии левой кнопки мыши.
-        /// </summary>
-        private void OrderCard_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement fe)
-            {
-                var order = fe.DataContext as OrderDisplayItem;
-
-                // --- ДОБАВЬТЕ ЭТУ ПРОВЕРКУ ---
-                if (order == null || order.IsCompleted)
-                {
-                    // Если заказ выполнен, мы просто не начинаем операцию перетаскивания
-                    return;
-                }
-                // -----------------------------
-
-                DataObject data = new DataObject("OrderItem", order);
-                DragDrop.DoDragDrop(this, data, DragDropEffects.Move);
-            }
-        }
-
 
         /// <summary>
         /// Обрабатывает событие сброса карточки заказа в новую рабочую зону.
@@ -1204,39 +1222,7 @@ namespace AccuratPanelCWD
         }
 
 
-        // Обработчик запроса кассы из Стола Управляющего
-        private void DeskOverlay_CashboxRequested(object sender, RoutedEventArgs e)
-        {
-            if (_currentShift == null || _currentShift.IsClosed)
-            {
-                MessageBox.Show("Сначала откройте смену!", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // Открываем кассу и передаем ей текущую смену
-            CashboxPanel.Show(_currentShift);
-        }
-
-        // Обработчик запроса настроек компании из Стола Управляющего
-        private void DeskOverlay_CompanySettingsRequested(object sender, RoutedEventArgs e)
-        {
-            // Скрываем стол управляющего
-            DeskOverlay.Hide();
-
-            // Открываем панель настроек (используем имя из XAML: CompanySettingsPanel)
-            CompanySettingsPanel.Show();
-        }
-
-
-
-        /// <summary>
-        /// Обработка кнопки для вызова калькулятора.
-        /// </summary>
-        private void CalcButton_Click(object sender, RoutedEventArgs e)
-        {
-            CalculatorOverlay.Show();
-        }
-
+        
         #endregion
 
         #region Обработка горячих клавиш

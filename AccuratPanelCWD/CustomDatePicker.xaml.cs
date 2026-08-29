@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 
 namespace AccuratPanelCWD
 {
@@ -32,13 +33,10 @@ namespace AccuratPanelCWD
                 {
                     DateTextBox.Text = value.HasValue ? value.Value.ToString("dd.MM.yyyy") : "";
                     UpdateCalendar();
-
-                    // Вызываем событие
                     SelectedDateChanged?.Invoke(this, value);
                 }
             }
         }
-
 
         private static void OnSelectedDateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -55,10 +53,7 @@ namespace AccuratPanelCWD
         public CustomDatePicker()
         {
             InitializeComponent();
-
-            // Подписываемся на событие загрузки
             this.Loaded += CustomDatePicker_Loaded;
-
             _currentDate = DateTime.Now;
             SelectedDate = DateTime.Now;
         }
@@ -68,35 +63,63 @@ namespace AccuratPanelCWD
             CreateCalendar();
             UpdateCalendar();
             _isInitialized = true;
-
-            // Обновляем текстовое поле
             DateTextBox.Text = SelectedDate.HasValue ? SelectedDate.Value.ToString("dd.MM.yyyy") : "";
+        }
+
+        /// <summary>
+        /// Безопасно получает Brush из ресурсов темы.
+        /// Если ресурс не найден — возвращает fallbackBrush (чтобы не падало).
+        /// </summary>
+        private Brush GetThemeBrush(string key, Brush fallbackBrush)
+        {
+            return TryFindResource(key) as Brush ?? fallbackBrush;
         }
 
         private void CreateCalendar()
         {
-            // Очищаем существующие кнопки, если есть
             CalendarGrid.Children.Clear();
 
             for (int i = 0; i < 42; i++)
             {
                 var btn = new Button
                 {
-                    Width = 35,
-                    Height = 35,
-                    Margin = new Thickness(2),
+                    Width = 36,
+                    Height = 36,
+                    Margin = new Thickness(1),
                     BorderThickness = new Thickness(0),
                     Cursor = Cursors.Hand,
-                    Tag = i
+                    Tag = i,
+                    FontSize = 13,
+                    Template = CreateRoundButtonTemplate()
                 };
                 btn.Click += DayButton_Click;
+
+                // Hover-эффект
+                btn.MouseEnter += (s, ev) => ApplyDayHover(btn, true);
+                btn.MouseLeave += (s, ev) => ApplyDayHover(btn, false);
+
                 CalendarGrid.Children.Add(btn);
             }
         }
 
+        private ControlTemplate CreateRoundButtonTemplate()
+        {
+            var template = new ControlTemplate(typeof(Button));
+            var borderFactory = new FrameworkElementFactory(typeof(Border), "Border");
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(6)); /// CornerRadius соответствует радиусу кнопки для поддержания общей стилистики
+            borderFactory.SetValue(Border.BackgroundProperty, new TemplateBindingExtension(Button.BackgroundProperty));
+
+            var content = new FrameworkElementFactory(typeof(ContentPresenter));
+            content.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            content.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+
+            borderFactory.AppendChild(content);
+            template.VisualTree = borderFactory;
+            return template;
+        }
+
         private void UpdateCalendar()
         {
-            // Проверяем, что кнопки уже созданы
             if (CalendarGrid.Children.Count != 42) return;
 
             DateTime firstDayOfMonth = new DateTime(_currentDate.Year, _currentDate.Month, 1);
@@ -106,6 +129,14 @@ namespace AccuratPanelCWD
             DateTime startDate = firstDayOfMonth.AddDays(-(firstDayOfWeek - 1));
 
             MonthYearText.Text = _currentDate.ToString("MMMM yyyy");
+
+            // Кисти из темы (с фолбэками на случай проблем)
+            var accentBlue = GetThemeBrush("AccentBlue", new SolidColorBrush(Color.FromRgb(52, 152, 219)));
+            var bgCard = GetThemeBrush("BgCard", Brushes.White);
+            var bgSelected = GetThemeBrush("BgSelected", new SolidColorBrush(Color.FromRgb(236, 240, 241)));
+            var bgMain = GetThemeBrush("BgMain", new SolidColorBrush(Color.FromRgb(245, 245, 245)));
+            var textMain = GetThemeBrush("TextMain", new SolidColorBrush(Color.FromRgb(44, 62, 80)));
+            var textLightMuted = GetThemeBrush("TextLightMuted", new SolidColorBrush(Color.FromRgb(149, 165, 166)));
 
             for (int i = 0; i < 42; i++)
             {
@@ -122,35 +153,91 @@ namespace AccuratPanelCWD
 
                 if (isSelected)
                 {
-                    btn.Background = new SolidColorBrush(Color.FromRgb(52, 152, 219));
-                    btn.Foreground = new SolidColorBrush(Colors.White);
+                    btn.Background = accentBlue;
+                    btn.Foreground = bgCard; // Белый текст на синем
+                    btn.FontWeight = FontWeights.Bold;
                 }
                 else if (isToday)
                 {
-                    btn.Background = new SolidColorBrush(Color.FromRgb(236, 240, 241));
-                    btn.Foreground = new SolidColorBrush(Color.FromRgb(44, 62, 80));
+                    btn.Background = bgSelected;
+                    btn.Foreground = textMain;
+                    btn.FontWeight = FontWeights.Bold;
                 }
                 else if (!isCurrentMonth)
                 {
-                    btn.Background = new SolidColorBrush(Color.FromRgb(245, 245, 245));
-                    btn.Foreground = new SolidColorBrush(Color.FromRgb(149, 165, 166));
+                    btn.Background = bgMain;
+                    btn.Foreground = textLightMuted;
+                    btn.FontWeight = FontWeights.Normal;
                 }
                 else
                 {
-                    btn.Background = new SolidColorBrush(Colors.White);
-                    btn.Foreground = new SolidColorBrush(Color.FromRgb(44, 62, 80));
+                    btn.Background = bgCard;
+                    btn.Foreground = textMain;
+                    btn.FontWeight = FontWeights.Normal;
                 }
 
-                btn.FontWeight = (isToday && !isSelected) ? FontWeights.Bold : FontWeights.Normal;
+                // Сохраняем "базовое" состояние кнопки для hover-эффекта
+                btn.SetValue(TagProperty, new DayButtonState(currentDate, isSelected, isToday, isCurrentMonth));
+            }
+        }
+
+        private void ApplyDayHover(Button btn, bool isHover)
+        {
+            if (btn.Tag is DayButtonState state)
+            {
+                if (state.IsSelected) return; // Выбранный день не меняем
+
+                var accentBlue = GetThemeBrush("AccentBlue", new SolidColorBrush(Color.FromRgb(52, 152, 219)));
+                var bgSelected = GetThemeBrush("BgSelected", new SolidColorBrush(Color.FromRgb(236, 240, 241)));
+                var bgCard = GetThemeBrush("BgCard", Brushes.White);
+                var textMain = GetThemeBrush("TextMain", new SolidColorBrush(Color.FromRgb(44, 62, 80)));
+
+                if (isHover)
+                {
+                    btn.Background = state.IsToday ? accentBlue : bgSelected;
+                    btn.Foreground = state.IsToday ? bgCard : textMain;
+                }
+                else
+                {
+                    if (state.IsToday)
+                    {
+                        btn.Background = bgSelected;
+                        btn.Foreground = textMain;
+                    }
+                    else
+                    {
+                        btn.Background = bgCard;
+                        btn.Foreground = textMain;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Хранит базовое состояние дня (для корректного hover-эффекта).
+        /// </summary>
+        private class DayButtonState
+        {
+            public DateTime Date { get; }
+            public bool IsSelected { get; }
+            public bool IsToday { get; }
+            public bool IsCurrentMonth { get; }
+
+            public DayButtonState(DateTime date, bool isSelected, bool isToday, bool isCurrentMonth)
+            {
+                Date = date;
+                IsSelected = isSelected;
+                IsToday = isToday;
+                IsCurrentMonth = isCurrentMonth;
             }
         }
 
         private void DayButton_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
-            if (btn?.Tag is DateTime date)
+            if (btn?.Tag is DayButtonState state)
             {
-                SelectedDate = date;
+                SelectedDate = state.Date;
                 CalendarPopup.IsOpen = false;
             }
         }

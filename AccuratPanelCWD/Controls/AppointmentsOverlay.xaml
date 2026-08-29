@@ -10,22 +10,17 @@
              d:DesignHeight="800" d:DesignWidth="1200">
 
     <UserControl.Resources>
-        <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
-
         <!-- Анимация появления -->
         <Storyboard x:Key="ShowAnimation">
-            <!-- Анимация прозрачности для фона -->
             <DoubleAnimation Storyboard.TargetName="OverlayBackground" 
                              Storyboard.TargetProperty="Opacity"
                              From="0" To="1" Duration="0:0:0.25"/>
-            <!-- Анимация масштаба для popup панели -->
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
                              Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                              From="0.8" To="1" Duration="0:0:0.25"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
                              Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
                              From="0.8" To="1" Duration="0:0:0.25"/>
-            <!-- Анимация прозрачности для popup панели -->
             <DoubleAnimation Storyboard.TargetName="PopupPanel" 
                              Storyboard.TargetProperty="Opacity"
                              From="0" To="1" Duration="0:0:0.2"/>
@@ -46,86 +41,6 @@
                              Storyboard.TargetProperty="Opacity"
                              From="1" To="0" Duration="0:0:0.15"/>
         </Storyboard>
-
-        <Style x:Key="AppointmentCardBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="#FFF8E1"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="15"/>
-            <Setter Property="Margin" Value="0,0,0,10"/>
-            <Setter Property="BorderBrush" Value="#FFD54F"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1"/>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="BorderBrush" Value="#FF9800"/>
-                    <Setter Property="BorderThickness" Value="3"/>
-                    <Setter Property="Background" Value="#FFF3E0"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <DataTemplate x:Key="AppointmentTemplate" DataType="{x:Type models:OrderDisplayItem}">
-            <Border Style="{StaticResource AppointmentCardBorderStyle}">
-                <StackPanel>
-                    <DockPanel LastChildFill="False" Margin="0,0,0,8">
-                        <TextBlock Text="{Binding CarNumber}" FontSize="16" FontWeight="Bold" Foreground="#2C3E50" DockPanel.Dock="Left"/>
-                        <TextBlock Text="{Binding Time, StringFormat={}{0:HH:mm}}" FontSize="14" Foreground="#7F8C8D" DockPanel.Dock="Right"/>
-                    </DockPanel>
-
-                    <TextBlock Text="{Binding CarModel}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4"/>
-
-                    <TextBlock Text="{Binding ServicesList}"
-                               FontSize="12" 
-                               Foreground="#7F8C8D" 
-                               TextWrapping="Wrap" 
-                               Margin="0,0,0,8"
-                               MaxWidth="300"
-                               HorizontalAlignment="Left"/>
-
-                    <Separator Background="#F1F2F6" Margin="0,5"/>
-
-                    <Grid Margin="0,5,0,0">
-                        <StackPanel>
-                            <TextBlock Text="{Binding FinalPrice, StringFormat={}{0:N0} ₽}" FontSize="16" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Left"/>
-                        </StackPanel>
-
-                        <Border Background="{Binding StatusColorHex, Converter={StaticResource HexToBrushConverter}}" 
-                                CornerRadius="4" Padding="6,2">
-                            <TextBlock Text="{Binding Status}" Foreground="White" FontSize="9" FontWeight="Bold"/>
-                        </Border>
-                    </Grid>
-
-                    <StackPanel Visibility="{Binding ExtraCost, Converter={StaticResource ZeroToVisibilityConverter}}">
-                        <TextBlock Text="{Binding ExtraCost, StringFormat=➕ {0:N0} ₽}" FontSize="11" Foreground="#E67E22" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="{Binding ExtraCostReason}" FontSize="10" Foreground="#E67E22" TextWrapping="Wrap" FontStyle="Italic"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </DataTemplate>
-
-        <Style x:Key="CleanListBoxStyle" TargetType="ListBox">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <ContentPresenter />
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Resources>
 
     <!-- Затемняющий фон -->
@@ -136,12 +51,12 @@
 
         <!-- Основная панель с записями -->
         <Border x:Name="PopupPanel"
-                Background="#F5F6FA" 
-                CornerRadius="15" 
+                Background="{DynamicResource BgMain}" 
+                CornerRadius="6" 
                 Margin="60,40,60,40" 
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                BorderBrush="#BDC3C7"
+                BorderBrush="{DynamicResource BorderColor}"
                 BorderThickness="1"
                 Opacity="0">
 
@@ -154,44 +69,59 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Заголовок и кнопка закрытия -->
-                <Grid Grid.Row="0">
+                <Grid Grid.Row="0" Margin="0,0,0,15">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="📅 Предварительные записи" FontSize="24" FontWeight="Bold" 
-                               Foreground="#2C3E50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="📅 Предварительные записи" 
+                               FontSize="24" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource TextMain}" 
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
 
                     <Button Grid.Column="1" 
-                            Content="✖" 
-                            Height="35" 
-                            Background="#E74C3C" 
-                            Foreground="White"
-                            FontSize="16"
+                            Content="✖"
+                            Style="{StaticResource DangerBtn}"
                             FontWeight="Bold"
-                            BorderThickness="0"
-                            Cursor="Hand"
                             Click="CloseButton_Click"/>
                 </Grid>
 
-                <!-- Фильтр по дате -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,15,0,15">
-                    <Label Content="📅 Показать записи за:" VerticalAlignment="Center"/>
-                    <local:CustomDatePicker x:Name="FilterDatePicker" Height="50" Width="400" Margin="5"/>
-                    <Button Content="➕ Новая запись" Click="NewAppointmentButton_Click" Height="35" Margin="5" Background="#3498DB" Foreground="White"/>
-                    <Button Content="🗑 Удалить" Click="DeleteButton_Click" Height="35" Margin="5" Background="#E74C3C" Foreground="White"/>
-                    <Button Content="✏ Редактировать" Click="EditButton_Click" Height="35" Margin="5" Background="#F39C12" Foreground="White"/>
+                <!-- Фильтр по дате и кнопки действий -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="📅 Показать записи за:" 
+                               VerticalAlignment="Center" 
+                               Foreground="{DynamicResource TextMain}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,10,0"/>
+                    <local:CustomDatePicker x:Name="FilterDatePicker" 
+                                            Height="45" 
+                                            Width="300" 
+                                            Margin="0,0,15,0"/>
+                    <Button Content="➕ Новая запись" 
+                            Click="NewAppointmentButton_Click" 
+                            Style="{StaticResource PrimaryBtn}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="✏ Редактировать" 
+                            Click="EditButton_Click" 
+                            Style="{StaticResource WarningBtn}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="🗑 Удалить" 
+                            Click="DeleteButton_Click" 
+                            Style="{StaticResource DangerBtn}"/>
                 </StackPanel>
 
                 <!-- Три бокса -->
-                <TabControl Grid.Row="3" ItemsSource="{Binding BranchTabs}" SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}" Background="Transparent" BorderThickness="0">
+                <TabControl Grid.Row="2" 
+                            ItemsSource="{Binding BranchTabs}" 
+                            SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}">
                     <TabControl.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding BranchName}" FontSize="14" FontWeight="Bold"/>
@@ -200,11 +130,19 @@
 
                     <TabControl.ContentTemplate>
                         <DataTemplate>
-                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,15,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                                          HorizontalScrollBarVisibility="Disabled" 
+                                          Padding="0,0,15,0">
                                 <StackPanel>
 
-                                    <StackPanel Visibility="{Binding HasWashZones, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,20">
-                                        <TextBlock Text="💦 МОЕЧНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="#34495E" Margin="5,0,0,10" Opacity="0.8"/>
+                                    <StackPanel Visibility="{Binding HasWashZones, Converter={StaticResource BoolToVisibilityConverter}}" 
+                                                Margin="0,0,0,20">
+                                        <TextBlock Text="💦 МОЕЧНАЯ ЗОНА" 
+                                                   FontSize="18" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="{DynamicResource TextMain}" 
+                                                   Margin="5,0,0,10" 
+                                                   Opacity="0.9"/>
                                         <ItemsControl ItemsSource="{Binding WashZones}">
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
@@ -213,20 +151,23 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <GroupBox Header="{Binding ZoneName}" Width="360" MinHeight="400" Margin="5,0,15,15" FontSize="14" FontWeight="Bold" Foreground="#2C3E50">
+                                                    <GroupBox Header="{Binding ZoneName}" 
+                                                              Width="360" 
+                                                              MinHeight="400" 
+                                                              Margin="5,0,15,15">
                                                         <ListBox ItemsSource="{Binding Orders}"
                                                                  SelectedItem="{Binding DataContext.SelectedItem, RelativeSource={RelativeSource AncestorType=controls:AppointmentsOverlay}, Mode=TwoWay}"
-                                                                 ItemTemplate="{StaticResource AppointmentTemplate}"
+                                                                 ItemTemplate="{StaticResource OrderTemplate}"
                                                                  Style="{StaticResource CleanListBoxStyle}"
                                                                  MouseDoubleClick="AppointmentList_MouseDoubleClick"
                                                                  PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
                                                                  Margin="5">
                                                             <ListBox.ContextMenu>
                                                                 <ContextMenu>
-                                                                    <MenuItem Header="✏ Редактировать" Click="EditButton_Click" Icon="✏"/>
-                                                                    <MenuItem Header="🔄 Преобразовать в заказ" Click="ConvertToOrderButton_Click" Icon="🔄"/>
+                                                                    <MenuItem Header="✏ Редактировать" Click="EditButton_Click"/>
+                                                                    <MenuItem Header="🔄 Преобразовать в заказ" Click="ConvertToOrderButton_Click"/>
                                                                     <Separator/>
-                                                                    <MenuItem Header="🗑 Удалить" Click="DeleteButton_Click" Icon="🗑" Foreground="Red"/>
+                                                                    <MenuItem Header="🗑 Удалить" Click="DeleteButton_Click" Foreground="{DynamicResource AccentRed}"/>
                                                                 </ContextMenu>
                                                             </ListBox.ContextMenu>
                                                         </ListBox>
@@ -237,7 +178,12 @@
                                     </StackPanel>
 
                                     <StackPanel Visibility="{Binding HasServiceZones, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <TextBlock Text="🔧 СЕРВИСНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="#34495E" Margin="5,0,0,10" Opacity="0.8"/>
+                                        <TextBlock Text="🔧 СЕРВИСНАЯ ЗОНА" 
+                                                   FontSize="18" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="{DynamicResource TextMain}" 
+                                                   Margin="5,0,0,10" 
+                                                   Opacity="0.9"/>
                                         <ItemsControl ItemsSource="{Binding ServiceZones}">
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
@@ -246,20 +192,23 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <GroupBox Header="{Binding ZoneName}" Width="360" MinHeight="400" Margin="5,0,15,15" FontSize="14" FontWeight="Bold" Foreground="#2C3E50">
+                                                    <GroupBox Header="{Binding ZoneName}" 
+                                                              Width="360" 
+                                                              MinHeight="400" 
+                                                              Margin="5,0,15,15">
                                                         <ListBox ItemsSource="{Binding Orders}"
                                                                  SelectedItem="{Binding DataContext.SelectedItem, RelativeSource={RelativeSource AncestorType=controls:AppointmentsOverlay}, Mode=TwoWay}"
-                                                                 ItemTemplate="{StaticResource AppointmentTemplate}"
+                                                                 ItemTemplate="{StaticResource OrderTemplate}"
                                                                  Style="{StaticResource CleanListBoxStyle}"
                                                                  MouseDoubleClick="AppointmentList_MouseDoubleClick"
                                                                  PreviewMouseLeftButtonDown="ListBox_PreviewMouseLeftButtonDown"
                                                                  Margin="5">
                                                             <ListBox.ContextMenu>
                                                                 <ContextMenu>
-                                                                    <MenuItem Header="✏ Редактировать" Click="EditButton_Click" Icon="✏"/>
-                                                                    <MenuItem Header="🔄 Преобразовать в заказ" Click="ConvertToOrderButton_Click" Icon="🔄"/>
+                                                                    <MenuItem Header="✏ Редактировать" Click="EditButton_Click"/>
+                                                                    <MenuItem Header="🔄 Преобразовать в заказ" Click="ConvertToOrderButton_Click"/>
                                                                     <Separator/>
-                                                                    <MenuItem Header="🗑 Удалить" Click="DeleteButton_Click" Icon="🗑" Foreground="Red"/>
+                                                                    <MenuItem Header="🗑 Удалить" Click="DeleteButton_Click" Foreground="{DynamicResource AccentRed}"/>
                                                                 </ContextMenu>
                                                             </ListBox.ContextMenu>
                                                         </ListBox>
@@ -276,9 +225,14 @@
                 </TabControl>
 
                 <!-- Кнопка закрытия внизу -->
-                <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20">
-                    <Button Content="✖ Закрыть" Click="CloseButton_Click" Height="35" 
-                            Margin="5" Background="#E74C3C" Foreground="White"/>
+                <StackPanel Grid.Row="3" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Center" 
+                            Margin="0,20,0,0">
+                    <Button Content="✖ Закрыть" 
+                            Click="CloseButton_Click" 
+                            Style="{StaticResource DangerBtn}"
+                            FontSize="14"/>
                 </StackPanel>
             </Grid>
         </Border>

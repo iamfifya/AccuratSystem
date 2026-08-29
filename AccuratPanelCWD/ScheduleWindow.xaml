@@ -9,15 +9,14 @@
         ResizeMode="CanResize"
         MinWidth="1100" MinHeight="600"
         Width="1200" Height="750"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
-        WindowStyle="None"
+        WindowStyle="SingleBorderWindow"
         WindowState="Maximized"
-        Foreground="Black">
+        Foreground="{DynamicResource TextMain}">
 
     <Window.Resources>
-        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Style x:Key="HeaderCellStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="White"/>
@@ -33,35 +32,21 @@
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Вкладки филиалов -->
             <RowDefinition Height="Auto"/>
-            <!-- Заголовок -->
             <RowDefinition Height="Auto"/>
-            <!-- Навигация по месяцам -->
             <RowDefinition Height="Auto"/>
-            <!-- Легенда -->
             <RowDefinition Height="Auto"/>
-            <!-- Шапка таблицы -->
             <RowDefinition Height="*"/>
-            <!-- Сама таблица (скролл) -->
             <RowDefinition Height="Auto"/>
-            <!-- Кнопки -->
         </Grid.RowDefinitions>
 
-        <!-- 1. Вкладки филиалов (используем общий стиль из ресурсов) -->
+        <!-- 1. Вкладки филиалов -->
         <TabControl Grid.Row="0" 
-            ItemsSource="{Binding BranchTabs}" 
-            SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
-            Background="Transparent" 
-            BorderThickness="0" 
-            Margin="0,0,0,15">
+                    ItemsSource="{Binding BranchTabs}" 
+                    SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
+                    Margin="0,0,0,15">
 
             <TabControl.ItemContainerStyle>
-                <!-- 
-          ВАЖНО: BasedOn="{StaticResource {x:Type TabItem}}" 
-          говорит WPF: "Возьми всё оформление из общего стиля TabItem в ResourceDictionary, 
-          но добавь сюда специфическую логику видимости" 
-        -->
                 <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                     <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, ElementName=RootWindow, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </Style>
@@ -78,53 +63,131 @@
             </TabControl.ContentTemplate>
         </TabControl>
 
+        <!-- 2. Заголовок -->
+        <TextBlock Grid.Row="1" 
+                   Text="ГРАФИК РАБОТЫ СОТРУДНИКОВ" 
+                   FontSize="22" 
+                   FontWeight="Black" 
+                   Foreground="{DynamicResource TextMain}" 
+                   Margin="0,0,0,20" 
+                   HorizontalAlignment="Center"/>
 
-        <TextBlock Grid.Row="1" Text="ГРАФИК РАБОТЫ СОТРУДНИКОВ" FontSize="20" FontWeight="Black" Foreground="#2C3E50" Margin="0,0,0,15" HorizontalAlignment="Center"/>
-
-        <DockPanel Grid.Row="2" Margin="0,0,0,15" LastChildFill="False">
+        <!-- 3. Навигация по месяцам -->
+        <DockPanel Grid.Row="2" Margin="0,0,0,20" LastChildFill="False">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                <Button Content="◀" Click="PrevMonth_Click" Width="35" Height="35" FontSize="16" FontWeight="Bold" Background="#3498DB" Foreground="White" BorderThickness="0"/>
-                <Border Background="White" BorderBrush="#BDC3C7" BorderThickness="1,1,1,1" Padding="15,0" Margin="5,0" Width="200" Height="40">
-                    <TextBlock x:Name="MonthYearText" TextAlignment="Center" Text="Апрель 2026" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Button Content="◀" 
+                        Click="PrevMonth_Click" 
+                        Width="40" 
+                        Height="40" 
+                        FontSize="16" 
+                        FontWeight="Bold" 
+                        Style="{StaticResource PrimaryBtn}"/>
+                <Border Background="{DynamicResource BgCard}" 
+                        BorderBrush="{DynamicResource BorderColor}" 
+                        BorderThickness="1" 
+                        Padding="15,0" 
+                        Margin="8,0" 
+                        Width="220" 
+                        Height="40"
+                        CornerRadius="6">
+                    <TextBlock x:Name="MonthYearText" 
+                               TextAlignment="Center" 
+                               Text="Апрель 2026" 
+                               FontSize="16" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource TextMain}"
+                               VerticalAlignment="Center"/>
                 </Border>
-                <Button Content="▶" Click="NextMonth_Click" Width="35" Height="35" FontSize="16" FontWeight="Bold" Background="#3498DB" Foreground="White" BorderThickness="0"/>
+                <Button Content="▶" 
+                        Click="NextMonth_Click" 
+                        Width="40" 
+                        Height="40" 
+                        FontSize="16" 
+                        FontWeight="Bold" 
+                        Style="{StaticResource PrimaryBtn}"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                <Button Content="🔧 Создать по шаблону" Click="TemplateButton_Click" Height="35" Padding="15,0" Margin="0,0,10,0" Background="#F39C12" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+                <Button Content="🔧 Создать по шаблону" 
+                        Click="TemplateButton_Click" 
+                        Style="{StaticResource WarningBtn}"/>
             </StackPanel>
         </DockPanel>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="Легенда (Левый клик - переключить, Правый клик - очистить):" FontWeight="Medium" Margin="0,0,15,0" VerticalAlignment="Center"/>
-            <Border Width="15" Height="15" Background="#A9DFBF" BorderBrush="Gray" BorderThickness="1"/>
-            <TextBlock Text=" Р - Рабочий" VerticalAlignment="Center" Margin="0,0,15,0"/>
-            <Border Width="15" Height="15" Background="#FAD7A1" BorderBrush="Gray" BorderThickness="1"/>
-            <TextBlock Text=" В - Выходной" VerticalAlignment="Center" Margin="0,0,15,0"/>
-            <Border Width="15" Height="15" Background="#ed7669" BorderBrush="Gray" BorderThickness="1"/>
-            <TextBlock Text=" П - Пропуск" VerticalAlignment="Center" Margin="0,0,10,0"/>
-        </StackPanel>
+        <!-- 4. Легенда -->
+        <Border Grid.Row="3" 
+                Background="{DynamicResource BgCard}" 
+                CornerRadius="6" 
+                Padding="15" 
+                Margin="0,0,0,15"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Легенда (Левый клик - переключить, Правый клик - очистить):" 
+                           FontWeight="Medium" 
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,20,0" 
+                           VerticalAlignment="Center"/>
+                <Border Width="20" Height="20" Background="{DynamicResource ScheduleWorkDay}" CornerRadius="6" Margin="0,0,8,0"/>
+                <TextBlock Text="Р - Рабочий" 
+                           Foreground="{DynamicResource TextMain}"
+                           VerticalAlignment="Center" 
+                           Margin="0,0,20,0"/>
+                <Border Width="20" Height="20" Background="{DynamicResource ScheduleDayOff}" CornerRadius="6" Margin="0,0,8,0"/>
+                <TextBlock Text="В - Выходной" 
+                           Foreground="{DynamicResource TextMain}"
+                           VerticalAlignment="Center" 
+                           Margin="0,0,20,0"/>
+                <Border Width="20" Height="20" Background="{DynamicResource ScheduleSkip}" CornerRadius="6" Margin="0,0,8,0" Opacity="0.3"/>
+                <TextBlock Text="П - Пропуск" 
+                           Foreground="{DynamicResource TextMain}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
 
-        <Border Grid.Row="4" Background="#2C3E50" Height="45" CornerRadius="4,4,0,0">
-            <Grid x:Name="HeaderGrid" Background="#2C3E50">
+        <!-- 5. Шапка таблицы -->
+        <Border Grid.Row="4" 
+                Background="{DynamicResource TextMain}" 
+                Height="45" 
+                CornerRadius="6,6,0,0">
+            <Grid x:Name="HeaderGrid">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150" MinWidth="120"/>
+                    <ColumnDefinition Width="180" MinWidth="150"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="Сотрудник / День" Style="{StaticResource HeaderCellStyle}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,8"/>
+                <TextBlock Text="Сотрудник / День" 
+                           Style="{StaticResource HeaderCellStyle}" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center" 
+                           Padding="10,8"
+                           FontSize="14"/>
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <!-- 6. Сама таблица -->
+        <ScrollViewer Grid.Row="5" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Auto">
             <Grid x:Name="ScheduleGrid" VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150" MinWidth="120"/>
+                    <ColumnDefinition Width="180" MinWidth="150"/>
                 </Grid.ColumnDefinitions>
             </Grid>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
-            <Button x:Name="SaveButton" Content="💾 Сохранить" Click="SaveButton_Click" MinWidth="100" Height="35" Margin="20,5,5,5" Background="#27AE60" Foreground="White" IsEnabled="False"/>
-            <Button Content="✖ Закрыть" Click="CloseButton_Click" MinWidth="100" Height="35" Margin="5" Background="#E74C3C" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+        <!-- 7. Кнопки -->
+        <StackPanel Grid.Row="6" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20,0,15">
+            <Button x:Name="SaveButton" 
+                    Content="💾 Сохранить" 
+                    Click="SaveButton_Click" 
+                    Style="{StaticResource SuccessBtn}"
+                    Margin="0,0,10,0"
+                    IsEnabled="False"/>
+            <Button Content="✖ Закрыть" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>

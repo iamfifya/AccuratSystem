@@ -5,11 +5,16 @@
         xmlns:local="clr-namespace:AccuratPanelCWD"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         Title="Интервальный отчет"
-        WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
-        MinWidth="1100" MinHeight="750" Width="1200" Height="850"
-        Background="#F5F6FA" WindowStyle="None" WindowState="Maximized" Foreground="Black">
+        WindowStartupLocation="CenterScreen" 
+        ResizeMode="CanResize"
+        MinWidth="1100" MinHeight="750" 
+        Width="1200" Height="850"
+        Background="{DynamicResource BgMain}" 
+        WindowStyle="None" 
+        WindowState="Maximized" 
+        Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="10">
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -18,9 +23,11 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TabControl Grid.Row="0" ItemsSource="{Binding BranchTabs}" 
+        <!-- Табы филиалов -->
+        <TabControl Grid.Row="0" 
+                    ItemsSource="{Binding BranchTabs}" 
                     SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
-                    Margin="0,0,0,10" Background="#f0f0f2" BorderThickness="0">
+                    Margin="0,0,0,15">
             <TabControl.ItemContainerStyle>
                 <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                     <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, ElementName=RootWindow, Converter={StaticResource BoolToVisibilityConverter}}"/>
@@ -28,7 +35,7 @@
             </TabControl.ItemContainerStyle>
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding BranchName}" FontSize="11" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding BranchName}" FontSize="12" FontWeight="Bold"/>
                 </DataTemplate>
             </TabControl.ItemTemplate>
             <TabControl.ContentTemplate>
@@ -36,96 +43,243 @@
             </TabControl.ContentTemplate>
         </TabControl>
 
-        <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,15">
-            <TextBlock Text="📊 Интервальная аналитика" FontSize="24" FontWeight="Bold" Foreground="#2C3E50"/>
-            <TextBlock Text="{Binding SelectedBranchTab.BranchName}" FontSize="14" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <TextBlock Text="📊 Интервальная аналитика" 
+                       FontSize="26" 
+                       FontWeight="Bold" 
+                       Foreground="{DynamicResource TextMain}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding SelectedBranchTab.BranchName}" 
+                       FontSize="15" 
+                       Foreground="{DynamicResource TextMuted}" 
+                       HorizontalAlignment="Center"
+                       Margin="0,5,0,0"/>
         </StackPanel>
 
-        <Grid Grid.Row="2" Margin="0,0,0,15" HorizontalAlignment="Center">
-            <StackPanel Orientation="Horizontal">
-                <Label Content="С:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <local:CustomDatePicker x:Name="StartDatePicker" Height="50" Width="400"/>
-                <Label Content="По:" VerticalAlignment="Center" Margin="15,0,5,0"/>
-                <local:CustomDatePicker x:Name="EndDatePicker" Height="50" Width="400"/>
-                <Button Content="🚀 Сформировать" Click="GenerateReportButton_Click" 
-                        Width="160" Height="35" Margin="20,0,0,0" Background="#3498DB" Foreground="White" Cursor="Hand"/>
-            </StackPanel>
-        </Grid>
+        <!-- Панель выбора дат -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource BgCard}" 
+                CornerRadius="6"
+                Padding="20" 
+                Margin="0,0,0,20"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="С:" 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,10,0"
+                           Foreground="{DynamicResource TextMain}"
+                           FontWeight="SemiBold"
+                           FontSize="14"/>
+                <local:CustomDatePicker x:Name="StartDatePicker" Height="45" Width="280"/>
 
+                <TextBlock Text="По:" 
+                           VerticalAlignment="Center" 
+                           Margin="25,0,10,0"
+                           Foreground="{DynamicResource TextMain}"
+                           FontWeight="SemiBold"
+                           FontSize="14"/>
+                <local:CustomDatePicker x:Name="EndDatePicker" Height="45" Width="280"/>
+
+                <Button Content="🚀 Сформировать" 
+                        Click="GenerateReportButton_Click" 
+                        Style="{StaticResource PrimaryBtn}"
+                        Margin="30,0,0,0"
+                        FontSize="14"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Контент отчета -->
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="ReportContent" Visibility="Collapsed" Margin="10">
 
-                <UniformGrid Columns="4" Margin="0,0,0,15">
+                <!-- KPI карточки -->
+                <UniformGrid Columns="4" Margin="0,0,0,20">
                     <Border Style="{StaticResource StatCard}" Margin="5">
                         <StackPanel>
-                            <TextBlock Text="💰 Общая выручка" FontSize="12" Foreground="#7F8C8D"/>
-                            <TextBlock x:Name="TotalRevenueText" FontSize="22" FontWeight="Bold" Foreground="#27AE60"/>
+                            <TextBlock Text="💰 Общая выручка" 
+                                       FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock x:Name="TotalRevenueText" 
+                                       FontSize="24" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource AccentGreen}"
+                                       Margin="0,8,0,0"/>
                         </StackPanel>
                     </Border>
-                    <Border Style="{StaticResource StatCard}" Margin="5" Background="#34495E">
+                    <Border Style="{StaticResource StatCard}" Margin="5" Background="{DynamicResource ReportNetProfitBg}">
                         <StackPanel>
-                            <TextBlock Text="💎 Чистая прибыль (ЧПКО)" FontSize="12" Foreground="#BDC3C7"/>
-                            <TextBlock x:Name="NetProfitText" FontSize="22" FontWeight="Bold" Foreground="#2ECC71"/>
+                            <TextBlock Text="💎 Чистая прибыль (ЧПКО)" 
+                                       FontSize="13" 
+                                       Foreground="{DynamicResource ReportNetProfitText}"/>
+                            <TextBlock x:Name="NetProfitText" 
+                                       FontSize="24" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource ReportNetProfitValue}"
+                                       Margin="0,8,0,0"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource StatCard}" Margin="5">
                         <StackPanel>
-                            <TextBlock Text="🚗 Всего заказов" FontSize="12" Foreground="#7F8C8D"/>
-                            <TextBlock x:Name="TotalCarsText" FontSize="22" FontWeight="Bold" Foreground="#2C3E50"/>
+                            <TextBlock Text="🚗 Всего заказов" 
+                                       FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock x:Name="TotalCarsText" 
+                                       FontSize="24" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="0,8,0,0"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource StatCard}" Margin="5">
                         <StackPanel>
-                            <TextBlock Text="👥 Новых клиентов" FontSize="12" Foreground="#7F8C8D"/>
-                            <TextBlock x:Name="NewClientsText" FontSize="22" FontWeight="Bold" Foreground="#3498DB"/>
+                            <TextBlock Text="👥 Новых клиентов" 
+                                       FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock x:Name="NewClientsText" 
+                                       FontSize="24" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource AccentBlue}"
+                                       Margin="0,8,0,0"/>
                         </StackPanel>
                     </Border>
                 </UniformGrid>
 
-                <Grid Height="300" Margin="0,0,0,20">
+                <!-- Графики -->
+                <Grid Height="320" Margin="0,0,0,25">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="10" Margin="5">
-                        <lvc:CartesianChart Series="{Binding RevenueSeries}" LegendLocation="None">
-                            <lvc:CartesianChart.AxisX>
-                                <lvc:Axis Title="Даты" Labels="{Binding Labels}"/>
-                            </lvc:CartesianChart.AxisX>
-                        </lvc:CartesianChart>
+                    <!-- Линейный график выручки -->
+                    <Border Grid.Column="0" 
+                            Background="{DynamicResource BgCard}" 
+                            CornerRadius="6"
+                            Padding="15" 
+                            Margin="0,0,10,0"
+                            BorderBrush="{DynamicResource BorderColor}"
+                            BorderThickness="1">
+                        <Grid>
+                            <TextBlock Text="📈 Динамика выручки" 
+                                       FontSize="16" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="0,0,0,10"/>
+                            <lvc:CartesianChart Series="{Binding RevenueSeries}" 
+                                               LegendLocation="None"
+                                               Margin="0,30,0,0">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Title="Даты" 
+                                              Labels="{Binding Labels}"
+                                              Foreground="{DynamicResource TextMain}"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="₽" 
+                                              Foreground="{DynamicResource TextMain}"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </Grid>
                     </Border>
 
-                    <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" Margin="5">
-                        <lvc:PieChart Series="{Binding ShareSeries}" LegendLocation="Bottom" InnerRadius="40"/>
+                    <!-- Круговая диаграмма -->
+                    <Border Grid.Column="1" 
+                            Background="{DynamicResource BgCard}" 
+                            CornerRadius="6"
+                            Padding="15" 
+                            Margin="10,0,0,0"
+                            BorderBrush="{DynamicResource BorderColor}"
+                            BorderThickness="1">
+                        <Grid>
+                            <TextBlock Text="🥧 Доли департаментов" 
+                                       FontSize="16" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="0,0,0,10"/>
+                            <lvc:PieChart Series="{Binding ShareSeries}" 
+                                         LegendLocation="Bottom" 
+                                         InnerRadius="45"
+                                         Margin="0,30,0,0"/>
+                        </Grid>
                     </Border>
                 </Grid>
 
-                <Grid Margin="0,0,0,20">
+                <!-- Секции департаментов -->
+                <Grid Margin="0,0,0,25">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <GroupBox Header="🧽 МОЙКА" Grid.Column="0" Margin="5">
-                        <StackPanel Margin="10">
-                            <TextBlock x:Name="WashRevenueText" FontSize="18" FontWeight="Bold" Foreground="#27AE60"/>
-                            <TextBlock x:Name="WashCarsText" FontSize="14" Foreground="#7F8C8D"/>
-                            <TextBlock x:Name="WashProfitText" FontSize="16" FontWeight="Bold" Margin="0,10,0,0"/>
+                    <Border Grid.Column="0" 
+                            Background="{DynamicResource BgCard}" 
+                            CornerRadius="6"
+                            Padding="20" 
+                            Margin="0,0,10,0"
+                            BorderBrush="{DynamicResource BorderColor}"
+                            BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="🧽 МОЙКА" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="0,0,0,15"/>
+                            <TextBlock x:Name="WashRevenueText" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource AccentGreen}"
+                                       Margin="0,0,0,5"/>
+                            <TextBlock x:Name="WashCarsText" 
+                                       FontSize="14" 
+                                       Foreground="{DynamicResource TextMuted}"
+                                       Margin="0,0,0,10"/>
+                            <Separator Background="{DynamicResource BorderColor}" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="WashProfitText" 
+                                       FontSize="16" 
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource ReportWashProfit}"/>
                         </StackPanel>
-                    </GroupBox>
+                    </Border>
 
-                    <GroupBox Header="🔧 АВТОСЕРВИС" Grid.Column="1" Margin="5">
-                        <StackPanel Margin="10">
-                            <TextBlock x:Name="ServiceRevenueText" FontSize="18" FontWeight="Bold" Foreground="#27AE60"/>
-                            <TextBlock x:Name="ServiceCarsText" FontSize="14" Foreground="#7F8C8D"/>
-                            <TextBlock x:Name="ServiceProfitText" FontSize="16" FontWeight="Bold" Margin="0,10,0,0"/>
+                    <Border Grid.Column="1" 
+                            Background="{DynamicResource BgCard}" 
+                            CornerRadius="6"
+                            Padding="20" 
+                            Margin="10,0,0,0"
+                            BorderBrush="{DynamicResource BorderColor}"
+                            BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="🔧 АВТОСЕРВИС" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="0,0,0,15"/>
+                            <TextBlock x:Name="ServiceRevenueText" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource AccentGreen}"
+                                       Margin="0,0,0,5"/>
+                            <TextBlock x:Name="ServiceCarsText" 
+                                       FontSize="14" 
+                                       Foreground="{DynamicResource TextMuted}"
+                                       Margin="0,0,0,10"/>
+                            <Separator Background="{DynamicResource BorderColor}" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="ServiceProfitText" 
+                                       FontSize="16" 
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource ReportServiceProfit}"/>
                         </StackPanel>
-                    </GroupBox>
+                    </Border>
                 </Grid>
 
-                <TextBlock Text="💳 Способы оплаты за период" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                <!-- Способы оплаты -->
+                <TextBlock Text="💳 Способы оплаты за период" 
+                           FontSize="18" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,15"/>
+                <Border Style="{StaticResource StatCard}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -134,61 +288,119 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="💵 Наличные" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="CashTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <TextBlock Text="💵 Наличные" 
+                                       Foreground="{DynamicResource TextMuted}" 
+                                       FontSize="13" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="CashTotalText" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}" 
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="💳 Карта" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="CardTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock Text="💳 Карта" 
+                                       Foreground="{DynamicResource TextMuted}" 
+                                       FontSize="13" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="CardTotalText" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}" 
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="📱 Перевод" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TransferTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <TextBlock Text="📱 Перевод" 
+                                       Foreground="{DynamicResource TextMuted}" 
+                                       FontSize="13" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TransferTotalText" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}" 
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="3">
-                            <TextBlock Text="📱 QR-код" Foreground="#7F8C8D" FontSize="12" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="QrTotalText" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                            <TextBlock Text="🔲 QR-код" 
+                                       Foreground="{DynamicResource TextMuted}" 
+                                       FontSize="13" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="QrTotalText" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextMain}" 
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <TextBlock Text="👥 ФОТ сотрудников (Оклад + % + Бонусы)" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                <ListView x:Name="EmployeesSalaryList" MinHeight="150" Background="White" Margin="0,5">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn Header="Сотрудник" Width="250" DisplayMemberBinding="{Binding EmployeeName}"/>
-                            <GridViewColumn Header="Заказов" Width="80" DisplayMemberBinding="{Binding CarsWashed}"/>
-                            <GridViewColumn Header="Начислено" Width="120">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Earnings, StringFormat={}{0:N0} ₽}" 
-                                                   ToolTip="Включает сдельный %, оклад и бонусы Умного кассира"
-                                                   Foreground="#27AE60" FontWeight="SemiBold"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Авансы" Width="100" DisplayMemberBinding="{Binding Advances, StringFormat={}{0:N0} ₽}"/>
-                            <GridViewColumn Header="К ВЫПЛАТЕ" Width="150">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding ToPay, StringFormat={}{0:N0} ₽}" 
-                                                   Foreground="#8E44AD" FontWeight="Bold"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                <!-- ФОТ сотрудников -->
+                <TextBlock Text="👥 ФОТ сотрудников (Оклад + % + Бонусы)" 
+                           FontSize="18" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,15"/>
+                <Border Background="{DynamicResource BgCard}" 
+                        CornerRadius="6"
+                        Padding="15"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="1">
+                    <ListView x:Name="EmployeesSalaryList" 
+                              MinHeight="150" 
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Foreground="{DynamicResource TextMain}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Сотрудник" Width="250" DisplayMemberBinding="{Binding EmployeeName}"/>
+                                <GridViewColumn Header="Заказов" Width="80" DisplayMemberBinding="{Binding CarsWashed}"/>
+                                <GridViewColumn Header="Начислено" Width="120">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Earnings, StringFormat={}{0:N0} ₽}" 
+                                                       ToolTip="Включает сдельный %, оклад и бонусы Умного кассира"
+                                                       Foreground="{DynamicResource AccentGreen}" 
+                                                       FontWeight="SemiBold"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Авансы" Width="100" DisplayMemberBinding="{Binding Advances, StringFormat={}{0:N0} ₽}"/>
+                                <GridViewColumn Header="К ВЫПЛАТЕ" Width="150">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ToPay, StringFormat={}{0:N0} ₽}" 
+                                                       Foreground="{DynamicResource ReportToPayText}" 
+                                                       FontWeight="Bold"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
-            <Button Content="📄 В Excel" Click="ExportButton_Click" Background="#27AE60" Width="120" Margin="5" Foreground="White" Cursor="Hand"/>
-            <Button Content="✖ Закрыть" Click="CloseButton_Click" Background="#E74C3C" Width="100" Margin="5" Foreground="White" Cursor="Hand"/>
+        <!-- Кнопки действий -->
+        <StackPanel Grid.Row="4" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20,0,15">
+            <Button Content="📄 В Excel" 
+                    Click="ExportButton_Click" 
+                    Style="{StaticResource SuccessBtn}"
+                    Margin="0,0,10,0"/>
+            <Button Content="✖ Закрыть" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>

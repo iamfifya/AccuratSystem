@@ -7,35 +7,40 @@
         ResizeMode="CanResize"
         MinWidth="900" MinHeight="550"
         Width="1080" Height="800"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
         WindowStyle="None"
         WindowState="Maximized"
-        Foreground="Black">
+        Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="10">
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,15">
+        <!-- Заголовок + табы филиалов -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            
-            <TextBlock Grid.Column="0" Text="📊 Ежедневные отчеты" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+            <TextBlock Grid.Column="0" 
+                       Text="📊 Ежедневные отчеты" 
+                       FontSize="26" 
+                       FontWeight="Bold" 
+                       Foreground="{DynamicResource TextMain}" 
+                       VerticalAlignment="Center" 
+                       Margin="0,0,25,0"/>
 
             <TabControl Grid.Column="1" 
                         ItemsSource="{Binding BranchTabs}" 
                         SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
-                        Background="Transparent" 
-                        BorderThickness="0"
                         VerticalAlignment="Center">
-                
+
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                         <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, ElementName=RootWindow, Converter={StaticResource BoolToVisibilityConverter}}"/>
@@ -49,92 +54,195 @@
                 </TabControl.ItemTemplate>
 
                 <TabControl.ContentTemplate>
-                    <DataTemplate>
-                        </DataTemplate>
+                    <DataTemplate/>
                 </TabControl.ContentTemplate>
             </TabControl>
         </Grid>
 
+        <!-- Основной контент -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="350"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="#F8F9FA" CornerRadius="10" Padding="10">
+            <!-- Левая панель: список смен -->
+            <Border Grid.Column="0" 
+                    Background="{DynamicResource BgMain}" 
+                    CornerRadius="6"
+                    Padding="15"
+                    BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="📁 Закрытые смены" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <ListBox x:Name="ReportsListBox" MinHeight="400" 
+                    <TextBlock Text="📁 Закрытые смены" 
+                               FontSize="17" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource TextMain}"
+                               Margin="0,0,0,12"/>
+                    <ListBox x:Name="ReportsListBox" 
+                             MinHeight="400" 
                              SelectionChanged="ReportSelectionChanged"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="#F8F9FA"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" 
+                             Background="Transparent"
+                             BorderThickness="0"
                              HorizontalContentAlignment="Stretch">
+
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0,0,0,6"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="RowBorder"
+                                                    Background="{DynamicResource BgCard}"
+                                                    BorderBrush="{DynamicResource BorderColor}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="6"
+                                                    Padding="10,8">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource TableRowHover}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource TableRowSelected}"/>
+                                                    <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource TableRowSelectedBorder}"/>
+                                                    <Setter TargetName="RowBorder" Property="BorderThickness" Value="2"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="White" CornerRadius="3" Height="auto">
-                                    <Grid Height="auto">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="120"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                                        <TextBlock Margin="5,0,5,0" Grid.Column="0" FontWeight="Bold" 
-                                                   Text="{Binding Date, StringFormat=📅 {0:dd.MM.yyyy}}" 
-                                                   FontSize="14" VerticalAlignment="Center" Foreground="Black"/>
+                                    <TextBlock Grid.Column="0" 
+                                               FontWeight="Bold" 
+                                               Text="{Binding Date, StringFormat=📅 {0:dd.MM.yyyy}}" 
+                                               FontSize="14" 
+                                               VerticalAlignment="Center" 
+                                               Foreground="{DynamicResource TextMain}"/>
 
-                                        <TextBlock Margin="5,0,5,0" Grid.Column="1" 
-                                                   Text="{Binding TotalCars, StringFormat=🚗 {0}}" 
-                                                   HorizontalAlignment="Center" FontSize="14" 
-                                                   VerticalAlignment="Center" Foreground="Black"/>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding TotalCars, StringFormat=🚗 {0}}" 
+                                               HorizontalAlignment="Center" 
+                                               FontSize="14" 
+                                               VerticalAlignment="Center" 
+                                               Foreground="{DynamicResource TextMuted}"/>
 
-                                        <TextBlock Margin="5,0,5,0" Grid.Column="2" 
-                                                   Text="{Binding TotalRevenue, StringFormat=💰 {0:N0} ₽}" 
-                                                   Foreground="#27AE60" FontSize="14" 
-                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </Grid>
-                                </Border>
+                                    <TextBlock Grid.Column="2" 
+                                               Text="{Binding TotalRevenue, StringFormat=💰 {0:N0} ₽}" 
+                                               Foreground="{DynamicResource AccentGreen}" 
+                                               FontSize="14" 
+                                               FontWeight="SemiBold" 
+                                               VerticalAlignment="Center"/>
+                                </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="1" Background="#F8F9FA" CornerRadius="10" Padding="15" Margin="10,0,0,0">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Foreground="Black">
+            <!-- Правая панель: детали смены -->
+            <Border Grid.Column="1" 
+                    Background="{DynamicResource BgMain}" 
+                    CornerRadius="6"
+                    Padding="20" 
+                    Margin="15,0,0,0"
+                    BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="📋 Детали смены" FontSize="16" FontWeight="Bold" 
-                                   HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                        <TextBlock Text="📋 Детали смены" 
+                                   FontSize="17" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMain}"
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,0,0,15"/>
 
-                        <Border Background="White" CornerRadius="8" Padding="15" Margin="0,5">
+                        <!-- Основная карточка -->
+                        <Border Background="{DynamicResource BgCard}" 
+                                CornerRadius="6" 
+                                Padding="20" 
+                                Margin="0,5"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="{Binding SelectedReport.Date, StringFormat=📅 Дата: {0:dd.MM.yyyy}}"/>
-                                <TextBlock Text="{Binding SelectedReport.StartTime, StringFormat=🕐 Начало: {0:HH:mm:ss}}" Margin="0,3,0,0"/>
-                                <TextBlock Text="{Binding SelectedReport.EndTime, StringFormat=🕒 Конец: {0:HH:mm:ss}}" Margin="0,3,0,0"/>
-                                <TextBlock Text="{Binding SelectedReport.TotalCars, StringFormat=🚗 Всего заказов (машин): {0}}" Margin="0,5,0,0"/>
+                                <TextBlock Text="{Binding SelectedReport.Date, StringFormat=📅 Дата: {0:dd.MM.yyyy}}"
+                                           Foreground="{DynamicResource TextMain}" FontSize="14"/>
+                                <TextBlock Text="{Binding SelectedReport.StartTime, StringFormat=🕐 Начало: {0:HH:mm:ss}}" 
+                                           Foreground="{DynamicResource TextMain}" FontSize="14" Margin="0,4,0,0"/>
+                                <TextBlock Text="{Binding SelectedReport.EndTime, StringFormat=🕒 Конец: {0:HH:mm:ss}}" 
+                                           Foreground="{DynamicResource TextMain}" FontSize="14" Margin="0,4,0,0"/>
+                                <TextBlock Text="{Binding SelectedReport.TotalCars, StringFormat=🚗 Всего заказов (машин): {0}}" 
+                                           Foreground="{DynamicResource TextMain}" FontSize="14" Margin="0,6,0,0"/>
 
                                 <TextBlock Text="{Binding SelectedReport.TotalRevenue, StringFormat=💰 Общая выручка: {0:N0} ₽}" 
-                                           FontWeight="Bold" Foreground="#27AE60" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                           FontWeight="Bold" 
+                                           Foreground="{DynamicResource AccentGreen}" 
+                                           FontSize="15"
+                                           Margin="0,8,0,0" 
+                                           TextWrapping="Wrap"/>
 
                                 <TextBlock Text="{Binding SelectedReport.TotalWasherEarnings, StringFormat=👥 ФОТ сотрудников (Оклад + % + Бонусы): {0:N0} ₽}" 
-                                           Foreground="#8E44AD" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                                
+                                           Foreground="{DynamicResource ReportToPayText}" 
+                                           Margin="0,6,0,0" 
+                                           TextWrapping="Wrap"/>
+
                                 <TextBlock Text="{Binding SelectedReport.TotalCompanyEarnings, StringFormat=🏢 Компании (Грязными): {0:N0} ₽}" 
-                                           Foreground="#34495E" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                           Foreground="{DynamicResource TextMain}" 
+                                           Margin="0,4,0,0" 
+                                           TextWrapping="Wrap"/>
 
                                 <TextBlock Text="{Binding SelectedReport.TotalExpenses, StringFormat=📉 Расходы за смену: {0:N0} ₽}" 
-                                           Foreground="#E74C3C" Margin="0,10,0,0" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                           Foreground="{DynamicResource AccentRed}" 
+                                           Margin="0,12,0,0" 
+                                           FontWeight="SemiBold" 
+                                           TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding SelectedReport.TotalAdvances, StringFormat=💸 Выдано авансов: {0:N0} ₽}" 
-                                           Foreground="#F39C12" Margin="0,3,0,0" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                           Foreground="{DynamicResource AccentYellow}" 
+                                           Margin="0,4,0,0" 
+                                           FontWeight="SemiBold" 
+                                           TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding SelectedReport.NetProfit, StringFormat=💎 Чистая прибыль (ЧПКО): {0:N0} ₽}" 
-                                           Foreground="#2ECC71" Margin="0,5,0,0" FontWeight="Bold" FontSize="14" TextWrapping="Wrap"/>
+                                           Foreground="{DynamicResource ReportNetProfitValue}" 
+                                           Margin="0,6,0,0" 
+                                           FontWeight="Bold" 
+                                           FontSize="15" 
+                                           TextWrapping="Wrap"/>
 
                                 <TextBlock Text="{Binding SelectedReport.Notes, StringFormat=📝 Примечание: {0}}" 
-                                           FontSize="12" Foreground="#7F8C8D" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                                           FontSize="12" 
+                                           Foreground="{DynamicResource TextMuted}" 
+                                           Margin="0,12,0,0" 
+                                           TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="💳 Способы оплаты" FontSize="14" FontWeight="Bold" Margin="0,10,0,5"/>
-                        <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                        <!-- Способы оплаты -->
+                        <TextBlock Text="💳 Способы оплаты" 
+                                   FontSize="15" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMain}"
+                                   Margin="0,15,0,8"/>
+                        <Border Background="{DynamicResource BgCard}" 
+                                CornerRadius="6" 
+                                Padding="20" 
+                                Margin="0,0,0,15"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -145,47 +253,65 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,10">
-                                    <TextBlock Text="💵 Наличные" Foreground="#7F8C8D" FontSize="12"/>
+                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,12">
+                                    <TextBlock Text="💵 Наличные" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding SelectedReport.CashAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" FontSize="14" Foreground="#2C3E50"/>
-                                        <TextBlock Text="{Binding SelectedReport.CashCount, StringFormat=' ({0} шт.)'}" FontSize="12" Foreground="#95A5A6" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding SelectedReport.CashAmount, StringFormat={}{0:N0} ₽}" 
+                                                   FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextMain}"/>
+                                        <TextBlock Text="{Binding SelectedReport.CashCount, StringFormat=' ({0} шт.)'}" 
+                                                   FontSize="12" Foreground="{DynamicResource TextLightMuted}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
 
-                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
-                                    <TextBlock Text="💳 Карта" Foreground="#7F8C8D" FontSize="12"/>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+                                    <TextBlock Text="💳 Карта" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding SelectedReport.CardAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" FontSize="14" Foreground="#2C3E50"/>
-                                        <TextBlock Text="{Binding SelectedReport.CardCount, StringFormat=' ({0} шт.)'}" FontSize="12" Foreground="#95A5A6" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding SelectedReport.CardAmount, StringFormat={}{0:N0} ₽}" 
+                                                   FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextMain}"/>
+                                        <TextBlock Text="{Binding SelectedReport.CardCount, StringFormat=' ({0} шт.)'}" 
+                                                   FontSize="12" Foreground="{DynamicResource TextLightMuted}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
 
                                 <StackPanel Grid.Row="1" Grid.Column="0">
-                                    <TextBlock Text="📱 Перевод" Foreground="#7F8C8D" FontSize="12"/>
+                                    <TextBlock Text="📱 Перевод" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding SelectedReport.TransferAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" FontSize="14" Foreground="#2C3E50"/>
-                                        <TextBlock Text="{Binding SelectedReport.TransferCount, StringFormat=' ({0} шт.)'}" FontSize="12" Foreground="#95A5A6" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding SelectedReport.TransferAmount, StringFormat={}{0:N0} ₽}" 
+                                                   FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextMain}"/>
+                                        <TextBlock Text="{Binding SelectedReport.TransferCount, StringFormat=' ({0} шт.)'}" 
+                                                   FontSize="12" Foreground="{DynamicResource TextLightMuted}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
 
                                 <StackPanel Grid.Row="1" Grid.Column="1">
-                                    <TextBlock Text="📱 QR-код" Foreground="#7F8C8D" FontSize="12"/>
+                                    <TextBlock Text="🔲 QR-код" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding SelectedReport.QrAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" FontSize="14" Foreground="#2C3E50"/>
-                                        <TextBlock Text="{Binding SelectedReport.QrCount, StringFormat=' ({0} шт.)'}" FontSize="12" Foreground="#95A5A6" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding SelectedReport.QrAmount, StringFormat={}{0:N0} ₽}" 
+                                                   FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextMain}"/>
+                                        <TextBlock Text="{Binding SelectedReport.QrCount, StringFormat=' ({0} шт.)'}" 
+                                                   FontSize="12" Foreground="{DynamicResource TextLightMuted}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </Border>
 
-                        <Separator Margin="0,15" Height="1" Background="#BDC3C7"/>
+                        <Separator Margin="0,15" Height="1" Background="{DynamicResource BorderColor}"/>
 
-                        <TextBlock Text="👥 Работа сотрудников (Зарплата)" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <!-- Работа сотрудников -->
+                        <TextBlock Text="👥 Работа сотрудников (Зарплата)" 
+                                   FontSize="15" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMain}"
+                                   Margin="0,0,0,10"/>
                         <ItemsControl ItemsSource="{Binding SelectedReport.EmployeesWork}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="White" CornerRadius="5" Padding="10" Margin="0,3">
+                                    <Border Background="{DynamicResource BgCard}" 
+                                            CornerRadius="6" 
+                                            Padding="12" 
+                                            Margin="0,0,0,6"
+                                            BorderBrush="{DynamicResource BorderColor}"
+                                            BorderThickness="1">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="1.2*"/>
@@ -194,15 +320,37 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding EmployeeName}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding CarsWashed, StringFormat=🚗 Заказов: {0}}" 
-                                                       Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding Earnings, StringFormat=💰 Начислено: {0:N0} ₽}" 
-                                                       Foreground="#27AE60" Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center" ToolTip="Оклад + Процент + Бонусы"/>
-                                            <TextBlock Grid.Column="3" Text="{Binding Advances, StringFormat=🔻 Авансы: {0:N0} ₽}" 
-                                                       Foreground="#E74C3C" Margin="10,0" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="4" Text="{Binding ToPay, StringFormat=💳 НА РУКИ: {0:N0} ₽}" 
-                                                       Foreground="#8E44AD" Margin="10,0" FontWeight="Bold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding EmployeeName}" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{DynamicResource TextMain}"
+                                                       TextWrapping="Wrap" 
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding CarsWashed, StringFormat=🚗 Заказов: {0}}" 
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       Margin="12,0" 
+                                                       TextWrapping="Wrap" 
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" 
+                                                       Text="{Binding Earnings, StringFormat=💰 Начислено: {0:N0} ₽}" 
+                                                       Foreground="{DynamicResource AccentGreen}" 
+                                                       Margin="12,0" 
+                                                       TextWrapping="Wrap" 
+                                                       VerticalAlignment="Center" 
+                                                       ToolTip="Оклад + Процент + Бонусы"/>
+                                            <TextBlock Grid.Column="3" 
+                                                       Text="{Binding Advances, StringFormat=🔻 Авансы: {0:N0} ₽}" 
+                                                       Foreground="{DynamicResource AccentRed}" 
+                                                       Margin="12,0" 
+                                                       TextWrapping="Wrap" 
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" 
+                                                       Text="{Binding ToPay, StringFormat=💳 НА РУКИ: {0:N0} ₽}" 
+                                                       Foreground="{DynamicResource ReportToPayText}" 
+                                                       Margin="12,0" 
+                                                       FontWeight="Bold" 
+                                                       TextWrapping="Wrap" 
+                                                       VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -213,13 +361,22 @@
             </Border>
         </Grid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20">
-            <Button Content="📅 Интервальный отчет" Click="CustomReportButton_Click" 
-                    Width="200" Height="35" Margin="5" Background="#3498DB" Foreground="White" Cursor="Hand"/>
-            <Button Content="📄 Экспорт смены" Click="ExportButton_Click" 
-                    Width="150" Height="35" Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
-            <Button Content="✖ Закрыть" Click="CloseButton_Click" 
-                    Width="120" Height="35" Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+        <!-- Кнопки действий (БЕЗ Width/Height — из AppStyles) -->
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20,0,15">
+            <Button Content="📅 Интервальный отчет" 
+                    Click="CustomReportButton_Click" 
+                    Style="{StaticResource PrimaryBtn}"
+                    Margin="0,0,8,0"/>
+            <Button Content="📄 Экспорт смены" 
+                    Click="ExportButton_Click" 
+                    Style="{StaticResource SuccessBtn}"
+                    Margin="0,0,8,0"/>
+            <Button Content="✖ Закрыть" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>

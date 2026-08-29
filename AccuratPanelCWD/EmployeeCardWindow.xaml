@@ -9,52 +9,52 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
         MinWidth="800" MinHeight="500"
-        Width="1000" Height="600"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Width="1100" Height="700"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
         WindowStyle="None"
         WindowState="Maximized"
-        Foreground="Black">
+        Foreground="{DynamicResource TextMain}">
 
     <Window.Resources>
-
         <Style x:Key="HeaderCellStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="FontSize" Value="13"/>
         </Style>
 
         <Style x:Key="TableRowStyle" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource BgCard}"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderBrush" Value="#E9ECEF"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TableRowBorder}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F0F8FF"/>
+                    <Setter Property="Background" Value="{DynamicResource TableRowHover}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="GridSplitterStyle" TargetType="GridSplitter">
             <Setter Property="Width" Value="4"/>
-            <Setter Property="Background" Value="#BDC3C7"/>
+            <Setter Property="Background" Value="{DynamicResource GridSplitterColor}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="ShowsPreview" Value="True"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#3498DB"/>
+                    <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
                     <Setter Property="Cursor" Value="SizeWE"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
 
-    <Grid Margin="10">
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -64,27 +64,50 @@
         </Grid.RowDefinitions>
 
         <!-- Заголовок -->
-        <TextBlock Text="👥 Сотрудники" FontSize="24" FontWeight="Bold" 
-                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15" Grid.Row="0"/>
+        <TextBlock Text="👥 Сотрудники" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   Foreground="{DynamicResource TextMain}" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,0,0,20" 
+                   Grid.Row="0"/>
 
         <!-- Панель управления -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15" 
-                    HorizontalAlignment="Left" VerticalAlignment="Center">
-            <Button Content="➕ Добавить сотрудника" Click="AddButton_Click" 
-                    MinWidth="140" Height="35" 
-                    Margin="5" Background="#27AE60" Foreground="White"/>
-            <Button x:Name="ScheduleButton" Content="📅 График сотрудников" 
-                    Click="ScheduleButton_Click" Padding="15,8" Margin="0,0,10,0"
-                    Background="#F39C12" Foreground="White" BorderThickness="0"
-                    Cursor="Hand" Height="35"/>
-            <Label Content="🔍 Поиск:" VerticalContentAlignment="Center" Margin="20,0,0,0"/>
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    Margin="0,0,0,20" 
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Center">
+            <Button Content="➕ Добавить сотрудника" 
+                    Click="AddButton_Click" 
+                    Style="{StaticResource SuccessBtn}"
+                    Margin="0,0,8,0"/>
+            <Button x:Name="ScheduleButton" 
+                    Content="📅 График сотрудников" 
+                    Click="ScheduleButton_Click" 
+                    Style="{StaticResource WarningBtn}"
+                    Margin="0,0,8,0"/>
+
+            <Border Width="1" Background="{DynamicResource BorderColor}" Margin="15,5"/>
+
+            <TextBlock Text="🔍 Поиск" 
+                       VerticalAlignment="Center" 
+                       Foreground="{DynamicResource TextMain}"
+                       FontWeight="SemiBold"
+                       Margin="0,0,8,0"/>
             <TextBox x:Name="SearchFilterTextBox" 
-                     Width="250" Height="35" Margin="5" Padding="5"
+                     Width="280" 
+                     Height="45" 
+                     Padding="15,0"
+                     FontSize="14"
                      KeyUp="SearchFilterTextBox_KeyUp"/>
         </StackPanel>
 
         <!-- Заголовок таблицы -->
-        <Border Grid.Row="2" Background="#2C3E50" Height="45" CornerRadius="4,4,0,0">
+        <Border Grid.Row="2" 
+                Background="{DynamicResource TableHeaderBg}" 
+                Height="45" 
+                CornerRadius="6,6,0,0">
             <Grid x:Name="HeaderGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0.8*" MinWidth="50"/>
@@ -141,14 +164,15 @@
                 <ListBox x:Name="EmployeesListView" 
                          Grid.ColumnSpan="11"
                          SelectionMode="Single" 
-                         Background="White"
+                         Background="{DynamicResource BgCard}"
                          BorderThickness="0"
                          SelectionChanged="EmployeesListView_SelectionChanged"
                          MouseDoubleClick="EmployeesListView_MouseDoubleClick"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          VirtualizingPanel.ScrollUnit="Pixel"
                          VirtualizingPanel.IsVirtualizing="True"
-                         VirtualizingPanel.VirtualizationMode="Recycling">
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         Foreground="{DynamicResource TextMain}">
 
                     <ListBox.ContextMenu>
                         <ContextMenu>
@@ -167,7 +191,6 @@
                             <Setter Property="Padding" Value="0"/>
                             <Setter Property="Margin" Value="0"/>
                             <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Foreground" Value="Black"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                             <Setter Property="Template">
@@ -194,47 +217,52 @@
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Text="{Binding FullName}" 
-                                               HorizontalAlignment="Center" 
+                                               HorizontalAlignment="Left" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                TextWrapping="Wrap"
                                                TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextMain}"
+                                               FontWeight="SemiBold"
                                                Grid.Column="1"/>
 
                                     <TextBlock Text="{Binding Phone}" 
-                                               HorizontalAlignment="Center" 
+                                               HorizontalAlignment="Left" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                TextTrimming="CharacterEllipsis"
-                                               Grid.Column="2"
-                                               Foreground="#7F8C8D"/>
-                                    
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Grid.Column="2"/>
+
                                     <TextBlock Text="{Binding Login}" 
-                                               HorizontalAlignment="Center" 
+                                               HorizontalAlignment="Left" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
                                                TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextMain}"
                                                Grid.Column="3"/>
 
                                     <TextBlock Text="{Binding Role.Name}" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
                                                Padding="10,8"
+                                               Foreground="{DynamicResource TextMain}"
                                                Grid.Column="4"/>
 
                                     <!-- Статус с использованием триггера -->
                                     <TextBlock Grid.Column="5" 
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center" 
-                                               Padding="10,8">
+                                               Padding="10,8"
+                                               FontWeight="Bold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Text" Value="Трудоустроен"/>
-                                                <Setter Property="Foreground" Value="Green"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource StatusActive}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsActive}" Value="False">
                                                         <Setter Property="Text" Value="Уволен"/>
-                                                        <Setter Property="Foreground" Value="Red"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource StatusInactive}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -244,8 +272,8 @@
                             </Border>
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                    <Setter TargetName="RowBorder" Property="Background" Value="#E3F2FD"/>
-                                    <Setter TargetName="RowBorder" Property="BorderBrush" Value="#2196F3"/>
+                                    <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource TableRowSelected}"/>
+                                    <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource TableRowSelectedBorder}"/>
                                     <Setter TargetName="RowBorder" Property="BorderThickness" Value="0,0,0,2"/>
                                 </DataTrigger>
                             </DataTemplate.Triggers>
@@ -255,10 +283,14 @@
             </Grid>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
-            <Button Content="✖ Закрыть" Click="CloseButton_Click" 
-                    MinWidth="80" Height="35" 
-                    Margin="5" Background="#E74C3C" Foreground="White"/>
+        <!-- Кнопка закрытия (БЕЗ размеров — из AppStyles) -->
+        <StackPanel Grid.Row="4" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20,0,15">
+            <Button Content="✖ Закрыть" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>

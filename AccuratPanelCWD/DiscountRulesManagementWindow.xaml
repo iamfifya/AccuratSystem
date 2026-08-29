@@ -3,105 +3,174 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:AccuratPanelCWD.Controls" 
         xmlns:local="clr-namespace:AccuratPanelCWD"
-        Title="Управление правилами скидок" Height="600" Width="700"
-        WindowStartupLocation="CenterScreen" Background="#F5F6FA" WindowStyle="ToolWindow">
+        Title="Управление правилами скидок" 
+        Height="750" 
+        Width="850"
+        WindowStartupLocation="CenterScreen" 
+        Background="{DynamicResource BgMain}" 
+        WindowStyle="SingleBorderWindow"
+        Foreground="{DynamicResource TextMain}">
 
     <Window.Resources>
         <local:BooleanToDiscountTypeConverter x:Key="BooleanToDiscountTypeConverter"/>
     </Window.Resources>
 
-    <Grid Margin="15">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-            <TextBlock Text="🎁 Настройка Правил Скидок" FontSize="22" FontWeight="Bold" Foreground="#3498DB" Margin="0,0,0,15"/>
+        <!-- Заголовок -->
+        <TextBlock Text="🎁 Настройка Правил Скидок" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   Foreground="{DynamicResource AccentBlue}" 
+                   Margin="0,0,0,20"/>
 
-            <!-- Блок создания нового правила -->
-            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#BDC3C7" BorderThickness="1">
-                <StackPanel>
-                    <TextBlock Text="➕ Создать новое правило" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
+        <!-- Блок создания нового правила -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource BgCard}" 
+                CornerRadius="6"
+                Padding="20" 
+                Margin="0,0,0,20" 
+                BorderBrush="{DynamicResource BorderColor}" 
+                BorderThickness="1">
+            <StackPanel>
+                <TextBlock Text="➕ Создать новое правило" 
+                           FontWeight="Bold" 
+                           FontSize="16" 
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,15"/>
 
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Название (например: 'Дождь' или 'Пенсионер'):" Foreground="#7F8C8D" FontSize="11"/>
-                            <TextBox x:Name="RuleNameTextBox" Height="40" Padding="5" VerticalContentAlignment="Center" Margin="0,0,0,0"/>
-                        </StackPanel>
+                    <!-- Название правила -->
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Название (например: 'Дождь' или 'Пенсионер')" 
+                                   Foreground="{DynamicResource TextMuted}" 
+                                   FontSize="12"
+                                   Margin="0,0,0,8"/>
+                        <TextBox x:Name="RuleNameTextBox" 
+                                 Height="45" 
+                                 Padding="15,0" 
+                                 VerticalContentAlignment="Center"
+                                 FontSize="14"/>
+                    </StackPanel>
 
-                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                            <TextBlock Text="Значение:" Foreground="#7F8C8D" FontSize="11"/>
-                            <TextBox x:Name="RuleValueTextBox" Height="40" Padding="5" Width="80" VerticalContentAlignment="Center" TextAlignment="Center"/>
-                        </StackPanel>
+                    <!-- Значение -->
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Значение" 
+                                   Foreground="{DynamicResource TextMuted}" 
+                                   FontSize="12"
+                                   Margin="0,0,0,8"/>
+                        <TextBox x:Name="RuleValueTextBox" 
+                                 Height="45" 
+                                 Padding="15,0" 
+                                 Width="120" 
+                                 VerticalContentAlignment="Center" 
+                                 TextAlignment="Center"
+                                 FontSize="14"
+                                 FontWeight="Bold"/>
+                    </StackPanel>
 
-                        <StackPanel Grid.Column="2" Margin="10,0,0,0">
-                            <TextBlock Text="Тип скидки:" Foreground="#7F8C8D" FontSize="11"/>
-                        <controls:CustomComboBox x:Name="RuleTypeCombo" Height="40" SelectedValuePath="Tag" Placeholder="Тип...">
+                    <!-- Тип скидки -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Тип скидки" 
+                                   Foreground="{DynamicResource TextMuted}" 
+                                   FontSize="12"
+                                   Margin="0,0,0,8"/>
+                        <controls:CustomComboBox x:Name="RuleTypeCombo" 
+                                                 Height="45" 
+                                                 Width="150"
+                                                 SelectedValuePath="Tag" 
+                                                 Placeholder="Тип...">
                             <controls:CustomComboBox.Items>
                                 <ComboBoxItem Content="Процент (%)" Tag="True"/>
                                 <ComboBoxItem Content="Сумма (₽)" Tag="False"/>
                             </controls:CustomComboBox.Items>
                         </controls:CustomComboBox>
                     </StackPanel>
-                    </Grid>
+                </Grid>
 
-                    <Button Content="Сохранить правило" Click="SaveRule_Click" 
-                        Background="#27AE60" Foreground="White" Width="150" Height="40" 
-                        FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Right"/>
-                </StackPanel>
-            </Border>
+                <Button Content="Сохранить правило" 
+                        Click="SaveRule_Click" 
+                        Style="{StaticResource SuccessBtn}"
+                        HorizontalAlignment="Right"/>
+            </StackPanel>
+        </Border>
 
-            <!-- Список существующих правил -->
-            <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="10" BorderBrush="#BDC3C7" BorderThickness="1">
-                <ListBox x:Name="RulesListBox" 
+        <!-- Список существующих правил -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource BgCard}" 
+                CornerRadius="6"
+                Padding="15" 
+                BorderBrush="{DynamicResource BorderColor}" 
+                BorderThickness="1">
+            <ListBox x:Name="RulesListBox" 
                      Background="Transparent" 
                      BorderThickness="0" 
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="Padding" Value="0"/>
-                            <Setter Property="Margin" Value="0"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <ContentPresenter />
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
 
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#EBF5FB" BorderBrush="#3498DB" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" Foreground="#2C3E50"/>
-                                        <TextBlock Text="{Binding Value, StringFormat='Значение: {0}'}" FontSize="13" Foreground="#7F8C8D"/>
-                                        <TextBlock Text="{Binding IsPercentage, Converter={StaticResource BooleanToDiscountTypeConverter}}"
-                                                   FontSize="11" Foreground="#3498DB" FontWeight="SemiBold" Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                    <Button Grid.Column="1" Content="🗑 Удалить" Click="DeleteRule_Click" 
-                                        Background="#E74C3C" Foreground="White" Padding="10,5" 
-                                        VerticalAlignment="Center" Cursor="Hand"/>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Border>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{DynamicResource DiscountRuleCardBg}" 
+                                BorderBrush="{DynamicResource DiscountRuleCardBorder}" 
+                                BorderThickness="1" 
+                                CornerRadius="6" 
+                                Padding="15" 
+                                Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" 
+                                               FontWeight="Bold" 
+                                               FontSize="16" 
+                                               Foreground="{DynamicResource TextMain}"/>
+                                    <TextBlock Text="{Binding Value, StringFormat='Значение: {0}'}" 
+                                               FontSize="14" 
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,5,0,0"/>
+                                    <TextBlock Text="{Binding IsPercentage, Converter={StaticResource BooleanToDiscountTypeConverter}}"
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource AccentBlue}" 
+                                               FontWeight="SemiBold" 
+                                               Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" 
+                                        Content="🗑 Удалить" 
+                                        Click="DeleteRule_Click" 
+                                        Style="{StaticResource DangerBtn}"
+                                        VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
     </Grid>
 </Window>

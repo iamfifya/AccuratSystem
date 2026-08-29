@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace AccuratPanelCWD
 {
@@ -82,18 +83,48 @@ namespace AccuratPanelCWD
             var btn = sender as Button;
             if (btn == null) return;
 
-            // Определяем тип смены по тексту кнопки или имени
+            // Определяем тип смены по имени кнопки
             if (btn.Name == "DayShiftBtn")
                 _selectedShiftType = ShiftType.Day;
             else
                 _selectedShiftType = ShiftType.Night;
 
-            // Визуальный фидбек: подсвечиваем выбранную кнопку
-            DayShiftBtn.Background = _selectedShiftType == ShiftType.Day ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2980B9")) : new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3498DB"));
-            NightShiftBtn.Background = _selectedShiftType == ShiftType.Night ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1C2833")) : new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2C3E50"));
+            // Визуальный фидбек: подсвечиваем выбранную кнопку с учётом темы
+            var accentBlue = TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3498DB"));
+            var textMain = TryFindResource("TextMain") as Brush ?? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2C3E50"));
+
+            // Затемнённые версии для выбранного состояния
+            var accentBlueDark = TryFindResource("AccentBlue") as SolidColorBrush;
+            var textMainDark = TryFindResource("TextMain") as SolidColorBrush;
+
+            // Для дневной: выбранная — затемнённый синий, невыбранная — обычный синий
+            DayShiftBtn.Background = _selectedShiftType == ShiftType.Day
+                ? CreateDarkenedBrush(accentBlue, 0.85)
+                : accentBlue;
+
+            // Для ночной: выбранная — затемнённый тёмный, невыбранная — обычный тёмный
+            NightShiftBtn.Background = _selectedShiftType == ShiftType.Night
+                ? CreateDarkenedBrush(textMain, 0.7)
+                : textMain;
 
             // Разблокируем кнопку "Далее"
             ContinueToEmployeesBtn.IsEnabled = true;
+        }
+
+        /// <summary>
+        /// Создаёт затемнённую версию кисти для эффекта "нажато/выбрано".
+        /// </summary>
+        private Brush CreateDarkenedBrush(Brush source, double factor)
+        {
+            if (source is SolidColorBrush solid)
+            {
+                var color = solid.Color;
+                return new SolidColorBrush(Color.FromRgb(
+                    (byte)(color.R * factor),
+                    (byte)(color.G * factor),
+                    (byte)(color.B * factor)));
+            }
+            return source;
         }
 
         private void ContinueToEmployees_Click(object sender, RoutedEventArgs e)

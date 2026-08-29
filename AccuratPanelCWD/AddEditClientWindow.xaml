@@ -9,73 +9,160 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Width="700" Height="950"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
         WindowStyle="SingleBorderWindow"
-        Foreground="Black">
+        Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="15">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,0,10,20">
 
-                <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="Bold" 
-                   Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                <!-- Заголовок -->
+                <TextBlock Text="{Binding WindowTitle}" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource TextMain}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,25"/>
 
-                <Label Content="ФИО:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- ФИО -->
+                <TextBlock Text="ФИО" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentClient.FullName, UpdateSourceTrigger=PropertyChanged}" 
-                Margin="0,5" Height="50" Padding="5"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Телефон:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- Телефон -->
+                <TextBlock Text="Телефон" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentClient.Phone, UpdateSourceTrigger=PropertyChanged}" 
-                Margin="0,5" Height="50" Padding="5"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Марка/Модель авто:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- Марка/Модель авто -->
+                <TextBlock Text="Марка/Модель авто" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentClient.CarModel, UpdateSourceTrigger=PropertyChanged}" 
-                Margin="0,5" Height="50" Padding="5"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Государственный номер:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- Государственный номер -->
+                <TextBlock Text="Государственный номер" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentClient.CarNumber, UpdateSourceTrigger=PropertyChanged}" 
-                Margin="0,5" Height="50" Padding="5"/>
+                         Margin="0,0,0,20" 
+                         Height="45" 
+                         Padding="15,0"
+                         FontSize="14"/>
 
-                <Label Content="Примечание:" Margin="0,5" FontWeight="SemiBold"/>
+                <!-- Примечание -->
+                <TextBlock Text="Примечание" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentClient.Notes, UpdateSourceTrigger=PropertyChanged}" 
-                Margin="0,5" Height="80" Padding="5" 
-                TextWrapping="Wrap" AcceptsReturn="True"/>
-                <Separator Margin="0,15" Background="#BDC3C7"/>
+                         Margin="0,0,0,20" 
+                         Height="80" 
+                         Padding="15,10" 
+                         TextWrapping="Wrap" 
+                         AcceptsReturn="True"
+                         FontSize="13"/>
+
+                <Separator Margin="0,15" Background="{DynamicResource BorderColor}"/>
 
                 <!-- Персональная скидка клиента -->
-                <TextBlock Text="Персональная скидка"
-                           FontSize="14" FontWeight="Bold" Foreground="#2C3E50" Margin="0,10,0,5"/>
+                <Border Background="{DynamicResource BgCard}" 
+                        CornerRadius="6" 
+                        Padding="20" 
+                        Margin="0,10,0,0"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="💰 Персональная скидка"
+                                   FontSize="16" 
+                                   FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextMain}" 
+                                   Margin="0,0,0,15"/>
 
-                <StackPanel Grid.Row="13" Orientation="Horizontal" Margin="0,5">
-                    <Label Content="Скидка:" Width="80" VerticalContentAlignment="Center"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBox x:Name="DiscountPercentTextBox" 
-                                 Text="{Binding CurrentClient.DefaultDiscountPercent, UpdateSourceTrigger=PropertyChanged}"
-                                 Width="100" Height="40" Padding="5" HorizontalContentAlignment="Center"
-                                 PreviewTextInput="DiscountPercentTextBox_PreviewTextInput"/>
-                        <TextBlock Text="%" VerticalAlignment="Center" Margin="5,0" FontSize="14"/>
-                        <TextBlock Text="(0-100)" Foreground="#95A5A6" FontSize="11" VerticalAlignment="Center" Margin="10,0"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBlock Text="Скидка:" 
+                                       Width="80" 
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"
+                                       FontWeight="SemiBold"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox x:Name="DiscountPercentTextBox" 
+                                         Text="{Binding CurrentClient.DefaultDiscountPercent, UpdateSourceTrigger=PropertyChanged}"
+                                         Width="100" 
+                                         Height="45" 
+                                         Padding="10,0" 
+                                         HorizontalContentAlignment="Center"
+                                         FontSize="16"
+                                         FontWeight="Bold"
+                                         PreviewTextInput="DiscountPercentTextBox_PreviewTextInput"/>
+                                <TextBlock Text="%" 
+                                           VerticalAlignment="Center" 
+                                           Margin="8,0" 
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextMain}"/>
+                                <TextBlock Text="(0-100)" 
+                                           Foreground="{DynamicResource TextMuted}" 
+                                           FontSize="12" 
+                                           VerticalAlignment="Center" 
+                                           Margin="15,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock Text="Эта скидка будет автоматически подставляться при выборе клиента в заказе" 
+                                   FontSize="11" 
+                                   Foreground="{DynamicResource TextMuted}" 
+                                   Margin="88,10,0,0" 
+                                   TextWrapping="Wrap"/>
                     </StackPanel>
-                </StackPanel>
-
-                <TextBlock Text="Эта скидка будет автоматически подставляться при выборе клиента в заказе" 
-                           FontSize="10" Foreground="#7F8C8D" Margin="85,5,0,0" TextWrapping="Wrap"/>
+                </Border>
 
             </StackPanel>
 
         </ScrollViewer>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
-            <Button Content="✅ Сохранить" Click="SaveButton_Click" Width="120" Height="35" 
-                    Margin="5" Background="#27AE60" Foreground="White" Cursor="Hand"/>
-            <Button Content="✖ Отмена" Click="CloseButton_Click" Width="100" Height="35" 
-                    Margin="5" Background="#E74C3C" Foreground="White" Cursor="Hand"/>
+        <!-- Кнопки действий -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20">
+            <Button Content="✅ Сохранить" 
+                    Click="SaveButton_Click" 
+                    Style="{StaticResource SuccessBtn}"/>
+            <Button Content="✖ Отмена" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>
