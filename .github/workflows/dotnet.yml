@@ -11,49 +11,56 @@ jobs:
     strategy:
       matrix:
         configuration: [Release]
-
     runs-on: windows-latest
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'  # ← замени на '10.0.x' если используешь .NET 10 Preview
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'  # ← возвращаем 10.0.x, твой проект на .NET 10
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v2
+      - name: Restore legacy packages (packages.config)
+        run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
 
-    - name: Setup .NET SDK (для nuget restore)
-      uses: nuget/setup-nuget@v2
+      - name: Fix broken CSPROJ paths
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path AccuratPanelCarWashing\packages
+          Copy-Item -Path packages\* -Destination AccuratPanelCarWashing\packages -Recurse -Force
 
-    - name: Restore NuGet Packages (WPF)
-      run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
+      - name: Restore modern packages (PackageReference)
+        run: dotnet restore AccuratPanelCWD\AccuratPanelCWD.csproj
 
-    - name: Fix broken CSPROJ paths
-      run: |
-        New-Item -ItemType Directory -Force -Path AccuratPanelCarWashing\packages
-        Copy-Item -Path packages\* -Destination AccuratPanelCarWashing\packages -Recurse -Force
+      - name: Build WPF Client
+        run: dotnet build AccuratPanelCWD\AccuratPanelCWD.csproj --configuration ${{ matrix.configuration }} --no-restore
 
-    - name: Restore .NET Packages (API)
-      run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
+      - name: Restore Web API
+        run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
 
-    - name: Build Web API
-      run: dotnet build Accurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
+      - name: Build Web API
+        run: dotnet build Accurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
 
-    - name: Build WPF Client
-      run: msbuild AccuratPanelCWD\AccuratPanelCWD.csproj /p:Configuration=${{ matrix.configuration }}
+      - name: Restore WPF Client
+        run: dotnet restore AccuratPanelCWD\AccuratPanelCWD.csproj
 
-    - name: Upload WPF Build Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Accurat-Client-Release
-        path: AccuratPanelCarWashing\bin\${{ matrix.configuration }}\
-        retention-days: 14
+      - name: Build WPF Client
+        run: dotnet build AccuratPanelCWD\AccuratPanelCWD.csproj --configuration ${{ matrix.configuration }} --no-restore
+
+      - name: Upload WPF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Accurat-Client-Release
+          path: AccuratPanelCWD\bin\${{ matrix.configuration }}\
+          retention-days: 14
