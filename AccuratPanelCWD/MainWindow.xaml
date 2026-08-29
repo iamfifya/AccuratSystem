@@ -12,63 +12,121 @@
         Height="810" Width="1440"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
-        Background="#F5F6FA"
-        BorderBrush="Black"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
         BorderThickness="1"
         WindowStyle="None"
-        Foreground="Black"
+        Foreground="{DynamicResource TextMain}"
         Focusable="True">
 
     <Window.Resources>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
+        <!-- ================= ЦВЕТОВАЯ ПАЛИТРА ================= -->
+        <SolidColorBrush x:Key="BgMain" Color="#F5F6FA"/>
+        <SolidColorBrush x:Key="BgCard" Color="White"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#DCDDE1"/>
+
+        <SolidColorBrush x:Key="TextMain" Color="#2C3E50"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#7F8C8D"/>
+        <SolidColorBrush x:Key="TextLightMuted" Color="#95A5A6"/>
+
+        <SolidColorBrush x:Key="AccentBlue" Color="#3498DB"/>
+        <SolidColorBrush x:Key="AccentGreen" Color="#27AE60"/>
+        <SolidColorBrush x:Key="AccentRed" Color="#E74C3C"/>
+        <SolidColorBrush x:Key="AccentOrange" Color="#E67E22"/>
+        <SolidColorBrush x:Key="AccentYellow" Color="#F39C12"/>
+        <SolidColorBrush x:Key="AccentPurple" Color="#8E44AD"/>
+        <!-- ==================================================== -->
+
+        <!-- БАЗОВЫЙ СТИЛЬ КНОПОК -->
+        <Style x:Key="BaseButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="Padding" Value="15,0"/>
+            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <!-- Привязка Padding раздвинет границы под контент -->
+                        <Border Background="{TemplateBinding Background}" 
+                        CornerRadius="6" 
+                        Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.9"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ЦВЕТОВЫЕ СТИЛИ КНОПОК -->
+        <Style x:Key="PrimaryBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
+        </Style>
+        <Style x:Key="SuccessBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentGreen}"/>
+        </Style>
+        <Style x:Key="DangerBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+        </Style>
+        <Style x:Key="WarningBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentYellow}"/>
+        </Style>
+        <Style x:Key="PurpleBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentPurple}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
         <!-- СТИЛЬ КАРТОЧКИ ЗАКАЗА -->
         <Style x:Key="OrderCardBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource BgCard}"/>
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="15"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
-            <Setter Property="BorderBrush" Value="#DCDDE1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1"/>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="BorderBrush" Value="#3498DB"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
                     <Setter Property="BorderThickness" Value="2"/>
                     <Setter Property="Background" Value="#EBF5FB"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
 
-        <!-- ШАБЛОН КАРТОЧКИ ЗАКАЗА (Здесь добавлено событие MouseMove для Drag-and-Drop) -->
+        <!-- ШАБЛОН КАРТОЧКИ ЗАКАЗА -->
         <DataTemplate x:Key="OrderTemplate" DataType="{x:Type models:OrderDisplayItem}">
             <Border Style="{StaticResource OrderCardBorderStyle}" MouseMove="OrderCard_MouseMove">
                 <StackPanel>
-                    <DockPanel LastChildFill="False" Margin="0,0,0,8">
-                        <TextBlock Text="{Binding CarNumber}" FontSize="16" FontWeight="Bold" Foreground="#2C3E50" DockPanel.Dock="Left"/>
-                        <TextBlock Text="{Binding Time, StringFormat={}{0:HH:mm}}" FontSize="14" Foreground="#7F8C8D" DockPanel.Dock="Right"/>
+                    <DockPanel Margin="0,0,0,8">
+                        <TextBlock Text="{Binding CarNumber}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextMain}" DockPanel.Dock="Left"/>
+                        <TextBlock Text="{Binding Time, StringFormat={}{0:HH:mm}}" FontSize="14" Foreground="{StaticResource TextMuted}" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
                     </DockPanel>
 
                     <TextBlock Text="{Binding CarModel}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4"/>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                        <TextBlock Text="Мойщик: " Foreground="#95A5A6" FontSize="12"/>
-                        <TextBlock Text="{Binding WasherName}" FontWeight="Medium" FontSize="12"/>
-                    </StackPanel>
+                    <TextBlock Margin="0,0,0,4">
+                        <Run Text="Мойщик: " Foreground="{StaticResource TextLightMuted}" FontSize="12"/>
+                        <Run Text="{Binding WasherName}" FontWeight="Medium" FontSize="12"/>
+                    </TextBlock>
 
-                    <TextBlock Text="{Binding ServicesList}"
-                               FontSize="12" 
-                               Foreground="#7F8C8D" 
-                               TextWrapping="Wrap" 
-                               Margin="0,0,0,8"
-                               MaxWidth="300"
-                               HorizontalAlignment="Left"/>
+                    <TextBlock Text="{Binding ServicesList}" FontSize="12" Foreground="{StaticResource TextMuted}" 
+                               TextWrapping="Wrap" Margin="0,0,0,8" MaxWidth="300" HorizontalAlignment="Left"/>
 
                     <Separator Background="#F1F2F6" Margin="0,5"/>
 
@@ -79,39 +137,32 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="{Binding OriginalPriceDisplay}" 
-                                       FontSize="11" Foreground="#95A5A6" HorizontalAlignment="Left"
+                            <TextBlock Text="{Binding OriginalPriceDisplay}" FontSize="11" Foreground="{StaticResource TextLightMuted}" 
                                        TextDecorations="Strikethrough"
                                        Visibility="{Binding ShowOriginalPrice, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                            <TextBlock Text="{Binding FinalPrice, StringFormat={}{0:N0} ₽}" 
-                                       FontSize="14" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Left"/>
+                            <TextBlock Text="{Binding FinalPrice, StringFormat={}{0:N0} ₽}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource AccentGreen}"/>
 
-                            <TextBlock Text="{Binding DiscountDisplay}" 
-                                       FontSize="10" Foreground="#E74C3C" FontWeight="Bold"
-                                       Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibilityConverter}}"
-                                       Margin="0,1,0,0"/>
+                            <TextBlock Text="{Binding DiscountDisplay}" FontSize="10" Foreground="{StaticResource AccentRed}" FontWeight="Bold"
+                                       Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,1,0,0"/>
 
-                            <TextBlock Text="{Binding PaymentMethod, StringFormat=💳 {0}}" 
-                                       FontSize="9" Foreground="#3498DB" Margin="0,1,0,0"/>
+                            <TextBlock Text="{Binding PaymentMethod, StringFormat=💳 {0}}" FontSize="9" Foreground="{StaticResource AccentBlue}" Margin="0,1,0,0"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                            <Border Background="{Binding StatusColorHex, Converter={StaticResource HexToBrushConverter}}"
-                                    CornerRadius="4" Padding="6,2">
+                            <Border Background="{Binding StatusColorHex, Converter={StaticResource HexToBrushConverter}}" CornerRadius="4" Padding="6,2">
                                 <TextBlock Text="{Binding Status}" Foreground="White" FontSize="9" FontWeight="Bold"/>
                             </Border>
 
-                            <TextBlock Text="{Binding TimeInStatus}" 
-                                       FontSize="10" Foreground="#7F8C8D" FontWeight="SemiBold" 
+                            <TextBlock Text="{Binding TimeInStatus}" FontSize="10" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold" 
                                        HorizontalAlignment="Right" Margin="0,2,0,0"
                                        Visibility="{Binding TimeInStatus, Converter={StaticResource ZeroToVisibilityConverter}}"/>
                         </StackPanel>
                     </Grid>
 
                     <StackPanel Visibility="{Binding ExtraCost, Converter={StaticResource ZeroToVisibilityConverter}}">
-                        <TextBlock Text="{Binding ExtraCost, StringFormat=➕ {0:N0} ₽}" FontSize="11" Foreground="#E67E22" FontWeight="Bold" Margin="0,4,0,0"/>
-                        <TextBlock Text="{Binding ExtraCostReason}" FontSize="10" Foreground="#E67E22" TextWrapping="Wrap" FontStyle="Italic"/>
+                        <TextBlock Text="{Binding ExtraCost, StringFormat=➕ {0:N0} ₽}" FontSize="11" Foreground="{StaticResource AccentOrange}" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="{Binding ExtraCostReason}" FontSize="10" Foreground="{StaticResource AccentOrange}" TextWrapping="Wrap" FontStyle="Italic"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -137,6 +188,11 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Шаблон строки для статистики оплат (DRY) -->
+        <Style x:Key="PaymentStatGridStyle" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -148,12 +204,8 @@
             </Grid.RowDefinitions>
 
             <!-- 1. ТАБЫ ФИЛИАЛОВ -->
-            <TabControl Grid.Row="0" 
-                        ItemsSource="{Binding BranchTabs}" 
-                        SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
-                        Margin="0,0,0,10" 
-                        Background="#f0f0f2" 
-                        BorderThickness="0">
+            <TabControl Grid.Row="0" ItemsSource="{Binding BranchTabs}" SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
+                        Margin="0,0,0,10" Background="#f0f0f2" BorderThickness="0">
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                         <Setter Property="Padding" Value="10,5"/>
@@ -165,125 +217,87 @@
                     </DataTemplate>
                 </TabControl.ItemTemplate>
                 <TabControl.ContentTemplate>
-                    <DataTemplate>
-                        <!-- Пусто -->
-                    </DataTemplate>
+                    <DataTemplate/>
                 </TabControl.ContentTemplate>
             </TabControl>
 
             <!-- 2. ВЕРХНЯЯ ПАНЕЛЬ -->
-            <Grid Grid.Row="1" Margin="10,0,10,0">
+            <Grid Grid.Row="1" Margin="10,0,10,10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Border CornerRadius="20" Padding="10" Background="Transparent" BorderBrush="#DCDDE1" BorderThickness="1">
-                    <Grid Grid.Row="0" Margin="0,0,0,0">
+                <Border CornerRadius="15" Padding="10" Background="Transparent" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="0,0,0,10">
+                    <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.5*"/>
-                            <ColumnDefinition Width="0.5*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Главная страница" FontSize="24" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
-                            <TextBlock Text=" | " FontSize="20" Foreground="#95A5A6" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="16" Foreground="#7F8C8D" VerticalAlignment="Center"/>
+                            <TextBlock Text="Главная страница" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextMain}" VerticalAlignment="Center"/>
+                            <TextBlock Text=" | " FontSize="20" Foreground="{StaticResource TextLightMuted}" VerticalAlignment="Center" Margin="5,0"/>
+                            <TextBlock Text="{Binding CurrentShiftInfo}" FontSize="16" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <Border CornerRadius="20"  Background="Transparent" BorderBrush="#DCDDE1" BorderThickness="1">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <WrapPanel Grid.Column="0">
-                                        <Border Background="#3498DB" CornerRadius="20" Width="40" Height="40" Margin="10">
-                                            <TextBlock Text="👤" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding ActiveUserInfo}" FontSize="13" FontWeight="SemiBold" Foreground="#2C3E50"/>
-                                            <TextBlock Text="{Binding CurrentBranchDisplay}" FontSize="11" Foreground="#7F8C8D"/>
-                                        </StackPanel>
-                                    </WrapPanel>
-
-                                    <!-- КНОПКА СМЕНЫ ПОЛЬЗОВАТЕЛЯ -->
-                                    <Button Content="🔄" Click="ChangeUserButton_Click" Grid.Column="1"
-                                        Background="Transparent" Foreground="#3498DB" FontSize="24"
-                                        Cursor="Hand" FontWeight="Bold" 
-                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                                        Width="Auto" Height="45"/>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
+                        <Border Grid.Column="1" CornerRadius="12" Background="Transparent" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Padding="5">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="{StaticResource AccentBlue}" CornerRadius="10" Width="36" Height="36" Margin="0,0,10,0">
+                                    <TextBlock Text="👤" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,15,0">
+                                    <TextBlock Text="{Binding ActiveUserInfo}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
+                                    <TextBlock Text="{Binding CurrentBranchDisplay}" FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+                                <Button Content="🔄" Click="ChangeUserButton_Click" Background="Transparent" Foreground="{StaticResource AccentBlue}" 
+                                        FontSize="20" Cursor="Hand" FontWeight="Bold" BorderThickness="0" ToolTip="Сменить пользователя"/>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </Border>
 
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Button Content="👑 Панель Разработчика" Click="DevPanelButton_Click"
-                            Height="40" Margin="5" Padding="10,0"
-                            Background="#8E44AD" Foreground="White" FontWeight="Bold" Cursor="Hand"
-                            Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                    <Button x:Name="AddButton" Content="➕ Добавить заказ" Click="AddButton_Click" 
-                            Padding="15,8" Margin="0,0,5,0" Background="#3498DB" Foreground="White"
-                            BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="ManagerDeskButton" Content="💼 Стол управляющего" Click="ManagerDeskButton_Click" 
-                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" 
-                            Padding="15,8" Margin="0,0,5,0" Background="#3498DB" 
-                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                <!-- ПАНЕЛЬ КНОПОК (Заменен StackPanel на WrapPanel для защиты от обрезки при сжатии окна) -->
+                <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                    <Button Content="👑 Панель Разработчика" Click="DevPanelButton_Click" Style="{StaticResource PurpleBtn}" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <Button x:Name="AddButton" Content="➕ Добавить заказ" Click="AddButton_Click" Style="{StaticResource PrimaryBtn}"/>
+                    <Button x:Name="ManagerDeskButton" Content="💼 Стол управляющего" Click="ManagerDeskButton_Click" Style="{StaticResource PrimaryBtn}" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                    <Button x:Name="StartShiftButton" Content="📅 Начать смену" Click="StartShiftButton_Click" 
-                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}" 
-                            Padding="15,8" Margin="10,0,5,0" Background="#27AE60" 
-                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="CloseShiftButton" Content="🔒 Закрыть смену" Click="CloseShiftButton_Click" 
-                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"
-                            Padding="15,8" Margin="0,0,5,0" Background="#E74C3C" 
-                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="CashboxButton" Content="💰 Трансфер сумм" Click="CashboxButton_Click" 
-                            Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"
-                            Padding="15,8" Margin="0,0,5,0" Background="#3498DB" 
-                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="CalcButton" Content="🧮 Калькулятор" Click="CalcButton_Click" 
-                            Padding="15,8" Margin="0,0,10,0" Background="#3498DB" 
-                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="AppointmentsBoardButton" Content="📋 Доска записей" Click="AppointmentsBoardButton_Click" 
-                            Padding="15,8" Margin="5,0,5,0" Background="#F39C12" 
-                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                    <Button x:Name="HistoryButton" Content="📊 История" Click="HistoryButton_Click" 
-                            Padding="15,8" Margin="0,0,10,0" Background="#F39C12" 
-                            Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
+                    <!-- Отступ-разделитель (заменяет Margin у кнопок) -->
+                    <Border Width="10"/>
+
+                    <Button x:Name="StartShiftButton" Content="📅 Начать смену" Click="StartShiftButton_Click" Style="{StaticResource SuccessBtn}" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <Button x:Name="CloseShiftButton" Content="🔒 Закрыть смену" Click="CloseShiftButton_Click" Style="{StaticResource DangerBtn}" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <Border Width="10"/>
+
+                    <Button x:Name="CashboxButton" Content="💰 Трансфер сумм" Click="CashboxButton_Click" Style="{StaticResource PrimaryBtn}" Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <Button x:Name="CalcButton" Content="🧮 Калькулятор" Click="CalcButton_Click" Style="{StaticResource PrimaryBtn}"/>
+                    <Button x:Name="AppointmentsBoardButton" Content="📋 Доска записей" Click="AppointmentsBoardButton_Click" Style="{StaticResource WarningBtn}"/>
+                    <Button x:Name="HistoryButton" Content="📊 История" Click="HistoryButton_Click" Style="{StaticResource WarningBtn}"/>
+
                     <TextBox x:Name="SearchFilterTextBox" Text="🔍 Поиск по гос. номеру или модели..." 
-                             KeyUp="SearchFilterTextBox_KeyUp" 
-                             GotFocus="SearchFilterTextBox_GotFocus" LostFocus="SearchFilterTextBox_LostFocus" 
-                             Padding="10,8" MinWidth="250" Height="50" Margin="20,0,0,0" 
-                             Background="White" BorderBrush="#BDC3C7" Foreground="#7F8C8D" 
-                             FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
-                    <WrapPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,0,0">
-                        <Button x:Name="ExitButton" Content="🚪 Выход" Click="ExitButton_Click" 
-                                Padding="15,8" Background="#E74C3C" Foreground="White" 
-                                BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" Height="35"/>
-                    </WrapPanel>
-                </StackPanel>
+                             KeyUp="SearchFilterTextBox_KeyUp" GotFocus="SearchFilterTextBox_GotFocus" LostFocus="SearchFilterTextBox_LostFocus" 
+                             Padding="10,0" Width="260" Height="35" Margin="0,0,8,8"
+                             Background="White" BorderBrush="{StaticResource BorderColor}" Foreground="{StaticResource TextMuted}" 
+                             FontSize="12" VerticalContentAlignment="Center" VerticalAlignment="Top"/>
+
+                    <Button x:Name="ExitButton" Content="🚪 Выход" Click="ExitButton_Click" Style="{StaticResource DangerBtn}" Margin="0,0,0,8" HorizontalAlignment="Right"/>
+                </WrapPanel>
             </Grid>
 
             <!-- 3. РАБОЧАЯ ОБЛАСТЬ -->
             <Grid Grid.Row="2" Margin="0,0,10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto" MinWidth="300"/>
+                    <ColumnDefinition Width="320"/>
                 </Grid.ColumnDefinitions>
 
-                <ScrollViewer Grid.Column="0" Padding="10"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer Grid.Column="0" Padding="10,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
                         <!-- МОЕЧНАЯ ЗОНА -->
                         <StackPanel Visibility="{Binding SelectedBranchTab.HasWashZones, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,20">
-                            <TextBlock Text="💦 МОЕЧНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="#34495E" Margin="5,0,0,10" Opacity="0.8"/>
+                            <TextBlock Text="💦 МОЕЧНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="5,0,0,15" Opacity="0.9"/>
                             <ItemsControl ItemsSource="{Binding SelectedBranchTab.WashZones}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -292,20 +306,17 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <GroupBox Header="{Binding ZoneName}" Width="360" MinHeight="400" Margin="5,0,15,15" FontSize="14" FontWeight="Bold" Foreground="#2C3E50">
+                                        <GroupBox Header="{Binding ZoneName}" Width="350" MinHeight="400" Margin="5,0,15,15" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}">
                                             <GroupBox.ContextMenu>
                                                 <ContextMenu>
                                                     <MenuItem Header="✏ Редактировать заказ" Click="EditOrderMenuItem_Click"/>
                                                     <MenuItem Header="🗑 Удалить заказ" Click="DeleteOrderMenuItem_Click"/>
                                                 </ContextMenu>
                                             </GroupBox.ContextMenu>
-                                            <ListBox ItemsSource="{Binding Orders}"
-                                                     AllowDrop="True" 
-                                                     Drop="Order_Drop"
+                                            <ListBox ItemsSource="{Binding Orders}" AllowDrop="True" Drop="Order_Drop"
                                                      SelectedItem="{Binding DataContext.SelectedItem, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Mode=TwoWay}"
-                                                     ItemTemplate="{StaticResource OrderTemplate}"
-                                                     Style="{StaticResource CleanListBoxStyle}"
-                                                     MouseDoubleClick="BoxItemsControl_MouseDoubleClick" Margin="5"/>
+                                                     ItemTemplate="{StaticResource OrderTemplate}" Style="{StaticResource CleanListBoxStyle}"
+                                                     MouseDoubleClick="BoxItemsControl_MouseDoubleClick" Margin="5,10,5,5"/>
                                         </GroupBox>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -314,7 +325,7 @@
 
                         <!-- СЕРВИСНАЯ ЗОНА -->
                         <StackPanel Visibility="{Binding SelectedBranchTab.HasServiceZones, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBlock Text="🔧 СЕРВИСНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="#34495E" Margin="5,0,0,10" Opacity="0.8"/>
+                            <TextBlock Text="🔧 СЕРВИСНАЯ ЗОНА" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="5,0,0,15" Opacity="0.9"/>
                             <ItemsControl ItemsSource="{Binding SelectedBranchTab.ServiceZones}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -323,20 +334,17 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <GroupBox Header="{Binding ZoneName}" Width="360" MinHeight="400" Margin="5,0,15,15" FontSize="14" FontWeight="Bold" Foreground="#2C3E50">
+                                        <GroupBox Header="{Binding ZoneName}" Width="350" MinHeight="400" Margin="5,0,15,15" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}">
                                             <GroupBox.ContextMenu>
                                                 <ContextMenu>
                                                     <MenuItem Header="✏ Редактировать заказ" Click="EditOrderMenuItem_Click"/>
                                                     <MenuItem Header="🗑 Удалить заказ" Click="DeleteOrderMenuItem_Click"/>
                                                 </ContextMenu>
                                             </GroupBox.ContextMenu>
-                                            <ListBox ItemsSource="{Binding Orders}"
-                                                     AllowDrop="True" 
-                                                     Drop="Order_Drop"
+                                            <ListBox ItemsSource="{Binding Orders}" AllowDrop="True" Drop="Order_Drop"
                                                      SelectedItem="{Binding DataContext.SelectedItem, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Mode=TwoWay}"
-                                                     ItemTemplate="{StaticResource OrderTemplate}"
-                                                     Style="{StaticResource CleanListBoxStyle}"
-                                                     MouseDoubleClick="BoxItemsControl_MouseDoubleClick" Margin="5"/>
+                                                     ItemTemplate="{StaticResource OrderTemplate}" Style="{StaticResource CleanListBoxStyle}"
+                                                     MouseDoubleClick="BoxItemsControl_MouseDoubleClick" Margin="5,10,5,5"/>
                                         </GroupBox>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -346,43 +354,41 @@
                 </ScrollViewer>
 
                 <!-- БОКОВАЯ ПАНЕЛЬ СТАТИСТИКИ -->
-                <Border Grid.Column="1" Background="White" CornerRadius="10" Padding="15" Margin="20,0,0,0">
-                    <DockPanel>
-                        <StackPanel Orientation="Vertical" Width="280" Margin="15,0,0,0" Background="White" VerticalAlignment="Top">
-                            <TextBlock Text="👥 Статистика сотрудников:" FontSize="14" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,10"/>
+                <Border Grid.Column="1" Background="{StaticResource BgCard}" CornerRadius="12" Padding="15" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="10,0,0,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="👥 Статистика сотрудников:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="0,0,0,10"/>
                             <ItemsControl ItemsSource="{Binding WashersStats}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#F8F9FA" CornerRadius="5" Padding="10" Margin="0,0,0,8" BorderBrush="#E9ECEF" BorderThickness="1">
+                                        <Border Background="{StaticResource BgMain}" CornerRadius="8" Padding="10" Margin="0,0,0,10" BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding WasherName}" FontSize="13" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
+                                                <TextBlock Text="{Binding WasherName}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="0,0,0,6"/>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                                        <TextBlock Text="🚗 " FontSize="11"/>
-                                                        <TextBlock FontSize="11" Text="{Binding CarsCount, StringFormat={}{0} маш.}" Foreground="#7F8C8D"/>
-                                                    </StackPanel>
-                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                                        <TextBlock Text="📊 " FontSize="11"/>
-                                                        <TextBlock FontSize="11" FontWeight="Bold" Foreground="#E67E22" Text="{Binding Percentage, StringFormat={}{0:F1}%}" />
-                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="0" FontSize="12" Foreground="{StaticResource TextMuted}">
+                                                        <Run Text="🚗 "/> <Run Text="{Binding CarsCount, StringFormat={}{0} маш.}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Grid.Column="1" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentOrange}" HorizontalAlignment="Right">
+                                                        <Run Text="📊 "/> <Run Text="{Binding Percentage, StringFormat={}{0:F1}%}"/>
+                                                    </TextBlock>
                                                 </Grid>
-                                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                                    <TextBlock Text="💰 " FontSize="11"/>
-                                                    <TextBlock FontSize="12" FontWeight="Bold" Text="{Binding Earnings, StringFormat={}{0:N0} ₽}" Foreground="#27AE60"/>
-                                                </StackPanel>
+                                                <TextBlock Margin="0,6,0,0" FontSize="13" FontWeight="Bold" Foreground="{StaticResource AccentGreen}">
+                                                    <Run Text="💰 "/><Run Text="{Binding Earnings, StringFormat={}{0:N0} ₽}"/>
+                                                </TextBlock>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <Separator Margin="0,10,0,10" Height="1" Background="#BDC3C7"/>
-                            <TextBlock Text="💳 Способы оплаты:" FontSize="14" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
-                            <Border Background="#F8F9FA" CornerRadius="5" Padding="10" Margin="0,0,0,8">
+                            <Separator Margin="0,10" Background="{StaticResource BorderColor}"/>
+                            <TextBlock Text="💳 Способы оплаты:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}" Margin="0,0,0,10"/>
+
+                            <Border Background="{StaticResource BgMain}" CornerRadius="8" Padding="12" BorderBrush="{StaticResource BorderColor}" BorderThickness="1">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -390,108 +396,103 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                    </Grid.Resources>
+
+                                    <!-- Наличные -->
+                                    <Grid Grid.Row="0" Style="{StaticResource PaymentStatGridStyle}">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="25"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="💵" FontSize="16" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="Наличные" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding CashCount, StringFormat={}{0} шт.}" FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text=" / " FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text="{Binding CashAmount, StringFormat={}{0:N0} ₽}" FontSize="11" FontWeight="Bold" Foreground="#27AE60"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="0" Text="💵" FontSize="16"/>
+                                        <TextBlock Grid.Column="1" Text="Наличные" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="2" Foreground="{StaticResource TextMuted}" FontSize="12">
+                                            <Run Text="{Binding CashCount, StringFormat={}{0} шт.}"/> <Run Text=" / "/><Run Text="{Binding CashAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" Foreground="{StaticResource AccentGreen}"/>
+                                        </TextBlock>
                                     </Grid>
-                                    <Grid Grid.Row="1" Margin="0,0,0,8">
+
+                                    <!-- Карта -->
+                                    <Grid Grid.Row="1" Style="{StaticResource PaymentStatGridStyle}">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="25"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="💳" FontSize="16" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="Карта" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding CardCount, StringFormat={}{0} шт.}" FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text=" / " FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text="{Binding CardAmount, StringFormat={}{0:N0} ₽}" FontSize="11" FontWeight="Bold" Foreground="#27AE60"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="0" Text="💳" FontSize="16"/>
+                                        <TextBlock Grid.Column="1" Text="Карта" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="2" Foreground="{StaticResource TextMuted}" FontSize="12">
+                                            <Run Text="{Binding CardCount, StringFormat={}{0} шт.}"/> <Run Text=" / "/><Run Text="{Binding CardAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" Foreground="{StaticResource AccentGreen}"/>
+                                        </TextBlock>
                                     </Grid>
-                                    <Grid Grid.Row="2" Margin="0,0,0,8">
+
+                                    <!-- Перевод -->
+                                    <Grid Grid.Row="2" Style="{StaticResource PaymentStatGridStyle}">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="25"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="📱" FontSize="16" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="Перевод" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding TransferCount, StringFormat={}{0} шт.}" FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text=" / " FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text="{Binding TransferAmount, StringFormat={}{0:N0} ₽}" FontSize="11" FontWeight="Bold" Foreground="#27AE60"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="0" Text="📱" FontSize="16"/>
+                                        <TextBlock Grid.Column="1" Text="Перевод" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="2" Foreground="{StaticResource TextMuted}" FontSize="12">
+                                            <Run Text="{Binding TransferCount, StringFormat={}{0} шт.}"/> <Run Text=" / "/><Run Text="{Binding TransferAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" Foreground="{StaticResource AccentGreen}"/>
+                                        </TextBlock>
                                     </Grid>
-                                    <Grid Grid.Row="3" Margin="0,0,0,8">
+
+                                    <!-- QR -->
+                                    <Grid Grid.Row="3">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="25"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="📱" FontSize="16" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="QR-код" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding QrCount, StringFormat={}{0} шт.}" FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text=" / " FontSize="11" Foreground="#7F8C8D"/>
-                                            <TextBlock Text="{Binding QrAmount, StringFormat={}{0:N0} ₽}" FontSize="11" FontWeight="Bold" Foreground="#27AE60"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="0" Text="🔲" FontSize="16"/>
+                                        <TextBlock Grid.Column="1" Text="QR-код" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="2" Foreground="{StaticResource TextMuted}" FontSize="12">
+                                            <Run Text="{Binding QrCount, StringFormat={}{0} шт.}"/> <Run Text=" / "/><Run Text="{Binding QrAmount, StringFormat={}{0:N0} ₽}" FontWeight="Bold" Foreground="{StaticResource AccentGreen}"/>
+                                        </TextBlock>
                                     </Grid>
                                 </Grid>
                             </Border>
 
-                            <Separator Margin="0,10,0,10" Height="1" Background="#BDC3C7"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                <TextBlock Text="🏢 Компания: " FontSize="13" FontWeight="Bold" Foreground="#2C3E50"/>
-                                <TextBlock Text="{Binding CompanyEarnings, StringFormat={}{0:N0} ₽}" FontSize="13" FontWeight="Bold" Foreground="#27AE60"/>
+                            <Separator Margin="0,15" Background="{StaticResource BorderColor}"/>
+
+                            <!-- Итоговые суммы -->
+                            <StackPanel Margin="0,0,0,15">
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="🏢 Компания:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                                    <TextBlock Text="{Binding CompanyEarnings, StringFormat={}{0:N0} ₽}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource AccentGreen}" HorizontalAlignment="Right"/>
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Text="💵 Общая выручка:" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextMain}"/>
+                                    <TextBlock Text="{Binding TotalRevenue, StringFormat={}{0:N0} ₽}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource AccentBlue}" HorizontalAlignment="Right"/>
+                                </DockPanel>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                <TextBlock Text="💵 Общая выручка: " FontSize="13" FontWeight="Bold" Foreground="#2C3E50"/>
-                                <TextBlock Text="{Binding TotalRevenue, StringFormat={}{0:N0} ₽}" FontSize="13" FontWeight="Bold" Foreground="#3498DB"/>
-                            </StackPanel>
-                            <Border Background="#34495E" CornerRadius="5" Padding="15" Margin="0,15,0,0">
-                                <TextBlock Text="{Binding TotalOrdersInfo}" FontSize="14" FontWeight="Bold" Foreground="White" TextWrapping="WrapWithOverflow"/>
+
+                            <Border Background="{StaticResource TextMain}" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                                <TextBlock Text="{Binding TotalOrdersInfo}" FontSize="14" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
                             </Border>
-                            <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center">
-                                <Button Content="📤 Экспорт данных" Click="ExportButton_Click" Padding="15,8" Margin="10" Background="#9B59B6" Foreground="White" BorderThickness="0" Cursor="Hand" Height="35"/>
-                                <TextBlock Text="Важно при возникновении ошибок" HorizontalAlignment="Center" FontSize="10" Foreground="#7F8C8D"/>
+
+                            <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,10,0,0">
+                                <Button Content="📤 Экспорт данных" Click="ExportButton_Click" Style="{StaticResource PurpleBtn}" Width="200" Margin="0,0,0,5"/>
+                                <TextBlock Text="Важно при возникновении ошибок" HorizontalAlignment="Center" FontSize="11" Foreground="{StaticResource TextLightMuted}"/>
                             </StackPanel>
                         </StackPanel>
-                    </DockPanel>
+                    </ScrollViewer>
                 </Border>
             </Grid>
         </Grid>
 
-        <!-- Оверлей окна записей -->
-        <controls:AppointmentsOverlay x:Name="AppointmentsOverlay" Visibility="Collapsed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Panel.ZIndex="9999"/>
-
-        <!-- Оверлей Стола управляющего (подписались на событие CashboxRequested) -->
-        <controls:ManagerDeskOverlay x:Name="DeskOverlay" 
-                                     CashboxRequested="DeskOverlay_CashboxRequested" 
-                                     CompanySettingsRequested="DeskOverlay_CompanySettingsRequested" 
-                                     Visibility="Collapsed" Panel.ZIndex="150"/>
-
-        <!-- Оверлей Кассы -->
-        <controls:CashboxOverlay x:Name="CashboxPanel" 
-                     Visibility="Collapsed" Panel.ZIndex="160"/>
-
-        <!-- Оверлей Калькулятора  -->
-        <controls:CalculatorOverlay x:Name="CalculatorOverlay" 
-                                        Visibility="Collapsed" Panel.ZIndex="200"/>
-        
-        <!-- Оверлей Настроек Компании  -->
-        <controls:CompanyManagementOverlay x:Name="CompanySettingsPanel" 
-                                    Visibility="Collapsed" Panel.ZIndex="200"/>
-
-
+        <!-- Оверлеи (оставлены без изменений) -->
+        <controls:AppointmentsOverlay x:Name="AppointmentsOverlay" Visibility="Collapsed" Panel.ZIndex="9999"/>
+        <controls:ManagerDeskOverlay x:Name="DeskOverlay" CashboxRequested="DeskOverlay_CashboxRequested" CompanySettingsRequested="DeskOverlay_CompanySettingsRequested" Visibility="Collapsed" Panel.ZIndex="150"/>
+        <controls:CashboxOverlay x:Name="CashboxPanel" Visibility="Collapsed" Panel.ZIndex="160"/>
+        <controls:CalculatorOverlay x:Name="CalculatorOverlay" Visibility="Collapsed" Panel.ZIndex="200"/>
+        <controls:CompanyManagementOverlay x:Name="CompanySettingsPanel" Visibility="Collapsed" Panel.ZIndex="200"/>
     </Grid>
 </Window>
