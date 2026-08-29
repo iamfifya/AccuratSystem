@@ -4,6 +4,7 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Элементы решения/">
+    <File Path=".github/workflows/dotnet.yml" />
     <File Path="README.md" />
   </Folder>
   <Project Path="Accurat.WebAPI/Accurat.WebAPI.csproj" />

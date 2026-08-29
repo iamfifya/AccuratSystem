@@ -8,6 +8,7 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>AccuratPanelCarWashing</RootNamespace>
 		<AssemblyName>ACCURAT - Панель управления</AssemblyName>
+		<ApplicationIcon>Resources\accurat.ico</ApplicationIcon>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="MaterialDesignThemes" Version="5.3.1" />
@@ -25,6 +26,9 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Resource Include="Resources\**\*" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="Resources\accurat.ico" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="appsettings.json">

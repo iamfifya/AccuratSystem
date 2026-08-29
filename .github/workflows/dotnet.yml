@@ -6,12 +6,17 @@ on:
   pull_request:
     branches: [ "main" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # Отменяет старые сборки при новых коммитах
+
 jobs:
   build:
     strategy:
       matrix:
         configuration: [Release]
     runs-on: windows-latest
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -21,7 +26,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'  # ← возвращаем 10.0.x, твой проект на .NET 10
+          dotnet-version: '10.0.x'
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
@@ -31,6 +39,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      # === RESTORE PHASE ===
       - name: Restore legacy packages (packages.config)
         run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
 
@@ -40,27 +49,32 @@ jobs:
           New-Item -ItemType Directory -Force -Path AccuratPanelCarWashing\packages
           Copy-Item -Path packages\* -Destination AccuratPanelCarWashing\packages -Recurse -Force
 
-      - name: Restore modern packages (PackageReference)
+      - name: Restore modern packages (WPF)
         run: dotnet restore AccuratPanelCWD\AccuratPanelCWD.csproj
 
+      - name: Restore modern packages (API)
+        run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
+
+      # === BUILD PHASE ===
       - name: Build WPF Client
         run: dotnet build AccuratPanelCWD\AccuratPanelCWD.csproj --configuration ${{ matrix.configuration }} --no-restore
-
-      - name: Restore Web API
-        run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
 
       - name: Build Web API
         run: dotnet build Accurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
 
-      - name: Restore WPF Client
-        run: dotnet restore AccuratPanelCWD\AccuratPanelCWD.csproj
-
-      - name: Build WPF Client
-        run: dotnet build AccuratPanelCWD\AccuratPanelCWD.csproj --configuration ${{ matrix.configuration }} --no-restore
-
+      # === ARTIFACTS ===
       - name: Upload WPF Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Accurat-Client-Release
-          path: AccuratPanelCWD\bin\${{ matrix.configuration }}\
+          name: Accurat-Client-${{ matrix.configuration }}
+          path: AccuratPanelCWD\bin\${{ matrix.configuration }}\net10.0-windows\
           retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload API Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Accurat-API-${{ matrix.configuration }}
+          path: Accurat.WebAPI\bin\${{ matrix.configuration }}\net10.0\
+          retention-days: 14
+          if-no-files-found: error
