@@ -43,7 +43,7 @@ jobs:
         Copy-Item -Path packages\* -Destination AccuratPanelCarWashing\packages -Recurse -Force
 
     - name: Restore .NET Packages (API)
-      run: dotnet restore Akkurat.WebAPI\Accurat.WebAPI.csproj
+      run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
 
     - name: Build Web API
       run: dotnet build Akkurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
