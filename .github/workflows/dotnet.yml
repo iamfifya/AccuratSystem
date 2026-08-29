@@ -2,28 +2,64 @@ name: Accurat System CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # Отменяет старые сборки при новых коммитах в PR
+
 jobs:
-  build:
+  build-api:
+    name: Build Web API
+    runs-on: windows-latest
     strategy:
       matrix:
         configuration: [Release]
-
-    runs-on: windows-latest 
-
+    
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: Setup .NET 10
+    - name: Setup .NET 9
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.x' 
+        dotnet-version: '9.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-api-${{ hashFiles('**/*.csproj', '**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-api-
+
+    - name: Restore .NET Packages
+      run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
+
+    - name: Build Web API
+      run: dotnet build Accurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
+
+  build-wpf:
+    name: Build WPF Client
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Release]
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
 
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
@@ -31,28 +67,40 @@ jobs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2
 
-    # 4. Скачиваем пакеты в корневую папку (для тех библиотек, что ищут путь "..\packages")
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.nuget/packages
+          packages
+        key: ${{ runner.os }}-nuget-wpf-${{ hashFiles('**/packages.config', '**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-wpf-
+
     - name: Restore NuGet Packages (WPF)
       run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
 
-    # 🔥 4.1 ВОТ НАШ ФИКС: Копируем скачанные пакеты внутрь проекта
-    # (для тех библиотек, что ищут путь "packages\" внутри проекта, например MaterialDesign)
     - name: Fix broken CSPROJ paths
+      shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path AccuratPanelCarWashing\packages
         Copy-Item -Path packages\* -Destination AccuratPanelCarWashing\packages -Recurse -Force
 
-    - name: Restore .NET Packages (API)
-      run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
-
-    - name: Build Web API
-      run: dotnet build Accurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
-
     - name: Build WPF Client
-      run: msbuild AccuratPanelCWD\AccuratPanelCWD.csproj /p:Configuration=${{ matrix.configuration }}
+      run: msbuild AccuratPanelCWD\AccuratPanelCWD.csproj /p:Configuration=${{ matrix.configuration }} /restore:false
 
     - name: Upload WPF Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Accurat-Client-Release
+        name: Accurat-Client-${{ matrix.configuration }}
         path: AccuratPanelCarWashing\bin\${{ matrix.configuration }}\
+        retention-days: 30
+        if-no-files-found: error
+
+    - name: Upload API Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Accurat-API-${{ matrix.configuration }}
+        path: Accurat.WebAPI\bin\${{ matrix.configuration }}\
+        retention-days: 30
+        if-no-files-found: error
