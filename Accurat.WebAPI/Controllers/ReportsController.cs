@@ -42,6 +42,18 @@ namespace Accurat.WebAPI.Controllers
 
             var shifts = await shiftsQuery.ToListAsync();
             var reports = new List<ShiftReport>();
+            if (!shifts.Any()) return Ok(reports);
+
+            var shiftIds = shifts.Select(s => s.Id).ToList();
+
+            var allShiftOrders = await _context.Orders
+                .Include(o => o.OrderWashers)
+                .Where(o => shiftIds.Contains(o.ShiftId) && (o.Status == "Выполнен" || o.Status == "Завершен"))
+                .ToListAsync();
+
+            var allShiftTransactions = await _context.Transactions
+                .Where(t => t.ShiftId.HasValue && shiftIds.Contains(t.ShiftId.Value))
+                .ToListAsync();
 
             var allUsers = await _context.Users.Where(u => CurrentCompanyId == 0 || u.CompanyId == CurrentCompanyId).ToListAsync();
             var allServices = await _context.Services.Where(s => CurrentCompanyId == 0 || s.CompanyId == CurrentCompanyId).ToListAsync();
@@ -49,11 +61,8 @@ namespace Accurat.WebAPI.Controllers
 
             foreach (var shift in shifts)
             {
-                var orders = await _context.Orders
-                    .Include(o => o.OrderWashers)
-                    .Where(o => o.ShiftId == shift.Id && (o.Status == "Выполнен" || o.Status == "Завершен")).ToListAsync();
-
-                var transactions = await _context.Transactions.Where(t => t.ShiftId == shift.Id).ToListAsync();
+                var orders = allShiftOrders.Where(o => o.ShiftId == shift.Id).ToList();
+                var transactions = allShiftTransactions.Where(t => t.ShiftId == shift.Id).ToList();
 
                 var report = new ShiftReport
                 {
@@ -82,6 +91,7 @@ namespace Accurat.WebAPI.Controllers
                     ServiceTotalExpenses = transactions.Where(t => t.Type == "Расход" && t.Department == "Service").Sum(t => t.Amount)
                 };
 
+                // === ФОТ СОТРУДНИКОВ (мойщики + админы) ===
                 decimal totalFOT = 0;
                 var shiftEmployeeIds = shift.EmployeeIds?.ToList() ?? new List<int>();
                 var washerIds = orders.SelectMany(o => o.OrderWashers?.Select(ow => ow.UserId) ?? new List<int>());
@@ -96,29 +106,27 @@ namespace Accurat.WebAPI.Controllers
                     decimal empEarnings = 0;
                     decimal empAdvances = transactions.Where(t => t.EmployeeId == emp.Id && t.Type == "Аванс мойщику").Sum(t => t.Amount);
 
+                    var empOrderWashers = orders
+                        .SelectMany(o => (o.OrderWashers ?? new List<OrderWasher>())
+                            .Select(ow => new { Order = o, Washer = ow }))
+                        .Where(x => x.Washer.UserId == empId)
+                        .ToList();
+
                     if (emp.RoleId == 3 || emp.RoleId == 4) // МОЙЩИКИ И СЕРВИС
                     {
-                        // ИСПРАВЛЕНИЕ: Используем JOIN вместо .Any(), чтобы точно достать замороженные суммы
-                        empEarnings = await (from ow in _context.OrderWashers
-                                             join o in _context.Orders on ow.OrderId equals o.Id
-                                             where ow.UserId == empId && o.ShiftId == shift.Id
-                                             select ow.EarnedAmount).SumAsync();
+                        empEarnings = empOrderWashers.Sum(x => x.Washer.EarnedAmount);
                     }
                     else // АДМИНЫ И ДИРЕКТОРА
                     {
-                        // БЕЗОПАСНОСТЬ: Если смена закрыта, берем снапшот из Shift, а не пересчитываем!
                         if (shift.IsClosed && shift.AdminEarningsSnapshot > 0)
                         {
-                            // Распределяем общий снапшот админов между теми, кто был в смене
                             var adminsInShiftCount = shift.EmployeeIds?.Count(uid =>
                                 allUsers.FirstOrDefault(u => u.Id == uid)?.RoleId == 1 ||
                                 allUsers.FirstOrDefault(u => u.Id == uid)?.RoleId == 2) ?? 1;
-
                             empEarnings = shift.AdminEarningsSnapshot / (adminsInShiftCount > 0 ? adminsInShiftCount : 1);
                         }
                         else
                         {
-                            // Если смена еще открыта — считаем живой расчет
                             var adminStats = OrderMath.CalculateShiftStats(orders, allServices, emp, shift.Type, allUsers, settings);
                             empEarnings = adminStats.TotalEarned;
                         }
@@ -128,14 +136,45 @@ namespace Accurat.WebAPI.Controllers
                     {
                         EmployeeId = emp.Id,
                         EmployeeName = emp.FullName,
+                        CarsWashed = empOrderWashers.Count,
+                        TotalAmount = empOrderWashers.Sum(x => x.Order.FinalPrice),
                         Earnings = empEarnings,
                         Advances = empAdvances
                     });
                     totalFOT += empEarnings;
                 }
 
+                // === ИТОГИ СМЕНЫ ===
                 report.TotalWasherEarnings = totalFOT;
                 report.TotalCompanyEarnings = report.TotalRevenue - totalFOT;
+
+                // === РАСКЛАДКА ФОТ АДМИНОВ ПО ДЕПАРТАМЕНТАМ ===
+                // washWasherFOT — замороженные зарплаты мойщиков департамента Wash
+                decimal washWasherFOT = orders.Where(o => o.Department == "Wash")
+                    .SelectMany(o => o.OrderWashers ?? new List<OrderWasher>())
+                    .Sum(ow => ow.EarnedAmount);
+
+                // serviceWasherFOT — то же самое по департаменту Service
+                decimal serviceWasherFOT = orders.Where(o => o.Department == "Service")
+                    .SelectMany(o => o.OrderWashers ?? new List<OrderWasher>())
+                    .Sum(ow => ow.EarnedAmount);
+
+                // adminFOT — зарплата админов/директоров за смену.
+                // Считаем как разницу: весь ФОТ минус ФОТ мойщиков
+                decimal adminFOT = totalFOT - (washWasherFOT + serviceWasherFOT);
+
+                // washShare / serviceShare — доля департамента в общей кассе смены.
+                // По ним пропорционально раскладываем админский ФОТ
+                decimal washShare = report.TotalRevenue > 0 ? report.WashTotalRevenue / report.TotalRevenue : 0m;
+                decimal serviceShare = report.TotalRevenue > 0 ? report.ServiceTotalRevenue / report.TotalRevenue : 0m;
+
+                // WashCompanyEarnings — прибыль мойки ПОСЛЕ всех зарплат:
+                // касса мойки − мойщики мойки − доля админского ФОТ
+                report.WashCompanyEarnings = report.WashTotalRevenue - washWasherFOT - (adminFOT * washShare);
+
+                // ServiceCompanyEarnings — то же самое по сервису
+                report.ServiceCompanyEarnings = report.ServiceTotalRevenue - serviceWasherFOT - (adminFOT * serviceShare);
+
                 reports.Add(report);
             }
 

@@ -176,8 +176,7 @@
                                               Foreground="{DynamicResource TextMain}"/>
                                 </lvc:CartesianChart.AxisX>
                                 <lvc:CartesianChart.AxisY>
-                                    <lvc:Axis Title="₽" 
-                                              Foreground="{DynamicResource TextMain}"/>
+                                    <lvc:Axis Title="₽" LabelFormatter="{Binding YFormatter}"/>
                                 </lvc:CartesianChart.AxisY>
                             </lvc:CartesianChart>
                         </Grid>

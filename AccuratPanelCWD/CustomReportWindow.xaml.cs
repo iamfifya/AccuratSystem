@@ -23,7 +23,9 @@ namespace AccuratPanelCWD
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
         private readonly WpfUser _currentUser;
-        
+
+        public Func<double, string> YFormatter { get; } = value => value.ToString("#,0");
+
         // Добавляем поле для хранения сформированного отчета
         private AccuratSystem.Contracts.Models.CustomPeriodReport _lastGeneratedReport;
 
