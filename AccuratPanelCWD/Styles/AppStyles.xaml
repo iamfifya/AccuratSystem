@@ -263,17 +263,85 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
         <Setter Property="BorderThickness" Value="1"/>
     </Style>
 
-    <!-- Стиль для TabControl -->
+    <!-- ============ TAB CONTROL ============ -->
     <Style TargetType="TabControl">
         <Setter Property="FontFamily" Value="Segoe UI"/>
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Background" Value="#F0F0F2"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
     </Style>
 
+    <!-- ============ TAB ITEM ============ -->
     <Style TargetType="TabItem">
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Margin" Value="0,0,2,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Border x:Name="Border"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0,0,0,2"
+                        CornerRadius="6"
+                        Padding="16,10"
+                        SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="ContentSite"
+                                      ContentSource="Header"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      TextBlock.Foreground="{DynamicResource TextMuted}"/>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <!-- Hover -->
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="IsSelected" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource TableRowHover}"/>
+                            <Setter TargetName="ContentSite" Property="TextBlock.Foreground" Value="{DynamicResource TextMain}"/>
+                        </MultiTrigger>
+
+                        <!-- Выбранная вкладка: подчёркивание снизу + синий текст -->
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource BgCard}"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                            <Setter TargetName="ContentSite" Property="TextBlock.Foreground" Value="{DynamicResource AccentBlue}"/>
+                            <Setter TargetName="ContentSite" Property="TextBlock.FontWeight" Value="Bold"/>
+                        </Trigger>
+
+                        <!-- Поддержка разных позиций табов (FallbackValue=Top убирает ошибку при создании элемента) -->
+                        <DataTrigger Binding="{Binding TabStripPlacement, 
+                                         RelativeSource={RelativeSource AncestorType=TabControl}, 
+                                         FallbackValue=Top}" Value="Bottom">
+                            <Setter TargetName="Border" Property="BorderThickness" Value="0,2,0,0"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding TabStripPlacement, 
+                                         RelativeSource={RelativeSource AncestorType=TabControl}, 
+                                         FallbackValue=Top}" Value="Left">
+                            <Setter TargetName="Border" Property="BorderThickness" Value="0,0,2,0"/>
+                            <Setter TargetName="Border" Property="Margin" Value="0,0,0,2"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding TabStripPlacement, 
+                                         RelativeSource={RelativeSource AncestorType=TabControl}, 
+                                         FallbackValue=Top}" Value="Right">
+                            <Setter TargetName="Border" Property="BorderThickness" Value="2,0,0,0"/>
+                            <Setter TargetName="Border" Property="Margin" Value="0,0,0,2"/>
+                        </DataTrigger>
+
+                        <!-- Disabled -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="ContentSite" Property="TextBlock.Foreground" Value="{DynamicResource TextLightMuted}"/>
+                            <Setter Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
 </ResourceDictionary>
