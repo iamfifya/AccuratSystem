@@ -1,6 +1,6 @@
 ﻿namespace AccuratSystem.Contracts.Models
 {
-    public class OrderStatus
+    public class OrderStatuses
     {
         public int Id { get; set; }
         public int CompanyId { get; set; }

@@ -27,7 +27,54 @@ namespace AccuratPanelCWD.Models
         public string PaymentMethod { get; set; }
 
         private string _statusColorHex;
-        public string StatusColorHex { get => _statusColorHex; set { _statusColorHex = value; OnPropertyChanged(); } }
+
+        /// <summary>
+        /// Цвет бейджа статуса. Если сервер вернул свой цвет — используем его,
+        /// иначе берём фолбэк-палитру по имени статуса (работает без API).
+        /// </summary>
+        public string StatusColorHex
+        {
+            get
+            {
+                // Серверный цвет используем, если он есть и это не дефолтный серый
+                if (!string.IsNullOrWhiteSpace(_statusColorHex) && _statusColorHex != "#7F8C8D")
+                    return _statusColorHex;
+
+                return GetFallbackStatusColor(Status);
+            }
+            set
+            {
+                _statusColorHex = value;
+                OnPropertyChanged(nameof(StatusColorHex));
+            }
+        }
+
+        /// <summary>
+        /// Запасная палитра статусов: гарантирует цветные бейджи,
+        /// даже если OrderStatuses не загрузились с сервера.
+        /// </summary>
+        public static string GetFallbackStatusColor(string status)
+        {
+            switch (status)
+            {
+                case "В работе":
+                    return "#3498DB";   // синий — процесс идёт
+                case "Выполнен":
+                case "Завершен":
+                    return "#27AE60";   // зелёный — успех
+                case "Отменен":
+                    return "#E74C3C";   // красный — отмена
+                case "Предварительная запись":
+                case "Запись":
+                case "Ожидает":
+                    return "#F39C12";   // оранжевый — ожидание
+                case "Диагностика":
+                case "Ожидание запчастей":
+                    return "#9B59B6";   // фиолетовый — сервисные паузы
+                default:
+                    return "#7F8C8D";   // серый — неизвестный статус
+            }
+        }
 
         // === НОВОЕ: Время начала текущего статуса ===
         public DateTime? StatusStartTime { get; set; }

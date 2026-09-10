@@ -139,16 +139,16 @@ namespace AccuratPanelCarWashing.Services
             }
         }
 
-        public async Task<List<AccuratSystem.Contracts.Models.OrderStatus>> GetOrderStatusesAsync(int branchId)
+        public async Task<List<AccuratSystem.Contracts.Models.OrderStatuses>> GetOrderStatusesAsync(int branchId)
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.OrderStatus>>($"OrderStatuses/by-branch/{branchId}")
-                       ?? new List<AccuratSystem.Contracts.Models.OrderStatus>();
+                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.OrderStatuses>>($"OrderStatuses/by-branch/{branchId}")
+                       ?? new List<AccuratSystem.Contracts.Models.OrderStatuses>();
             }
             catch (Exception)
             {
-                return new List<AccuratSystem.Contracts.Models.OrderStatus>();
+                return new List<AccuratSystem.Contracts.Models.OrderStatuses>();
             }
         }
         #endregion

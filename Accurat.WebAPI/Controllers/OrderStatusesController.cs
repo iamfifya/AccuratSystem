@@ -13,7 +13,7 @@ namespace Accurat.WebAPI.Controllers
         public OrderStatusesController(AppDbContext context) => _context = context;
 
         [HttpGet("by-branch/{branchId}")]
-        public async Task<ActionResult<IEnumerable<OrderStatus>>> GetByBranch(int branchId)
+        public async Task<ActionResult<IEnumerable<OrderStatuses>>> GetByBranch(int branchId)
         {
             var branch = await _context.Branches.FindAsync(branchId);
             if (branch == null) return NotFound("Филиал не найден");

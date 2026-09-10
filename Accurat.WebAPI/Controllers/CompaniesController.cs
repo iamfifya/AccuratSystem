@@ -69,7 +69,7 @@ namespace Accurat.WebAPI.Controllers
                     .Where(s => s.CompanyId == 1).ToListAsync();
                 foreach (var s in defaultStatuses)
                 {
-                    _context.OrderStatuses.Add(new OrderStatus
+                    _context.OrderStatuses.Add(new OrderStatuses
                     {
                         Name = s.Name,
                         Icon = s.Icon,

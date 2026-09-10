@@ -202,47 +202,52 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("{id}/cashbox")]
         public async Task<ActionResult<CashboxSummary>> GetCashboxSummary(int id)
         {
-            // БЕЗОПАСНОСТЬ: Используем наш хелпер
             var shift = await VerifyShiftAccess(id);
             if (shift == null) return (CurrentCompanyId != 0) ? Forbid() : NotFound();
 
+            // === ФИКС №1: Статусы "Выполнен" И "Завершен" (как в отчётах) ===
             var orders = await _context.Orders
                 .Include(o => o.OrderWashers)
-                .Where(o => o.ShiftId == id && o.Status == "Выполнен" && o.PaymentMethod == "Наличные")
+                .Where(o => o.ShiftId == id
+                         && (o.Status == "Выполнен" || o.Status == "Завершен")
+                         && o.PaymentMethod == "Наличные")
                 .ToListAsync();
 
             var transactions = await _context.Transactions.Where(t => t.ShiftId == id).ToListAsync();
             var allServices = await _context.Services.ToListAsync();
             var allUsers = await _context.Users.ToListAsync();
-
             var settings = await _context.CompanySettings.FindAsync(shift.Branch?.CompanyId ?? 0);
 
+            // CashInHand — реальная сумма наличных в ящике:
+            // наличная выручка + приходы/размен - авансы/расходы/инкассации
             decimal cashRevenue = orders.Sum(o => o.FinalPrice);
             decimal deposits = transactions.Where(t => t.Type == "Приход" || t.Type == "Размен").Sum(t => t.Amount);
             decimal advances = transactions.Where(t => t.Type == "Аванс мойщику").Sum(t => t.Amount);
             decimal expenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
             decimal withdrawals = transactions.Where(t => t.Type == "Инкассация").Sum(t => t.Amount);
 
-            decimal totalTopUp = 0;
-            var orderWasherPairs = orders
+            // === ФИКС №2: ЗП мойщика берём из замороженных EarnedAmount ===
+            // Это гарантирует, что цифры кассы = цифры отчётов
+            // (старый код пересчитывал через SalaryCalculationService, что могло давать расхождения)
+            decimal washerPay = orders
                 .Where(o => o.OrderWashers != null)
-                .SelectMany(o => o.OrderWashers,
-                        (o, ow) => new { Order = o, OrderWasher = ow, WasherId = ow.UserId })
-                .ToList();
+                .SelectMany(o => o.OrderWashers)
+                .Sum(ow => ow.EarnedAmount);
 
-            foreach (var group in orderWasherPairs.GroupBy(x => x.WasherId))
-            {
-                decimal basePay = group.Sum(x =>
-                    Accurat.WebAPI.Services.SalaryCalculationService.CalculateWasherIncomeForOrder(x.OrderWasher, x.Order, allServices, allUsers, shift.Type, settings));
-
-                totalTopUp += basePay;
-            }
+            // === ФИКС №3: CompanyEarnings = Выручка − ЗП мойщика (без двойного вычета) ===
+            // Это ровно то же, что считает OrderMath.Calculate().CompanyNetEarnings
+            decimal companyCashEarnings = cashRevenue - washerPay;
 
             return new CashboxSummary
             {
+                // Наличных в ящике: приход - расход
                 CashInHand = cashRevenue + deposits - (advances + expenses + withdrawals),
+
+                // Расходы + авансы (аванс тоже уходит из ящика наличными)
                 TotalExpenses = expenses + advances,
-                NetCashProfit = (cashRevenue * (settings?.CompanySharePercentage ?? 65m) / 100m) - expenses - totalTopUp
+
+                // Чистая прибыль = доля компании - расходы (ЗП мойщика уже вычтена в companyCashEarnings)
+                NetCashProfit = companyCashEarnings - expenses
             };
         }
     }

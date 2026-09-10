@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using OrderStatus = AccuratSystem.Contracts.Models.OrderStatus;
+using OrderStatuses = AccuratSystem.Contracts.Models.OrderStatuses;
 
 namespace Accurat.WebAPI.Data
 {
@@ -36,7 +36,7 @@ namespace Accurat.WebAPI.Data
         public DbSet<Company> Companies { get; set; }
         public DbSet<CarCategory> CarCategories { get; set; }
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
-        public DbSet<AccuratSystem.Contracts.Models.OrderStatus> OrderStatuses { get; set; }
+        public DbSet<AccuratSystem.Contracts.Models.OrderStatuses> OrderStatuses { get; set; }
         public DbSet<CompanySettings> CompanySettings { get; set; }
         public DbSet<DiscountRule> DiscountRules { get; set; }
 
@@ -297,10 +297,10 @@ namespace Accurat.WebAPI.Data
                 new PaymentMethod { Id = 5, CompanyId = 1, Name = "QR-код", SortOrder = 5 }
             );
 
-            modelBuilder.Entity<OrderStatus>().HasData(
-                new OrderStatus { Id = 1, CompanyId = 1, Name = "В работе", Icon = "🟢", ColorHex = "#3498DB", SortOrder = 1 }, // Синий
-                new OrderStatus { Id = 2, CompanyId = 1, Name = "Выполнен", Icon = "✅", ColorHex = "#2ECC71", SortOrder = 2 }, // Зеленый
-                new OrderStatus { Id = 3, CompanyId = 1, Name = "Отменен", Icon = "❌", ColorHex = "#95A5A6", SortOrder = 3 }  // Серый
+            modelBuilder.Entity<OrderStatuses>().HasData(
+                new OrderStatuses { Id = 1, CompanyId = 1, Name = "В работе", Icon = "🟢", ColorHex = "#3498DB", SortOrder = 1 }, // Синий
+                new OrderStatuses { Id = 2, CompanyId = 1, Name = "Выполнен", Icon = "✅", ColorHex = "#2ECC71", SortOrder = 2 }, // Зеленый
+                new OrderStatuses { Id = 3, CompanyId = 1, Name = "Отменен", Icon = "❌", ColorHex = "#95A5A6", SortOrder = 3 }  // Серый
             );
 
             // Добавляем настройки для компании Accurat (CompanyId = 1)

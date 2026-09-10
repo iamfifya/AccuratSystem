@@ -20,7 +20,7 @@
                 Background="{DynamicResource BgMain}" 
                 CornerRadius="6" 
                 Width="950" 
-                Height="650" 
+                Height="700" 
                 VerticalAlignment="Center" 
                 HorizontalAlignment="Center" 
                 BorderBrush="{DynamicResource BorderColor}" 
@@ -42,29 +42,35 @@
                 </Grid.RowDefinitions>
 
                 <!-- Заголовок -->
-                <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,20" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                        <TextBlock Text="💰 Касса смены" 
-                                   FontSize="26" 
-                                   FontWeight="Bold" 
-                                   Foreground="{DynamicResource TextMain}"/>
-                    </StackPanel>
+                <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,20" VerticalAlignment="Center">
+                    <TextBlock DockPanel.Dock="Left"
+                               Text="💰 Касса смены" 
+                               FontSize="26" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource TextMain}"
+                               VerticalAlignment="Center"/>
                     <Button Click="Close_Click" 
                             DockPanel.Dock="Right" 
-                            Background="Transparent" 
-                            BorderThickness="0" 
-                            Cursor="Hand"
-                            Width="45"
-                            Height="45">
-                        <TextBlock Text="✕" 
-                                   VerticalAlignment="Center" 
-                                   FontSize="24" 
-                                   Foreground="{DynamicResource TextMain}"
-                                   FontWeight="Bold"/>
+                            Width="40" Height="40"
+                            Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="CloseBorder" Background="Transparent" CornerRadius="6">
+                                    <TextBlock Text="✕" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               FontSize="20" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextMuted}"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="CloseBorder" Property="Background" Value="{DynamicResource TableRowHover}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
                     </Button>
                 </DockPanel>
 
-                <!-- Статистические карточки -->
+                <!-- Карточки итогов -->
                 <Grid Grid.Row="1" Margin="0,0,0,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -72,56 +78,44 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" 
-                            Background="{DynamicResource BgCard}" 
-                            CornerRadius="6" 
-                            Padding="15" 
-                            Margin="0,0,10,0">
+                    <Border Grid.Column="0" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="20" Margin="0,0,10,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="💵 Наличных в ящике" 
-                                       FontSize="12" 
-                                       Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock Text="💵 Наличных в ящике" FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,8"/>
                             <TextBlock Text="{Binding CashInHand, StringFormat={}{0:N0} ₽}" 
-                                       FontSize="24" 
-                                       FontWeight="Bold" 
+                                       FontSize="28" FontWeight="Bold" 
                                        Foreground="{DynamicResource AccentGreen}"/>
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="1" 
-                            Background="{DynamicResource BgCard}" 
-                            CornerRadius="6" 
-                            Padding="15" 
-                            Margin="5,0,5,0">
+                    <Border Grid.Column="1" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="20" Margin="5,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="📉 Расходы / Авансы" 
-                                       FontSize="12" 
-                                       Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock Text="📉 Расходы / Авансы" FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,8"/>
                             <TextBlock Text="{Binding TotalExpenses, StringFormat={}{0:N0} ₽}" 
-                                       FontSize="24" 
-                                       FontWeight="Bold" 
+                                       FontSize="28" FontWeight="Bold" 
                                        Foreground="{DynamicResource AccentRed}"/>
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="2" 
-                            Background="{DynamicResource TextMain}" 
-                            CornerRadius="6" 
-                            Padding="15" 
-                            Margin="10,0,0,0">
+                    <Border Grid.Column="2" Background="{DynamicResource TextMain}" CornerRadius="6" 
+                            Padding="20" Margin="10,0,0,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="🏢 Чистая прибыль (наличная)" 
-                                       FontSize="12" 
-                                       Foreground="{DynamicResource TextLightMuted}"/>
+                            <TextBlock Text="🏢 Чистая прибыль (наличная)" FontSize="13" 
+                                       Foreground="{DynamicResource TextLightMuted}" Margin="0,0,0,8"/>
                             <TextBlock Text="{Binding NetCashProfit, StringFormat={}{0:N0} ₽}" 
-                                       FontSize="24" 
-                                       FontWeight="Bold" 
+                                       FontSize="28" FontWeight="Bold" 
                                        Foreground="{DynamicResource BgCard}"/>
                         </StackPanel>
                     </Border>
                 </Grid>
 
-                <!-- Основной контент -->
+                <!-- Контент -->
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.5*"/>
@@ -129,134 +123,106 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Лента операций -->
-                    <Border Grid.Column="0" 
-                            Background="{DynamicResource BgCard}" 
-                            CornerRadius="6" 
-                            Padding="15" 
-                            Margin="0,0,15,0">
+                    <Border Grid.Column="0" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="15" Margin="0,0,15,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
                         <DockPanel>
-                            <TextBlock DockPanel.Dock="Top" 
-                                       Text="📜 Лента операций" 
-                                       FontWeight="Bold" 
-                                       FontSize="14"
-                                       Foreground="{DynamicResource TextMain}"
-                                       Margin="0,0,0,10"/>
-                            <ListBox ItemsSource="{Binding Transactions}" 
-                                     BorderThickness="0" 
-                                     Background="Transparent" 
-                                     HorizontalContentAlignment="Stretch">
-
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="Padding" Value="10"/>
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ListBoxItem">
-                                                    <ContentPresenter Margin="0,2"/>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
-
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="{DynamicResource SeparatorColor}" 
-                                                BorderThickness="0,0,0,1" 
-                                                Padding="5,10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="40"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding Icon}" 
-                                                           FontSize="18" 
-                                                           VerticalAlignment="Center"/>
-                                                <StackPanel Grid.Column="1" 
-                                                            VerticalAlignment="Center" 
-                                                            Margin="10,0">
-                                                    <TextBlock Text="{Binding Type}" 
-                                                               FontWeight="Bold" 
-                                                               FontSize="12"
-                                                               Foreground="{DynamicResource TextMain}"/>
-                                                    <TextBlock Text="{Binding Comment}" 
-                                                               FontSize="11" 
-                                                               Foreground="{DynamicResource TextMuted}"/>
-                                                </StackPanel>
-                                                <TextBlock Grid.Column="2" 
-                                                           Text="{Binding FormattedAmount}" 
-                                                           FontWeight="Bold" 
-                                                           FontSize="13"
-                                                           Foreground="{Binding ColorHex, Converter={StaticResource HexToBrushConverter}}" 
-                                                           VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                            <TextBlock DockPanel.Dock="Top" Text="📜 Лента операций" 
+                                       FontWeight="Bold" FontSize="16"
+                                       Foreground="{DynamicResource TextMain}" Margin="0,0,0,12"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ListBox ItemsSource="{Binding Transactions}" 
+                                         BorderThickness="0" Background="Transparent" 
+                                         HorizontalContentAlignment="Stretch">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter/>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{DynamicResource BorderColor}" 
+                                                    BorderThickness="0,0,0,1" Padding="8,12">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="40"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Icon}" FontSize="20" 
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
+                                                        <TextBlock Text="{Binding Type}" FontWeight="SemiBold" FontSize="14"
+                                                                   Foreground="{DynamicResource TextMain}"/>
+                                                        <TextBlock Text="{Binding Comment}" FontSize="12" 
+                                                                   Foreground="{DynamicResource TextMuted}" 
+                                                                   TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                                        <TextBlock Text="{Binding DateTime, StringFormat={}{0:dd.MM HH:mm}}" 
+                                                                   FontSize="11" Foreground="{DynamicResource TextLightMuted}" 
+                                                                   Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedAmount}" 
+                                                               FontWeight="Bold" FontSize="15"
+                                                               Foreground="{Binding ColorHex, Converter={StaticResource HexToBrushConverter}}" 
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </ScrollViewer>
                         </DockPanel>
                     </Border>
 
-                    <!-- Форма новой операции -->
-                    <Border Grid.Column="1" 
-                            Background="{DynamicResource BgCard}" 
-                            CornerRadius="6" 
-                            Padding="15">
+                    <!-- Форма операции -->
+                    <Border Grid.Column="1" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="20"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="➕ Новая операция" 
-                                       FontWeight="Bold" 
-                                       FontSize="14"
-                                       Foreground="{DynamicResource TextMain}"
-                                       Margin="0,0,0,15"/>
+                            <TextBlock Text="➕ Новая операция" FontWeight="Bold" FontSize="16"
+                                       Foreground="{DynamicResource TextMain}" Margin="0,0,0,20"/>
 
+                            <TextBlock Text="Тип операции" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"/>
                             <controls:CustomComboBox x:Name="TypeCashTransactionCombo" 
-                                                     Margin="0,5,0,10" 
-                                                     Height="50"
+                                                     Margin="0,0,0,15" Height="45"
                                                      ItemsSource="{Binding OperationTypes}"
                                                      SelectedValue="{Binding SelectedOperationType, Mode=TwoWay}"
-                                                     SelectedValuePath="Value"
-                                                     DisplayMemberPath="Key"
+                                                     SelectedValuePath="Value" DisplayMemberPath="Key"
                                                      Placeholder="Выберите тип операции"/>
 
+                            <TextBlock Text="Сотрудник" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"
+                                       Visibility="{Binding EmployeeComboVisibility}"/>
                             <controls:CustomComboBox x:Name="EmployeeCombo" 
-                                                     Margin="0,0,0,10" 
-                                                     Height="50"
+                                                     Margin="0,0,0,15" Height="45"
                                                      Visibility="{Binding EmployeeComboVisibility}"
                                                      ItemsSource="{Binding ActiveEmployees}"
                                                      SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}"
                                                      DisplayMemberPath="FullName"
                                                      Placeholder="Кому выдаем аванс?"/>
 
-                            <TextBlock Text="Сумма (₽)" 
-                                       FontSize="12" 
-                                       Foreground="{DynamicResource TextMuted}"
-                                       Margin="0,0,0,5"/>
-                            <TextBox x:Name="AmountText" 
-                                     Height="45" 
-                                     FontSize="14" 
-                                     FontWeight="Bold" 
-                                     Padding="15,0" 
-                                     Margin="0,0,0,15"/>
+                            <TextBlock Text="Сумма (₽)" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="AmountText" Height="45" FontSize="16" FontWeight="Bold" 
+                                     Padding="15,0" Margin="0,0,0,15"/>
 
-                            <TextBlock Text="Комментарий" 
-                                       FontSize="12" 
-                                       Foreground="{DynamicResource TextMuted}"
-                                       Margin="0,0,0,5"/>
-                            <TextBox x:Name="CommentText" 
-                                     Height="60" 
-                                     TextWrapping="Wrap" 
-                                     AcceptsReturn="True" 
-                                     Padding="10" 
-                                     Margin="0,0,0,20"
-                                     FontSize="12"/>
+                            <TextBlock Text="Комментарий" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="CommentText" Height="80" TextWrapping="Wrap" 
+                                     AcceptsReturn="True" Padding="12,10" Margin="0,0,0,25" FontSize="13"/>
 
-                            <Button Content="Провести операцию" 
-                                    Click="AddTransaction_Click" 
-                                    Style="{StaticResource PrimaryBtn}"
-                                    Height="50"
-                                    FontSize="14"/>
+                            <Button Content="Провести операцию" Click="AddTransaction_Click" 
+                                    Style="{StaticResource SuccessBtn}" FontSize="15"/>
                         </StackPanel>
                     </Border>
                 </Grid>
