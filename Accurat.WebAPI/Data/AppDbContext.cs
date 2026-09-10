@@ -137,16 +137,16 @@ namespace Accurat.WebAPI.Data
                 entity.HasIndex(e => e.ServiceId);
                 entity.HasIndex(e => new { e.OrderId, e.ServiceId });
 
-                // Связи
+                // ИСПРАВЛЕНО: явно указываем навигационное свойство Order.OrderServiceItems
                 entity.HasOne<Order>()
-                    .WithMany()
+                    .WithMany(o => o.OrderServiceItems)  // ← ДОБАВЛЕНО
                     .HasForeignKey(e => e.OrderId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne<Service>()
                     .WithMany()
                     .HasForeignKey(e => e.ServiceId)
-                    .OnDelete(DeleteBehavior.Restrict); // Не удалять услугу, если она используется в истории
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // 4. Order - новые поля для сервиса
@@ -298,10 +298,10 @@ namespace Accurat.WebAPI.Data
             );
 
             modelBuilder.Entity<OrderStatuses>().HasData(
-                new OrderStatuses { Id = 1, CompanyId = 1, Name = "В работе", Icon = "🟢", ColorHex = "#3498DB", SortOrder = 1 }, // Синий
-                new OrderStatuses { Id = 2, CompanyId = 1, Name = "Выполнен", Icon = "✅", ColorHex = "#2ECC71", SortOrder = 2 }, // Зеленый
-                new OrderStatuses { Id = 3, CompanyId = 1, Name = "Отменен", Icon = "❌", ColorHex = "#95A5A6", SortOrder = 3 }  // Серый
-            );
+                new OrderStatuses { Id = 1, CompanyId = 1, Name = "В работе", Icon = "🟢", ColorHex = "#3498DB", SortOrder = 1 },
+                new OrderStatuses { Id = 2, CompanyId = 1, Name = "Выполнен", Icon = "✅", ColorHex = "#27AE60", SortOrder = 2 },  // ИЗМЕНЕНО: было #2ECC71
+                new OrderStatuses { Id = 3, CompanyId = 1, Name = "Отменен", Icon = "❌", ColorHex = "#E74C3C", SortOrder = 3 }   // ИЗМЕНЕНО: было #95A5A6
+);
 
             // Добавляем настройки для компании Accurat (CompanyId = 1)
             modelBuilder.Entity<CompanySettings>().HasData(
