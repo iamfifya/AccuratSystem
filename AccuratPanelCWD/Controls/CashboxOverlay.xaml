@@ -20,7 +20,7 @@
                 Background="{DynamicResource BgMain}" 
                 CornerRadius="6" 
                 Width="950" 
-                Height="700" 
+                Height="950" 
                 VerticalAlignment="Center" 
                 HorizontalAlignment="Center" 
                 BorderBrush="{DynamicResource BorderColor}" 
@@ -36,9 +36,14 @@
 
             <Grid Margin="25">
                 <Grid.RowDefinitions>
+                    <!-- заголовок -->
+                    <RowDefinition Height="Auto"/> 
+                    <!-- карточки -->
+                    <RowDefinition Height="Auto"/> 
+                    <!-- НОВОЕ: полоса X-отчета -->
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <!-- контент -->
+                    <RowDefinition Height="*"/> 
                 </Grid.RowDefinitions>
 
                 <!-- Заголовок -->
@@ -115,8 +120,26 @@
                     </Border>
                 </Grid>
 
+                <!-- X-ОТЧЕТ: статус пересчёта кассы -->
+                <Border Grid.Row="2" Background="{DynamicResource BgCard}" CornerRadius="6"
+        Padding="15,10" Margin="0,0,0,15"
+        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Content="🧮 X-Отчет" Click="XReportButton_Click"
+                Style="{StaticResource PrimaryBtn}" Width="140" Height="40" Margin="0,0,15,0"/>
+                        <TextBlock x:Name="ReconciliationStatusText" Grid.Column="1"
+                   Text="⚠️ Касса не пересчитана" FontSize="13" FontWeight="SemiBold"
+                   Foreground="{DynamicResource AccentOrange}"
+                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </Grid>
+                </Border>
+
                 <!-- Контент -->
-                <Grid Grid.Row="2">
+                <Grid Grid.Row="3">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="1*"/>

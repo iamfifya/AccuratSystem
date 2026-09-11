@@ -18,6 +18,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using AccuratPanelCWD.Models;
+using System.Windows.Media;
 
 namespace AccuratPanelCWD.Controls
 {
@@ -77,6 +78,21 @@ namespace AccuratPanelCWD.Controls
                         BranchId = user.BranchId,
                         BaseWagePercentage = user.BaseWagePercentage
                     });
+                }
+                // === СТАТУС X-ОТЧЕТА ===
+                var recons = await _apiService.GetReconciliationsAsync(_currentShift.Id);
+                if (recons.Any())
+                {
+                    var last = recons.First();
+                    ReconciliationStatusText.Text = last.Difference == 0
+                        ? $"✅ Пересчитано {last.CountedAt:dd.MM HH:mm} ({last.CountedBy}): касса сошлась"
+                        : $"✅ Пересчитано {last.CountedAt:dd.MM HH:mm} ({last.CountedBy}): {(last.Difference < 0 ? "недостача" : "излишек")} {Math.Abs(last.Difference):N0} ₽";
+                    ReconciliationStatusText.Foreground = (Brush)FindResource(last.Difference == 0 ? "AccentGreen" : "AccentRed");
+                }
+                else
+                {
+                    ReconciliationStatusText.Text = "⚠️ Касса не пересчитана (X-отчет не проводился)";
+                    ReconciliationStatusText.Foreground = (Brush)FindResource("AccentOrange");
                 }
             }
 
@@ -166,5 +182,23 @@ namespace AccuratPanelCWD.Controls
         private void Close_Click(object sender, RoutedEventArgs e) => this.Visibility = Visibility.Collapsed;
 
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        private async void XReportButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentShift == null) return;
+
+            // Ожидаемая сумма берётся из той же формулы, что показывает касса
+            var summary = await _apiService.GetShiftCashboxSummaryAsync(_currentShift.Id);
+
+            var dialog = new AccuratPanelCWD.XReportWindow(_currentShift, summary.CashInHand)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                await RefreshDataAsync(); // обновим карточки и статус пересчёта
+            }
+        }
     }
 }

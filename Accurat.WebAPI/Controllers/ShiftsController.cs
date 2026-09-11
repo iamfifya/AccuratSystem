@@ -52,6 +52,185 @@ namespace Accurat.WebAPI.Controllers
         }
         #endregion
 
+        #region X-ОТЧЕТ (СВЕРКА КАССЫ)
+
+        /// <summary>
+        /// Общий метод расчёта кассы. Используется и в GET cashbox (отображение), 
+        /// и в POST reconcile (сохранение X-отчета). Обе точки считают по ОДНОЙ формуле.
+        /// </summary>
+        private async Task<CashboxSummary> GetCashboxSummaryInternalAsync(int shiftId)
+        {
+            var shift = await _context.Shifts
+                .Include(s => s.Branch)
+                .FirstOrDefaultAsync(s => s.Id == shiftId);
+
+            if (shift == null)
+                throw new InvalidOperationException($"Смена #{shiftId} не найдена");
+
+            var orders = await _context.Orders
+                .Include(o => o.OrderWashers)
+                .Where(o => o.ShiftId == shiftId
+                         && (o.Status == "Выполнен" || o.Status == "Завершен")
+                         && o.PaymentMethod == "Наличные")
+                .ToListAsync();
+
+            var transactions = await _context.Transactions.Where(t => t.ShiftId == shiftId).ToListAsync();
+
+            // Наличная выручка
+            decimal cashRevenue = orders.Sum(o => o.FinalPrice);
+
+            // Приходы и размен (добавляются в кассу)
+            decimal deposits = transactions
+                .Where(t => t.Type == "Приход" || t.Type == "Размен")
+                .Sum(t => t.Amount);
+
+            // Авансы мойщикам (уходят из кассы)
+            decimal advances = transactions
+                .Where(t => t.Type == "Аванс мойщику")
+                .Sum(t => t.Amount);
+
+            // Расходы (уходят из кассы)
+            decimal expenses = transactions
+                .Where(t => t.Type == "Расход")
+                .Sum(t => t.Amount);
+
+            // Инкассации (уходят из кассы)
+            decimal withdrawals = transactions
+                .Where(t => t.Type == "Инкассация")
+                .Sum(t => t.Amount);
+
+            // ЗП мойщика берём из замороженных EarnedAmount (гарантирует совпадение с отчётами)
+            decimal washerPay = orders
+                .Where(o => o.OrderWashers != null)
+                .SelectMany(o => o.OrderWashers)
+                .Sum(ow => ow.EarnedAmount);
+
+            // Чистая прибыль компании = выручка - ЗП мойщика
+            decimal companyCashEarnings = cashRevenue - washerPay;
+
+            return new CashboxSummary
+            {
+                CashInHand = cashRevenue + deposits - (advances + expenses + withdrawals),
+                TotalExpenses = expenses + advances,
+                NetCashProfit = companyCashEarnings - expenses
+            };
+        }
+
+        /// <summary>
+        /// Общий метод расчёта ожидаемой наличности в кассе.
+        /// </summary>
+        private async Task<decimal> ComputeCashInHandAsync(int shiftId)
+        {
+            var summary = await GetCashboxSummaryInternalAsync(shiftId);
+            return summary.CashInHand;
+        }
+
+        /// <summary>
+        /// POST /Shifts/{id}/reconcile — сохранить пересчёт кассы (X-отчет).
+        /// </summary>
+        [HttpPost("{id}/reconcile")]
+        public async Task<IActionResult> ReconcileCash(int id, [FromBody] ReconcileCashRequest request)
+        {
+            if (request == null) return BadRequest("Тело запроса пустое");
+
+            var shift = await _context.Shifts
+                .Include(s => s.Branch)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (shift == null) return NotFound($"Смена #{id} не найдена");
+
+            if (CurrentCompanyId != 0 && shift.Branch?.CompanyId != CurrentCompanyId)
+                return Forbid();
+
+            var expected = await ComputeCashInHandAsync(id);
+
+            var record = new CashReconciliation
+            {
+                ShiftId = id,
+                ExpectedCash = expected,
+                ActualCash = request.ActualCash,
+                Difference = request.ActualCash - expected,
+                CountedById = request.CountedById,
+                CountedBy = request.CountedBy ?? "Неизвестно",
+                Comment = request.Comment ?? "",
+                CountedAt = DateTime.UtcNow
+            };
+
+            _context.CashReconciliations.Add(record);
+
+            // Логируем событие пересчёта кассы в Журнал действий смены ShiftTimelineEntries
+            _context.ShiftTimelineEntries.Add(new ShiftTimelineEntry
+            {
+                ShiftId = id,
+                EventType = "CashReconciliation",
+                Message = record.Difference == 0
+                    ? $"Пересчёт кассы: ожидалось {expected:N0} ₽, факт {request.ActualCash:N0} ₽ — касса сошлась"
+                    : $"Пересчёт кассы: ожидалось {expected:N0} ₽, факт {request.ActualCash:N0} ₽ — {(record.Difference < 0 ? "недостача" : "излишек")} {Math.Abs(record.Difference):N0} ₽",
+                CreatedBy = record.CountedBy,
+                Timestamp = DateTime.UtcNow,
+                RelatedEntityId = record.Id
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new ReconcileCashResult
+            {
+                Id = record.Id,
+                ExpectedCash = record.ExpectedCash,
+                ActualCash = record.ActualCash,
+                Difference = record.Difference
+            });
+        }
+
+        [HttpGet("{id}/timeline")]
+        public async Task<ActionResult<IEnumerable<ShiftTimelineEntry>>> GetShiftTimeline(int id)
+        {
+            var shift = await VerifyShiftAccess(id);
+            if (shift == null) return (CurrentCompanyId != 0) ? Forbid() : NotFound();
+
+            var list = await _context.ShiftTimelineEntries
+                .Where(e => e.ShiftId == id)
+                .OrderByDescending(e => e.Timestamp)
+                .ToListAsync();
+
+            return Ok(list);
+        }
+
+        /// <summary>
+        /// GET /Shifts/{id}/reconciliations — история пересчётов смены.
+        /// </summary>
+        [HttpGet("{id}/reconciliations")]
+        public async Task<ActionResult<IEnumerable<CashReconciliation>>> GetReconciliations(int id)
+        {
+            var shift = await _context.Shifts
+                .Include(s => s.Branch)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (shift == null) return NotFound($"Смена #{id} не найдена");
+
+            if (CurrentCompanyId != 0 && shift.Branch?.CompanyId != CurrentCompanyId)
+                return Forbid();
+
+            var list = await _context.CashReconciliations
+                .Where(r => r.ShiftId == id)
+                .OrderByDescending(r => r.CountedAt)
+                .ToListAsync();
+
+            return Ok(list);
+        }
+
+        #endregion
+
+        [HttpGet("{id}/cashbox")]
+        public async Task<ActionResult<CashboxSummary>> GetCashboxSummary(int id)
+        {
+            var shift = await VerifyShiftAccess(id);
+            if (shift == null) return (CurrentCompanyId != 0) ? Forbid() : NotFound();
+
+            var summary = await GetCashboxSummaryInternalAsync(id);
+            return Ok(summary);
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Shift>>> GetShifts()
         {
@@ -90,6 +269,17 @@ namespace Accurat.WebAPI.Controllers
                 _context.Shifts.Update(existingShift);
                 await _context.SaveChangesAsync();
 
+                // Логируем событие открытия смены в Журнал действий смены ShiftTimelineEntries
+                _context.ShiftTimelineEntries.Add(new ShiftTimelineEntry
+                {
+                    ShiftId = shift.Id,
+                    EventType = "ShiftOpened",
+                    Message = $"Смена открыта на {shift.Branch?.Name ?? "филиале"}",
+                    CreatedBy = "Система",
+                    Timestamp = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+
                 return Ok(existingShift);
             }
             else
@@ -103,6 +293,8 @@ namespace Accurat.WebAPI.Controllers
 
                 return Ok(shift);
             }
+
+
         }
 
         [HttpPatch("{id}/close")]
@@ -165,6 +357,7 @@ namespace Accurat.WebAPI.Controllers
                 .ToListAsync();
 
             var transferredCount = 0;
+
             if (nextShift != null && serviceOrdersToTransfer.Any())
             {
                 foreach (var order in serviceOrdersToTransfer)
@@ -184,6 +377,17 @@ namespace Accurat.WebAPI.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // Логируем событие закрытия смены в Журнал действий смены ShiftTimelineEntries
+            _context.ShiftTimelineEntries.Add(new ShiftTimelineEntry
+            {
+                ShiftId = id,
+                EventType = "ShiftClosed",
+                Message = $"Смена закрыта. Заказов: {completedOrders.Count}, выручка: {completedOrders.Sum(o => o.FinalPrice):N0} ₽",
+                CreatedBy = "Система",
+                Timestamp = DateTime.UtcNow,
+                RelatedEntityId = completedOrders.Count
+            });
+
             shift.IsClosed = true;
             shift.EndTime = DateTime.UtcNow;
 
@@ -199,56 +403,6 @@ namespace Accurat.WebAPI.Controllers
             });
         }
 
-        [HttpGet("{id}/cashbox")]
-        public async Task<ActionResult<CashboxSummary>> GetCashboxSummary(int id)
-        {
-            var shift = await VerifyShiftAccess(id);
-            if (shift == null) return (CurrentCompanyId != 0) ? Forbid() : NotFound();
-
-            // === ФИКС №1: Статусы "Выполнен" И "Завершен" (как в отчётах) ===
-            var orders = await _context.Orders
-                .Include(o => o.OrderWashers)
-                .Where(o => o.ShiftId == id
-                         && (o.Status == "Выполнен" || o.Status == "Завершен")
-                         && o.PaymentMethod == "Наличные")
-                .ToListAsync();
-
-            var transactions = await _context.Transactions.Where(t => t.ShiftId == id).ToListAsync();
-            var allServices = await _context.Services.ToListAsync();
-            var allUsers = await _context.Users.ToListAsync();
-            var settings = await _context.CompanySettings.FindAsync(shift.Branch?.CompanyId ?? 0);
-
-            // CashInHand — реальная сумма наличных в ящике:
-            // наличная выручка + приходы/размен - авансы/расходы/инкассации
-            decimal cashRevenue = orders.Sum(o => o.FinalPrice);
-            decimal deposits = transactions.Where(t => t.Type == "Приход" || t.Type == "Размен").Sum(t => t.Amount);
-            decimal advances = transactions.Where(t => t.Type == "Аванс мойщику").Sum(t => t.Amount);
-            decimal expenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount);
-            decimal withdrawals = transactions.Where(t => t.Type == "Инкассация").Sum(t => t.Amount);
-
-            // === ФИКС №2: ЗП мойщика берём из замороженных EarnedAmount ===
-            // Это гарантирует, что цифры кассы = цифры отчётов
-            // (старый код пересчитывал через SalaryCalculationService, что могло давать расхождения)
-            decimal washerPay = orders
-                .Where(o => o.OrderWashers != null)
-                .SelectMany(o => o.OrderWashers)
-                .Sum(ow => ow.EarnedAmount);
-
-            // === ФИКС №3: CompanyEarnings = Выручка − ЗП мойщика (без двойного вычета) ===
-            // Это ровно то же, что считает OrderMath.Calculate().CompanyNetEarnings
-            decimal companyCashEarnings = cashRevenue - washerPay;
-
-            return new CashboxSummary
-            {
-                // Наличных в ящике: приход - расход
-                CashInHand = cashRevenue + deposits - (advances + expenses + withdrawals),
-
-                // Расходы + авансы (аванс тоже уходит из ящика наличными)
-                TotalExpenses = expenses + advances,
-
-                // Чистая прибыль = доля компании - расходы (ЗП мойщика уже вычтена в companyCashEarnings)
-                NetCashProfit = companyCashEarnings - expenses
-            };
-        }
+        
     }
 }

@@ -1014,6 +1014,16 @@ namespace AccuratPanelCWD
 
             if (MessageBox.Show("Закрыть смену?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
+                // ПРЕДУПРЕЖДЕНИЕ: касса не пересчитана (решение №1: предупреждаем, но не блокируем)
+                var recons = await _apiService.GetReconciliationsAsync(_currentShift.Id);
+                if (!recons.Any())
+                {
+                    var answer = MessageBox.Show(
+                        "Касса не пересчитана (X-отчет не проводился).\n\nЗакрыть смену без пересчёта?",
+                        "Внимание", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (answer != MessageBoxResult.Yes) return;
+                }
+
                 try
                 {
                     await _apiService.CloseShiftAsync(_currentShift.Id);

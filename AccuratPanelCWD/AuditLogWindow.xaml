@@ -3,13 +3,29 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:AccuratPanelCWD.Controls"
         xmlns:local="clr-namespace:AccuratPanelCWD"
+        xmlns:windows="clr-namespace:AccuratPanelCWD.Windows"
         Title="📜 Журнал действий" 
-        Height="800" Width="1300"
-        MinHeight="800" MinWidth="1300"
+        Height="800" Width="1500"
+        MinHeight="800" MinWidth="1500"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BgMain}">
 
+    <Window.Resources>
+        <!-- РЕГИСТРАЦИЯ КОНВЕРТЕРОВ -->
+        <windows:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <windows:EventTypeRuConverter x:Key="EventTypeRuConverter"/>
+
+        <!-- ИСПРАВЛЕНО: переименован из FilterLabel в FilterLabelStyle -->
+        <Style x:Key="FilterLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+    </Window.Resources>
+
     <Grid Margin="20">
+        <!-- ... остальной XAML остаётся БЕЗ ИЗМЕНЕНИЙ ... -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -42,6 +58,7 @@
                     <ColumnDefinition Width="1.5*"/>
                     <ColumnDefinition Width="1.5*"/>
                     <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -77,8 +94,17 @@
                                              Placeholder="Выберите тип"/>
                 </StackPanel>
 
+                <StackPanel Grid.Column="4" Margin="5,0,15,0">
+                    <TextBlock Text="Филиал" Style="{StaticResource FilterLabelStyle}"/>
+                    <controls:CustomComboBox x:Name="BranchFilter" 
+                             Height="45" HorizontalAlignment="Stretch"
+                             SelectedValuePath="Value"
+                             DisplayMemberPath="Key"
+                             Placeholder="Выберите филиал"/>
+                </StackPanel>
+
                 <!-- Кнопки -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Bottom">
                     <Button Content="🔍 Применить" 
                             Click="ApplyFilters_Click"
                             Style="{StaticResource SuccessBtn}"/>
@@ -118,20 +144,30 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <!-- Заказ -->
-                    <DataGridTemplateColumn Header="Заказ" Width="90">
+                    <!-- Связь -->
+                    <DataGridTemplateColumn Header="Связь" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding OrderId, StringFormat=#{0}}"
-                                           Style="{StaticResource ClickableTextStyle}"
-                                           PreviewMouseLeftButtonDown="OrderId_MouseDoubleClick"
-                                           ToolTip="Нажмите для перехода к заказу"/>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding OrderId, StringFormat='📋 Заказ #{0}'}"
+                                               Style="{StaticResource ClickableTextStyle}"
+                                               PreviewMouseLeftButtonDown="OrderId_MouseDoubleClick"
+                                               ToolTip="Двойной клик для перехода к заказу"
+                                               Visibility="{Binding OrderId, Converter={StaticResource NullToVisibilityConverter}}"/>
+
+                                    <TextBlock Text="{Binding ShiftId, StringFormat='📅 Смена #{0}'}"
+                                               Style="{StaticResource ClickableTextStyle}"
+                                               Foreground="{DynamicResource AccentPurple}"
+                                               FontWeight="SemiBold"
+                                               ToolTip="Смена"
+                                               Visibility="{Binding ShiftId, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
                     <DataGridTextColumn Header="Тип события" 
-                                        Binding="{Binding EntryType}"
+                                        Binding="{Binding EventType, Converter={StaticResource EventTypeRuConverter}}"
                                         Width="160"
                                         FontSize="12"/>
 

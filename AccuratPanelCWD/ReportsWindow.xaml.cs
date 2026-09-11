@@ -15,6 +15,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace AccuratPanelCWD
 {
@@ -151,6 +153,24 @@ namespace AccuratPanelCWD
         private void ReportSelectionChanged(object sender, SelectionChangedEventArgs args)
         {
             SelectedReport = ReportsListBox.SelectedItem as ContractsShiftReport;
+        }
+
+        private async Task LoadReconciliationInfoAsync(int shiftId)
+        {
+            var recons = await _apiService.GetReconciliationsAsync(shiftId);
+            if (recons.Any())
+            {
+                var last = recons.First();
+                ReconciliationInfoText.Text = $"🧮 Пересчёт {last.CountedAt:dd.MM HH:mm} — {last.CountedBy}: " +
+                                              $"ожидалось {last.ExpectedCash:N0} ₽, факт {last.ActualCash:N0} ₽, " +
+                                              $"разница {last.Difference:+0;-0;0} ₽";
+                ReconciliationInfoText.Foreground = (Brush)FindResource(last.Difference == 0 ? "AccentGreen" : "AccentRed");
+            }
+            else
+            {
+                ReconciliationInfoText.Text = "⚠️ Касса не пересчитана (X-отчет не проводился)";
+                ReconciliationInfoText.Foreground = (Brush)FindResource("AccentOrange");
+            }
         }
 
         private void CustomReportButton_Click(object sender, RoutedEventArgs e)

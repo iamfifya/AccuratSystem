@@ -26,6 +26,7 @@ namespace Accurat.WebAPI.Data
         public DbSet<OrderTimelineEntry> OrderTimelineEntries { get; set; }
         public DbSet<OrderServiceItem> OrderServiceItems { get; set; }
 
+
         // OutboxMessage — API-only, поэтому DbSet остаётся с явным get/set
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
         public DbSet<OrderWasher> OrderWashers { get; set; }
@@ -39,6 +40,9 @@ namespace Accurat.WebAPI.Data
         public DbSet<AccuratSystem.Contracts.Models.OrderStatuses> OrderStatuses { get; set; }
         public DbSet<CompanySettings> CompanySettings { get; set; }
         public DbSet<DiscountRule> DiscountRules { get; set; }
+        public DbSet<CashReconciliation> CashReconciliations => Set<CashReconciliation>();
+
+        public DbSet<ShiftTimelineEntry> ShiftTimelineEntries => Set<ShiftTimelineEntry>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -301,7 +305,7 @@ namespace Accurat.WebAPI.Data
                 new OrderStatuses { Id = 1, CompanyId = 1, Name = "В работе", Icon = "🟢", ColorHex = "#3498DB", SortOrder = 1 },
                 new OrderStatuses { Id = 2, CompanyId = 1, Name = "Выполнен", Icon = "✅", ColorHex = "#27AE60", SortOrder = 2 },  // ИЗМЕНЕНО: было #2ECC71
                 new OrderStatuses { Id = 3, CompanyId = 1, Name = "Отменен", Icon = "❌", ColorHex = "#E74C3C", SortOrder = 3 }   // ИЗМЕНЕНО: было #95A5A6
-);
+            );
 
             // Добавляем настройки для компании Accurat (CompanyId = 1)
             modelBuilder.Entity<CompanySettings>().HasData(
@@ -314,29 +318,54 @@ namespace Accurat.WebAPI.Data
             );
 
             modelBuilder.Entity<UpsellSuggestion>().HasData(
-    new UpsellSuggestion
-    {
-        Id = 1,
-        TriggerServiceId = 1, // Стандартная мойка
-        SuggestedServiceId = 6, // Кварцевое покрытие
-        Message = "Клиент выбрал стандартную мойку. Предложите покрыть кузов кварцем для защиты от грязи и блеска!",
-        BonusAmount = 150m // Премия админу/мойщику за допродажу
-    },
-    new UpsellSuggestion
-    {
-        Id = 2,
-        TriggerServiceId = 2, // Комплекс
-        SuggestedServiceId = 3, // Чистка стекол
-        Message = "В комплекс не входит антидождь/глубокая чистка стекол. Отличный шанс предложить эту услугу!",
-        BonusAmount = 50m
-    }
-);
+            new UpsellSuggestion
+            {
+                Id = 1,
+                TriggerServiceId = 1, // Стандартная мойка
+                SuggestedServiceId = 6, // Кварцевое покрытие
+                Message = "Клиент выбрал стандартную мойку. Предложите покрыть кузов кварцем для защиты от грязи и блеска!",
+                BonusAmount = 150m // Премия админу/мойщику за допродажу
+            },
+            new UpsellSuggestion
+            {
+                Id = 2,
+                TriggerServiceId = 2, // Комплекс
+                SuggestedServiceId = 3, // Чистка стекол
+                Message = "В комплекс не входит антидождь/глубокая чистка стекол. Отличный шанс предложить эту услугу!",
+                BonusAmount = 50m
+            }
+            );
 
             // И не забудь включить сам модуль для филиала (иначе UserSession.IsFeatureEnabled вернет false)
             modelBuilder.Entity<TenantFeature>().HasData(
                 new TenantFeature { Id = 1, CompanyId = 1, IsUpsellEnabled = true },
                 new TenantFeature { Id = 2, CompanyId = 2, IsUpsellEnabled = true }
             );
+
+            // === СВЕРКА КАССЫ (X-ОТЧЕТ) ===
+            modelBuilder.Entity<CashReconciliation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ShiftId);
+
+                entity.HasOne(e => e.Shift)
+                    .WithMany()
+                    .HasForeignKey(e => e.ShiftId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // === ЛЕНТА СОБЫТИЙ СМЕНЫ ===
+            modelBuilder.Entity<ShiftTimelineEntry>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ShiftId);
+                entity.HasIndex(e => new { e.ShiftId, e.Timestamp });
+
+                entity.HasOne(e => e.Shift)
+                    .WithMany()
+                    .HasForeignKey(e => e.ShiftId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
         }
     }

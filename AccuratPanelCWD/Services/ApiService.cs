@@ -845,5 +845,70 @@ namespace AccuratPanelCWD.Services
         }
 
         #endregion
+
+        #region X-ОТЧЕТ (СВЕРКА КАССЫ)
+        //Проведение сверки кассы(X - отчёт) по смене 
+        public async Task<ReconcileCashResult> ReconcileCashAsync(int shiftId, ReconcileCashRequest request)
+        {
+            var response = await _http.PostAsJsonAsync($"Shifts/{shiftId}/reconcile", request);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ReconcileCashResult>();
+        }
+
+        // Получение списка сверок по смене
+        public async Task<List<CashReconciliation>> GetReconciliationsAsync(int shiftId)
+        {
+            // Используем хелпер: он ловит 404 как "нет данных" и возвращает default (null).
+            // Прямой _http.GetFromJsonAsync выбрасывал HttpRequestException.
+            var result = await GetFromJsonAsync<List<CashReconciliation>>($"Shifts/{shiftId}/reconciliations");
+            return result ?? new List<CashReconciliation>();
+        }
+
+        // Получение ленты событий смены (Shift Timeline)
+        public async Task<List<ShiftTimelineEntry>> GetShiftTimelineAsync(int shiftId)
+        {
+            var result = await GetFromJsonAsync<List<ShiftTimelineEntry>>($"Shifts/{shiftId}/timeline");
+            return result ?? new List<ShiftTimelineEntry>();
+        }
+        #endregion
+
+        #region ЕДИНЫЙ ЖУРНАЛ ДЕЙСТВИЙ (AUDIT LOG)
+        public async Task<List<AuditEntryDto>> GetAuditLogAsync(
+            int? userId = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string entryType = null,
+            int? branchId = null,
+            int pageSize = 500,
+            int pageNumber = 1)
+        {
+            var queryParams = new List<string>();
+
+            if (userId.HasValue)
+                queryParams.Add($"userId={userId.Value}");
+
+            if (startDate.HasValue)
+                queryParams.Add($"startDate={DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc):O}");
+
+            if (endDate.HasValue)
+                queryParams.Add($"endDate={DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc):O}");
+
+            if (!string.IsNullOrWhiteSpace(entryType))
+                queryParams.Add($"entryType={Uri.EscapeDataString(entryType)}");
+
+            if (branchId.HasValue)
+                queryParams.Add($"branchId={branchId.Value}");
+
+            queryParams.Add($"pageSize={pageSize}");
+            queryParams.Add($"pageNumber={pageNumber}");
+
+            var url = $"audit-log?{string.Join("&", queryParams)}";
+
+            // Хелпер GetFromJsonAsync<T> ловит 404 и возвращает default (null).
+            // Прямой _http.GetFromJsonAsync выбрасывал HttpRequestException.
+            var result = await GetFromJsonAsync<List<AuditEntryDto>>(url);
+            return result ?? new List<AuditEntryDto>();
+        }
+        #endregion
     }
 }
