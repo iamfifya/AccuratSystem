@@ -222,6 +222,24 @@ namespace Accurat.WebAPI.Controllers
             }
         }
 
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Order>> GetOrderById(int id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderWashers)
+                .FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null) return NotFound();
+
+            // Изоляция тенанта: заказ должен принадлежать компании запроса
+            if (CurrentCompanyId != 0)
+            {
+                var branch = await _context.Branches.FindAsync(order.BranchId);
+                if (branch == null || branch.CompanyId != CurrentCompanyId) return Forbid();
+            }
+
+            return Ok(order);
+        }
+
         [HttpPost("{id}/convert")]
         public async Task<ActionResult<Order>> ConvertToOrder(int id, [FromQuery] int shiftId, [FromQuery] int washerId)
         {
@@ -309,6 +327,14 @@ namespace Accurat.WebAPI.Controllers
             {
                 var oldStatus = existingOrder.Status;
 
+                // === НОВОЕ: АУДИТ ФИНАНСОВЫХ ИЗМЕНЕНИЙ ===
+                // Вызываем ДО SetValues: existingOrder ещё содержит состояние из БД,
+                // order — присланное клиентом. Серверное сравнение нельзя подделать.
+                await AuditPriceChanges(existingOrder, order);
+
+                // === НОВОЕ: АУДИТ ОПЕРАЦИОННЫХ ИЗМЕНЕНИЙ ===
+                await AuditOperationalChanges(existingOrder, order);
+
                 // Сохраняем поля, которые запрещено менять с клиента
                 var dbBranchId = existingOrder.BranchId;
                 var dbShiftId = existingOrder.ShiftId;
@@ -346,20 +372,18 @@ namespace Accurat.WebAPI.Controllers
                         OrderId = id,
                         EntryType = TimelineEntryType.StatusChanged,
                         Message = $"Статус изменен на: {existingOrder.Status}",
-                        CreatedBy = "Система",
+                        CreatedBy = await GetActorName(),  // ИСПРАВЛЕНО: было "Система", теперь реальный пользователь
                         Timestamp = DateTime.UtcNow
                     });
                 }
 
                 // 3. Обновление мойщиков (ИСПРАВЛЕНИЕ ОШИБКИ PK_OrderWashers)
-                // Clear() сам пометит старые записи как Deleted в ChangeTracker
                 existingOrder.OrderWashers.Clear();
 
                 if (order.OrderWashers != null && order.OrderWashers.Any())
                 {
                     foreach (var ow in order.OrderWashers)
                     {
-                        // Создаем новые объекты, чтобы избежать конфликта трекинга и PK
                         existingOrder.OrderWashers.Add(new OrderWasher
                         {
                             OrderId = id,
@@ -379,7 +403,6 @@ namespace Accurat.WebAPI.Controllers
                 var finalCalc = OrderMath.Calculate(existingOrder, actualServices, washers, settings);
                 existingOrder.FinalPrice = finalCalc.FinalPrice;
 
-                // Обновляем промежуточные цены, если они есть в модели
                 existingOrder.TotalPrice = finalCalc.ServicesTotal;
                 existingOrder.OriginalTotalPrice = finalCalc.ServicesTotal;
 
@@ -391,8 +414,6 @@ namespace Accurat.WebAPI.Controllers
                     }
                 }
 
-                // Вызывать _context.Orders.Update() НЕ НУЖНО! 
-                // existingOrder уже отслеживается, EF Core сам увидит изменения.
                 await _context.SaveChangesAsync();
                 transaction.Commit();
 
@@ -405,6 +426,206 @@ namespace Accurat.WebAPI.Controllers
                 return StatusCode(500, "Ошибка обновления: " + ex.Message);
             }
         }
+
+        #region Аудит финансовых изменений (хелперы контроллера)
+
+        /// <summary>
+        /// Аудит операционных изменений: бокс, мойщик, способ оплаты, время.
+        /// Вызывается вместе с AuditPriceChanges.
+        /// </summary>
+        private async Task AuditOperationalChanges(Order oldOrder, Order newOrder)
+        {
+            var actor = await GetActorName();
+            int.TryParse(Request.Headers["X-User-Id"].FirstOrDefault(), out int actorId);
+            int? relatedId = actorId == 0 ? null : actorId;
+
+            // 1. Смена бокса
+            if (oldOrder.BoxNumber != newOrder.BoxNumber)
+            {
+                _context.OrderTimelineEntries.Add(MakeAuditEntry(oldOrder.Id, TimelineEntryType.BoxChanged,
+                    $"🅿️ Бокс изменён: {oldOrder.BoxNumber} → {newOrder.BoxNumber}",
+                    actor, relatedId));
+            }
+
+            // 2. Смена способа оплаты
+            if ((oldOrder.PaymentMethod ?? "") != (newOrder.PaymentMethod ?? ""))
+            {
+                _context.OrderTimelineEntries.Add(MakeAuditEntry(oldOrder.Id, TimelineEntryType.PaymentMethodChanged,
+                    $"💳 Способ оплаты: {oldOrder.PaymentMethod ?? "не указан"} → {newOrder.PaymentMethod ?? "не указан"}",
+                    actor, relatedId));
+            }
+
+            // 3. Смена времени записи
+            if (oldOrder.Time != newOrder.Time)
+            {
+                _context.OrderTimelineEntries.Add(MakeAuditEntry(oldOrder.Id, TimelineEntryType.TimeChanged,
+                    $"🕐 Время записи: {oldOrder.Time:dd.MM HH:mm} → {newOrder.Time:dd.MM HH:mm}",
+                    actor, relatedId));
+            }
+
+            // 4. Смена мойщиков (сравниваем списки UserId)
+            var oldWashers = oldOrder.OrderWashers?.Select(ow => ow.UserId).OrderBy(x => x).ToList() ?? new List<int>();
+            var newWashers = newOrder.OrderWashers?.Select(ow => ow.UserId).OrderBy(x => x).ToList() ?? new List<int>();
+
+            if (!oldWashers.SequenceEqual(newWashers))
+            {
+                var added = newWashers.Except(oldWashers).ToList();
+                var removed = oldWashers.Except(newWashers).ToList();
+
+                // Загружаем имена сотрудников для читаемости
+                var allUserIds = added.Concat(removed).Distinct().ToList();
+                var users = await _context.Users.Where(u => allUserIds.Contains(u.Id)).ToListAsync();
+
+                string GetName(int id) => users.FirstOrDefault(u => u.Id == id)?.FullName ?? $"ID {id}";
+
+                var parts = new List<string>();
+                if (removed.Any()) parts.Add($"убраны: {string.Join(", ", removed.Select(GetName))}");
+                if (added.Any()) parts.Add($"добавлены: {string.Join(", ", added.Select(GetName))}");
+
+                _context.OrderTimelineEntries.Add(MakeAuditEntry(oldOrder.Id, TimelineEntryType.WasherChanged,
+                    $"👤 Мойщики: {string.Join("; ", parts)}",
+                    actor, relatedId));
+            }
+        }
+
+        /// <summary>
+        /// Возвращает имя пользователя из БД по ID из заголовка.
+        /// Это безопасно: сервер берёт реальное имя из БД, а не доверяет клиенту.
+        /// </summary>
+        private async Task<string> GetActorName()
+        {
+            var idHeader = Request.Headers["X-User-Id"].FirstOrDefault();
+
+            if (int.TryParse(idHeader, out int userId))
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                    return $"{user.FullName} (ID {userId})";
+            }
+
+            return "Неизвестный пользователь";
+        }
+
+        private static OrderTimelineEntry MakeAuditEntry(int orderId, TimelineEntryType type, string message, string actor, int? actorId)
+        {
+            return new OrderTimelineEntry
+            {
+                OrderId = orderId,
+                EntryType = type,
+                Message = message,
+                CreatedBy = actor,
+                Timestamp = DateTime.UtcNow,
+                RelatedEntityId = actorId
+            };
+        }
+
+        /// <summary>
+        /// Сравнивает старое состояние заказа (из БД) с присланным клиентом и
+        /// пишет в ленту событий все финансовые расхождения.
+        /// ВАЖНО: вызывается ДО SetValues(), когда existingOrder ещё не изменён.
+        /// </summary>
+        private async Task AuditPriceChanges(Order oldOrder, Order newOrder)
+        {
+            var actor = await GetActorName();
+            int.TryParse(Request.Headers["X-User-Id"].FirstOrDefault(), out int actorId);
+            int? relatedId = actorId == 0 ? null : actorId;
+
+            // 1. Скидка: процент или фиксированная сумма
+            bool discountChanged = oldOrder.DiscountPercent != newOrder.DiscountPercent ||
+                                   oldOrder.DiscountAmount != newOrder.DiscountAmount;
+            if (discountChanged)
+            {
+                string OldDisp() => oldOrder.DiscountPercent > 0
+                    ? $"{oldOrder.DiscountPercent:N0}%"
+                    : (oldOrder.DiscountAmount > 0 ? $"{oldOrder.DiscountAmount:N0} ₽" : "нет");
+                string NewDisp() => newOrder.DiscountPercent > 0
+                    ? $"{newOrder.DiscountPercent:N0}%"
+                    : (newOrder.DiscountAmount > 0 ? $"{newOrder.DiscountAmount:N0} ₽" : "нет");
+
+                _context.OrderTimelineEntries.Add(MakeAuditEntry(oldOrder.Id, TimelineEntryType.DiscountApplied,
+                    $"🏷 Скидка: {OldDisp()} → {NewDisp()}", actor, relatedId));
+            }
+
+            // 2. Доплата: сумма или причина (причина без суммы тоже пишется — это подозрительно)
+            bool extraChanged = oldOrder.ExtraCost != newOrder.ExtraCost ||
+                               (oldOrder.ExtraCostReason ?? "") != (newOrder.ExtraCostReason ?? "");
+            if (extraChanged)
+            {
+                _context.OrderTimelineEntries.Add(MakeAuditEntry(oldOrder.Id, TimelineEntryType.ExtraCostChanged,
+                    $"➕ Доплата: {oldOrder.ExtraCost:N0} ₽ → {newOrder.ExtraCost:N0} ₽. Причина: «{newOrder.ExtraCostReason}»",
+                    actor, relatedId));
+            }
+
+            // 3. Список услуг (влияет на итоговую цену)
+            var oldServices = (oldOrder.ServiceIds ?? new List<int>()).OrderBy(x => x).ToList();
+            var newServices = (newOrder.ServiceIds ?? new List<int>()).OrderBy(x => x).ToList();
+            if (!oldServices.SequenceEqual(newServices))
+            {
+                var added = newServices.Except(oldServices).ToList();
+                var removed = oldServices.Except(newServices).ToList();
+                var parts = new List<string>();
+                if (removed.Any()) parts.Add($"убраны: {string.Join(", ", removed)}");
+                if (added.Any()) parts.Add($"добавлены: {string.Join(", ", added)}");
+
+                _context.OrderTimelineEntries.Add(MakeAuditEntry(oldOrder.Id, TimelineEntryType.PriceChanged,
+                    $"🛒 Состав услуг изменён: {string.Join("; ", parts)}", actor, relatedId));
+            }
+        }
+
+        #endregion
+
+        #region Журнал аудита
+
+        /// <summary>
+        /// Возвращает все записи журнала действий с пагинацией и фильтрами.
+        /// Для директора: все записи компании. Для админа: только своего филиала.
+        /// </summary>
+        [HttpGet("audit-log")]
+        public async Task<ActionResult<IEnumerable<OrderTimelineEntry>>> GetAuditLog(
+            [FromQuery] int? userId = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null,
+            [FromQuery] string entryType = null,
+            [FromQuery] int pageSize = 100,
+            [FromQuery] int pageNumber = 1)
+        {
+            var query = _context.OrderTimelineEntries.AsQueryable();
+
+            if (userId.HasValue)
+            {
+                query = query.Where(e => e.RelatedEntityId == userId.Value);
+            }
+
+            if (startDate.HasValue)
+            {
+                var startUtc = DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc);
+                query = query.Where(e => e.Timestamp >= startUtc);
+            }
+
+            if (endDate.HasValue)
+            {
+                var endUtc = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                query = query.Where(e => e.Timestamp <= endUtc);
+            }
+
+            if (!string.IsNullOrWhiteSpace(entryType))
+            {
+                if (Enum.TryParse<TimelineEntryType>(entryType, out var parsedType))
+                {
+                    query = query.Where(e => e.EntryType == parsedType);
+                }
+            }
+
+            var entries = await query
+                .OrderByDescending(e => e.Timestamp)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(entries);
+        }
+
+        #endregion
 
 
         [HttpPatch("{id}/complete")]
@@ -656,13 +877,15 @@ namespace Accurat.WebAPI.Controllers
 
             if (history == null || !history.Any()) return NotFound(new { message = "История времени не найдена" });
 
-            var analysis = history.Select(h => new {
+            var analysis = history.Select(h => new
+            {
                 h.Status,
                 DurationTicks = (h.EndTime ?? DateTime.UtcNow) - h.StartTime
             }).ToList();
 
             var summary = analysis.GroupBy(a => a.Status)
-                .Select(g => new {
+                .Select(g => new
+                {
                     Status = g.Key,
                     TotalDuration = TimeSpan.FromTicks(g.Sum(x => x.DurationTicks.Ticks)),
                     Occurrences = g.Count()
@@ -670,5 +893,7 @@ namespace Accurat.WebAPI.Controllers
 
             return Ok(summary);
         }
+
+        
     }
 }

@@ -481,6 +481,102 @@
                         </Style>
                     </TabControl.ItemContainerStyle>
 
+                    <!-- Вкладка: Лента -->
+                    <TabItem Header="📋 Лента">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                  HorizontalScrollBarVisibility="Disabled"
+                  Padding="5">
+                            <Border Background="{DynamicResource TabContentBg}" 
+                CornerRadius="6" 
+                Padding="15" 
+                Margin="5"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="1">
+                                <ListBox ItemsSource="{Binding OrderTimeline}" 
+                     Background="Transparent" 
+                     BorderThickness="0"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     HorizontalContentAlignment="Stretch"
+                     VerticalContentAlignment="Stretch">
+
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,10" 
+                                BorderBrush="{DynamicResource TimelineCardBorder}" 
+                                BorderThickness="1" 
+                                CornerRadius="6" 
+                                Padding="12,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <WrapPanel Grid.Column="0" Margin="0,0,12,0" 
+                                           HorizontalAlignment="Stretch" MinWidth="50">
+                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM}}" 
+                                               FontSize="11" 
+                                               Foreground="{DynamicResource TextMain}" 
+                                               HorizontalAlignment="Center"/>
+                                                        <TextBlock Text=" | " FontSize="9" Foreground="{DynamicResource TextMuted}"/>
+                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}" 
+                                               FontSize="11" 
+                                               FontWeight="Bold" 
+                                               Foreground="{DynamicResource TextMain}" 
+                                               HorizontalAlignment="Center"/>
+                                                    </WrapPanel>
+
+                                                    <StackPanel Grid.Column="1">
+                                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                            <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="{Binding CreatedBy}" 
+                                                   FontWeight="SemiBold" 
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMain}"/>
+                                                            <TextBlock Text="•" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="6,0"/>
+                                                            <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                                        </WrapPanel>
+
+                                                        <WrapPanel>
+                                                            <TextBlock Text="{Binding Message}" 
+                                                   FontSize="12" 
+                                                   TextWrapping="Wrap" 
+                                                   Foreground="{DynamicResource TextMain}"/>
+                                                            <TextBlock Text=" | " Foreground="{DynamicResource TextMuted}"/>
+                                                            <TextBlock Text="{Binding RelatedEntityInfo}"
+                                                   FontSize="12" 
+                                                   Foreground="{DynamicResource TextLightMuted}" 
+                                                   FontStyle="Italic" 
+                                                   Visibility="{Binding RelatedEntityInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                                                        </WrapPanel>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                        </ScrollViewer>
+                    </TabItem>
+
                     <!-- Вкладка: Расходы -->
                     <TabItem Header="💰 Расходы">
                         <Border Background="{DynamicResource TabContentBg}" 
@@ -641,101 +737,7 @@
                         </Border>
                     </TabItem>
 
-                    <!-- Вкладка: Лента -->
-                    <TabItem Header="📋 Лента">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Padding="5">
-                            <Border Background="{DynamicResource TabContentBg}" 
-                                    CornerRadius="6" 
-                                    Padding="15" 
-                                    Margin="5"
-                                    BorderBrush="{DynamicResource BorderColor}"
-                                    BorderThickness="1">
-                                <ListBox ItemsSource="{Binding OrderTimeline}" 
-                                         Background="Transparent" 
-                                         BorderThickness="0"
-                                         VirtualizingPanel.IsVirtualizing="True"
-                                         VirtualizingPanel.VirtualizationMode="Recycling"
-                                         HorizontalContentAlignment="Stretch"
-                                         VerticalContentAlignment="Stretch">
-
-                                    <ListBox.ItemContainerStyle>
-                                        <Style TargetType="ListBoxItem">
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                            <Setter Property="Padding" Value="0"/>
-                                            <Setter Property="Margin" Value="0"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="ListBoxItem">
-                                                        <ContentPresenter />
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </ListBox.ItemContainerStyle>
-
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Margin="0,0,0,10" 
-                                                    BorderBrush="{DynamicResource TimelineCardBorder}" 
-                                                    BorderThickness="1" 
-                                                    CornerRadius="6" 
-                                                    Padding="12,8">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <WrapPanel Grid.Column="0" Margin="0,0,12,0" 
-                                                               HorizontalAlignment="Stretch" MinWidth="50">
-                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM}}" 
-                                                                   FontSize="11" 
-                                                                   Foreground="{DynamicResource TextMain}" 
-                                                                   HorizontalAlignment="Center"/>
-                                                        <TextBlock Text=" | " FontSize="9" Foreground="{DynamicResource TextMuted}"/>
-                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}" 
-                                                                   FontSize="11" 
-                                                                   FontWeight="Bold" 
-                                                                   Foreground="{DynamicResource TextMain}" 
-                                                                   HorizontalAlignment="Center"/>
-                                                    </WrapPanel>
-
-                                                    <StackPanel Grid.Column="1">
-                                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                            <TextBlock Text="{Binding EntryTypeIcon}" FontSize="14" Margin="0,0,6,0"/>
-                                                            <TextBlock Text="{Binding CreatedBy}" 
-                                                                       FontWeight="SemiBold" 
-                                                                       FontSize="12"
-                                                                       Foreground="{DynamicResource TextMain}"/>
-                                                            <TextBlock Text="•" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="6,0"/>
-                                                            <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" 
-                                                                       FontSize="11" 
-                                                                       Foreground="{DynamicResource TextMuted}"/>
-                                                        </WrapPanel>
-
-                                                        <WrapPanel>
-                                                            <TextBlock Text="{Binding Message}" 
-                                                                       FontSize="12" 
-                                                                       TextWrapping="Wrap" 
-                                                                       Foreground="{DynamicResource TextMain}"/>
-                                                            <TextBlock Text=" | " Foreground="{DynamicResource TextMuted}"/>
-                                                            <TextBlock Text="{Binding RelatedEntityInfo}"
-                                                                       FontSize="12" 
-                                                                       Foreground="{DynamicResource TextLightMuted}" 
-                                                                       FontStyle="Italic" 
-                                                                       Visibility="{Binding RelatedEntityInfo, Converter={StaticResource ZeroToVisibilityConverter}}"/>
-                                                        </WrapPanel>
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Border>
-                        </ScrollViewer>
-                    </TabItem>
+                    
                 </TabControl>
 
                 <!-- Итоговая панель -->

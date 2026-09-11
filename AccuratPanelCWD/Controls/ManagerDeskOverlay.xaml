@@ -263,13 +263,13 @@
                                        Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource TileButtonStyle}" x:Name="EmptyBtn3">
+                    <Button Style="{StaticResource TileButtonStyle}" x:Name="AuditLogBtn" Click="AuditLogBtn_Click">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text=":)" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
-                                           Foreground="{DynamicResource AccentGreen}"/>
+                                <TextBlock Text="📜" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
+                       Foreground="{DynamicResource AccentBlue}"/>
                             </WrapPanel>
-                            <TextBlock Text="тут пусто :)" 
+                            <TextBlock Text="Журнал действий" 
                                        HorizontalAlignment="Center" 
                                        TextWrapping="Wrap" 
                                        TextAlignment="Center"

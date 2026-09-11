@@ -180,5 +180,10 @@ namespace AccuratPanelCWD.Controls
             // Мы не открываем панель сами, а просим Главное окно сделать это
             CompanySettingsRequested?.Invoke(this, e);
         }
+
+        private void AuditLogBtn_Click(object sender, RoutedEventArgs e)
+        {
+            new Windows.AuditLogWindow().ShowDialog();
+        }
     }
 }

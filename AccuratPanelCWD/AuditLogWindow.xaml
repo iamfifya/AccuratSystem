@@ -1,0 +1,203 @@
+﻿<Window x:Class="AccuratPanelCWD.Windows.AuditLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AccuratPanelCWD.Controls"
+        xmlns:local="clr-namespace:AccuratPanelCWD"
+        Title="📜 Журнал действий" 
+        Height="800" Width="1300"
+        MinHeight="800" MinWidth="1300"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgMain}">
+
+    <Window.Resources>
+        <!-- Стили текстов -->
+        <Style x:Key="FilterLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="ClickableTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="TextDecorations" Value="Underline"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentOrange}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стили DataGrid -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource BgMain}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource BgSelected}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="📜 Журнал действий" 
+                       FontSize="26" 
+                       FontWeight="Black" 
+                       Foreground="{DynamicResource TextMain}"/>
+            <TextBlock Text="Все изменения заказов, скидок, статусов и операций" 
+                       FontSize="13" 
+                       Foreground="{DynamicResource TextMuted}" 
+                       Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Фильтры -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource BgCard}" 
+                CornerRadius="6" 
+                Padding="15" 
+                Margin="0,0,0,15"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="1.5*"/>
+                    <ColumnDefinition Width="1.5*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Пользователь -->
+                <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                    <TextBlock Text="Пользователь" Style="{StaticResource FilterLabel}"/>
+                    <controls:CustomComboBox x:Name="UserFilter" 
+                                             Height="45" HorizontalAlignment="Stretch"
+                                             SelectedValuePath="Value"
+                                             DisplayMemberPath="Key"
+                                             Placeholder="Выберите пользователя"/>
+                </StackPanel>
+
+                <!-- Дата начала -->
+                <StackPanel Grid.Column="1" Margin="0,0,15,0">
+                    <TextBlock Text="С даты" Style="{StaticResource FilterLabel}"/>
+                    <local:CustomDatePicker x:Name="StartDateFilter" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <!-- Дата окончания -->
+                <StackPanel Grid.Column="2" Margin="0,0,15,0">
+                    <TextBlock Text="По дату" Style="{StaticResource FilterLabel}"/>
+                    <local:CustomDatePicker x:Name="EndDateFilter" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <!-- Тип события -->
+                <StackPanel Grid.Column="3" Margin="0,0,20,0">
+                    <TextBlock Text="Тип события" Style="{StaticResource FilterLabel}"/>
+                    <controls:CustomComboBox x:Name="EntryTypeFilter" 
+                                             Height="45" HorizontalAlignment="Stretch"
+                                             SelectedValuePath="Value"
+                                             DisplayMemberPath="Key"
+                                             Placeholder="Выберите тип"/>
+                </StackPanel>
+
+                <!-- Кнопки -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button Content="🔍 Применить" 
+                            Click="ApplyFilters_Click"
+                            Style="{StaticResource SuccessBtn}"/>
+                    <Button Content="🔄 Сбросить" 
+                            Click="ResetFilters_Click"
+                            Style="{StaticResource DangerBtn}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Таблица записей -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource BgCard}"
+                CornerRadius="6"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="1">
+            <DataGrid x:Name="AuditLogGrid" 
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="{DynamicResource BorderColor}"
+                      Background="Transparent"
+                      RowBackground="{DynamicResource BgCard}"
+                      AlternatingRowBackground="{DynamicResource TableRowHover}"
+                      BorderThickness="0"
+                      FontFamily="Segoe UI"
+                      RowHeight="40"
+                      ColumnHeaderHeight="40">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Дата и время" 
+                                        Binding="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm:ss}}"
+                                        Width="140"
+                                        FontSize="12"/>
+
+                    <!-- Пользователь -->
+                    <DataGridTemplateColumn Header="Пользователь" Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding CreatedBy}"
+                                           Style="{StaticResource ClickableTextStyle}"
+                                           PreviewMouseLeftButtonDown="EmployeeName_MouseDoubleClick"
+                                           ToolTip="Нажмите для открытия карточки сотрудника"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Заказ -->
+                    <DataGridTemplateColumn Header="Заказ" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding OrderId, StringFormat=#{0}}"
+                                           Style="{StaticResource ClickableTextStyle}"
+                                           PreviewMouseLeftButtonDown="OrderId_MouseDoubleClick"
+                                           ToolTip="Нажмите для перехода к заказу"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Тип события" 
+                                        Binding="{Binding EntryType}"
+                                        Width="160"
+                                        FontSize="12"/>
+
+                    <DataGridTextColumn Header="Описание" 
+                                        Binding="{Binding Message}"
+                                        Width="*"
+                                        FontSize="12"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</Window>

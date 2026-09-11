@@ -30,13 +30,16 @@ namespace AccuratPanelCWD.Services
     {
         private static readonly HttpClient _http;
 
+        // Статический конструктор для инициализации HttpClient
         static ApiService()
         {
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
 
+            // Для работы через туннель
             _http = new HttpClient(handler) { BaseAddress = new Uri("https://cp4zpdt4-7165.uks1.devtunnels.ms/api/") };
-            // Для работы через локалхост  _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
+            // Для работы через локалхост  
+            // _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
         }
 
         public ApiService()
@@ -175,6 +178,8 @@ namespace AccuratPanelCWD.Services
         #endregion
 
         #region ЗАКАЗЫ (ORDERS)
+
+        // Получение списка заказов с фильтрацией по дате
         public async Task<List<ContractsOrder>> GetOrdersAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             try
@@ -195,13 +200,21 @@ namespace AccuratPanelCWD.Services
             catch (HttpRequestException ex) { throw new Exception("Ошибка при получении списка заказов: " + ex.Message); }
         }
 
+        // Получение заказа по ID
+        public async Task<ContractsOrder> GetOrderByIdAsync(int orderId)
+        {
+            try { return await _http.GetFromJsonAsync<ContractsOrder>($"Orders/{orderId}"); }
+            catch { return null; }
+        }
 
+        // Получение заказов по ID клиента
         public async Task<List<ContractsOrder>> GetOrdersByClientIdAsync(int clientId)
         {
             try { return await _http.GetFromJsonAsync<List<ContractsOrder>>($"Orders/client/{clientId}") ?? new List<ContractsOrder>(); }
             catch (HttpRequestException ex) { throw new Exception($"История заказов клиента: {ex.Message}"); }
         }
 
+        // Создание нового заказа
         public async Task<ContractsOrder> CreateOrderAsync(ContractsOrder order)
         {
             var response = await _http.PostAsJsonAsync("Orders", order);
@@ -213,9 +226,20 @@ namespace AccuratPanelCWD.Services
             return await response.Content.ReadFromJsonAsync<ContractsOrder>();
         }
 
+        // Обновление существующего заказа
         public async Task UpdateOrderAsync(ContractsOrder order)
         {
-            var response = await _http.PutAsJsonAsync($"Orders/{order.Id}", order);
+            var request = new HttpRequestMessage(HttpMethod.Put, $"Orders/{order.Id}");
+            request.Content = JsonContent.Create(order);
+
+            // ИСПРАВЛЕНО: передаём только ID (число, всегда ASCII)
+            // Имя сервер сам достанет из БД по этому ID
+            if (App.CurrentUser != null)
+            {
+                request.Headers.Add("X-User-Id", App.CurrentUser.Id.ToString());
+            }
+
+            var response = await _http.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
                 string errorText = await response.Content.ReadAsStringAsync();
@@ -223,6 +247,57 @@ namespace AccuratPanelCWD.Services
             }
         }
 
+        /// <summary>
+        /// Получает журнал действий с фильтрами и пагинацией.
+        /// </summary>
+        public async Task<List<OrderTimelineEntry>> GetAuditLogAsync(
+            int? userId = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string entryType = null,
+            int pageSize = 100,
+            int pageNumber = 1)
+        {
+            try
+            {
+                var queryParams = new List<string>();
+
+                if (userId.HasValue)
+                    queryParams.Add($"userId={userId.Value}");
+
+                // ИСПРАВЛЕНО: принудительно конвертируем в UTC
+                if (startDate.HasValue)
+                {
+                    var utcStart = DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc);
+                    queryParams.Add($"startDate={utcStart:O}");
+                }
+
+                if (endDate.HasValue)
+                {
+                    var utcEnd = DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc);
+                    queryParams.Add($"endDate={utcEnd:O}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(entryType))
+                    queryParams.Add($"entryType={Uri.EscapeDataString(entryType)}");
+
+                queryParams.Add($"pageSize={pageSize}");
+                queryParams.Add($"pageNumber={pageNumber}");
+
+                var queryString = string.Join("&", queryParams);
+                var url = $"Orders/audit-log?{queryString}";
+
+                return await _http.GetFromJsonAsync<List<OrderTimelineEntry>>(url)
+                       ?? new List<OrderTimelineEntry>();
+            }
+            catch (HttpRequestException ex)
+            {
+                // ИСПРАВЛЕНО: показываем детали ошибки
+                throw new Exception($"Журнал аудита: {ex.Message}");
+            }
+        }
+
+        // Получение активных заказов для конкретного филиала
         public async Task<List<ContractsOrder>> GetActiveOrdersAsync(int branchId)
         {
             try
@@ -237,6 +312,7 @@ namespace AccuratPanelCWD.Services
             }
         }
 
+        // Завершение заказа (профессиональный переход)
         public async Task<bool> CompleteOrderAsync(int orderId)
         {
             try
@@ -254,7 +330,7 @@ namespace AccuratPanelCWD.Services
 
 
 
-        // 1. Смена статуса заказа (профессиональный переход)
+        // Смена статуса заказа (профессиональный переход)
         public async Task<bool> ChangeStatusAsync(int orderId, string newStatus, int? userId, string userName)
         {
             try
@@ -276,7 +352,7 @@ namespace AccuratPanelCWD.Services
             }
         }
 
-        // 2. Получение анализа времени (для графиков и отчетов)
+        // Получение анализа времени (для графиков и отчетов)
         public async Task<List<dynamic>> GetTimeAnalysisAsync(int orderId)
         {
             try
@@ -291,6 +367,7 @@ namespace AccuratPanelCWD.Services
             }
         }
 
+        // Удаление заказа (профессиональный переход)
         public async Task<bool> DeleteOrderAsync(int orderId)
         {
             try
@@ -709,8 +786,10 @@ namespace AccuratPanelCWD.Services
         }
         #endregion
 
+        #region РОЛИ (ROLES)
 
         // К Ролям (Roles) добавь методы Create, Update, Delete (GET у тебя уже есть)
+        // Создание новой роли
         public async Task<Role> CreateRoleAsync(Role role)
         {
             var response = await _http.PostAsJsonAsync("Roles", role);
@@ -718,24 +797,28 @@ namespace AccuratPanelCWD.Services
             return await response.Content.ReadFromJsonAsync<Role>();
         }
 
+        // Обновление существующей роли
         public async Task UpdateRoleAsync(Role role)
         {
             var response = await _http.PutAsJsonAsync($"Roles/{role.Id}", role);
             response.EnsureSuccessStatusCode();
         }
 
+        // Удаление роли
         public async Task DeleteRoleAsync(int id)
         {
             var response = await _http.DeleteAsync($"Roles/{id}");
             response.EnsureSuccessStatusCode();
         }
 
+        // DTO для ответа с количеством новых и уникальных клиентов
         public class ClientStatsResponse
         {
             public int NewClients { get; set; }
             public int UniqueClients { get; set; }
         }
 
+        // Универсальный метод для безопасного получения JSON с обработкой ошибок
         public async Task<T> GetFromJsonAsync<T>(string url)
         {
             try
@@ -760,5 +843,7 @@ namespace AccuratPanelCWD.Services
                 return default;
             }
         }
+
+        #endregion
     }
 }
