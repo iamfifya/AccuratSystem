@@ -316,26 +316,26 @@ namespace Accurat.WebAPI.Controllers
 
             if (existingOrder.Status == "Выполнен" || existingOrder.Status == "Завершен")
             {
-                // Разрешаем только отмену выполненного заказа (например, для возврата денег клиенту)
-                if (order.Status != "Отменен")
-                {
-                    return BadRequest("Нельзя редактировать выполненный или завершенный заказ. Доступна только отмена (возврат).");
-                }
+                // Если статус не изменился, значит пытаются править цены/услуги — блокируем
+                if (existingOrder.Status == order.Status)
+                    return BadRequest("Нельзя редактировать цены или услуги в выполненном заказе. Доступна только смена статуса.");
 
-                // 🛡️ ЗАЩИТА ОТ МАХИНАЦИЙ: При отмене выполненного заказа запрещаем менять 
-                // услуги, цены и мойщиков. Оставляем только факт смены статуса.
-                // Это также спасёт AuditLog от ложных срабатываний ("цена изменена", "мойщик изменен").
-                order.ServiceIds = existingOrder.ServiceIds;
-                order.OrderWashers = existingOrder.OrderWashers;
-                order.ExtraCost = existingOrder.ExtraCost;
-                order.DiscountPercent = existingOrder.DiscountPercent;
-                order.DiscountAmount = existingOrder.DiscountAmount;
-                order.BoxNumber = existingOrder.BoxNumber;
-                order.PaymentMethod = existingOrder.PaymentMethod;
-            }
-            else if (order.Status == "Выполнен" && (string.IsNullOrWhiteSpace(order.PaymentMethod) || order.PaymentMethod == "Не указано"))
-            {
-                return BadRequest("Для выполненного заказа требуется указание способа оплаты.");
+                // Разрешаем ТОЛЬКО смену статуса (например, на "Отменен")
+                existingOrder.Status = order.Status;
+
+                // Логируем изменение в ленту
+                _context.OrderTimelineEntries.Add(new AccuratSystem.Contracts.Models.OrderTimelineEntry
+                {
+                    OrderId = id,
+                    EntryType = TimelineEntryType.StatusChanged,
+                    Message = $"Статус изменен на: {existingOrder.Status} (Заказ ранее был выполнен)",
+                    CreatedBy = await GetActorName(),
+                    Timestamp = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
+                await _hubContext.Clients.All.SendAsync("UpdateData");
+                return NoContent(); // Успешно сохранили только статус, выходим
             }
 
             order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);

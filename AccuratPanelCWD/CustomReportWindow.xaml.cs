@@ -96,12 +96,40 @@ namespace AccuratPanelCWD
                 this.IsEnabled = false;
                 DateTime start = StartDatePicker.SelectedDate ?? DateTime.Now.AddDays(-7);
                 DateTime end = EndDatePicker.SelectedDate ?? DateTime.Now;
-
                 int branchId = SelectedBranchTab?.BranchId ?? 0;
-                var periodReports = await _apiService.GetShiftReportsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
-                var clientStats = await _apiService.GetClientsStatsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
 
-                if (!periodReports.Any()) { MessageBox.Show("Нет данных за выбранный период", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information); return; }
+                var periodReports = await _apiService.GetShiftReportsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
+
+                if (!periodReports.Any())
+                {
+                    MessageBox.Show("Нет данных за выбранный период", "Инфо", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ReconciliationSummaryText.Visibility = Visibility.Collapsed;
+                    return;
+                }
+
+                // === НОВОЕ: Загружаем сводку по X-отчетам за период ===
+                var reconSummary = await _apiService.GetReconciliationsSummaryAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
+                if (reconSummary.TotalShifts > 0)
+                {
+                    ReconciliationSummaryText.Visibility = Visibility.Visible;
+                    if (reconSummary.ReconciledShifts == reconSummary.TotalShifts)
+                    {
+                        ReconciliationSummaryText.Text = $"🧮 Касса пересчитана во всех {reconSummary.TotalShifts} сменах. Суммарная разница: {reconSummary.TotalDifference:+0;-0;0} ₽";
+                        ReconciliationSummaryText.Foreground = TryFindResource(reconSummary.TotalDifference == 0 ? "AccentGreen" : "AccentRed") as Brush
+                            ?? new SolidColorBrush(reconSummary.TotalDifference == 0 ? Colors.Green : Colors.Red);
+                    }
+                    else
+                    {
+                        ReconciliationSummaryText.Text = $"⚠️ X-отчёт проведён только в {reconSummary.ReconciledShifts} из {reconSummary.TotalShifts} смен. Суммарная разница: {reconSummary.TotalDifference:+0;-0;0} ₽";
+                        ReconciliationSummaryText.Foreground = TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Colors.Orange);
+                    }
+                }
+                else
+                {
+                    ReconciliationSummaryText.Visibility = Visibility.Collapsed;
+                }
+
+                var clientStats = await _apiService.GetClientsStatsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
 
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
                 decimal netProfit = periodReports.Sum(r => r.NetProfit);

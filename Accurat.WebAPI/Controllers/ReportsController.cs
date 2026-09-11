@@ -203,5 +203,45 @@ namespace Accurat.WebAPI.Controllers
 
             return Ok(new { NewClients = newClients, UniqueClients = uniqueClients });
         }
+
+        [HttpGet("reconciliations-summary")]
+        public async Task<ActionResult<object>> GetReconciliationsSummary(int branchId, DateTime start, DateTime end)
+        {
+            var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
+            var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+
+            var shiftsQuery = _context.Shifts
+                .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
+
+            if (CurrentCompanyId != 0)
+            {
+                var myBranchIds = _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id);
+                shiftsQuery = shiftsQuery.Where(s => myBranchIds.Contains(s.BranchId));
+            }
+            if (branchId > 0)
+            {
+                shiftsQuery = shiftsQuery.Where(s => s.BranchId == branchId);
+            }
+
+            var shiftIds = await shiftsQuery.Select(s => s.Id).ToListAsync();
+            if (!shiftIds.Any()) return Ok(new { TotalShifts = 0, ReconciledShifts = 0, TotalDifference = 0m });
+
+            var reconciliations = await _context.CashReconciliations
+                .Where(r => shiftIds.Contains(r.ShiftId))
+                .ToListAsync();
+
+            // Берём только последний пересчёт для каждой смены (если их было несколько)
+            var grouped = reconciliations
+                .GroupBy(r => r.ShiftId)
+                .Select(g => g.OrderByDescending(r => r.CountedAt).First())
+                .ToList();
+
+            return Ok(new
+            {
+                TotalShifts = shiftIds.Count,
+                ReconciledShifts = grouped.Count,
+                TotalDifference = grouped.Sum(r => r.Difference)
+            });
+        }
     }
 }

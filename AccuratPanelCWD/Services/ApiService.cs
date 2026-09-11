@@ -532,22 +532,45 @@ namespace AccuratPanelCWD.Services
         #endregion
 
         #region ОТЧЕТЫ (REPORTS)
+
+        // Получение отчетов по сменам с фильтрацией по филиалу и диапазону дат
         public async Task<List<ContractsShiftReport>> GetShiftReportsAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<List<ContractsShiftReport>>($"Reports/shifts?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsShiftReport>(); }
             catch { return new List<ContractsShiftReport>(); }
         }
 
+        // Получение статистики по клиентам с фильтрацией по филиалу и диапазону дат
         public async Task<ClientStatsResponse> GetClientsStatsAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={start:O}&end={end:O}") ?? new ClientStatsResponse(); }
             catch { return new ClientStatsResponse(); }
         }
 
+        // Получение транзакций по филиалу и диапазону дат
         public async Task<List<ContractsTransaction>> GetTransactionsByDateRangeAsync(int branchId, DateTime start, DateTime end)
         {
             try { return await _http.GetFromJsonAsync<List<ContractsTransaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsTransaction>(); }
             catch { return new List<ContractsTransaction>(); }
+        }
+
+        // Получение сводки по сверкам (Reconciliation Summary) с фильтрацией по филиалу и диапазону дат
+        public class ReconciliationSummaryResponse
+        {
+            public int TotalShifts { get; set; }
+            public int ReconciledShifts { get; set; }
+            public decimal TotalDifference { get; set; }
+        }
+
+        // Метод для получения сводки по сверкам
+        public async Task<ReconciliationSummaryResponse> GetReconciliationsSummaryAsync(int branchId, DateTime start, DateTime end)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<ReconciliationSummaryResponse>($"Reports/reconciliations-summary?branchId={branchId}&start={start:O}&end={end:O}")
+                       ?? new ReconciliationSummaryResponse();
+            }
+            catch { return new ReconciliationSummaryResponse(); }
         }
         #endregion
 

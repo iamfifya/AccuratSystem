@@ -153,6 +153,14 @@ namespace AccuratPanelCWD
         private void ReportSelectionChanged(object sender, SelectionChangedEventArgs args)
         {
             SelectedReport = ReportsListBox.SelectedItem as ContractsShiftReport;
+            if (SelectedReport != null)
+            {
+                _ = LoadReconciliationInfoAsync(SelectedReport.Id);
+            }
+            else
+            {
+                ReconciliationInfoText.Text = "";
+            }
         }
 
         private async Task LoadReconciliationInfoAsync(int shiftId)
