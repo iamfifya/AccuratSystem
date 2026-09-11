@@ -3,9 +3,9 @@
                     xmlns:controls="clr-namespace:AccuratPanelCWD.Controls">
 
     <Style TargetType="{x:Type controls:CustomComboBox}">
-        <Setter Property="Height" Value="35"/>
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="BorderBrush" Value="#BDC3C7"/>
+        <Setter Property="Height" Value="45"/>
+        <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="6"/>
         <Setter Property="FontFamily" Value="Segoe UI"/>
@@ -25,9 +25,10 @@
                         <TextBlock x:Name="HeaderText"
                                    Grid.Row="0"
                                    Text="{TemplateBinding Header}"
-                                   FontSize="11"
-                                   Foreground="#7F8C8D"
-                                   Margin="10,5,10,0"/>
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   Margin="0,0,0,6"/>
 
                         <!-- Основное поле (кликабельное) -->
                         <Border x:Name="PART_MainBorder"
@@ -50,26 +51,26 @@
                                          Grid.Column="0"
                                          BorderThickness="0"
                                          Background="Transparent"
-                                         Padding="10,0,0,0"
+                                         Padding="15,0,0,0"
                                          VerticalAlignment="Center"
                                          IsReadOnly="{TemplateBinding IsEditable}"
-                                         Foreground="Black"
+                                         Foreground="{DynamicResource InputText}"
                                          FontSize="13"
                                          IsHitTestVisible="False"/>
 
                                 <!-- Кнопка-стрелка -->
                                 <ToggleButton x:Name="PART_ToggleButton"
                                               Grid.Column="1"
-                                              Width="30"
-                                              Height="30"
+                                              Width="35"
+                                              Height="35"
                                               Margin="0,0,5,0"
                                               VerticalAlignment="Center"
                                               IsHitTestVisible="True">
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
-                                            <Border Background="Transparent">
+                                            <Border Background="Transparent" CornerRadius="4">
                                                 <Path x:Name="Arrow"
-                                                      Fill="#7F8C8D"
+                                                      Fill="{DynamicResource TextMuted}"
                                                       HorizontalAlignment="Center"
                                                       VerticalAlignment="Center"
                                                       Data="M 0 0 L 5 5 L 10 0 Z"/>
@@ -77,6 +78,9 @@
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsChecked" Value="True">
                                                     <Setter TargetName="Arrow" Property="Data" Value="M 0 5 L 5 0 L 10 5 Z"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Arrow" Property="Fill" Value="{DynamicResource AccentBlue}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -92,17 +96,17 @@
                                StaysOpen="False"
                                Width="{Binding ActualWidth, ElementName=PART_MainBorder}">
 
-                            <Border Background="White"
-                                    BorderBrush="#BDC3C7"
+                            <Border Background="{DynamicResource BgCard}"
+                                    BorderBrush="{DynamicResource BorderColor}"
                                     BorderThickness="1"
                                     CornerRadius="6"
-                                    Margin="0,2,0,0">
-                                <ScrollViewer x:Name="PART_ScrollViewer"
-                                              MaxHeight="250"
+                                    Margin="0,4,0,0">
+                            <ScrollViewer x:Name="PART_ScrollViewer"
+                                              MaxHeight="300"
                                               VerticalScrollBarVisibility="Auto">
                                     <StackPanel x:Name="PART_ItemsPanel" 
                                                 Orientation="Vertical"
-                                                Background="White"/>
+                                                Background="Transparent"/>
                                 </ScrollViewer>
                             </Border>
                         </Popup>
@@ -110,8 +114,11 @@
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="BorderBrush" Value="#3498DB"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                             <Setter Property="BorderThickness" Value="2"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="PART_MainBorder" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
                         </Trigger>
                         <Trigger Property="Header" Value="{x:Null}">
                             <Setter TargetName="HeaderText" Property="Visibility" Value="Collapsed"/>

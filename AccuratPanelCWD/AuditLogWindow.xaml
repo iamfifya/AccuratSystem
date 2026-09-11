@@ -9,52 +9,6 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BgMain}">
 
-    <Window.Resources>
-        <!-- Стили текстов -->
-        <Style x:Key="FilterLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
-        </Style>
-
-        <Style x:Key="ClickableTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="TextDecorations" Value="Underline"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource AccentOrange}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Стили DataGrid -->
-        <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource BgMain}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,0"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-        </Style>
-
-        <Style TargetType="DataGridCell">
-            <Setter Property="Padding" Value="10,0"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource BgSelected}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Resources>
-
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -93,7 +47,7 @@
 
                 <!-- Пользователь -->
                 <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                    <TextBlock Text="Пользователь" Style="{StaticResource FilterLabel}"/>
+                    <TextBlock Text="Пользователь" Style="{StaticResource FilterLabelStyle}"/>
                     <controls:CustomComboBox x:Name="UserFilter" 
                                              Height="45" HorizontalAlignment="Stretch"
                                              SelectedValuePath="Value"
@@ -103,19 +57,19 @@
 
                 <!-- Дата начала -->
                 <StackPanel Grid.Column="1" Margin="0,0,15,0">
-                    <TextBlock Text="С даты" Style="{StaticResource FilterLabel}"/>
+                    <TextBlock Text="С даты" Style="{StaticResource FilterLabelStyle}"/>
                     <local:CustomDatePicker x:Name="StartDateFilter" HorizontalAlignment="Stretch"/>
                 </StackPanel>
 
                 <!-- Дата окончания -->
                 <StackPanel Grid.Column="2" Margin="0,0,15,0">
-                    <TextBlock Text="По дату" Style="{StaticResource FilterLabel}"/>
+                    <TextBlock Text="По дату" Style="{StaticResource FilterLabelStyle}"/>
                     <local:CustomDatePicker x:Name="EndDateFilter" HorizontalAlignment="Stretch"/>
                 </StackPanel>
 
                 <!-- Тип события -->
                 <StackPanel Grid.Column="3" Margin="0,0,20,0">
-                    <TextBlock Text="Тип события" Style="{StaticResource FilterLabel}"/>
+                    <TextBlock Text="Тип события" Style="{StaticResource FilterLabelStyle}"/>
                     <controls:CustomComboBox x:Name="EntryTypeFilter" 
                                              Height="45" HorizontalAlignment="Stretch"
                                              SelectedValuePath="Value"
@@ -142,20 +96,9 @@
                 BorderBrush="{DynamicResource BorderColor}"
                 BorderThickness="1">
             <DataGrid x:Name="AuditLogGrid" 
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="{DynamicResource BorderColor}"
-                      Background="Transparent"
-                      RowBackground="{DynamicResource BgCard}"
-                      AlternatingRowBackground="{DynamicResource TableRowHover}"
-                      BorderThickness="0"
-                      FontFamily="Segoe UI"
-                      RowHeight="40"
-                      ColumnHeaderHeight="40">
+                      Style="{StaticResource AuditDataGridStyle}"
+                      ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                      CellStyle="{StaticResource DataGridCellStyle}">
 
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Дата и время" 

@@ -276,7 +276,7 @@ namespace AccuratPanelCWD.Controls
             if (SelectedItem != null)
             {
                 _textBox.Text = GetDisplayText(SelectedItem);
-                _textBox.Foreground = new SolidColorBrush(Colors.Black);
+                _textBox.Foreground = GetThemeBrush("InputText", new SolidColorBrush(Colors.Black));
             }
             else if (SelectedValue != null && ItemsSource != null)
             {
@@ -290,8 +290,8 @@ namespace AccuratPanelCWD.Controls
                         if (Equals(value, SelectedValue))
                         {
                             SelectedItem = item;
-                            _textBox.Text = GetDisplayText(item);
-                            _textBox.Foreground = new SolidColorBrush(Colors.Black);
+                            _textBox.Text = Placeholder;
+                            _textBox.Foreground = GetThemeBrush("TextLightMuted", new SolidColorBrush(Colors.Gray));
                             return;
                         }
                     }
@@ -400,45 +400,65 @@ namespace AccuratPanelCWD.Controls
 
         private Border CreateItemBorder(object item)
         {
+            // === ЦВЕТА ИЗ ТЕМЫ (светлая/тёмная переключатся автоматически) ===
+            var bgCard = GetThemeBrush("BgCard", new SolidColorBrush(Color.FromRgb(255, 255, 255)));
+            var hoverBrush = GetThemeBrush("TableRowHover", new SolidColorBrush(Color.FromRgb(240, 240, 240)));
+            var textBrush = GetThemeBrush("InputText", new SolidColorBrush(Colors.Black));
+            var accentBlue = GetThemeBrush("AccentBlue", new SolidColorBrush(Color.FromRgb(52, 152, 219)));
+            var whiteBrush = new SolidColorBrush(Colors.White);
+
+            // Текущий выбранный пункт подсвечиваем синим
+            bool isSelected = ReferenceEquals(item, SelectedItem);
+
             var border = new Border
             {
-                Background = new SolidColorBrush(Colors.White),
-                Padding = new Thickness(10, 10, 10, 10),
+                Background = isSelected ? accentBlue : bgCard,   // было: hardcoded White
+                Padding = new Thickness(10),
                 Cursor = Cursors.Hand,
                 DataContext = item
             };
 
             border.MouseEnter += (s, e) =>
             {
-                border.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
+                if (!ReferenceEquals(border.DataContext, SelectedItem))
+                    border.Background = hoverBrush;
             };
             border.MouseLeave += (s, e) =>
             {
-                border.Background = new SolidColorBrush(Colors.White);
+                border.Background = ReferenceEquals(border.DataContext, SelectedItem) ? accentBlue : bgCard;
             };
             border.MouseLeftButtonUp += Item_MouseLeftButtonUp;
 
             if (ItemTemplate != null)
             {
-                var content = new ContentControl
+                border.Child = new ContentControl
                 {
                     ContentTemplate = ItemTemplate,
                     Content = item
                 };
-                border.Child = content;
             }
             else
             {
-                var textBlock = new TextBlock
+                border.Child = new TextBlock
                 {
                     Text = GetDisplayText(item),
                     VerticalAlignment = VerticalAlignment.Center,
-                    FontSize = 13
+                    FontSize = 13,
+                    // === ЯВНО ЗАДАЁМ ЦВЕТ ТЕКСТА: больше никакого наследованного белого ===
+                    Foreground = isSelected ? whiteBrush : textBrush
                 };
-                border.Child = textBlock;
             }
 
             return border;
+        }
+
+        /// <summary>
+        /// Безопасно достаёт кисть из ресурсов темы.
+        /// Если ресурс не найден — возвращает fallback (чтобы не падало).
+        /// </summary>
+        private Brush GetThemeBrush(string key, Brush fallback)
+        {
+            return TryFindResource(key) as Brush ?? fallback;
         }
 
         #endregion
