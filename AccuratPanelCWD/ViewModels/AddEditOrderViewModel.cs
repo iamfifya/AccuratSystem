@@ -56,6 +56,7 @@ namespace AccuratPanelCWD.ViewModels
             set { _currentSuggestion = value; OnPropertyChanged(nameof(CurrentSuggestion)); }
         }
 
+        // === МЕТОДЫ ДЛЯ ОБРАБОТКИ АПСЕЛЛА ===
         public async Task CheckForUpsellAsync()
         {
             if (CurrentOrder == null || CurrentOrder.BranchId <= 0) return;
@@ -69,11 +70,14 @@ namespace AccuratPanelCWD.ViewModels
 
             try
             {
-                string query = string.Join("&", selectedIds.Select(id => $"currentServices={id}"));
-                var response = await _apiService.GetFromJsonAsync<UpsellSuggestion>($"Upsell/suggest?{query}&branchId={CurrentOrder.BranchId}");
-                CurrentSuggestion = response;
+                // ИСПРАВЛЕНО: используем специализированный метод ApiService
+                // вместо прямого GetFromJsonAsync (который был private)
+                CurrentSuggestion = await _apiService.GetUpsellSuggestionAsync(selectedIds, CurrentOrder.BranchId);
             }
-            catch { CurrentSuggestion = null; }
+            catch
+            {
+                CurrentSuggestion = null;
+            }
         }
 
         public void ApplyUpsell()

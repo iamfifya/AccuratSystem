@@ -21,30 +21,22 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("suggest")]
         public async Task<ActionResult<UpsellSuggestion>> GetSuggestion([FromQuery] List<int> currentServices, [FromQuery] int branchId)
         {
-            // Услуг не выбрано — советовать нечего. Это НОРМА, а не ошибка:
-            // возвращаем null, клиент молча спрячет баннер.
             if (currentServices == null || !currentServices.Any())
-                return Ok((UpsellSuggestion)null);
+                return new JsonResult(null);  // ← было Ok((UpsellSuggestion)null)
 
-            // Проверяем лицензию модуля для ТЕКУЩЕЙ компании
             var tenantFeature = await _context.TenantFeatures.FirstOrDefaultAsync(f => f.CompanyId == CurrentCompanyId);
             if (CurrentCompanyId != 0 && (tenantFeature == null || !tenantFeature.IsUpsellEnabled))
                 return StatusCode(403, "Модуль 'Умный кассир' отключен.");
 
-            // Ищем правило ТОЛЬКО для текущей компании
             var suggestion = await _context.UpsellSuggestions
                 .Where(s => s.CompanyId == CurrentCompanyId)
                 .Where(s => currentServices.Contains(s.TriggerServiceId) && !currentServices.Contains(s.SuggestedServiceId))
                 .OrderByDescending(s => s.BonusAmount)
                 .FirstOrDefaultAsync();
 
-            // ИСПРАВЛЕНО: было return NotFound() — клиент воспринимал это как
-            // «эндпоинт умер» и spamил логами [404]. Правило не найдено — это
-            // рабочий исход: Ok(null) сериализуется в "null", клиент получит
-            // null и просто не покажет баннер.
-            return Ok(suggestion);
+            // JsonResult всегда возвращает JSON, даже для null (вернёт строку "null")
+            return new JsonResult(suggestion);
         }
-
         // 2. ПОЛУЧИТЬ ВСЕ ПРАВИЛА (только свои)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UpsellSuggestion>>> GetAllRules()

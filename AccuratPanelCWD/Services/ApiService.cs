@@ -571,7 +571,7 @@ namespace AccuratPanelCWD.Services
         }
         #endregion
 
-        #region ConvertAppointmentToOrderAsync
+        #region КОНВЕРТАЦИЯ ЗАПИСИ В ЗАКАЗ
         public async Task<ContractsOrder> ConvertAppointmentToOrderAsync(int appointmentId, int shiftId, int washerId)
         {
             // Бьем ровно по тому маршруту, который создали в контроллере
@@ -687,12 +687,14 @@ namespace AccuratPanelCWD.Services
 
         #region УМНЫЙ КАССИР (UPSELL DLC)
 
+        // Получить все правила апселла для текущей компании
         public async Task<List<UpsellSuggestion>> GetUpsellRulesAsync()
         {
             try { return await _http.GetFromJsonAsync<List<UpsellSuggestion>>("Upsell") ?? new List<UpsellSuggestion>(); }
             catch { return new List<UpsellSuggestion>(); }
         }
 
+        // Создать новое правило апселла
         public async Task<UpsellSuggestion> CreateUpsellRuleAsync(UpsellSuggestion rule)
         {
             var response = await _http.PostAsJsonAsync("Upsell", rule);
@@ -700,10 +702,28 @@ namespace AccuratPanelCWD.Services
             return await response.Content.ReadFromJsonAsync<UpsellSuggestion>();
         }
 
+        // Удалить существующее правило апселла
         public async Task DeleteUpsellRuleAsync(int id)
         {
             var response = await _http.DeleteAsync($"Upsell/{id}");
             response.EnsureSuccessStatusCode();
+        }
+
+        /// <summary>
+        /// Получить подсказку апселла для текущего набора услуг.
+        /// Возвращает null, если правила нет (это нормально, не ошибка).
+        /// Внутренне использует защищённый GetFromJsonAsync, который корректно
+        /// обрабатывает пустое тело и 404 — не падает с JsonException.
+        /// </summary>
+        public async Task<UpsellSuggestion?> GetUpsellSuggestionAsync(List<int> selectedServiceIds, int branchId)
+        {
+            if (selectedServiceIds == null || !selectedServiceIds.Any() || branchId <= 0)
+                return null;
+
+            var query = string.Join("&", selectedServiceIds.Select(id => $"currentServices={id}"));
+            var url = $"Upsell/suggest?{query}&branchId={branchId}";
+
+            return await GetFromJsonAsync<UpsellSuggestion>(url);
         }
 
         #endregion
@@ -818,28 +838,38 @@ namespace AccuratPanelCWD.Services
             public int UniqueClients { get; set; }
         }
 
-        // Универсальный метод для безопасного получения JSON с обработкой ошибок
-        public async Task<T> GetFromJsonAsync<T>(string url)
+        /// <summary>
+        /// Безопасная версия GetFromJsonAsync: обрабатывает 404 как "нет данных",
+        /// пустое тело как default(T), и тело "null" как null.
+        /// </summary>
+        private async Task<T?> GetFromJsonAsync<T>(string url)
         {
             try
             {
                 var response = await _http.GetAsync(url);
 
-                // Если сервер вернул 404, это значит "данные не найдены", а не "сервер упал"
+                // 404 = данные не найдены, это нормальный результат
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[404] Endpoint not found or empty: {url}");
                     return default;
-                }
 
-                // Для всех остальных ошибок (500, 401 и т.д.) выбрасываем исключение
                 response.EnsureSuccessStatusCode();
 
-                return await response.Content.ReadFromJsonAsync<T>();
+                // Читаем тело как строку, чтобы проверить на пустоту
+                var content = await response.Content.ReadAsStringAsync();
+
+                // Пустое тело или "null" = default(T)
+                if (string.IsNullOrWhiteSpace(content) || content == "null")
+                    return default;
+
+                // Десериализуем непустой JSON
+                return System.Text.Json.JsonSerializer.Deserialize<T>(content, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
             }
-            catch (Exception ex)
+            catch (HttpRequestException)
             {
-                System.Diagnostics.Debug.WriteLine($"API Error at {url}: {ex.Message}");
+                // Сетевые ошибки проглатываем — возвращаем default
                 return default;
             }
         }

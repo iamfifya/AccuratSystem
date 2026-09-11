@@ -262,39 +262,56 @@ namespace Accurat.WebAPI.Controllers
 
             if (existingShift != null)
             {
+                // Реактивируем существующую закрытую смену
                 existingShift.IsClosed = false;
                 existingShift.EmployeeIds = shift.EmployeeIds;
                 existingShift.EndTime = null;
+                existingShift.StartTime = DateTime.UtcNow;  // Добавил: обновляем время открытия
+                existingShift.AdminEarningsSnapshot = 0;     // Добавил: сбрасываем снимок зарплаты
 
-                _context.Shifts.Update(existingShift);
-                await _context.SaveChangesAsync();
+                // ИСПРАВЛЕНО: используем existingShift.Id вместо shift.Id
+                // Загружаем название филиала из БД
+                var branch = await _context.Branches.FindAsync(shift.BranchId);
 
-                // Логируем событие открытия смены в Журнал действий смены ShiftTimelineEntries
                 _context.ShiftTimelineEntries.Add(new ShiftTimelineEntry
                 {
-                    ShiftId = shift.Id,
+                    ShiftId = existingShift.Id,  // ✅ Используем ID существующей смены
                     EventType = "ShiftOpened",
-                    Message = $"Смена открыта на {shift.Branch?.Name ?? "филиале"}",
+                    Message = $"Смена переоткрыта на {branch?.Name ?? "филиале"}",
                     CreatedBy = "Система",
                     Timestamp = DateTime.UtcNow
                 });
+
+                // ОДИН SaveChanges для обеих операций — EF Core сам обработает зависимости
                 await _context.SaveChangesAsync();
 
                 return Ok(existingShift);
             }
             else
             {
+                // Создаём новую смену
                 shift.StartTime = DateTime.UtcNow;
                 shift.Date = targetDate;
                 shift.IsClosed = false;
+                shift.AdminEarningsSnapshot = 0;
 
                 _context.Shifts.Add(shift);
+                await _context.SaveChangesAsync();  // shift.Id теперь заполнен БД
+
+                // Логируем открытие новой смены
+                var branch = await _context.Branches.FindAsync(shift.BranchId);
+                _context.ShiftTimelineEntries.Add(new ShiftTimelineEntry
+                {
+                    ShiftId = shift.Id,  // ✅ ID уже сгенерирован БД
+                    EventType = "ShiftOpened",
+                    Message = $"Смена открыта на {branch?.Name ?? "филиале"}",
+                    CreatedBy = "Система",
+                    Timestamp = DateTime.UtcNow
+                });
                 await _context.SaveChangesAsync();
 
                 return Ok(shift);
             }
-
-
         }
 
         [HttpPatch("{id}/close")]
