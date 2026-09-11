@@ -38,7 +38,6 @@ namespace AccuratPanelCWD.ViewModels
             {
                 if (_price != value)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[ServiceVM] Price changed: {Name} {_price:N0} → {value:N0} ₽");
                     _price = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Price)));
                 }

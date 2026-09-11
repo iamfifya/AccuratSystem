@@ -21,7 +21,10 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("suggest")]
         public async Task<ActionResult<UpsellSuggestion>> GetSuggestion([FromQuery] List<int> currentServices, [FromQuery] int branchId)
         {
-            if (currentServices == null || !currentServices.Any()) return NotFound();
+            // Услуг не выбрано — советовать нечего. Это НОРМА, а не ошибка:
+            // возвращаем null, клиент молча спрячет баннер.
+            if (currentServices == null || !currentServices.Any())
+                return Ok((UpsellSuggestion)null);
 
             // Проверяем лицензию модуля для ТЕКУЩЕЙ компании
             var tenantFeature = await _context.TenantFeatures.FirstOrDefaultAsync(f => f.CompanyId == CurrentCompanyId);
@@ -30,12 +33,15 @@ namespace Accurat.WebAPI.Controllers
 
             // Ищем правило ТОЛЬКО для текущей компании
             var suggestion = await _context.UpsellSuggestions
-                .Where(s => s.CompanyId == CurrentCompanyId) // ДОБАВЛЕНО: Фильтр по компании
+                .Where(s => s.CompanyId == CurrentCompanyId)
                 .Where(s => currentServices.Contains(s.TriggerServiceId) && !currentServices.Contains(s.SuggestedServiceId))
                 .OrderByDescending(s => s.BonusAmount)
                 .FirstOrDefaultAsync();
 
-            if (suggestion == null) return NotFound();
+            // ИСПРАВЛЕНО: было return NotFound() — клиент воспринимал это как
+            // «эндпоинт умер» и spamил логами [404]. Правило не найдено — это
+            // рабочий исход: Ok(null) сериализуется в "null", клиент получит
+            // null и просто не покажет баннер.
             return Ok(suggestion);
         }
 

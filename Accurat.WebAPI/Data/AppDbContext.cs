@@ -321,6 +321,7 @@ namespace Accurat.WebAPI.Data
             new UpsellSuggestion
             {
                 Id = 1,
+                CompanyId = 1,
                 TriggerServiceId = 1, // Стандартная мойка
                 SuggestedServiceId = 6, // Кварцевое покрытие
                 Message = "Клиент выбрал стандартную мойку. Предложите покрыть кузов кварцем для защиты от грязи и блеска!",
@@ -329,6 +330,7 @@ namespace Accurat.WebAPI.Data
             new UpsellSuggestion
             {
                 Id = 2,
+                CompanyId = 1,
                 TriggerServiceId = 2, // Комплекс
                 SuggestedServiceId = 3, // Чистка стекол
                 Message = "В комплекс не входит антидождь/глубокая чистка стекол. Отличный шанс предложить эту услугу!",
