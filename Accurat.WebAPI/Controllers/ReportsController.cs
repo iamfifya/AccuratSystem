@@ -48,6 +48,7 @@ namespace Accurat.WebAPI.Controllers
 
             var allShiftOrders = await _context.Orders
                 .Include(o => o.OrderWashers)
+                .Include(o => o.OrderServiceItems)   // для топ-услуг
                 .Where(o => shiftIds.Contains(o.ShiftId) && (o.Status == "Выполнен" || o.Status == "Завершен"))
                 .ToListAsync();
 
@@ -175,6 +176,47 @@ namespace Accurat.WebAPI.Controllers
                 // ServiceCompanyEarnings — то же самое по сервису
                 report.ServiceCompanyEarnings = report.ServiceTotalRevenue - serviceWasherFOT - (adminFOT * serviceShare);
 
+                // === БЫСТРЫЕ МЕТРИКИ ===
+
+                // Средний чек
+                report.AverageCheck = report.TotalCars > 0
+                    ? report.TotalRevenue / report.TotalCars
+                    : 0;
+
+                // Аналитика по скидкам
+                report.TotalDiscountAmount = orders.Sum(o =>
+                    o.DiscountPercent > 0
+                        ? o.TotalPrice * o.DiscountPercent / 100
+                        : o.DiscountAmount);
+                report.DiscountedOrdersCount = orders.Count(o => o.DiscountPercent > 0 || o.DiscountAmount > 0);
+
+                // Топ услуг за смену (по snapshot-ценам из OrderServiceItems)
+                var serviceStats = new Dictionary<int, ServiceAnalytics>();
+                foreach (var order in orders)
+                {
+                    if (order.OrderServiceItems == null) continue;
+                    foreach (var item in order.OrderServiceItems)
+                    {
+                        if (!serviceStats.ContainsKey(item.ServiceId))
+                        {
+                            var svc = allServices.FirstOrDefault(s => s.Id == item.ServiceId);
+                            serviceStats[item.ServiceId] = new ServiceAnalytics
+                            {
+                                ServiceName = svc?.Name ?? $"Услуга #{item.ServiceId}",
+                                Count = 0,
+                                TotalRevenue = 0
+                            };
+                        }
+                        serviceStats[item.ServiceId].Count++;
+                        serviceStats[item.ServiceId].TotalRevenue += item.ActualPrice * item.Quantity;
+                    }
+                }
+                report.TopServices = serviceStats.Values
+                    .OrderByDescending(s => s.Count)
+                    .ThenByDescending(s => s.TotalRevenue)
+                    .Take(5)
+                    .ToList();
+
                 reports.Add(report);
             }
 
@@ -186,6 +228,7 @@ namespace Accurat.WebAPI.Controllers
         {
             var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
             var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+
             var newClientsQuery = _context.Clients.Where(c => c.RegistrationDate >= startUtc && c.RegistrationDate <= endUtc);
             var uniqueClientsQuery = _context.Orders.Where(o => o.Time >= startUtc && o.Time <= endUtc && o.ClientId != null);
 
@@ -195,13 +238,29 @@ namespace Accurat.WebAPI.Controllers
                 var myBranchIds = _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id);
                 uniqueClientsQuery = uniqueClientsQuery.Where(o => myBranchIds.Contains(o.BranchId));
             }
-
             if (branchId > 0) uniqueClientsQuery = uniqueClientsQuery.Where(o => o.BranchId == branchId);
 
             int newClients = await newClientsQuery.CountAsync();
-            int uniqueClients = await uniqueClientsQuery.Select(o => o.ClientId).Distinct().CountAsync();
 
-            return Ok(new { NewClients = newClients, UniqueClients = uniqueClients });
+            // === НОВОЕ: возвращаемость клиентов ===
+            var clientVisitCounts = await uniqueClientsQuery
+                .GroupBy(o => o.ClientId)
+                .Select(g => new { ClientId = g.Key, VisitsCount = g.Count() })
+                .ToListAsync();
+
+            int uniqueClients = clientVisitCounts.Count;
+            int repeatClients = clientVisitCounts.Count(c => c.VisitsCount > 1);
+            decimal retentionRate = uniqueClients > 0
+                ? Math.Round((decimal)repeatClients / uniqueClients * 100, 1)
+                : 0;
+
+            return Ok(new
+            {
+                NewClients = newClients,
+                UniqueClients = uniqueClients,
+                RepeatClients = repeatClients,      // НОВОЕ
+                RetentionRate = retentionRate        // НОВОЕ
+            });
         }
 
         [HttpGet("reconciliations-summary")]

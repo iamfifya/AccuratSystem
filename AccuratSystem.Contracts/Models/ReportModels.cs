@@ -38,6 +38,17 @@ namespace AccuratSystem.Contracts.Models
         public decimal TotalExpenses { get; set; }
         public decimal NetProfit { get { return TotalCompanyEarnings - TotalExpenses; } }
 
+        // === Средний чек ===
+        public decimal AverageCheck { get; set; }
+
+        // === Аналитика по скидкам ===
+        public decimal TotalDiscountAmount { get; set; }
+        public int DiscountedOrdersCount { get; set; }
+
+        // === Топ услуг (класс уже существует, просто начинаем использовать) ===
+        public List<ServiceAnalytics> TopServices { get; set; } = new List<ServiceAnalytics>();
+
+
         public List<EmployeeReport> EmployeesWork { get; set; } = new List<EmployeeReport>();
     }
 

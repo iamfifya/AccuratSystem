@@ -14,6 +14,30 @@
         WindowState="Maximized" 
         Foreground="{DynamicResource TextMain}">
 
+    <Window.Resources>
+        <DataTemplate x:Key="TopServiceTemplate">
+            <Border Background="{DynamicResource BgMain}" CornerRadius="6" Padding="12" Margin="0,0,0,8"
+            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Count, StringFormat={}{0}×}"
+                       FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"
+                       VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <TextBlock Grid.Column="1" Text="{Binding ServiceName}"
+                       FontSize="14" Foreground="{DynamicResource TextMain}"
+                       VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding TotalRevenue, StringFormat={}{0:N0} ₽}"
+                       FontSize="14" FontWeight="Bold" Foreground="{DynamicResource AccentGreen}"
+                       VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -153,6 +177,57 @@
                         </StackPanel>
                     </Border>
                 </UniformGrid>
+
+                <!-- === НОВОЕ: Быстрые метрики === -->
+                <TextBlock Text="📈 Быстрые метрики"
+           FontSize="18" FontWeight="Bold"
+           Foreground="{DynamicResource TextMain}"
+           Margin="0,20,0,15"/>
+                <Border Style="{StaticResource StatCard}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <TextBlock Text="Средний чек" Foreground="{DynamicResource TextMuted}" FontSize="13"/>
+                            <TextBlock x:Name="AvgCheckText" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource TextMain}" Margin="0,5,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock Text="Скидки (упущено)" Foreground="{DynamicResource TextMuted}" FontSize="13"/>
+                            <TextBlock x:Name="DiscountsText" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource AccentRed}" Margin="0,5,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <TextBlock Text="Возвращаемость" Foreground="{DynamicResource TextMuted}" FontSize="13"/>
+                            <TextBlock x:Name="RetentionText" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource AccentBlue}" Margin="0,5,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                            <TextBlock Text="Повторных клиентов" Foreground="{DynamicResource TextMuted}" FontSize="13"/>
+                            <TextBlock x:Name="RepeatClientsText" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource AccentGreen}" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- === НОВОЕ: Топ услуг === -->
+                <TextBlock Text="🏆 Топ-5 услуг за период"
+                           FontSize="18" FontWeight="Bold"
+                           Foreground="{DynamicResource TextMain}"
+                           Margin="0,20,0,15"/>
+                <Border Background="{DynamicResource BgCard}"
+                        CornerRadius="6" Padding="15"
+                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                    <ItemsControl x:Name="TopServicesList" ItemTemplate="{StaticResource TopServiceTemplate}"/>
+                </Border>
 
                 <!-- Графики -->
                 <Grid Height="320" Margin="0,0,0,25">

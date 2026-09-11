@@ -854,11 +854,13 @@ namespace AccuratPanelCWD.Services
             response.EnsureSuccessStatusCode();
         }
 
-        // DTO для ответа с количеством новых и уникальных клиентов
+        // DTO для статистики клиентов (Client Stats)
         public class ClientStatsResponse
         {
-            public int NewClients { get; set; }
-            public int UniqueClients { get; set; }
+            public int NewClients { get; set; } // количество новых клиентов за период
+            public int UniqueClients { get; set; } // количество уникальных клиентов за период
+            public int RepeatClients { get; set; }  // количество повторных клиентов за период
+            public decimal RetentionRate { get; set; }  // коэффициент удержания клиентов за период
         }
 
         /// <summary>

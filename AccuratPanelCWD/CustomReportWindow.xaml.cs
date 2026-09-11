@@ -1,5 +1,6 @@
 using AccuratPanelCWD.Models;
 using AccuratPanelCWD.Services;
+using AccuratSystem.Contracts.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
 using System;
@@ -10,11 +11,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-
+using ContractsEmployeeReport = AccuratSystem.Contracts.Models.EmployeeReport;
+using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
 // Алиасы для предотвращения конфликтов
 using WpfUser = AccuratPanelCWD.Models.User;
-using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
-using ContractsEmployeeReport = AccuratSystem.Contracts.Models.EmployeeReport;
 
 namespace AccuratPanelCWD
 {
@@ -134,6 +134,11 @@ namespace AccuratPanelCWD
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
                 decimal netProfit = periodReports.Sum(r => r.NetProfit);
 
+                // Средний чек за период
+                decimal avgCheck = clientStats.UniqueClients > 0
+                    ? totalRev / periodReports.Sum(r => r.TotalCars)
+                    : 0;
+
                 // Заполнение UI
                 TotalRevenueText.Text = $"{totalRev:N0} ₽";
                 NetProfitText.Text = $"{netProfit:N0} ₽";
@@ -156,6 +161,33 @@ namespace AccuratPanelCWD
                 CardTotalText.Text = $"{periodReports.Sum(r => r.CardAmount):N0} ₽ ({periodReports.Sum(r => r.CardCount)} шт.)";
                 TransferTotalText.Text = $"{periodReports.Sum(r => r.TransferAmount):N0} ₽ ({periodReports.Sum(r => r.TransferCount)} шт.)";
                 QrTotalText.Text = $"{periodReports.Sum(r => r.QrAmount):N0} ₽ ({periodReports.Sum(r => r.QrCount)} шт.)";
+
+                // Заполняем быстрые метрики
+                AvgCheckText.Text = $"{avgCheck:N0} ₽";
+
+                // Сумма скидок за период
+                decimal totalDiscounts = periodReports.Sum(r => r.TotalDiscountAmount);
+                DiscountsText.Text = $"{totalDiscounts:N0} ₽";
+
+                RetentionText.Text = $"{clientStats.RetentionRate:N1}%";
+                RepeatClientsText.Text = clientStats.RepeatClients.ToString();
+
+                // Топ-5 услуг за период
+                var allTopServices = periodReports
+                    .SelectMany(r => r.TopServices)
+                    .GroupBy(s => s.ServiceName)
+                    .Select(g => new ServiceAnalytics
+                    {
+                        ServiceName = g.Key,
+                        Count = g.Sum(s => s.Count),
+                        TotalRevenue = g.Sum(s => s.TotalRevenue)
+                    })
+                    .OrderByDescending(s => s.Count)
+                    .ThenByDescending(s => s.TotalRevenue)
+                    .Take(5)
+                    .ToList();
+
+                TopServicesList.ItemsSource = allTopServices;
 
                 // ГРАФИКИ LiveCharts 
                 RevenueSeries = new SeriesCollection {
