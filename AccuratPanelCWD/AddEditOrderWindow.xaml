@@ -613,8 +613,6 @@
                                                 Content="Добавить" 
                                                 Click="AddExpenseButton_Click" 
                                                 Style="{StaticResource SuccessBtn}"
-                                                Width="120" 
-                                                Height="40"
                                                 Margin="0,0,8,0"/>
                                     </Grid>
                                     <Grid Margin="0,8,0,0">

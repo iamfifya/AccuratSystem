@@ -100,9 +100,7 @@
                     Content="Далее ➡️" 
                     Click="ContinueToEmployees_Click" 
                     Style="{StaticResource SuccessBtn}"
-                    Width="250"
                     Margin="0,35,0,0" 
-                    FontSize="16"
                     IsEnabled="False"/>
         </StackPanel>
 
@@ -222,12 +220,10 @@
                     Click="StartShiftButton_Click" 
                     Style="{StaticResource SuccessBtn}"
                     Margin="0,0,10,0"
-                    FontSize="14"
                     Visibility="Collapsed"/>
             <Button Content="✖ Отмена" 
                     Click="CloseButton_Click" 
-                    Style="{StaticResource DangerBtn}"
-                    FontSize="14"/>
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>

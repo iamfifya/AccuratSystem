@@ -146,12 +146,10 @@
                                     <Button Content="Сохранить" 
                                             Click="SaveCategory_Click" 
                                             Style="{StaticResource SuccessBtn}"
-                                            Height="40" 
                                             Margin="0,5,0,0"/>
                                     <Button Content="Удалить" 
                                             Click="DeleteCategory_Click" 
                                             Style="{StaticResource DangerBtn}"
-                                            Height="40" 
                                             Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -201,12 +199,10 @@
                                     <Button Content="Сохранить" 
                                             Click="SavePayment_Click" 
                                             Style="{StaticResource SuccessBtn}"
-                                            Height="40" 
                                             Margin="0,5,0,0"/>
                                     <Button Content="Удалить" 
                                             Click="DeletePayment_Click" 
                                             Style="{StaticResource DangerBtn}"
-                                            Height="40" 
                                             Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -246,12 +242,10 @@
                                     <Button Content="Сохранить" 
                                             Click="SaveRole_Click" 
                                             Style="{StaticResource SuccessBtn}"
-                                            Height="40" 
                                             Margin="0,5,0,0"/>
                                     <Button Content="Удалить" 
                                             Click="DeleteRole_Click" 
                                             Style="{StaticResource DangerBtn}"
-                                            Height="40" 
                                             Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -299,9 +293,7 @@
 
                                 <Button Content="Сохранить все настройки" 
                                         Click="SaveSettings_Click" 
-                                        Style="{StaticResource SuccessBtn}"
-                                        Height="50" 
-                                        FontSize="16"/>
+                                        Style="{StaticResource SuccessBtn}"/>
                             </StackPanel>
                         </Border>
                     </TabItem>
@@ -312,9 +304,6 @@
                         Content="✖ Закрыть" 
                         Click="CloseButton_Click" 
                         Style="{StaticResource DangerBtn}"
-                        Width="200" 
-                        Height="45" 
-                        FontSize="14"
                         HorizontalAlignment="Center" 
                         Margin="0,20,0,0"/>
             </Grid>

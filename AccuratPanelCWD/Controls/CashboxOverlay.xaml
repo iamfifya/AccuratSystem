@@ -130,7 +130,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Button Content="🧮 X-Отчет" Click="XReportButton_Click"
-                Style="{StaticResource PrimaryBtn}" Width="140" Height="40" Margin="0,0,15,0"/>
+                                Style="{StaticResource PrimaryBtn}" Margin="0,0,15,0"/>
                         <TextBlock x:Name="ReconciliationStatusText" Grid.Column="1"
                    Text="⚠️ Касса не пересчитана" FontSize="13" FontWeight="SemiBold"
                    Foreground="{DynamicResource AccentOrange}"
@@ -245,7 +245,7 @@
                                      AcceptsReturn="True" Padding="12,10" Margin="0,0,0,25" FontSize="13"/>
 
                             <Button Content="Провести операцию" Click="AddTransaction_Click" 
-                                    Style="{StaticResource SuccessBtn}" FontSize="15"/>
+                                    Style="{StaticResource SuccessBtn}"/>
                         </StackPanel>
                     </Border>
                 </Grid>

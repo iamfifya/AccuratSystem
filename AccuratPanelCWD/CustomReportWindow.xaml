@@ -152,8 +152,7 @@
                 <Button Content="🚀 Сформировать"
                         Click="GenerateReportButton_Click"
                         Style="{StaticResource PrimaryBtn}"
-                        Margin="30,0,0,0"
-                        FontSize="14"/>
+                        Margin="30,0,0,0"/>
             </StackPanel>
         </Border>
 

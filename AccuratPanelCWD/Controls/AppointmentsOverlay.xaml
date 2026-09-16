@@ -231,8 +231,7 @@
                             Margin="0,20,0,0">
                     <Button Content="✖ Закрыть" 
                             Click="CloseButton_Click" 
-                            Style="{StaticResource DangerBtn}"
-                            FontSize="14"/>
+                            Style="{StaticResource DangerBtn}"/>
                 </StackPanel>
             </Grid>
         </Border>

@@ -282,9 +282,6 @@
                         Content="✖ Вернуться в терминал" 
                         Click="CloseButton_Click" 
                         Style="{StaticResource DangerBtn}"
-                        Width="280" 
-                        Height="45" 
-                        FontSize="14"
                         HorizontalAlignment="Center" 
                         Margin="0,20,0,0"/>
             </Grid>

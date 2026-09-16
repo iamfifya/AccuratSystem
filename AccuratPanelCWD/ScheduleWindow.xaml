@@ -77,10 +77,6 @@
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                 <Button Content="◀" 
                         Click="PrevMonth_Click" 
-                        Width="40" 
-                        Height="40" 
-                        FontSize="16" 
-                        FontWeight="Bold" 
                         Style="{StaticResource PrimaryBtn}"/>
                 <Border Background="{DynamicResource BgCard}" 
                         BorderBrush="{DynamicResource BorderColor}" 
@@ -100,10 +96,6 @@
                 </Border>
                 <Button Content="▶" 
                         Click="NextMonth_Click" 
-                        Width="40" 
-                        Height="40" 
-                        FontSize="16" 
-                        FontWeight="Bold" 
                         Style="{StaticResource PrimaryBtn}"/>
             </StackPanel>
 

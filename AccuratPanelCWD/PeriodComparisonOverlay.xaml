@@ -100,8 +100,9 @@
                     <Button Content="✖"
                             Click="CloseButton_Click"
                             HorizontalAlignment="Right"
+                            Background="Transparent"
                             Style="{StaticResource DangerBtn}"
-                            Width="35" Height="35"
+                            Width="40" Height="40"
                             FontSize="14"
                             Padding="0"/>
                 </Grid>

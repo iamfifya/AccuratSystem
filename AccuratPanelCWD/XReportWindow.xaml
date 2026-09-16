@@ -72,9 +72,9 @@
         <!-- Кнопки -->
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
             <Button Content="✅ Зафиксировать пересчёт" Click="Save_Click"
-                    Style="{StaticResource SuccessBtn}" Width="200"/>
+                    Style="{StaticResource SuccessBtn}"/>
             <Button Content="✖ Отмена" Click="Close_Click"
-                    Style="{StaticResource DangerBtn}" Width="110"/>
+                    Style="{StaticResource DangerBtn}"/>
         </StackPanel>
     </Grid>
 </Window>
