@@ -1,0 +1,798 @@
+﻿<UserControl x:Class="AccuratPanelCWD.PeriodComparisonOverlay"
+             x:Name="RootOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AccuratPanelCWD"
+             xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf">
+
+    <UserControl.Resources>
+
+        <local:PercentConverter x:Key="PercentConverter"/>
+
+        <!-- Шаблон карточки сравнения -->
+        <Style x:Key="ComparisonCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource BgCard}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="15"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+
+        <!-- Шаблон строки сравнения (для таблиц) -->
+        <DataTemplate x:Key="ServiceComparisonTemplate">
+            <Border Background="{DynamicResource BgMain}" CornerRadius="6" Padding="10" Margin="0,0,0,6"
+                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="80"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding ServiceName}"
+                               FontSize="13" Foreground="{DynamicResource TextMain}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding PreviousCount, StringFormat={}{0} шт.}"
+                               FontSize="13" Foreground="{DynamicResource TextMuted}"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding CurrentCount, StringFormat={}{0} шт.}"
+                               FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="{Binding CountChangePercent, StringFormat={}{0:+0.0;-0.0;0}%}"
+                               FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextMain}"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ExpenseComparisonTemplate">
+            <Border Background="{DynamicResource BgMain}" CornerRadius="6" Padding="10" Margin="0,0,0,6"
+                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="80"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Category}"
+                               FontSize="13" Foreground="{DynamicResource TextMain}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding PreviousAmount, StringFormat={}{0:N0} ₽}"
+                               FontSize="13" Foreground="{DynamicResource TextMuted}"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding CurrentAmount, StringFormat={}{0:N0} ₽}"
+                               FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentRed}"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="{Binding AmountChangePercent, StringFormat={}{0:+0.0;-0.0;0}%}"
+                               FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextMain}"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!-- Клик по фону закрывает оверлей -->
+    <Grid MouseLeftButtonDown="OverlayBackground_Click" Background="#80000000">
+        <!-- Центрированная карточка оверлея -->
+            <Border Background="{DynamicResource BgMain}"
+                    CornerRadius="12"
+                    Width="{Binding ActualWidth, ElementName=RootOverlay, Converter={StaticResource PercentConverter}, ConverterParameter=0.95}"
+                    MaxHeight="{Binding ActualHeight, ElementName=RootOverlay, Converter={StaticResource PercentConverter}, ConverterParameter=0.95}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    MouseLeftButtonDown="OverlayCard_Click">
+
+                <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок -->
+                <Grid Grid.Row="0" Margin="20,15">
+                    <TextBlock Text="⚖️ Сравнение периодов"
+                               FontSize="22" FontWeight="Bold"
+                               Foreground="{DynamicResource TextMain}"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"/>
+                    <Button Content="✖"
+                            Click="CloseButton_Click"
+                            HorizontalAlignment="Right"
+                            Style="{StaticResource DangerBtn}"
+                            Width="35" Height="35"
+                            FontSize="14"
+                            Padding="0"/>
+                </Grid>
+
+                <!-- Контент -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="20,0">
+                    <StackPanel>
+
+                        <!-- Панель выбора периодов -->
+                        <Border Style="{StaticResource ComparisonCard}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Текущий период -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="📅 Текущий период"
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource AccentBlue}"
+                                                   Margin="0,0,0,5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <local:CustomDatePicker x:Name="CurrentStartDatePicker" Height="40" Width="160"/>
+                                            <TextBlock Text="—" VerticalAlignment="Center" Margin="8,0"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                            <local:CustomDatePicker x:Name="CurrentEndDatePicker" Height="40" Width="160"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- VS -->
+                                    <TextBlock Grid.Column="1" Text="VS"
+                                               FontSize="18" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center"
+                                               Margin="15,0"/>
+
+                                    <!-- Прошлый период -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="📅 Прошлый период"
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   Margin="0,0,0,5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <local:CustomDatePicker x:Name="PreviousStartDatePicker" Height="40" Width="160"/>
+                                            <TextBlock Text="—" VerticalAlignment="Center" Margin="8,0"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                            <local:CustomDatePicker x:Name="PreviousEndDatePicker" Height="40" Width="160"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Кнопка Сравнить -->
+                                    <Button Grid.Column="3" x:Name="CompareButton"
+                                            Content="🚀 Сравнить"
+                                            Click="CompareButton_Click"
+                                            Style="{StaticResource PrimaryBtn}"
+                                            Margin="20,0,0,0"
+                                            VerticalAlignment="Bottom"/>
+                                </Grid>
+
+                                <!-- Пресеты -->
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                    <TextBlock Text="Пресеты:" FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <Button Content="Неделя" Click="Preset_Click" Tag="Week"
+                                            Style="{StaticResource PrimaryBtn}" Margin="0,0,5,0" Padding="10,5"/>
+                                    <Button Content="Месяц" Click="Preset_Click" Tag="Month"
+                                            Style="{StaticResource PrimaryBtn}" Margin="0,0,5,0" Padding="10,5"/>
+                                    <Button Content="Квартал" Click="Preset_Click" Tag="Quarter"
+                                            Style="{StaticResource PrimaryBtn}" Margin="0,0,5,0" Padding="10,5"/>
+                                    <Button Content="Полгода" Click="Preset_Click" Tag="HalfYear"
+                                            Style="{StaticResource PrimaryBtn}" Margin="0,0,5,0" Padding="10,5"/>
+                                    <Button Content="Год" Click="Preset_Click" Tag="Year"
+                                            Style="{StaticResource PrimaryBtn}" Padding="10,5"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Предупреждение -->
+                        <TextBlock x:Name="WarningText"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentOrange}"
+                                   Margin="5,10,5,0"
+                                   TextWrapping="Wrap"
+                                   Visibility="Collapsed"/>
+
+                        <!-- Скелетон загрузки -->
+                        <StackPanel x:Name="LoadingSkeleton" Visibility="Collapsed" Margin="0,20,0,0">
+                            <Border Background="{DynamicResource BgCard}" CornerRadius="6" Height="80" Margin="5"/>
+                            <Border Background="{DynamicResource BgCard}" CornerRadius="6" Height="200" Margin="5"/>
+                            <Border Background="{DynamicResource BgCard}" CornerRadius="6" Height="200" Margin="5"/>
+                            <Border Background="{DynamicResource BgCard}" CornerRadius="6" Height="150" Margin="5"/>
+                        </StackPanel>
+
+                        <!-- Результат сравнения -->
+                        <StackPanel x:Name="ComparisonResult" Visibility="Collapsed">
+
+                            <!-- KPI карточки -->
+                            <TextBlock Text="📊 Ключевые показатели"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,20,0,10"/>
+                            <UniformGrid Columns="3" Margin="0,0,0,15">
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="💰 Выручка" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="RevenueCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="RevenuePreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="RevenueDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="💎 Чистая прибыль" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="ProfitCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentGreen}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="ProfitPreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="ProfitDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="🚗 Заказы" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="CarsCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMain}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="CarsPreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="CarsDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="💵 Средний чек" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="AvgCheckCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMain}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="AvgCheckPreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="AvgCheckDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="🛒 Расходы" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="ExpensesCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentRed}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="ExpensesPreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="ExpensesDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="👥 Новые клиенты" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="NewClientsCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="NewClientsPreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="NewClientsDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+
+                            <!-- Графики: Выручка по дням -->
+                            <TextBlock Text="📈 Динамика выручки"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,10,0,10"/>
+                            <Grid Height="250" Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource ComparisonCard}" Margin="5,0,5,0">
+                                    <Grid>
+                                        <TextBlock Text="По дням" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding RevenueByDaySeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding CurrentDayLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis LabelFormatter="{Binding YFormatter}"/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource ComparisonCard}" Margin="5,0,0,0">
+                                    <Grid>
+                                        <TextBlock Text="По процентам (нормализация)" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding RevenueByPercentSeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding PercentDayLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis LabelFormatter="{Binding PercentFormatter}"/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Графики: Заказы по дням -->
+                            <TextBlock Text="🚗 Заказы по дням"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+                            <Grid Height="250" Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource ComparisonCard}" Margin="5,0,5,0">
+                                    <Grid>
+                                        <TextBlock Text="По дням" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding CarsByDaySeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding CurrentDayLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource ComparisonCard}" Margin="5,0,0,0">
+                                    <Grid>
+                                        <TextBlock Text="По процентам" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding CarsByPercentSeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding PercentDayLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis LabelFormatter="{Binding PercentFormatter}"/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Графики: Средний чек по дням -->
+                            <TextBlock Text="💵 Средний чек по дням"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+                            <Grid Height="250" Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource ComparisonCard}" Margin="5,0,5,0">
+                                    <Grid>
+                                        <TextBlock Text="По дням" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding AvgCheckByDaySeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding CurrentDayLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis LabelFormatter="{Binding YFormatter}"/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource ComparisonCard}" Margin="5,0,0,0">
+                                    <Grid>
+                                        <TextBlock Text="По процентам" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding AvgCheckByPercentSeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding PercentDayLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis LabelFormatter="{Binding PercentFormatter}"/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Загруженность по часам -->
+                            <TextBlock Text="⏰ Загруженность по часам"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+                            <Grid Height="250" Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource ComparisonCard}" Margin="5,0,5,0">
+                                    <Grid>
+                                        <TextBlock Text="По часам (абсолют)" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding HourlyLoadSeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding HourLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource ComparisonCard}" Margin="5,0,0,0">
+                                    <Grid>
+                                        <TextBlock Text="По процентам" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,5"/>
+                                        <lvc:CartesianChart Series="{Binding HourlyLoadPercentSeries}" Margin="0,25,0,0"
+                                                            LegendLocation="Top">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Labels="{Binding HourLabels}" Foreground="{DynamicResource TextMain}">
+                                                    <lvc:Axis.Separator>
+                                                        <lvc:Separator Step="2"/>
+                                                    </lvc:Axis.Separator>
+                                                </lvc:Axis>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis LabelFormatter="{Binding PercentFormatter}"/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Департаменты -->
+                            <TextBlock Text="🏢 Департаменты"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource ComparisonCard}" Margin="5,0,5,0">
+                                    <StackPanel>
+                                        <TextBlock Text="🧽 МОЙКА" FontSize="15" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextMain}" Margin="0,0,0,10"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Выручка" FontSize="13" Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Grid.Column="1" x:Name="WashRevenuePrevText" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="10,0"/>
+                                            <TextBlock Grid.Column="2" x:Name="WashRevenueCurText" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Grid.Column="3" x:Name="WashRevenueDeltaText" FontSize="13" FontWeight="Bold" Margin="10,0,0,0"/>
+                                        </Grid>
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Заказы" FontSize="13" Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Grid.Column="1" x:Name="WashCarsPrevText" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="10,0"/>
+                                            <TextBlock Grid.Column="2" x:Name="WashCarsCurText" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Grid.Column="3" x:Name="WashCarsDeltaText" FontSize="13" FontWeight="Bold" Margin="10,0,0,0"/>
+                                        </Grid>
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Прибыль" FontSize="13" Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Grid.Column="1" x:Name="WashProfitPrevText" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="10,0"/>
+                                            <TextBlock Grid.Column="2" x:Name="WashProfitCurText" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentGreen}"/>
+                                            <TextBlock Grid.Column="3" x:Name="WashProfitDeltaText" FontSize="13" FontWeight="Bold" Margin="10,0,0,0"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource ComparisonCard}" Margin="5,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="🔧 АВТОСЕРВИС" FontSize="15" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextMain}" Margin="0,0,0,10"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Выручка" FontSize="13" Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Grid.Column="1" x:Name="ServiceRevenuePrevText" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="10,0"/>
+                                            <TextBlock Grid.Column="2" x:Name="ServiceRevenueCurText" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Grid.Column="3" x:Name="ServiceRevenueDeltaText" FontSize="13" FontWeight="Bold" Margin="10,0,0,0"/>
+                                        </Grid>
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Заказы" FontSize="13" Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Grid.Column="1" x:Name="ServiceCarsPrevText" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="10,0"/>
+                                            <TextBlock Grid.Column="2" x:Name="ServiceCarsCurText" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Grid.Column="3" x:Name="ServiceCarsDeltaText" FontSize="13" FontWeight="Bold" Margin="10,0,0,0"/>
+                                        </Grid>
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Прибыль" FontSize="13" Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Grid.Column="1" x:Name="ServiceProfitPrevText" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="10,0"/>
+                                            <TextBlock Grid.Column="2" x:Name="ServiceProfitCurText" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentGreen}"/>
+                                            <TextBlock Grid.Column="3" x:Name="ServiceProfitDeltaText" FontSize="13" FontWeight="Bold" Margin="10,0,0,0"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Топ-5 услуг -->
+                            <TextBlock Text="🏆 Топ-5 услуг (сравнение)"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+                            <Border Style="{StaticResource ComparisonCard}" Margin="5,0,5,20">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Услуга" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMuted}"/>
+                                        <TextBlock Grid.Column="1" Text="Прошлый" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="Текущий" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="Δ%" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                    <ItemsControl x:Name="ServicesComparisonList" ItemTemplate="{StaticResource ServiceComparisonTemplate}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Расходы по категориям -->
+                            <TextBlock Text="🛒 Расходы по категориям (сравнение)"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+                            <Border Style="{StaticResource ComparisonCard}" Margin="5,0,5,20">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Категория" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMuted}"/>
+                                        <TextBlock Grid.Column="1" Text="Прошлый" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="Текущий" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentRed}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="Δ%" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                    <ItemsControl x:Name="ExpensesComparisonList" ItemTemplate="{StaticResource ExpenseComparisonTemplate}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Клиенты -->
+                            <TextBlock Text="👥 Клиенты (сравнение)"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+                            <Border Style="{StaticResource ComparisonCard}" Margin="5,0,5,20">
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                        <TextBlock Text="Уникальные" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                            <TextBlock x:Name="ClientsUniqueCurText" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="ClientsUniquePrevText" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                        <TextBlock Text="Новые" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                            <TextBlock x:Name="ClientsNewCurText" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentGreen}"/>
+                                            <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="ClientsNewPrevText" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="Повторные" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                            <TextBlock x:Name="ClientsRepeatCurText" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="ClientsRepeatPrevText" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                                        <TextBlock Text="Возвращаемость" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                            <TextBlock x:Name="ClientsRetentionCurText" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentGreen}"/>
+                                            <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="ClientsRetentionPrevText" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ФОТ сотрудников -->
+                            <TextBlock Text="👥 ФОТ сотрудников (сравнение)"
+                                       FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}"
+                                       Margin="5,0,0,10"/>
+
+                            <!-- Агрегаты ФОТ -->
+                            <Border Style="{StaticResource ComparisonCard}" Margin="5,0,5,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                        <TextBlock Text="Общий ФОТ" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                            <TextBlock x:Name="FotTotalCurText" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}"/>
+                                            <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="FotTotalPrevText" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="FotTotalDeltaText" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                        <TextBlock Text="Средний на сотрудника" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                            <TextBlock x:Name="FotAvgCurText" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMain}"/>
+                                            <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="FotAvgPrevText" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="Сотрудников" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                                            <TextBlock x:Name="FotCountCurText" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMain}"/>
+                                            <TextBlock Text=" / " FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="FotCountPrevText" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Таблица по сотрудникам -->
+                            <Border Style="{StaticResource ComparisonCard}" Margin="5,0,5,20">
+                                <ListView x:Name="FotEmployeesList"
+                                          MinHeight="150" MaxHeight="300"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          Foreground="{DynamicResource TextMain}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Header="Сотрудник" Width="200" DisplayMemberBinding="{Binding EmployeeName}"/>
+                                            <GridViewColumn Header="Прошлый" Width="100">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding PreviousEarnings, StringFormat={}{0:N0} ₽}"
+                                                                   Foreground="{DynamicResource TextMuted}"/>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Header="Текущий" Width="100">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding CurrentEarnings, StringFormat={}{0:N0} ₽}"
+                                                                   Foreground="{DynamicResource AccentBlue}" FontWeight="SemiBold"/>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Header="Δ%" Width="80">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding EarningsChangePercent, StringFormat={}{0:+0.0;-0.0;0}%}"
+                                                                   FontWeight="Bold"/>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Header="Заказы (тек.)" Width="90" DisplayMemberBinding="{Binding CurrentCars}"/>
+                                            <GridViewColumn Header="Авансы (тек.)" Width="100">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding CurrentAdvances, StringFormat={}{0:N0} ₽}"
+                                                                   Foreground="{DynamicResource AccentOrange}"/>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </Border>
+
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Нижние кнопки -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,20">
+                    <Button Content="📄 В Excel" x:Name="ExportButton"
+                            Click="ExportButton_Click"
+                            Style="{StaticResource SuccessBtn}"
+                            Margin="0,0,10,0"
+                            IsEnabled="False"/>
+                    <Button Content="✖ Закрыть"
+                            Click="CloseButton_Click"
+                            Style="{StaticResource DangerBtn}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

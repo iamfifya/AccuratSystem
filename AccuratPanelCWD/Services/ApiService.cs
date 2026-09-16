@@ -572,6 +572,28 @@ namespace AccuratPanelCWD.Services
             }
             catch { return new ReconciliationSummaryResponse(); }
         }
+
+        /// <summary>
+        /// Получает полное сравнение двух периодов
+        /// </summary>
+        public async Task<PeriodComparisonFull> GetPeriodComparisonFullAsync(
+            int branchId,
+            DateTime currentStart, DateTime currentEnd,
+            DateTime previousStart, DateTime previousEnd)
+        {
+            var url = $"Reports/compare-periods-full" +
+                      $"?branchId={branchId}" +
+                      $"&currentStart={currentStart:yyyy-MM-dd}" +
+                      $"&currentEnd={currentEnd:yyyy-MM-dd}" +
+                      $"&previousStart={previousStart:yyyy-MM-dd}" +
+                      $"&previousEnd={previousEnd:yyyy-MM-dd}";
+
+            var response = await _http.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<PeriodComparisonFull>(json);
+        }
+
         #endregion
 
         #region ГРАФИКИ (SCHEDULES) И КОНВЕРТАЦИЯ

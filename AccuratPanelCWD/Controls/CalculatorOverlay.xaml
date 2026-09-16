@@ -351,9 +351,6 @@
                         Content="✖ Закрыть" 
                         Click="CloseButton_Click" 
                         Style="{StaticResource DangerBtn}"
-                        Width="200" 
-                        Height="50" 
-                        FontSize="16"
                         HorizontalAlignment="Center" />
             </Grid>
         </Border>

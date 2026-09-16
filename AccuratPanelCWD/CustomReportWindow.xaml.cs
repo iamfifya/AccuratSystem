@@ -1,5 +1,6 @@
 using AccuratPanelCWD.Models;
 using AccuratPanelCWD.Services;
+using AccuratSystem.Contracts.Enums;
 using AccuratSystem.Contracts.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
@@ -13,7 +14,6 @@ using System.Windows;
 using System.Windows.Media;
 using ContractsEmployeeReport = AccuratSystem.Contracts.Models.EmployeeReport;
 using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
-// Алиасы для предотвращения конфликтов
 using WpfUser = AccuratPanelCWD.Models.User;
 
 namespace AccuratPanelCWD
@@ -23,18 +23,17 @@ namespace AccuratPanelCWD
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly ApiService _apiService;
         private readonly WpfUser _currentUser;
-
         public Func<double, string> YFormatter { get; } = value => value.ToString("#,0");
 
-        // Добавляем поле для хранения сформированного отчета
         private AccuratSystem.Contracts.Models.CustomPeriodReport _lastGeneratedReport;
-
         public bool IsDirector => UserPermissions.IsSuperUser(_currentUser);
 
-        // Данные для графиков
         public SeriesCollection RevenueSeries { get; set; }
         public SeriesCollection ShareSeries { get; set; }
+        public SeriesCollection HourlyLoadSeries { get; set; }
+        public SeriesCollection ExpenseCategoriesSeries { get; set; }
         public string[] Labels { get; set; }
+        public string[] HourLabels { get; set; }
 
         private ObservableCollection<BranchTabItem> _branchTabs = new ObservableCollection<BranchTabItem>();
         public ObservableCollection<BranchTabItem> BranchTabs
@@ -51,7 +50,6 @@ namespace AccuratPanelCWD
             {
                 _selectedBranchTab = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedBranchTab)));
-                // Скрываем контент при смене филиала, чтобы пользователь нажал "Сформировать" заново
                 ReportContent.Visibility = Visibility.Collapsed;
             }
         }
@@ -63,7 +61,6 @@ namespace AccuratPanelCWD
             _currentUser = user;
             DataContext = this;
 
-            // Дефолтные даты: за последние 7 дней
             StartDatePicker.SelectedDate = DateTime.Now.AddDays(-7);
             EndDatePicker.SelectedDate = DateTime.Now;
 
@@ -76,15 +73,9 @@ namespace AccuratPanelCWD
             {
                 var branches = await _apiService.GetBranchesAsync();
                 BranchTabs.Clear();
-
-                if (IsDirector)
-                    BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Вся сеть" });
-
-                foreach (var b in branches)
-                    BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
-
-                if (BranchTabs.Any())
-                    SelectedBranchTab = BranchTabs.First();
+                if (IsDirector) BranchTabs.Add(new BranchTabItem { BranchId = 0, BranchName = "🌐 Вся сеть" });
+                foreach (var b in branches) BranchTabs.Add(new BranchTabItem { BranchId = b.Id, BranchName = b.Name });
+                if (BranchTabs.Any()) SelectedBranchTab = BranchTabs.First();
             }
             catch (Exception ex) { MessageBox.Show($"Ошибка загрузки филиалов: {ex.Message}"); }
         }
@@ -107,7 +98,6 @@ namespace AccuratPanelCWD
                     return;
                 }
 
-                // === НОВОЕ: Загружаем сводку по X-отчетам за период ===
                 var reconSummary = await _apiService.GetReconciliationsSummaryAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
                 if (reconSummary.TotalShifts > 0)
                 {
@@ -133,19 +123,13 @@ namespace AccuratPanelCWD
 
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
                 decimal netProfit = periodReports.Sum(r => r.NetProfit);
+                decimal avgCheck = clientStats.UniqueClients > 0 ? totalRev / periodReports.Sum(r => r.TotalCars) : 0;
 
-                // Средний чек за период
-                decimal avgCheck = clientStats.UniqueClients > 0
-                    ? totalRev / periodReports.Sum(r => r.TotalCars)
-                    : 0;
-
-                // Заполнение UI
                 TotalRevenueText.Text = $"{totalRev:N0} ₽";
                 NetProfitText.Text = $"{netProfit:N0} ₽";
                 TotalCarsText.Text = periodReports.Sum(r => r.TotalCars).ToString();
                 NewClientsText.Text = clientStats.NewClients.ToString();
 
-                // Секции департаментов
                 WashRevenueText.Text = $"Выручка: {periodReports.Sum(r => r.WashTotalRevenue):N0} ₽";
                 WashCarsText.Text = $"Заказов: {periodReports.Sum(r => r.WashTotalCars)}";
                 WashProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.WashNetProfit):N0} ₽";
@@ -156,23 +140,17 @@ namespace AccuratPanelCWD
                 ServiceProfitText.Text = $"Прибыль: {periodReports.Sum(r => r.ServiceNetProfit):N0} ₽";
                 ServiceProfitText.Foreground = TryFindResource("ReportServiceProfit") as Brush ?? new SolidColorBrush(Color.FromRgb(26, 82, 118));
 
-                // ЗАПОЛНЯЕМ СПОСОБЫ ОПЛАТЫ
                 CashTotalText.Text = $"{periodReports.Sum(r => r.CashAmount):N0} ₽ ({periodReports.Sum(r => r.CashCount)} шт.)";
                 CardTotalText.Text = $"{periodReports.Sum(r => r.CardAmount):N0} ₽ ({periodReports.Sum(r => r.CardCount)} шт.)";
                 TransferTotalText.Text = $"{periodReports.Sum(r => r.TransferAmount):N0} ₽ ({periodReports.Sum(r => r.TransferCount)} шт.)";
                 QrTotalText.Text = $"{periodReports.Sum(r => r.QrAmount):N0} ₽ ({periodReports.Sum(r => r.QrCount)} шт.)";
 
-                // Заполняем быстрые метрики
                 AvgCheckText.Text = $"{avgCheck:N0} ₽";
-
-                // Сумма скидок за период
                 decimal totalDiscounts = periodReports.Sum(r => r.TotalDiscountAmount);
                 DiscountsText.Text = $"{totalDiscounts:N0} ₽";
-
                 RetentionText.Text = $"{clientStats.RetentionRate:N1}%";
                 RepeatClientsText.Text = clientStats.RepeatClients.ToString();
 
-                // Топ-5 услуг за период
                 var allTopServices = periodReports
                     .SelectMany(r => r.TopServices)
                     .GroupBy(s => s.ServiceName)
@@ -209,6 +187,104 @@ namespace AccuratPanelCWD
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShareSeries)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Labels)));
 
+                var allExpenses = periodReports
+                    .SelectMany(r => r.ExpensesByCategory)
+                    .GroupBy(e => e.Category)
+                    .Select(g => new ExpenseCategoryReport
+                    {
+                        Category = g.Key,
+                        TotalAmount = g.Sum(e => e.TotalAmount),
+                        Count = g.Sum(e => e.Count),
+                        Percentage = periodReports.Sum(r => r.TotalExpenses) > 0
+                            ? Math.Round(g.Sum(e => e.TotalAmount) / periodReports.Sum(r => r.TotalExpenses) * 100, 1)
+                            : 0
+                    })
+                    .OrderByDescending(e => e.TotalAmount)
+                    .ToList();
+
+                ExpensesList.ItemsSource = allExpenses;
+                TotalExpensesText.Text = $"{periodReports.Sum(r => r.TotalExpenses):N0} ₽";
+
+                var hourlyLoad = Enumerable.Range(0, 24)
+                    .Select(hour => new HourlyLoad
+                    {
+                        Hour = hour,
+                        HourLabel = $"{hour:D2}:00",
+                        OrdersCount = periodReports.Sum(r => r.HourlyLoad.FirstOrDefault(h => h.Hour == hour)?.OrdersCount ?? 0),
+                        Revenue = periodReports.Sum(r => r.HourlyLoad.FirstOrDefault(h => h.Hour == hour)?.Revenue ?? 0)
+                    })
+                    .ToList();
+
+                HourlyLoadList.ItemsSource = hourlyLoad;
+
+                var expectedCash = periodReports.Sum(r => r.ExpectedCashBalance);
+                var actualCash = periodReports.Sum(r => r.ActualCashBalance);
+                var cashDifference = periodReports.Sum(r => r.CashBalanceDifference);
+
+                ExpectedCashText.Text = $"{expectedCash:N0} ₽";
+                ActualCashText.Text = $"{actualCash:N0} ₽";
+                CashDifferenceText.Text = $"{cashDifference:+0;-0;0} ₽";
+                CashDifferenceText.Foreground = TryFindResource(cashDifference == 0 ? "AccentGreen" : "AccentRed") as Brush
+                    ?? new SolidColorBrush(cashDifference == 0 ? Colors.Green : Colors.Red);
+
+                RevenueSeries = new SeriesCollection
+                {
+                    new LineSeries
+                    {
+                        Title = "Выручка",
+                        Values = new ChartValues<decimal>(periodReports.OrderBy(r => r.Date).Select(r => r.TotalRevenue)),
+                        PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 10
+                    }
+                };
+
+                ShareSeries = new SeriesCollection
+                {
+                    new PieSeries { Title = "Мойка", Values = new ChartValues<decimal> { periodReports.Sum(r => r.WashTotalRevenue) }, DataLabels = true },
+                    new PieSeries { Title = "Сервис", Values = new ChartValues<decimal> { periodReports.Sum(r => r.ServiceTotalRevenue) }, DataLabels = true }
+                };
+
+                HourlyLoadSeries = new SeriesCollection
+                {
+                    new ColumnSeries
+                    {
+                        Title = "Заказы",
+                        Values = new ChartValues<int>(hourlyLoad.Select(h => h.OrdersCount)),
+                        DataLabels = true,
+                        LabelPoint = p => p.Instance.ToString()
+                    }
+                };
+                HourLabels = hourlyLoad.Select(h => h.HourLabel).ToArray();
+
+                ExpenseCategoriesSeries = new SeriesCollection();
+                var colors = new[] {
+                    TryFindResource("AccentRed") as Brush ?? new SolidColorBrush(Color.FromRgb(231, 76, 60)),
+                    TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Color.FromRgb(230, 126, 34)),
+                    TryFindResource("AccentYellow") as Brush ?? new SolidColorBrush(Color.FromRgb(241, 196, 15)),
+                    TryFindResource("AccentGreen") as Brush ?? new SolidColorBrush(Color.FromRgb(39, 174, 96)),
+                    TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush(Color.FromRgb(52, 152, 219))
+                };
+
+                for (int i = 0; i < Math.Min(allExpenses.Count, 5); i++)
+                {
+                    var expense = allExpenses[i];
+                    ExpenseCategoriesSeries.Add(new PieSeries
+                    {
+                        Title = expense.Category,
+                        Values = new ChartValues<decimal> { expense.TotalAmount },
+                        DataLabels = true,
+                        Fill = colors[i % colors.Length]
+                    });
+                }
+
+                Labels = periodReports.OrderBy(r => r.Date).Select(r => r.Date.ToString("dd.MM")).ToArray();
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RevenueSeries)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShareSeries)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HourlyLoadSeries)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ExpenseCategoriesSeries)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Labels)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HourLabels)));
+
                 _lastGeneratedReport = new AccuratSystem.Contracts.Models.CustomPeriodReport
                 {
                     StartDate = start,
@@ -227,6 +303,8 @@ namespace AccuratPanelCWD
                     TransferAmount = periodReports.Sum(r => r.TransferAmount),
                     QrCount = periodReports.Sum(r => r.QrCount),
                     QrAmount = periodReports.Sum(r => r.QrAmount),
+                    ExpensesByCategory = allExpenses,
+                    HourlyLoad = hourlyLoad,
                     DailyReports = periodReports.Select(r => new AccuratSystem.Contracts.Models.DailyReportSummary
                     {
                         Date = r.Date,
@@ -248,11 +326,7 @@ namespace AccuratPanelCWD
 
                 ApplyThemeToCharts();
                 ReportContent.Visibility = Visibility.Visible;
-
-                // Отдаем данные в таблицу:
                 EmployeesSalaryList.ItemsSource = _lastGeneratedReport.EmployeesWork;
-
-                ReportContent.Visibility = Visibility.Visible;
             }
             catch (Exception ex) { MessageBox.Show(ex.Message); }
             finally { this.IsEnabled = true; }
@@ -260,7 +334,6 @@ namespace AccuratPanelCWD
 
         private void ApplyThemeToCharts()
         {
-            // Темизация линейного графика
             if (RevenueSeries != null && RevenueSeries.Count > 0)
             {
                 var lineSeries = RevenueSeries[0] as LineSeries;
@@ -273,14 +346,12 @@ namespace AccuratPanelCWD
                 }
             }
 
-            // Темизация круговой диаграммы
             if (ShareSeries != null)
             {
                 var colors = new[] {
-            TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush(Color.FromRgb(52, 152, 219)),
-            TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Color.FromRgb(230, 126, 34))
-        };
-
+                    TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush(Color.FromRgb(52, 152, 219)),
+                    TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Color.FromRgb(230, 126, 34))
+                };
                 for (int i = 0; i < ShareSeries.Count && i < colors.Length; i++)
                 {
                     var pieSeries = ShareSeries[i] as PieSeries;
@@ -291,8 +362,55 @@ namespace AccuratPanelCWD
                     }
                 }
             }
+
+            if (HourlyLoadSeries != null && HourlyLoadSeries.Count > 0)
+            {
+                var columnSeries = HourlyLoadSeries[0] as ColumnSeries;
+                if (columnSeries != null)
+                {
+                    var accentBlue = TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush(Color.FromRgb(52, 152, 219));
+                    columnSeries.Fill = accentBlue;
+                    columnSeries.Foreground = TryFindResource("TextMain") as Brush ?? Brushes.Black;
+                }
+            }
         }
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
+
+
+        // ═══════════════════════════════════════════════════════
+        //  СРАВНЕНИЕ ПЕРИОДОВ (ОВЕРЛЕЙ)
+        // ═══════════════════════════════════════════════════════
+
+        private PeriodComparisonOverlay _comparisonOverlay;
+
+        private void ComparePeriodsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Получаем текущие параметры из окна
+            DateTime curStart = StartDatePicker.SelectedDate ?? DateTime.Now.AddDays(-7);
+            DateTime curEnd = EndDatePicker.SelectedDate ?? DateTime.Now;
+            int branchId = SelectedBranchTab?.BranchId ?? 0;
+
+            // Создаём оверлей
+            _comparisonOverlay = new PeriodComparisonOverlay(branchId, curStart, curEnd);
+            _comparisonOverlay.Closed += OnComparisonOverlayClosed;
+
+            // Добавляем в контейнер
+            OverlayContainer.Children.Clear();
+            OverlayContainer.Children.Add(_comparisonOverlay);
+            OverlayContainer.Visibility = Visibility.Visible;
+        }
+
+        private void OnComparisonOverlayClosed()
+        {
+            if (_comparisonOverlay != null)
+            {
+                _comparisonOverlay.Closed -= OnComparisonOverlayClosed;
+                _comparisonOverlay = null;
+            }
+            OverlayContainer.Children.Clear();
+            OverlayContainer.Visibility = Visibility.Collapsed;
+        }
+
         private void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             if (_lastGeneratedReport == null)
