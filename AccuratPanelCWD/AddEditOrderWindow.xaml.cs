@@ -244,7 +244,7 @@ namespace AccuratPanelCWD
                     if (TimeSpan.TryParse(OrderTimeTextBox.Text, out var time))
                     {
                         DateTime localTime = OrderDatePicker.SelectedDate.Value.Date + time;
-                        _viewModel.CurrentOrder.Time = DateTime.SpecifyKind(localTime, DateTimeKind.Utc);
+                        _viewModel.CurrentOrder.Time = localTime;
                     }
                     else
                     {

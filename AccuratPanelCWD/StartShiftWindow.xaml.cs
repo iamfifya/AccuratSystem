@@ -193,7 +193,7 @@ namespace AccuratPanelCWD
                 var newShift = new Shift
                 {
                     BranchId = targetBranchId,
-                    Date = DateTime.SpecifyKind(SelectedDate.Date, DateTimeKind.Utc),
+                    Date = SelectedDate.Date,
                     EmployeeIds = selectedIds,
                     IsClosed = false,
                     Notes = ""

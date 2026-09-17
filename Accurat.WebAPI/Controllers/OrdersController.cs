@@ -1,11 +1,12 @@
-﻿using AccuratSystem.Contracts.Models;
-using AccuratSystem.Contracts.Enums;
-using AccuratSystem.Contracts.DTOs;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Accurat.WebAPI.Data;
+﻿using Accurat.WebAPI.Data;
 using Accurat.WebAPI.Hubs;
+using Accurat.WebAPI.Time;
+using AccuratSystem.Contracts.DTOs;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -107,8 +108,8 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
         {
-            DateTime start = startDate ?? DateTime.UtcNow.AddDays(-1);
-            DateTime end = endDate ?? DateTime.UtcNow.AddDays(30);
+            DateTime start = BusinessTime.ToInstantUtc(startDate ?? DateTime.UtcNow.AddDays(-1));
+            DateTime end = BusinessTime.ToInstantUtc(endDate ?? DateTime.UtcNow.AddDays(30));
 
             var query = _context.Orders.AsQueryable();
 
@@ -174,7 +175,6 @@ namespace Accurat.WebAPI.Controllers
 
                     if (hasConflict) return BadRequest(new { message = "Выбранное время в данном боксе уже занято" });
 
-                    order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
                     if (string.IsNullOrEmpty(order.Status)) order.Status = "В работе";
 
                     var branch = await _context.Branches.FindAsync(order.BranchId);
@@ -262,7 +262,7 @@ namespace Accurat.WebAPI.Controllers
                     order.OrderWashers.Clear();
                     order.OrderWashers.Add(new OrderWasher { OrderId = order.Id, UserId = washerId, SplitShare = 1.0m });
 
-                    _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistory
+                    _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistories
                     {
                         OrderId = order.Id,
                         Status = "В работе",
@@ -338,8 +338,6 @@ namespace Accurat.WebAPI.Controllers
                 return NoContent(); // Успешно сохранили только статус, выходим
             }
 
-            order.Time = DateTime.SpecifyKind(order.Time, DateTimeKind.Utc);
-
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -377,7 +375,7 @@ namespace Accurat.WebAPI.Controllers
                         .FirstOrDefaultAsync(h => h.OrderId == id && h.EndTime == null);
                     if (currentHistory != null) currentHistory.EndTime = DateTime.UtcNow;
 
-                    _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistory
+                    _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistories
                     {
                         OrderId = id,
                         Status = existingOrder.Status,
@@ -616,13 +614,12 @@ namespace Accurat.WebAPI.Controllers
 
             if (startDate.HasValue)
             {
-                var startUtc = DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc);
+                var startUtc = BusinessTime.ToInstantUtc(startDate.Value);
                 query = query.Where(e => e.Timestamp >= startUtc);
             }
-
             if (endDate.HasValue)
             {
-                var endUtc = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                var endUtc = BusinessTime.ToInstantUtc(endDate.Value.Date.AddDays(1).AddTicks(-1));
                 query = query.Where(e => e.Timestamp <= endUtc);
             }
 
@@ -711,7 +708,7 @@ namespace Accurat.WebAPI.Controllers
             // БЕЗОПАСНОСТЬ: Проверка доступа к филиалу
             if (!await VerifyBranchAccess(branchId)) return Forbid();
 
-            var utcStart = DateTime.SpecifyKind(start, DateTimeKind.Utc);
+            var utcStart = BusinessTime.ToInstantUtc(start);
             var end = utcStart.AddMinutes(duration);
 
             var isBusy = await _context.Orders.AnyAsync(o =>
@@ -852,7 +849,7 @@ namespace Accurat.WebAPI.Controllers
 
                     order.Status = dto.NewStatus;
 
-                    _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistory
+                    _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistories
                     {
                         OrderId = id,
                         Status = dto.NewStatus,

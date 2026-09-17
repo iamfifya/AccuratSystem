@@ -185,7 +185,7 @@ namespace AccuratPanelCWD
                     Department = o.Department, //  ВАЖНО для вкладок
                     CarModel = o.CarModel,
                     CarNumber = o.CarNumber,
-                    Time = TimeHelper.ToMsk(o.Time),
+                    Time = o.Time,
                     // ИСПРАВЛЕНО: Используем метод расширения GetWasherId() и контрактный список пользователей
                     WasherName = allUsers.FirstOrDefault(u => u.Id == o.GetWasherId())?.FullName ?? (o.IsAppointment ? "📅 Запись" : "Не назначен"),
                     ServicesList = string.Join(", ", (o.ServiceIds ?? new List<int>()).Select(id =>

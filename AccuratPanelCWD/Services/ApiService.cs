@@ -10,8 +10,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using AccuratSystem.Contracts.DTOs;
-using System.Net.Http.Json;
 using ContractsBranch = AccuratSystem.Contracts.Models.Branch;
 using ContractsCashboxSummary = AccuratSystem.Contracts.Models.CashboxSummary;
 using ContractsClient = AccuratSystem.Contracts.Models.Client;
@@ -50,15 +48,15 @@ namespace AccuratPanelCWD.Services
         #region СМЕНЫ (SHIFTS)
         public async Task<List<ContractsShift>> GetShiftsAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsShift>>("Shifts") ?? new List<ContractsShift>(); }
+            try { return await _http.GetJsonAsync<List<ContractsShift>>("Shifts") ?? new List<ContractsShift>(); }
             catch (HttpRequestException ex) { throw new Exception($"Смены (Shifts): {ex.Message}"); }
         }
 
         public async Task<ContractsShift> OpenShiftAsync(ContractsShift shift)
         {
-            var response = await _http.PostAsJsonAsync("Shifts", shift);
+            var response = await _http.PostJsonAsync("Shifts", shift);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ContractsShift>();
+            return await response.Content.ReadJsonAsync<ContractsShift>();
         }
 
         public async Task CloseShiftAsync(int id)
@@ -78,20 +76,20 @@ namespace AccuratPanelCWD.Services
         #region УСЛУГИ (SERVICES)
         public async Task<List<ContractsService>> GetServicesAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsService>>("Services") ?? new List<ContractsService>(); }
+            try { return await _http.GetJsonAsync<List<ContractsService>>("Services") ?? new List<ContractsService>(); }
             catch (HttpRequestException ex) { throw new Exception($"Услуги (Services): {ex.Message}"); }
         }
 
         public async Task<ContractsService> CreateServiceAsync(ContractsService service)
         {
-            var response = await _http.PostAsJsonAsync("Services", service);
+            var response = await _http.PostJsonAsync("Services", service);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ContractsService>();
+            return await response.Content.ReadJsonAsync<ContractsService>();
         }
 
         public async Task UpdateServiceAsync(ContractsService service)
         {
-            var response = await _http.PutAsJsonAsync($"Services/{service.Id}", service);
+            var response = await _http.PutJsonAsync($"Services/{service.Id}", service);
             response.EnsureSuccessStatusCode();
         }
 
@@ -105,26 +103,26 @@ namespace AccuratPanelCWD.Services
         #region СОТРУДНИКИ (USERS)
         public async Task<List<ContractsUser>> GetUsersAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsUser>>("Users") ?? new List<ContractsUser>(); }
+            try { return await _http.GetJsonAsync<List<ContractsUser>>("Users") ?? new List<ContractsUser>(); }
             catch (HttpRequestException ex) { throw new Exception($"Сотрудники (Users): {ex.Message}"); }
         }
 
         public async Task<ContractsUser> CreateUserAsync(ContractsUser user)
         {
-            var response = await _http.PostAsJsonAsync("Users", user);
+            var response = await _http.PostJsonAsync("Users", user);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ContractsUser>();
+            return await response.Content.ReadJsonAsync<ContractsUser>();
         }
 
         public async Task UpdateUserAsync(ContractsUser user)
         {
-            var response = await _http.PutAsJsonAsync($"Users/{user.Id}", user);
+            var response = await _http.PutJsonAsync($"Users/{user.Id}", user);
             response.EnsureSuccessStatusCode();
         }
 
         public async Task<List<Role>> GetRolesAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<Role>>("Roles") ?? new List<Role>(); }
+            try { return await _http.GetJsonAsync<List<Role>>("Roles") ?? new List<Role>(); }
             catch (HttpRequestException ex) { throw new Exception($"Ошибка получения должностей: {ex.Message}"); }
         }
 
@@ -132,7 +130,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.PaymentMethod>>($"PaymentMethods/by-branch/{branchId}")
+                return await _http.GetJsonAsync<List<AccuratSystem.Contracts.Models.PaymentMethod>>($"PaymentMethods/by-branch/{branchId}")
                        ?? new List<AccuratSystem.Contracts.Models.PaymentMethod>();
             }
             catch (Exception ex)
@@ -146,7 +144,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.OrderStatuses>>($"OrderStatuses/by-branch/{branchId}")
+                return await _http.GetJsonAsync<List<AccuratSystem.Contracts.Models.OrderStatuses>>($"OrderStatuses/by-branch/{branchId}")
                        ?? new List<AccuratSystem.Contracts.Models.OrderStatuses>();
             }
             catch (Exception)
@@ -159,20 +157,20 @@ namespace AccuratPanelCWD.Services
         #region КЛИЕНТЫ (CLIENTS)
         public async Task<List<ContractsClient>> GetClientsAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsClient>>("Clients") ?? new List<ContractsClient>(); }
+            try { return await _http.GetJsonAsync<List<ContractsClient>>("Clients") ?? new List<ContractsClient>(); }
             catch (HttpRequestException ex) { throw new Exception($"Клиенты (Clients): {ex.Message}"); }
         }
 
         public async Task<ContractsClient> CreateClientAsync(ContractsClient client)
         {
-            var response = await _http.PostAsJsonAsync("Clients", client);
+            var response = await _http.PostJsonAsync("Clients", client);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ContractsClient>();
+            return await response.Content.ReadJsonAsync<ContractsClient>();
         }
 
         public async Task UpdateClientAsync(ContractsClient client)
         {
-            var response = await _http.PutAsJsonAsync($"Clients/{client.Id}", client);
+            var response = await _http.PutJsonAsync($"Clients/{client.Id}", client);
             response.EnsureSuccessStatusCode();
         }
         #endregion
@@ -186,16 +184,16 @@ namespace AccuratPanelCWD.Services
             {
                 // Принудительно устанавливаем Kind = Utc для обеих дат
                 DateTime start = startDate.HasValue
-                    ? DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc)
+                    ? startDate.Value
                     : DateTime.UtcNow.AddDays(-1);
 
                 DateTime end = endDate.HasValue
-                    ? DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc)
+                    ? endDate.Value
                     : DateTime.UtcNow.AddDays(30);
 
                 string url = $"Orders?startDate={start:O}&endDate={end:O}";
 
-                return await _http.GetFromJsonAsync<List<ContractsOrder>>(url) ?? new List<ContractsOrder>();
+                return await _http.GetJsonAsync<List<ContractsOrder>>(url) ?? new List<ContractsOrder>();
             }
             catch (HttpRequestException ex) { throw new Exception("Ошибка при получении списка заказов: " + ex.Message); }
         }
@@ -203,34 +201,34 @@ namespace AccuratPanelCWD.Services
         // Получение заказа по ID
         public async Task<ContractsOrder> GetOrderByIdAsync(int orderId)
         {
-            try { return await _http.GetFromJsonAsync<ContractsOrder>($"Orders/{orderId}"); }
+            try { return await _http.GetJsonAsync<ContractsOrder>($"Orders/{orderId}"); }
             catch { return null; }
         }
 
         // Получение заказов по ID клиента
         public async Task<List<ContractsOrder>> GetOrdersByClientIdAsync(int clientId)
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsOrder>>($"Orders/client/{clientId}") ?? new List<ContractsOrder>(); }
+            try { return await _http.GetJsonAsync<List<ContractsOrder>>($"Orders/client/{clientId}") ?? new List<ContractsOrder>(); }
             catch (HttpRequestException ex) { throw new Exception($"История заказов клиента: {ex.Message}"); }
         }
 
         // Создание нового заказа
         public async Task<ContractsOrder> CreateOrderAsync(ContractsOrder order)
         {
-            var response = await _http.PostAsJsonAsync("Orders", order);
+            var response = await _http.PostJsonAsync("Orders", order);
             if (!response.IsSuccessStatusCode)
             {
                 string errorText = await response.Content.ReadAsStringAsync();
                 throw new Exception($"Отказ сервера ({response.StatusCode}): {errorText}");
             }
-            return await response.Content.ReadFromJsonAsync<ContractsOrder>();
+            return await response.Content.ReadJsonAsync<ContractsOrder>();
         }
 
         // Обновление существующего заказа
         public async Task UpdateOrderAsync(ContractsOrder order)
         {
             var request = new HttpRequestMessage(HttpMethod.Put, $"Orders/{order.Id}");
-            request.Content = JsonContent.Create(order);
+            request.Content = JsonContent.Create(order, options: JsonOpts.Default);
 
             // ИСПРАВЛЕНО: передаём только ID (число, всегда ASCII)
             // Имя сервер сам достанет из БД по этому ID
@@ -268,13 +266,13 @@ namespace AccuratPanelCWD.Services
                 // ИСПРАВЛЕНО: принудительно конвертируем в UTC
                 if (startDate.HasValue)
                 {
-                    var utcStart = DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc);
+                    var utcStart = startDate.Value;
                     queryParams.Add($"startDate={utcStart:O}");
                 }
 
                 if (endDate.HasValue)
                 {
-                    var utcEnd = DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc);
+                    var utcEnd = endDate.Value;
                     queryParams.Add($"endDate={utcEnd:O}");
                 }
 
@@ -287,7 +285,7 @@ namespace AccuratPanelCWD.Services
                 var queryString = string.Join("&", queryParams);
                 var url = $"Orders/audit-log?{queryString}";
 
-                return await _http.GetFromJsonAsync<List<OrderTimelineEntry>>(url)
+                return await _http.GetJsonAsync<List<OrderTimelineEntry>>(url)
                        ?? new List<OrderTimelineEntry>();
             }
             catch (HttpRequestException ex)
@@ -302,7 +300,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                var activeOrders = await _http.GetFromJsonAsync<List<ContractsOrder>>($"Orders/active/{branchId}");
+                var activeOrders = await _http.GetJsonAsync<List<ContractsOrder>>($"Orders/active/{branchId}");
                 return activeOrders ?? new List<ContractsOrder>();
             }
             catch (Exception ex)
@@ -342,7 +340,7 @@ namespace AccuratPanelCWD.Services
                     UserName = userName
                 };
 
-                var response = await _http.PatchAsJsonAsync($"Orders/{orderId}/status", dto);
+                var response = await _http.PatchJsonAsync($"Orders/{orderId}/status", dto);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -357,7 +355,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<dynamic>>($"Orders/{orderId}/time-analysis")
+                return await _http.GetJsonAsync<List<dynamic>>($"Orders/{orderId}/time-analysis")
                        ?? new List<dynamic>();
             }
             catch (Exception ex)
@@ -391,7 +389,7 @@ namespace AccuratPanelCWD.Services
             try
             {
                 var url = $"Orders/check-availability?branchId={branchId}&box={box}&start={startTime:O}&duration={durationMinutes}&excludeOrderId={excludeOrderId}";
-                var isAvailable = await _http.GetFromJsonAsync<bool>(url);
+                var isAvailable = await _http.GetJsonAsync<bool>(url);
                 return isAvailable;
             }
             catch (Exception ex)
@@ -407,7 +405,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                var branches = await _http.GetFromJsonAsync<List<ContractsBranch>>("Branches");
+                var branches = await _http.GetJsonAsync<List<ContractsBranch>>("Branches");
                 return branches ?? new List<ContractsBranch>();
             }
             catch (Exception ex)
@@ -418,10 +416,10 @@ namespace AccuratPanelCWD.Services
         public async Task<LoginResponseDto> AuthenticateAsync(string login, string password)
         {
             var request = new LoginRequestDto { Login = login, Password = password };
-            var response = await _http.PostAsJsonAsync("Users/login", request);
+            var response = await _http.PostJsonAsync("Users/login", request);
 
             if (response.IsSuccessStatusCode)
-                return await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+                return await response.Content.ReadJsonAsync<LoginResponseDto>();
 
             return null;
         }
@@ -438,7 +436,7 @@ namespace AccuratPanelCWD.Services
 
         public async Task UpdateBranchAsync(ContractsBranch branch)
         {
-            var response = await _http.PutAsJsonAsync($"Branches/{branch.Id}", branch);
+            var response = await _http.PutJsonAsync($"Branches/{branch.Id}", branch);
             response.EnsureSuccessStatusCode();
         }
 
@@ -450,9 +448,9 @@ namespace AccuratPanelCWD.Services
 
         public async Task<ContractsBranch> CreateBranchAsync(ContractsBranch branch)
         {
-            var response = await _http.PostAsJsonAsync("Branches", branch);
+            var response = await _http.PostJsonAsync("Branches", branch);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ContractsBranch>();
+            return await response.Content.ReadJsonAsync<ContractsBranch>();
         }
         #endregion
 
@@ -476,26 +474,26 @@ namespace AccuratPanelCWD.Services
         #region ФИНАНСЫ (TRANSACTIONS)
         public async Task<List<ContractsTransaction>> GetTransactionsByBranchAsync(int branchId)
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsTransaction>>($"Transactions/branch/{branchId}") ?? new List<ContractsTransaction>(); }
+            try { return await _http.GetJsonAsync<List<ContractsTransaction>>($"Transactions/branch/{branchId}") ?? new List<ContractsTransaction>(); }
             catch (HttpRequestException ex) { throw new Exception($"Финансы (Transactions): {ex.Message}"); }
         }
 
         public async Task<ContractsTransaction> CreateTransactionAsync(ContractsTransaction transaction)
         {
-            var response = await _http.PostAsJsonAsync("Transactions", transaction);
+            var response = await _http.PostJsonAsync("Transactions", transaction);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ContractsTransaction>();
+            return await response.Content.ReadJsonAsync<ContractsTransaction>();
         }
 
         public async Task<ContractsCashboxSummary> GetShiftCashboxSummaryAsync(int shiftId)
         {
-            try { return await _http.GetFromJsonAsync<ContractsCashboxSummary>($"Shifts/{shiftId}/cashbox") ?? new ContractsCashboxSummary(); }
+            try { return await _http.GetJsonAsync<ContractsCashboxSummary>($"Shifts/{shiftId}/cashbox") ?? new ContractsCashboxSummary(); }
             catch { return new ContractsCashboxSummary(); }
         }
 
         public async Task<List<ContractsTransaction>> GetTransactionsByShiftAsync(int shiftId)
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsTransaction>>($"Transactions/shift/{shiftId}") ?? new List<ContractsTransaction>(); }
+            try { return await _http.GetJsonAsync<List<ContractsTransaction>>($"Transactions/shift/{shiftId}") ?? new List<ContractsTransaction>(); }
             catch { return new List<ContractsTransaction>(); }
         }
 
@@ -503,7 +501,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<AccuratSystem.Contracts.Models.CompanySettings>($"CompanySettings/by-branch/{branchId}")
+                return await _http.GetJsonAsync<AccuratSystem.Contracts.Models.CompanySettings>($"CompanySettings/by-branch/{branchId}")
                        ?? new AccuratSystem.Contracts.Models.CompanySettings();
             }
             catch (Exception)
@@ -516,10 +514,10 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                var response = await _http.PostAsJsonAsync("orders/calculate-preview", request);
+                var response = await _http.PostJsonAsync("orders/calculate-preview", request);
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<OrderCalculation>() ?? new OrderCalculation();
+                    return await response.Content.ReadJsonAsync<OrderCalculation>() ?? new OrderCalculation();
                 }
                 return new OrderCalculation();
             }
@@ -536,21 +534,21 @@ namespace AccuratPanelCWD.Services
         // Получение отчетов по сменам с фильтрацией по филиалу и диапазону дат
         public async Task<List<ContractsShiftReport>> GetShiftReportsAsync(int branchId, DateTime start, DateTime end)
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsShiftReport>>($"Reports/shifts?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsShiftReport>(); }
+            try { return await _http.GetJsonAsync<List<ContractsShiftReport>>($"Reports/shifts?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsShiftReport>(); }
             catch { return new List<ContractsShiftReport>(); }
         }
 
         // Получение статистики по клиентам с фильтрацией по филиалу и диапазону дат
         public async Task<ClientStatsResponse> GetClientsStatsAsync(int branchId, DateTime start, DateTime end)
         {
-            try { return await _http.GetFromJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={start:O}&end={end:O}") ?? new ClientStatsResponse(); }
+            try { return await _http.GetJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={start:O}&end={end:O}") ?? new ClientStatsResponse(); }
             catch { return new ClientStatsResponse(); }
         }
 
         // Получение транзакций по филиалу и диапазону дат
         public async Task<List<ContractsTransaction>> GetTransactionsByDateRangeAsync(int branchId, DateTime start, DateTime end)
         {
-            try { return await _http.GetFromJsonAsync<List<ContractsTransaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsTransaction>(); }
+            try { return await _http.GetJsonAsync<List<ContractsTransaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsTransaction>(); }
             catch { return new List<ContractsTransaction>(); }
         }
 
@@ -567,7 +565,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<ReconciliationSummaryResponse>($"Reports/reconciliations-summary?branchId={branchId}&start={start:O}&end={end:O}")
+                return await _http.GetJsonAsync<ReconciliationSummaryResponse>($"Reports/reconciliations-summary?branchId={branchId}&start={start:O}&end={end:O}")
                        ?? new ReconciliationSummaryResponse();
             }
             catch { return new ReconciliationSummaryResponse(); }
@@ -583,10 +581,8 @@ namespace AccuratPanelCWD.Services
         {
             var url = $"Reports/compare-periods-full" +
                       $"?branchId={branchId}" +
-                      $"&currentStart={currentStart:yyyy-MM-dd}" +
-                      $"&currentEnd={currentEnd:yyyy-MM-dd}" +
-                      $"&previousStart={previousStart:yyyy-MM-dd}" +
-                      $"&previousEnd={previousEnd:yyyy-MM-dd}";
+                      $"&currentStart={currentStart:O}&currentEnd={currentEnd:O}" +
+                      $"&previousStart={previousStart:O}&previousEnd={previousEnd:O}";
 
             var response = await _http.GetAsync(url);
             response.EnsureSuccessStatusCode();
@@ -602,7 +598,7 @@ namespace AccuratPanelCWD.Services
             try
             {
                 // Добавляем branchId в URL
-                return await _http.GetFromJsonAsync<List<ContractsEmployeeSchedule>>($"Schedules/{branchId}/{year}/{month}")
+                return await _http.GetJsonAsync<List<ContractsEmployeeSchedule>>($"Schedules/{branchId}/{year}/{month}")
                        ?? new List<ContractsEmployeeSchedule>();
             }
             catch { return new List<ContractsEmployeeSchedule>(); }
@@ -611,7 +607,7 @@ namespace AccuratPanelCWD.Services
         public async Task SaveScheduleAsync(int branchId, int year, int month, List<ContractsEmployeeSchedule> scheduleData)
         {
             // Добавляем branchId в URL
-            var response = await _http.PostAsJsonAsync($"Schedules/{branchId}/{year}/{month}", scheduleData);
+            var response = await _http.PostJsonAsync($"Schedules/{branchId}/{year}/{month}", scheduleData);
             response.EnsureSuccessStatusCode();
         }
         #endregion
@@ -628,7 +624,7 @@ namespace AccuratPanelCWD.Services
                 throw new Exception($"Отказ сервера ({response.StatusCode}): {errorText}");
             }
 
-            return await response.Content.ReadFromJsonAsync<ContractsOrder>();
+            return await response.Content.ReadJsonAsync<ContractsOrder>();
         }
         #endregion
 
@@ -638,7 +634,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<AccuratSystem.Contracts.Models.CarCategory>>($"CarCategories/by-branch/{branchId}")
+                return await _http.GetJsonAsync<List<AccuratSystem.Contracts.Models.CarCategory>>($"CarCategories/by-branch/{branchId}")
                        ?? new List<AccuratSystem.Contracts.Models.CarCategory>();
             }
             catch (Exception ex)
@@ -650,13 +646,13 @@ namespace AccuratPanelCWD.Services
 
         public async Task CreateCategoryAsync(AccuratSystem.Contracts.Models.CarCategory category)
         {
-            var response = await _http.PostAsJsonAsync("CarCategories", category);
+            var response = await _http.PostJsonAsync("CarCategories", category);
             response.EnsureSuccessStatusCode();
         }
 
         public async Task UpdateCategoryAsync(AccuratSystem.Contracts.Models.CarCategory category)
         {
-            var response = await _http.PutAsJsonAsync($"CarCategories/{category.Id}", category);
+            var response = await _http.PutJsonAsync($"CarCategories/{category.Id}", category);
             response.EnsureSuccessStatusCode();
         }
 
@@ -675,9 +671,9 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                var response = await _http.PostAsJsonAsync($"Orders/{orderId}/expenses", dto);
+                var response = await _http.PostJsonAsync($"Orders/{orderId}/expenses", dto);
                 response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<OrderExpense>();
+                return await response.Content.ReadJsonAsync<OrderExpense>();
             }
             catch (HttpRequestException ex)
             {
@@ -690,7 +686,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<OrderExpense>>($"Orders/{orderId}/expenses")
+                return await _http.GetJsonAsync<List<OrderExpense>>($"Orders/{orderId}/expenses")
                     ?? new List<OrderExpense>();
             }
             catch (HttpRequestException ex)
@@ -704,7 +700,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<OrderTimelineEntry>>($"Orders/{orderId}/timeline")
+                return await _http.GetJsonAsync<List<OrderTimelineEntry>>($"Orders/{orderId}/timeline")
                     ?? new List<OrderTimelineEntry>();
             }
             catch (HttpRequestException ex)
@@ -718,9 +714,9 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                var response = await _http.PutAsJsonAsync($"Orders/services/{orderServiceItemId}/price", dto);
+                var response = await _http.PutJsonAsync($"Orders/services/{orderServiceItemId}/price", dto);
                 response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<OrderServiceItem>();
+                return await response.Content.ReadJsonAsync<OrderServiceItem>();
             }
             catch (HttpRequestException ex)
             {
@@ -735,16 +731,16 @@ namespace AccuratPanelCWD.Services
         // Получить все правила апселла для текущей компании
         public async Task<List<UpsellSuggestion>> GetUpsellRulesAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<UpsellSuggestion>>("Upsell") ?? new List<UpsellSuggestion>(); }
+            try { return await _http.GetJsonAsync<List<UpsellSuggestion>>("Upsell") ?? new List<UpsellSuggestion>(); }
             catch { return new List<UpsellSuggestion>(); }
         }
 
         // Создать новое правило апселла
         public async Task<UpsellSuggestion> CreateUpsellRuleAsync(UpsellSuggestion rule)
         {
-            var response = await _http.PostAsJsonAsync("Upsell", rule);
+            var response = await _http.PostJsonAsync("Upsell", rule);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<UpsellSuggestion>();
+            return await response.Content.ReadJsonAsync<UpsellSuggestion>();
         }
 
         // Удалить существующее правило апселла
@@ -768,7 +764,7 @@ namespace AccuratPanelCWD.Services
             var query = string.Join("&", selectedServiceIds.Select(id => $"currentServices={id}"));
             var url = $"Upsell/suggest?{query}&branchId={branchId}";
 
-            return await GetFromJsonAsync<UpsellSuggestion>(url);
+            return await SafeGetAsync<UpsellSuggestion>(url);
         }
 
         #endregion
@@ -776,20 +772,20 @@ namespace AccuratPanelCWD.Services
         #region СУПЕРАДМИН (COMPANIES)
         public async Task<List<Company>> GetCompaniesAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<Company>>("Companies") ?? new List<Company>(); }
+            try { return await _http.GetJsonAsync<List<Company>>("Companies") ?? new List<Company>(); }
             catch { return new List<Company>(); }
         }
 
         public async Task<Company> CreateCompanyAsync(Company company)
         {
-            var response = await _http.PostAsJsonAsync("Companies", company);
+            var response = await _http.PostJsonAsync("Companies", company);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<Company>();
+            return await response.Content.ReadJsonAsync<Company>();
         }
 
         public async Task UpdateCompanyAsync(Company company)
         {
-            var response = await _http.PutAsJsonAsync($"Companies/{company.Id}", company);
+            var response = await _http.PutJsonAsync($"Companies/{company.Id}", company);
             response.EnsureSuccessStatusCode();
         }
 
@@ -803,14 +799,14 @@ namespace AccuratPanelCWD.Services
         #region УПРАВЛЕНИЕ ЛИЦЕНЗИЯМИ (TENANT FEATURES)
         public async Task<List<TenantFeature>> GetTenantFeaturesAsync()
         {
-            try { return await _http.GetFromJsonAsync<List<TenantFeature>>("TenantFeatures") ?? new List<TenantFeature>(); }
+            try { return await _http.GetJsonAsync<List<TenantFeature>>("TenantFeatures") ?? new List<TenantFeature>(); }
             catch { return new List<TenantFeature>(); }
         }
 
         public async Task UpdateTenantFeatureAsync(TenantFeature feature)
         {
             // Меняем feature.BranchId на feature.CompanyId
-            var response = await _http.PutAsJsonAsync($"TenantFeatures/{feature.CompanyId}", feature);
+            var response = await _http.PutJsonAsync($"TenantFeatures/{feature.CompanyId}", feature);
             response.EnsureSuccessStatusCode();
         }
 
@@ -827,20 +823,20 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetFromJsonAsync<List<DiscountRule>>("DiscountRules") ?? new List<DiscountRule>();
+                return await _http.GetJsonAsync<List<DiscountRule>>("DiscountRules") ?? new List<DiscountRule>();
             }
             catch (Exception ex) { throw new Exception($"Ошибка загрузки правил скидок: {ex.Message}"); }
         }
 
         public async Task CreateDiscountRuleAsync(DiscountRule rule)
         {
-            var response = await _http.PostAsJsonAsync("DiscountRules", rule);
+            var response = await _http.PostJsonAsync("DiscountRules", rule);
             response.EnsureSuccessStatusCode();
         }
 
         public async Task UpdateDiscountRuleAsync(DiscountRule rule)
         {
-            var response = await _http.PutAsJsonAsync($"DiscountRules/{rule.Id}", rule);
+            var response = await _http.PutJsonAsync($"DiscountRules/{rule.Id}", rule);
             response.EnsureSuccessStatusCode();
         }
 
@@ -857,15 +853,15 @@ namespace AccuratPanelCWD.Services
         // Создание новой роли
         public async Task<Role> CreateRoleAsync(Role role)
         {
-            var response = await _http.PostAsJsonAsync("Roles", role);
+            var response = await _http.PostJsonAsync("Roles", role);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<Role>();
+            return await response.Content.ReadJsonAsync<Role>();
         }
 
         // Обновление существующей роли
         public async Task UpdateRoleAsync(Role role)
         {
-            var response = await _http.PutAsJsonAsync($"Roles/{role.Id}", role);
+            var response = await _http.PutJsonAsync($"Roles/{role.Id}", role);
             response.EnsureSuccessStatusCode();
         }
 
@@ -889,34 +885,30 @@ namespace AccuratPanelCWD.Services
         /// Безопасная версия GetFromJsonAsync: обрабатывает 404 как "нет данных",
         /// пустое тело как default(T), и тело "null" как null.
         /// </summary>
-        private async Task<T?> GetFromJsonAsync<T>(string url)
+        /// <summary>
+        /// Безопасная версия GET: ловит 404/пустое тело/"null" и возвращает default.
+        /// Сериализация через JsonOpts.Default (с конвертером).
+        /// </summary>
+        private async Task<T?> SafeGetAsync<T>(string url)
         {
             try
             {
                 var response = await _http.GetAsync(url);
 
-                // 404 = данные не найдены, это нормальный результат
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     return default;
 
                 response.EnsureSuccessStatusCode();
 
-                // Читаем тело как строку, чтобы проверить на пустоту
                 var content = await response.Content.ReadAsStringAsync();
 
-                // Пустое тело или "null" = default(T)
                 if (string.IsNullOrWhiteSpace(content) || content == "null")
                     return default;
 
-                // Десериализуем непустой JSON
-                return System.Text.Json.JsonSerializer.Deserialize<T>(content, new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                return System.Text.Json.JsonSerializer.Deserialize<T>(content, JsonOpts.Default);
             }
             catch (HttpRequestException)
             {
-                // Сетевые ошибки проглатываем — возвращаем default
                 return default;
             }
         }
@@ -927,9 +919,9 @@ namespace AccuratPanelCWD.Services
         //Проведение сверки кассы(X - отчёт) по смене 
         public async Task<ReconcileCashResult> ReconcileCashAsync(int shiftId, ReconcileCashRequest request)
         {
-            var response = await _http.PostAsJsonAsync($"Shifts/{shiftId}/reconcile", request);
+            var response = await _http.PostJsonAsync($"Shifts/{shiftId}/reconcile", request);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ReconcileCashResult>();
+            return await response.Content.ReadJsonAsync<ReconcileCashResult>();
         }
 
         // Получение списка сверок по смене
@@ -937,14 +929,14 @@ namespace AccuratPanelCWD.Services
         {
             // Используем хелпер: он ловит 404 как "нет данных" и возвращает default (null).
             // Прямой _http.GetFromJsonAsync выбрасывал HttpRequestException.
-            var result = await GetFromJsonAsync<List<CashReconciliation>>($"Shifts/{shiftId}/reconciliations");
+            var result = await SafeGetAsync<List<CashReconciliation>>($"Shifts/{shiftId}/reconciliations");
             return result ?? new List<CashReconciliation>();
         }
 
         // Получение ленты событий смены (Shift Timeline)
         public async Task<List<ShiftTimelineEntry>> GetShiftTimelineAsync(int shiftId)
         {
-            var result = await GetFromJsonAsync<List<ShiftTimelineEntry>>($"Shifts/{shiftId}/timeline");
+            var result = await SafeGetAsync<List<ShiftTimelineEntry>>($"Shifts/{shiftId}/timeline");
             return result ?? new List<ShiftTimelineEntry>();
         }
         #endregion
@@ -965,10 +957,10 @@ namespace AccuratPanelCWD.Services
                 queryParams.Add($"userId={userId.Value}");
 
             if (startDate.HasValue)
-                queryParams.Add($"startDate={DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc):O}");
+                queryParams.Add($"startDate={startDate.Value:O}");
 
             if (endDate.HasValue)
-                queryParams.Add($"endDate={DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc):O}");
+                queryParams.Add($"endDate={endDate.Value:O}");
 
             if (!string.IsNullOrWhiteSpace(entryType))
                 queryParams.Add($"entryType={Uri.EscapeDataString(entryType)}");
@@ -981,9 +973,9 @@ namespace AccuratPanelCWD.Services
 
             var url = $"audit-log?{string.Join("&", queryParams)}";
 
-            // Хелпер GetFromJsonAsync<T> ловит 404 и возвращает default (null).
+            // Хелпер GetJsonAsync<T> ловит 404 и возвращает default (null).
             // Прямой _http.GetFromJsonAsync выбрасывал HttpRequestException.
-            var result = await GetFromJsonAsync<List<AuditEntryDto>>(url);
+            var result = await SafeGetAsync<List<AuditEntryDto>>(url);
             return result ?? new List<AuditEntryDto>();
         }
         #endregion

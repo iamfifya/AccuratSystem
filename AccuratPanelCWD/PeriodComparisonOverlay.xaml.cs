@@ -116,9 +116,7 @@ namespace AccuratPanelCWD
 
                 // Вызываем API
                 _comparisonResult = await _apiService.GetPeriodComparisonFullAsync(
-                    _branchId,
-                    TimeHelper.ToUtc(curStart), TimeHelper.ToUtc(curEnd),
-                    TimeHelper.ToUtc(prevStart), TimeHelper.ToUtc(prevEnd));
+                    _branchId,curStart, curEnd, prevStart, prevEnd);
 
                 // Предупреждение
                 if (!string.IsNullOrWhiteSpace(_comparisonResult.Warning))

@@ -71,10 +71,10 @@ namespace AccuratPanelCWD
                 this.IsEnabled = false;
 
                 // ВАЖНО: Фиксим дату перед отправкой, чтобы Postgres не ругался!
-                CurrentClient.RegistrationDate = DateTime.SpecifyKind(CurrentClient.RegistrationDate, DateTimeKind.Utc);
+                CurrentClient.RegistrationDate = CurrentClient.RegistrationDate;
                 if (CurrentClient.LastVisitDate.HasValue)
                 {
-                    CurrentClient.LastVisitDate = DateTime.SpecifyKind(CurrentClient.LastVisitDate.Value, DateTimeKind.Utc);
+                    CurrentClient.LastVisitDate = CurrentClient.LastVisitDate.Value;
                 }
 
                 if (CurrentClient.Id == 0)

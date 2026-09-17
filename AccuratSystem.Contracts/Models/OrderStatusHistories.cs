@@ -6,7 +6,7 @@ namespace AccuratSystem.Contracts.Models
     /// Модель истории статусов. 
     /// Позволяет точно знать, сколько времени заказ провел в каждом состоянии.
     /// </summary>
-    public class OrderStatusHistory
+    public class OrderStatusHistories
     {
         public int Id { get; set; }
         public int OrderId { get; set; }

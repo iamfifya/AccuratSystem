@@ -2,6 +2,7 @@
 using AccuratSystem.Contracts.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Accurat.WebAPI.Time;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -104,13 +105,13 @@ namespace Accurat.WebAPI.Controllers
 
             if (startDate.HasValue)
             {
-                var startUtc = DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc);
+                var startUtc = BusinessTime.ToInstantUtc(startDate.Value);
                 combined = combined.Where(e => e.Timestamp >= startUtc);
             }
 
             if (endDate.HasValue)
             {
-                var endUtc = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                var endUtc = BusinessTime.ToInstantUtc(endDate.Value.Date.AddDays(1).AddTicks(-1));
                 combined = combined.Where(e => e.Timestamp <= endUtc);
             }
 

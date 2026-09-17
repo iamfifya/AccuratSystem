@@ -37,7 +37,7 @@ namespace Accurat.WebAPI.Controllers
                     ? _zoneResolver.GetZone(branchId)
                     : _zoneResolver.DefaultZone;
 
-            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end);
+            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end, zone);
 
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
@@ -426,11 +426,8 @@ namespace Accurat.WebAPI.Controllers
         {
 
             // Определяем часовую зону филиала (или зону по умолчанию)
-            var zone = branchId > 0
-                    ? _zoneResolver.GetZone(branchId)
-                    : _zoneResolver.DefaultZone;
-
-            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end);
+            var zone = branchId > 0 ? _zoneResolver.GetZone(branchId) : _zoneResolver.DefaultZone;
+            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end, zone);
 
             var newClientsQuery = _context.Clients.Where(c => c.RegistrationDate >= startUtc && c.RegistrationDate <= endUtc);
             var uniqueClientsQuery = _context.Orders.Where(o => o.Time >= startUtc && o.Time <= endUtc && o.ClientId != null);
@@ -474,7 +471,7 @@ namespace Accurat.WebAPI.Controllers
                     ? _zoneResolver.GetZone(branchId)
                     : _zoneResolver.DefaultZone;
 
-            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end);
+            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end, zone);
 
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
@@ -519,9 +516,11 @@ namespace Accurat.WebAPI.Controllers
             DateTime currentStart, DateTime currentEnd,
             DateTime previousStart, DateTime previousEnd)
         {
+            // Зону резолвим внутри через резолвер
+            var zone = branchId > 0 ? _zoneResolver.GetZone(branchId) : _zoneResolver.DefaultZone;
 
             Console.WriteLine("═══════════════════════════════════════════");
-            Console.WriteLine($"ComparePeriodsFull CALLED: branch={branchId}");
+            Console.WriteLine($"ComparePeriodsFull CALLED: branch={branchId}, zone={zone.Id}");
             Console.WriteLine("═══════════════════════════════════════════");
 
             var result = new PeriodComparisonFull();
@@ -578,7 +577,7 @@ namespace Accurat.WebAPI.Controllers
             };
 
             // 5. Строим данные по дням для графиков
-            result.DailyData = BuildDailyComparisonData(currentReports, previousReports);
+            result.DailyData = BuildDailyComparisonData(currentReports, previousReports, zone);
 
             // 6. Загруженность по часам (уже есть в BaseReport)
             result.CurrentHourlyLoad = current.HourlyLoad;
@@ -646,19 +645,19 @@ namespace Accurat.WebAPI.Controllers
         }
 
         private DailyComparisonData BuildDailyComparisonData(
-            List<ShiftReport> currentReports,
-            List<ShiftReport> previousReports)
+                List<ShiftReport> currentReports,
+                List<ShiftReport> previousReports,
+                DateTimeZone zone)
         {
             var result = new DailyComparisonData();
 
-            // Текущий период - по дням
             var currentByDate = currentReports
-                .GroupBy(r => r.Date.BusinessDay())
+                .GroupBy(r => r.Date.BusinessDay(zone))
                 .Select((g, idx) => new DayComparisonPoint
                 {
-                    Date = g.Key.At(LocalTime.Midnight).ToDateTimeUnspecified(),
+                    Date = g.Key.ToWireDate(zone),
                     DayIndex = idx,
-                    DateLabel = g.Key.ToString("dd.MM", CultureInfo.InvariantCulture),
+                    DateLabel = g.Key.ToString("dd.MM", System.Globalization.CultureInfo.InvariantCulture),
                     Revenue = g.Sum(r => r.TotalRevenue),
                     CarsCount = g.Sum(r => r.TotalCars),
                     AvgCheck = g.Sum(r => r.TotalCars) > 0
@@ -667,21 +666,16 @@ namespace Accurat.WebAPI.Controllers
                 })
                 .OrderBy(d => d.Date)
                 .ToList();
-
-            // Перенумеровываем DayIndex после сортировки
-            for (int i = 0; i < currentByDate.Count; i++)
-                currentByDate[i].DayIndex = i;
-
+            for (int i = 0; i < currentByDate.Count; i++) currentByDate[i].DayIndex = i;
             result.CurrentDays = currentByDate;
 
-            // Прошлый период - по дням
             var previousByDate = previousReports
-                .GroupBy(r => r.Date.BusinessDay())
+                .GroupBy(r => r.Date.BusinessDay(zone))
                 .Select((g, idx) => new DayComparisonPoint
                 {
-                    Date = g.Key.At(LocalTime.Midnight).ToDateTimeUnspecified(),
+                    Date = g.Key.ToWireDate(zone),
                     DayIndex = idx,
-                    DateLabel = g.Key.ToString("dd.MM", CultureInfo.InvariantCulture),
+                    DateLabel = g.Key.ToString("dd.MM", System.Globalization.CultureInfo.InvariantCulture),
                     Revenue = g.Sum(r => r.TotalRevenue),
                     CarsCount = g.Sum(r => r.TotalCars),
                     AvgCheck = g.Sum(r => r.TotalCars) > 0
@@ -690,10 +684,7 @@ namespace Accurat.WebAPI.Controllers
                 })
                 .OrderBy(d => d.Date)
                 .ToList();
-
-            for (int i = 0; i < previousByDate.Count; i++)
-                previousByDate[i].DayIndex = i;
-
+            for (int i = 0; i < previousByDate.Count; i++) previousByDate[i].DayIndex = i;
             result.PreviousDays = previousByDate;
 
             return result;

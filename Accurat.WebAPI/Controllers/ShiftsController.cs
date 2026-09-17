@@ -1,5 +1,6 @@
 ﻿using Accurat.WebAPI.Data;
 using Accurat.WebAPI.Hubs;
+using Accurat.WebAPI.Time;
 using AccuratSystem.Contracts.DTOs;
 using AccuratSystem.Contracts.Enums;
 using AccuratSystem.Contracts.Models;
@@ -255,10 +256,9 @@ namespace Accurat.WebAPI.Controllers
             if (!await VerifyBranchAccess(shift.BranchId))
                 return Forbid("Вы не имеете прав на открытие смены в данном филиале.");
 
-            DateTime targetDate = DateTime.SpecifyKind(shift.Date.Date, DateTimeKind.Utc);
+            DateTime targetDate = BusinessTime.ToInstantUtc(shift.Date.Date);
 
-            Shift existingShift = await _context.Shifts
-                .FirstOrDefaultAsync(s => s.BranchId == shift.BranchId && s.Date == targetDate);
+            Shift existingShift = await _context.Shifts.FirstOrDefaultAsync(s => s.BranchId == shift.BranchId && s.Date == targetDate);
 
             if (existingShift != null)
             {

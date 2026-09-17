@@ -89,7 +89,7 @@ namespace AccuratPanelCWD
                 DateTime end = EndDatePicker.SelectedDate ?? DateTime.Now;
                 int branchId = SelectedBranchTab?.BranchId ?? 0;
 
-                var periodReports = await _apiService.GetShiftReportsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
+                var periodReports = await _apiService.GetShiftReportsAsync(branchId, start, end);
 
                 if (!periodReports.Any())
                 {
@@ -98,7 +98,7 @@ namespace AccuratPanelCWD
                     return;
                 }
 
-                var reconSummary = await _apiService.GetReconciliationsSummaryAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
+                var reconSummary = await _apiService.GetReconciliationsSummaryAsync(branchId, start, end);
                 if (reconSummary.TotalShifts > 0)
                 {
                     ReconciliationSummaryText.Visibility = Visibility.Visible;
@@ -119,7 +119,7 @@ namespace AccuratPanelCWD
                     ReconciliationSummaryText.Visibility = Visibility.Collapsed;
                 }
 
-                var clientStats = await _apiService.GetClientsStatsAsync(branchId, TimeHelper.ToUtc(start), TimeHelper.ToUtc(end));
+                var clientStats = await _apiService.GetClientsStatsAsync(branchId, start, end);
 
                 decimal totalRev = periodReports.Sum(r => r.TotalRevenue);
                 decimal netProfit = periodReports.Sum(r => r.NetProfit);

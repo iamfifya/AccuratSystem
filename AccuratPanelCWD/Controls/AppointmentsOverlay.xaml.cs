@@ -205,7 +205,7 @@ namespace AccuratPanelCWD.Controls
                     Department = a.Department,
                     CarModel = a.CarModel,
                     CarNumber = a.CarNumber,
-                    Time = TimeHelper.ToMsk(a.Time),
+                    Time = a.Time,
                     ServicesList = string.Join(", ", (a.ServiceIds ?? new List<int>()).Select(id => allServices.FirstOrDefault(s => s.Id == id)?.Name ?? "Unknown")),
                     FinalPrice = a.FinalPrice,
                     ExtraCost = a.ExtraCost,

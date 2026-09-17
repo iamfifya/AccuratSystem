@@ -46,7 +46,7 @@ namespace AccuratPanelCWD.ViewModels
         public TimelineEntryViewModel(OrderTimelineEntry entry)
         {
             Id = entry.Id;
-            Timestamp = TimeHelper.ToMsk(entry.Timestamp); // Конвертация в московское время
+            Timestamp = entry.Timestamp;
             CreatedBy = entry.CreatedBy ?? string.Empty;
             EntryType = entry.EntryType.ToString();
             Message = entry.Message;

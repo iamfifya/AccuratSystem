@@ -137,7 +137,7 @@ namespace AccuratPanelCWD.Controls
                 Amount = amt,
                 Type = type,
                 Comment = comment,
-                DateTime = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc) // Важно!
+                DateTime = DateTime.Now // Важно!
             };
 
             try

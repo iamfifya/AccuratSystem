@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Accurat.WebAPI.Time;
 using OrderStatuses = AccuratSystem.Contracts.Models.OrderStatuses;
 
 namespace Accurat.WebAPI.Data
@@ -30,7 +31,7 @@ namespace Accurat.WebAPI.Data
         // OutboxMessage — API-only, поэтому DbSet остаётся с явным get/set
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
         public DbSet<OrderWasher> OrderWashers { get; set; }
-        public DbSet<AccuratSystem.Contracts.Models.OrderStatusHistory> OrderStatusHistories { get; set; }
+        public DbSet<AccuratSystem.Contracts.Models.OrderStatusHistories> OrderStatusHistories { get; set; }
         public DbSet<TenantFeature> TenantFeatures { get; set; }
         public DbSet<UpsellSuggestion> UpsellSuggestions { get; set; }
         public DbSet<Role> Roles { get; set; } // Новая таблица с должностями
@@ -269,7 +270,7 @@ namespace Accurat.WebAPI.Data
             );
 
             // Создаем индекс для быстрой выборки текущего статуса заказа
-            modelBuilder.Entity<AccuratSystem.Contracts.Models.OrderStatusHistory>()
+            modelBuilder.Entity<AccuratSystem.Contracts.Models.OrderStatusHistories>()
                 .HasIndex(osh => new { osh.OrderId, osh.EndTime });
             // Говорим Entity Framework игнорировать это поле, чтобы он не искал его в таблице Orders
             modelBuilder.Entity<AccuratSystem.Contracts.Models.Order>().Ignore(o => o.CurrentStatusStartTime);
