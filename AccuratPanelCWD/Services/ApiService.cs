@@ -45,6 +45,12 @@ namespace AccuratPanelCWD.Services
             // Обычный конструктор теперь пустой
         }
 
+        /// <summary>
+        /// Безопасно форматирует DateTime для query-параметров URL.
+        /// Использует Uri.EscapeDataString, чтобы символы типа + и : в offset не ломали парсинг.
+        /// </summary>
+        private static string Q(DateTime dt) => Uri.EscapeDataString(dt.ToString("O"));
+
         #region СМЕНЫ (SHIFTS)
         public async Task<List<ContractsShift>> GetShiftsAsync()
         {
@@ -191,7 +197,7 @@ namespace AccuratPanelCWD.Services
                     ? endDate.Value
                     : DateTime.UtcNow.AddDays(30);
 
-                string url = $"Orders?startDate={start:O}&endDate={end:O}";
+                string url = $"Orders?startDate={Q(start)}&endDate={Q(end)}";
 
                 return await _http.GetJsonAsync<List<ContractsOrder>>(url) ?? new List<ContractsOrder>();
             }
@@ -267,13 +273,13 @@ namespace AccuratPanelCWD.Services
                 if (startDate.HasValue)
                 {
                     var utcStart = startDate.Value;
-                    queryParams.Add($"startDate={utcStart:O}");
+                    queryParams.Add($"startDate={Q(utcStart)}");
                 }
 
                 if (endDate.HasValue)
                 {
                     var utcEnd = endDate.Value;
-                    queryParams.Add($"endDate={utcEnd:O}");
+                    queryParams.Add($"endDate={Q(utcEnd)}");
                 }
 
                 if (!string.IsNullOrWhiteSpace(entryType))
@@ -388,7 +394,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                var url = $"Orders/check-availability?branchId={branchId}&box={box}&start={startTime:O}&duration={durationMinutes}&excludeOrderId={excludeOrderId}";
+                var url = $"Orders/check-availability?branchId={branchId}&box={box}&start={Q(startTime)}&duration={durationMinutes}&excludeOrderId={excludeOrderId}";
                 var isAvailable = await _http.GetJsonAsync<bool>(url);
                 return isAvailable;
             }
@@ -534,21 +540,21 @@ namespace AccuratPanelCWD.Services
         // Получение отчетов по сменам с фильтрацией по филиалу и диапазону дат
         public async Task<List<ContractsShiftReport>> GetShiftReportsAsync(int branchId, DateTime start, DateTime end)
         {
-            try { return await _http.GetJsonAsync<List<ContractsShiftReport>>($"Reports/shifts?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsShiftReport>(); }
+            try { return await _http.GetJsonAsync<List<ContractsShiftReport>>($"Reports/shifts?branchId={branchId}&start={Q(start)}&end={Q(end)}") ?? new List<ContractsShiftReport>(); }
             catch { return new List<ContractsShiftReport>(); }
         }
 
         // Получение статистики по клиентам с фильтрацией по филиалу и диапазону дат
         public async Task<ClientStatsResponse> GetClientsStatsAsync(int branchId, DateTime start, DateTime end)
         {
-            try { return await _http.GetJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={start:O}&end={end:O}") ?? new ClientStatsResponse(); }
+            try { return await _http.GetJsonAsync<ClientStatsResponse>($"Reports/clients-stats?branchId={branchId}&start={Q(start)}&end={Q(end)}") ?? new ClientStatsResponse(); }
             catch { return new ClientStatsResponse(); }
         }
 
         // Получение транзакций по филиалу и диапазону дат
         public async Task<List<ContractsTransaction>> GetTransactionsByDateRangeAsync(int branchId, DateTime start, DateTime end)
         {
-            try { return await _http.GetJsonAsync<List<ContractsTransaction>>($"Transactions/range?branchId={branchId}&start={start:O}&end={end:O}") ?? new List<ContractsTransaction>(); }
+            try { return await _http.GetJsonAsync<List<ContractsTransaction>>($"Transactions/range?branchId={branchId}&start={Q(start)}&end={Q(end)}") ?? new List<ContractsTransaction>(); }
             catch { return new List<ContractsTransaction>(); }
         }
 
@@ -565,7 +571,7 @@ namespace AccuratPanelCWD.Services
         {
             try
             {
-                return await _http.GetJsonAsync<ReconciliationSummaryResponse>($"Reports/reconciliations-summary?branchId={branchId}&start={start:O}&end={end:O}")
+                return await _http.GetJsonAsync<ReconciliationSummaryResponse>($"Reports/reconciliations-summary?branchId={branchId}&start={Q(start)}&end={Q(end)}")
                        ?? new ReconciliationSummaryResponse();
             }
             catch { return new ReconciliationSummaryResponse(); }
@@ -580,9 +586,9 @@ namespace AccuratPanelCWD.Services
             DateTime previousStart, DateTime previousEnd)
         {
             var url = $"Reports/compare-periods-full" +
-                      $"?branchId={branchId}" +
-                      $"&currentStart={currentStart:O}&currentEnd={currentEnd:O}" +
-                      $"&previousStart={previousStart:O}&previousEnd={previousEnd:O}";
+                $"?branchId={branchId}" +
+                $"&currentStart={Q(currentStart)}&currentEnd={Q(currentEnd)}" +
+                $"&previousStart={Q(previousStart)}&previousEnd={Q(previousEnd)}";
 
             var response = await _http.GetAsync(url);
             response.EnsureSuccessStatusCode();

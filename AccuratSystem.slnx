@@ -3,6 +3,10 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/docs/">
+    <File Path="TIME_CONVENTIONS.md" />
+    <File Path="TIME_MIGRATION_RUNBOOK.md" />
+  </Folder>
   <Folder Name="/Элементы решения/">
     <File Path=".github/workflows/dotnet.yml" />
     <File Path="img/logo.svg" />

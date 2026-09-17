@@ -116,11 +116,11 @@ namespace AccuratPanelCWD
         {
             try
             {
-                DateTime startUtc = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                DateTime endUtc = new DateTime(2050, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                DateTime start = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+                DateTime end = new DateTime(2050, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
                 //  Передаем branchId в API
-                var allReports = await _apiService.GetShiftReportsAsync(branchId, startUtc, endUtc);
+                var allReports = await _apiService.GetShiftReportsAsync(branchId, start, end);
 
                 Reports = allReports.OrderByDescending(r => r.Date).ToList();
 

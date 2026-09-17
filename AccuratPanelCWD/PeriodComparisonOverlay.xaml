@@ -114,9 +114,9 @@
                         <!-- Панель выбора периодов -->
                         <Border Style="{StaticResource ComparisonCard}">
                             <StackPanel>
-                                <Grid>
+                                <Grid HorizontalAlignment="Center">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
