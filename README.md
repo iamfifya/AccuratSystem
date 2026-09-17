@@ -1,8 +1,7 @@
 # Accurat System — Комплексная SaaS-платформа управления сетью автомоек и сервисов
 
 <div align="center">
-  <img src="./img/logo.svg" alt="Accurat System Logo" width="250" />
-  <h1>Accurat System</h1>
+  <img src="./img/logo.svg" alt="Accurat System Logo" width="500" />
 
 [![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
 [![Last Commit](https://badgen.net/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
