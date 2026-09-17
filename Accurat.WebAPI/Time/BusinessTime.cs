@@ -64,6 +64,18 @@ namespace Accurat.WebAPI.Time
         public static int BusinessHour(this Instant instant, DateTimeZone zone) =>
             instant.InZone(zone).Hour;
 
+        /// <summary>[v1] Instant -> настенное LocalDateTime (legacy: UTC-поля = локальные поля филиала).</summary>
+        public static LocalDateTime ToWallClock(this Instant instant) =>
+            LocalDateTime.FromDateTime(instant.ToDateTimeUtc());
+
+        /// <summary>[v1] Бизнес-день из Instant по конвенции v1 (без сдвига зоной).</summary>
+        public static LocalDate BusinessDay(this Instant instant) =>
+            instant.ToWallClock().Date;
+
+        /// <summary>[v1] Час суток (0-23) из Instant по конвенции v1 (без сдвига зоной).</summary>
+        public static int BusinessHour(this Instant instant) =>
+            instant.ToWallClock().Hour;
+
         /// <summary>
         /// [v2] Диапазон запроса для включительных бизнес-дней в указанной зоне.
         /// Возвращает Instant-границы для честного хранения времени.
@@ -75,5 +87,21 @@ namespace Accurat.WebAPI.Time
             var end = to.PlusDays(1).AtStartOfDayInZone(zone).ToInstant().Minus(Duration.FromTicks(1));
             return (start, end);
         }
+
+        /// <summary>
+        /// [v1.5] Интерпретация legacy-значения (настенное время филиала, помеченное как UTC)
+        /// как ZonedDateTime в зоне филиала. Значение НЕ сдвигается: поля остаются теми же.
+        /// После миграции данных (Этап 6) заменяется на instant.InZone(zone).
+        /// </summary>
+        public static ZonedDateTime FromLegacyWallClock(this DateTime stored, DateTimeZone zone) =>
+            LocalDateTime.FromDateTime(stored).InZoneLeniently(zone);
+
+        /// <summary>[v1.5] Бизнес-день в зоне филиала (legacy-интерпретация).</summary>
+        public static LocalDate BusinessDay(this DateTime stored, DateTimeZone zone) =>
+            stored.FromLegacyWallClock(zone).Date;
+
+        /// <summary>[v1.5] Час суток (0-23) в зоне филиала (legacy-интерпретация).</summary>
+        public static int BusinessHour(this DateTime stored, DateTimeZone zone) =>
+            stored.FromLegacyWallClock(zone).Hour;
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using NodaTime;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AccuratSystem.Contracts.Models
 {
@@ -11,6 +13,19 @@ namespace AccuratSystem.Contracts.Models
         public int BodyTypeCategory { get; set; } = 1;
         public string CarBodyType { get; set; } = string.Empty;
         public string Department { get; set; } = "Wash";
+
+        /// <summary>
+        /// Антикоррозийный шов: время заказа как NodaTime Instant.
+        /// Не маппится в БД и не сериализуется в провод (хранение и JSON остаются на DateTime).
+        /// Конвертация без сдвига значений: наследие v1 — настенное время филиала,
+        /// помеченное как UTC. На Этапе 5 маппинг переедет на это свойство.
+        /// </summary>
+        [NotMapped]
+        public Instant TimeInstant
+        {
+            get => Instant.FromDateTimeUtc(DateTime.SpecifyKind(Time, DateTimeKind.Utc));
+            set => Time = value.ToDateTimeUtc();
+        }
 
         public DateTime Time { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = "В работе";

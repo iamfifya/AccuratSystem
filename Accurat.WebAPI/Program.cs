@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization; // Подключаем Scalar
+using Npgsql.NodaTime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +37,9 @@ var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 
 // 2. ВКЛЮЧАЕМ ТУ САМУЮ МАГИЮ для работы со словарями в JSONB
 dataSourceBuilder.EnableDynamicJson();
+
+// 2.5. ВКЛЮЧАЕМ маппинг NodaTime (Instant/LocalDate ↔ timestamptz/date) — НОВОЕ
+dataSourceBuilder.UseNodaTime();
 
 var dataSource = dataSourceBuilder.Build();
 

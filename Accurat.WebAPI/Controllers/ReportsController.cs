@@ -203,7 +203,7 @@ namespace Accurat.WebAPI.Controllers
                 var hourlyLoad = new List<HourlyLoad>();
                 for (int hour = 0; hour < 24; hour++)
                 {
-                    var hourOrders = orders.Where(o => o.Time.Hour == hour).ToList();
+                    var hourOrders = orders.Where(o => o.Time.BusinessHour(zone) == hour).ToList();
                     hourlyLoad.Add(new HourlyLoad
                     {
                         Hour = hour,
