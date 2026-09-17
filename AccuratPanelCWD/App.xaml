@@ -12,7 +12,7 @@
                 <!-- Тема по умолчанию (светлая) -->
                 <ResourceDictionary Source="/Styles/LightTheme.xaml"/>
                 <ResourceDictionary Source="/Styles/OrderCardTemplate.xaml"/>
-                <ResourceDictionary Source="/Styles/CustomComboBoxStyle.xaml"/>
+                <ResourceDictionary Source="/Controls/CustomComboBoxStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

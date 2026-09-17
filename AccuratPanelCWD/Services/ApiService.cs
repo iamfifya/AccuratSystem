@@ -888,10 +888,6 @@ namespace AccuratPanelCWD.Services
         }
 
         /// <summary>
-        /// Безопасная версия GetFromJsonAsync: обрабатывает 404 как "нет данных",
-        /// пустое тело как default(T), и тело "null" как null.
-        /// </summary>
-        /// <summary>
         /// Безопасная версия GET: ловит 404/пустое тело/"null" и возвращает default.
         /// Сериализация через JsonOpts.Default (с конвертером).
         /// </summary>
@@ -904,7 +900,14 @@ namespace AccuratPanelCWD.Services
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     return default;
 
-                response.EnsureSuccessStatusCode();
+                // Логируем тело ответа и URL при ошибочном коде, чтобы понять причину 400/5xx
+                if (!response.IsSuccessStatusCode)
+                {
+                    var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? url;
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    System.Diagnostics.Debug.WriteLine($"HTTP GET {requestUri} -> {(int)response.StatusCode} {response.ReasonPhrase}. Body: {errorBody}");
+                    return default;
+                }   
 
                 var content = await response.Content.ReadAsStringAsync();
 
@@ -963,10 +966,10 @@ namespace AccuratPanelCWD.Services
                 queryParams.Add($"userId={userId.Value}");
 
             if (startDate.HasValue)
-                queryParams.Add($"startDate={startDate.Value:O}");
+                queryParams.Add($"startDate={Q(startDate.Value)}");
 
             if (endDate.HasValue)
-                queryParams.Add($"endDate={endDate.Value:O}");
+                queryParams.Add($"endDate={Q(endDate.Value)}");
 
             if (!string.IsNullOrWhiteSpace(entryType))
                 queryParams.Add($"entryType={Uri.EscapeDataString(entryType)}");

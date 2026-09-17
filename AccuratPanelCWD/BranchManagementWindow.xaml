@@ -1,6 +1,7 @@
 ﻿<Window x:Class="AccuratPanelCWD.BranchManagementWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AccuratPanelCWD.Controls"
         Title="Управление филиалами" 
         Height="750" Width="1100"
         WindowStyle="None"
@@ -160,6 +161,15 @@
                                      Height="45" 
                                      Padding="15,0"
                                      FontSize="14"/>
+
+                            <!-- Часовая зона -->
+                            <controls:CustomComboBox x:Name="TimeZoneComboBox" 
+                                Header="🕐 Часовая зона (IANA)"
+                                DisplayMemberPath="DisplayName"
+                                SelectedValuePath="Id"
+                                Placeholder="По умолчанию (Europe/Moscow)"
+                                ToolTip="Определяет, как система интерпретирует даты/время для этого филиала"
+                                Margin="0,20,0,0"/>
 
                             <!-- Постов и подъёмников -->
                             <Grid Margin="0,20,0,0">

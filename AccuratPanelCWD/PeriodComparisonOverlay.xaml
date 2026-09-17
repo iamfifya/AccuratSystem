@@ -129,19 +129,19 @@
                                                    Foreground="{DynamicResource AccentBlue}"
                                                    Margin="0,0,0,5"/>
                                         <StackPanel Orientation="Horizontal">
-                                            <local:CustomDatePicker x:Name="CurrentStartDatePicker" Height="40" Width="160"/>
+                                            <local:CustomDatePicker x:Name="CurrentStartDatePicker"/>
                                             <TextBlock Text="—" VerticalAlignment="Center" Margin="8,0"
                                                        Foreground="{DynamicResource TextMuted}"/>
-                                            <local:CustomDatePicker x:Name="CurrentEndDatePicker" Height="40" Width="160"/>
+                                            <local:CustomDatePicker x:Name="CurrentEndDatePicker"/>
                                         </StackPanel>
                                     </StackPanel>
 
                                     <!-- VS -->
-                                    <TextBlock Grid.Column="1" Text="VS"
-                                               FontSize="18" FontWeight="Bold"
+                                    <TextBlock Grid.Column="1" Text="|"
+                                               FontWeight="Bold"
                                                Foreground="{DynamicResource TextMuted}"
-                                               VerticalAlignment="Center"
-                                               Margin="15,0"/>
+                                               VerticalAlignment="Bottom"
+                                               Margin="15"/>
 
                                     <!-- Прошлый период -->
                                     <StackPanel Grid.Column="2">
@@ -150,10 +150,10 @@
                                                    Foreground="{DynamicResource TextMuted}"
                                                    Margin="0,0,0,5"/>
                                         <StackPanel Orientation="Horizontal">
-                                            <local:CustomDatePicker x:Name="PreviousStartDatePicker" Height="40" Width="160"/>
+                                            <local:CustomDatePicker x:Name="PreviousStartDatePicker"/>
                                             <TextBlock Text="—" VerticalAlignment="Center" Margin="8,0"
                                                        Foreground="{DynamicResource TextMuted}"/>
-                                            <local:CustomDatePicker x:Name="PreviousEndDatePicker" Height="40" Width="160"/>
+                                            <local:CustomDatePicker x:Name="PreviousEndDatePicker"/>
                                         </StackPanel>
                                     </StackPanel>
 
@@ -167,7 +167,7 @@
                                 </Grid>
 
                                 <!-- Пресеты -->
-                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0" HorizontalAlignment="Center">
                                     <TextBlock Text="Пресеты:" FontSize="12"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" Margin="0,0,10,0"/>

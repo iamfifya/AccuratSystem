@@ -18,10 +18,32 @@ namespace AccuratPanelCWD
         private List<Branch> _branches = new List<Branch>();
         private Branch _selectedBranch;
         private bool _isNewBranch = false;
+        public class TimeZoneOption
+        {
+            public string Id { get; set; }        // "Europe/Moscow" или "" для дефолта
+            public string DisplayName { get; set; }
+        }
+
+        private static readonly List<TimeZoneOption> TimeZones = new List<TimeZoneOption>
+            {
+                new TimeZoneOption { Id = "",                  DisplayName = "По умолчанию (Europe/Moscow)" },
+                new TimeZoneOption { Id = "Europe/Kaliningrad", DisplayName = "Калининград (UTC+2)" },
+                new TimeZoneOption { Id = "Europe/Moscow",      DisplayName = "Москва (UTC+3)" },
+                new TimeZoneOption { Id = "Europe/Samara",      DisplayName = "Самара (UTC+4)" },
+                new TimeZoneOption { Id = "Asia/Yekaterinburg", DisplayName = "Екатеринбург (UTC+5)" },
+                new TimeZoneOption { Id = "Asia/Omsk",          DisplayName = "Омск (UTC+6)" },
+                new TimeZoneOption { Id = "Asia/Krasnoyarsk",   DisplayName = "Красноярск (UTC+7)" },
+                new TimeZoneOption { Id = "Asia/Irkutsk",       DisplayName = "Иркутск (UTC+8)" },
+                new TimeZoneOption { Id = "Asia/Yakutsk",       DisplayName = "Якутск (UTC+9)" },
+                new TimeZoneOption { Id = "Asia/Vladivostok",   DisplayName = "Владивосток (UTC+10)" },
+                new TimeZoneOption { Id = "Asia/Magadan",       DisplayName = "Магадан (UTC+11)" },
+                new TimeZoneOption { Id = "Asia/Kamchatka",     DisplayName = "Камчатка (UTC+12)" },
+            };
 
         public BranchManagementWindow()
         {
             InitializeComponent();
+            TimeZoneComboBox.ItemsSource = TimeZones;
             LoadBranchesAsync();
         }
 
@@ -59,6 +81,8 @@ namespace AccuratPanelCWD
                 WashBaysTextBox.Text = branch.WashBaysCount.ToString();
                 ServiceLiftsTextBox.Text = branch.ServiceLiftsCount.ToString();
                 IsActiveCheckBox.IsChecked = branch.IsActive;
+                // Часовая зона: пустая строка в БД = дефолт (Europe/Moscow)
+                TimeZoneComboBox.SelectedValue = string.IsNullOrEmpty(branch.TimeZoneId) ? "" : (object)branch.TimeZoneId;
 
                 DeleteButton.Visibility = Visibility.Visible;
                 EditPanel.IsEnabled = true;
@@ -82,6 +106,7 @@ namespace AccuratPanelCWD
             WashBaysTextBox.Text = "0";
             ServiceLiftsTextBox.Text = "0";
             IsActiveCheckBox.IsChecked = true;
+            TimeZoneComboBox.SelectedValue = ""; // По умолчанию
 
             DeleteButton.Visibility = Visibility.Collapsed;
             EditPanel.IsEnabled = true;
@@ -106,6 +131,9 @@ namespace AccuratPanelCWD
                 _selectedBranch.WashBaysCount = int.TryParse(WashBaysTextBox.Text, out int w) ? w : 0;
                 _selectedBranch.ServiceLiftsCount = int.TryParse(ServiceLiftsTextBox.Text, out int s) ? s : 0;
                 _selectedBranch.IsActive = IsActiveCheckBox.IsChecked ?? false;
+
+                var selectedZone = TimeZoneComboBox.SelectedValue as string;
+                _selectedBranch.TimeZoneId = string.IsNullOrEmpty(selectedZone) ? null : selectedZone;
 
                 if (_isNewBranch)
                 {
