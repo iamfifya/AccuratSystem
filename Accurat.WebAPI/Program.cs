@@ -48,9 +48,13 @@ builder.Services.AddSignalR();
 // Подключаем наш фоновый обработчик
 builder.Services.AddHostedService<Accurat.WebAPI.Services.OutboxProcessorBackgroundService>();
 
+
+// 4. Регистрируем сервис для разрешения часовых зон филиалов
+builder.Services.AddScoped<Accurat.WebAPI.Time.IBranchZoneResolver, Accurat.WebAPI.Time.BranchZoneResolver>();
+
 var app = builder.Build();
 
-// 4. Настраиваем визуальный интерфейс
+// 5. Настраиваем визуальный интерфейс
 if (app.Environment.IsDevelopment())
 {
     // Генерирует сам файл описания (openapi/v1.json)

@@ -1,13 +1,16 @@
-﻿using AccuratSystem.Contracts.Models;
-using AccuratSystem.Contracts.Enums;
+﻿using Accurat.WebAPI.Data;
+using Accurat.WebAPI.Time;
 using AccuratSystem.Contracts.DTOs;
+using AccuratSystem.Contracts.Enums;
+using AccuratSystem.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Accurat.WebAPI.Data;
+using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace Accurat.WebAPI.Controllers
 {
@@ -16,14 +19,25 @@ namespace Accurat.WebAPI.Controllers
     public class ReportsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        public ReportsController(AppDbContext context) => _context = context;
+        private readonly Accurat.WebAPI.Time.IBranchZoneResolver _zoneResolver;
+
+        public ReportsController(AppDbContext context, Accurat.WebAPI.Time.IBranchZoneResolver zoneResolver)
+        {
+            _context = context;
+            _zoneResolver = zoneResolver;
+        }
         private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id) ? int.Parse(id) : 1;
 
         [HttpGet("shifts")]
         public async Task<ActionResult<IEnumerable<ShiftReport>>> GetShiftReports(int branchId, DateTime start, DateTime end)
         {
-            var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
-            var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+
+            // Определяем часовую зону филиала (или зону по умолчанию)
+            var zone = branchId > 0
+                    ? _zoneResolver.GetZone(branchId)
+                    : _zoneResolver.DefaultZone;
+
+            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end);
 
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
@@ -169,7 +183,7 @@ namespace Accurat.WebAPI.Controllers
                     o.DiscountPercent > 0 ? o.TotalPrice * o.DiscountPercent / 100 : o.DiscountAmount);
                 report.DiscountedOrdersCount = orders.Count(o => o.DiscountPercent > 0 || o.DiscountAmount > 0);
 
-                // === НОВОЕ: РАЗБИВКА РАСХОДОВ ПО КАТЕГОРИЯМ ===
+                // === РАЗБИВКА РАСХОДОВ ПО КАТЕГОРИЯМ ===
                 var expenses = transactions.Where(t => t.Type == "Расход").ToList();
                 var expenseGroups = expenses.GroupBy(t => string.IsNullOrWhiteSpace(t.Comment) ? "Без категории" : t.Comment)
                     .Select(g => new ExpenseCategoryReport
@@ -185,7 +199,7 @@ namespace Accurat.WebAPI.Controllers
                     .ToList();
                 report.ExpensesByCategory = expenseGroups;
 
-                // === НОВОЕ: ЗАГРУЖЕННОСТЬ ПО ЧАСАМ ===
+                // === ЗАГРУЖЕННОСТЬ ПО ЧАСАМ ===
                 var hourlyLoad = new List<HourlyLoad>();
                 for (int hour = 0; hour < 24; hour++)
                 {
@@ -200,7 +214,7 @@ namespace Accurat.WebAPI.Controllers
                 }
                 report.HourlyLoad = hourlyLoad;
 
-                // === НОВОЕ: ОСТАТОК ПО КАССЕ ===
+                // === ОСТАТОК ПО КАССЕ ===
                 var cashTransactions = transactions.Where(t => t.Type == "Приход" || t.Type == "Расход" || t.Type == "Инкассация").ToList();
                 var expectedCash = cashTransactions
                     .Where(t => t.Type == "Приход")
@@ -410,8 +424,13 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("clients-stats")]
         public async Task<ActionResult<object>> GetClientsStats(int branchId, DateTime start, DateTime end)
         {
-            var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
-            var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+
+            // Определяем часовую зону филиала (или зону по умолчанию)
+            var zone = branchId > 0
+                    ? _zoneResolver.GetZone(branchId)
+                    : _zoneResolver.DefaultZone;
+
+            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end);
 
             var newClientsQuery = _context.Clients.Where(c => c.RegistrationDate >= startUtc && c.RegistrationDate <= endUtc);
             var uniqueClientsQuery = _context.Orders.Where(o => o.Time >= startUtc && o.Time <= endUtc && o.ClientId != null);
@@ -449,8 +468,13 @@ namespace Accurat.WebAPI.Controllers
         [HttpGet("reconciliations-summary")]
         public async Task<ActionResult<object>> GetReconciliationsSummary(int branchId, DateTime start, DateTime end)
         {
-            var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
-            var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+
+            // Определяем часовую зону филиала (или зону по умолчанию)
+            var zone = branchId > 0
+                    ? _zoneResolver.GetZone(branchId)
+                    : _zoneResolver.DefaultZone;
+
+            var (startUtc, endUtc) = BusinessTime.StoredRangeInclusive(start, end);
 
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
@@ -629,12 +653,12 @@ namespace Accurat.WebAPI.Controllers
 
             // Текущий период - по дням
             var currentByDate = currentReports
-                .GroupBy(r => r.Date.Date)
+                .GroupBy(r => r.Date.BusinessDay())
                 .Select((g, idx) => new DayComparisonPoint
                 {
-                    Date = g.Key,
+                    Date = g.Key.At(LocalTime.Midnight).ToDateTimeUnspecified(),
                     DayIndex = idx,
-                    DateLabel = g.Key.ToString("dd.MM"),
+                    DateLabel = g.Key.ToString("dd.MM", CultureInfo.InvariantCulture),
                     Revenue = g.Sum(r => r.TotalRevenue),
                     CarsCount = g.Sum(r => r.TotalCars),
                     AvgCheck = g.Sum(r => r.TotalCars) > 0
@@ -652,12 +676,12 @@ namespace Accurat.WebAPI.Controllers
 
             // Прошлый период - по дням
             var previousByDate = previousReports
-                .GroupBy(r => r.Date.Date)
+                .GroupBy(r => r.Date.BusinessDay())
                 .Select((g, idx) => new DayComparisonPoint
                 {
-                    Date = g.Key,
+                    Date = g.Key.At(LocalTime.Midnight).ToDateTimeUnspecified(),
                     DayIndex = idx,
-                    DateLabel = g.Key.ToString("dd.MM"),
+                    DateLabel = g.Key.ToString("dd.MM", CultureInfo.InvariantCulture),
                     Revenue = g.Sum(r => r.TotalRevenue),
                     CarsCount = g.Sum(r => r.TotalCars),
                     AvgCheck = g.Sum(r => r.TotalCars) > 0

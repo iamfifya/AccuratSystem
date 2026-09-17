@@ -5,6 +5,8 @@
   </Configurations>
   <Folder Name="/Элементы решения/">
     <File Path=".github/workflows/dotnet.yml" />
+    <File Path="img/logo.svg" />
+    <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
   <Project Path="Accurat.WebAPI/Accurat.WebAPI.csproj" />

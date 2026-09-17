@@ -19,5 +19,9 @@ namespace AccuratSystem.Contracts.Models
 
         // Навигационные свойства убраны для C# 7.3 совместимости в Contracts
         // Связи настраиваются в AppDbContext бэкенда
+
+        // IANA-идентификатор часовой зоны филиала (например, "Europe/Moscow").
+        // Пустая строка = зона по умолчанию для компании.
+        public string TimeZoneId { get; set; } = string.Empty;
     }
 }
