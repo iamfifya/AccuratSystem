@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="./img/logo.svg" alt="Accurat System Logo" width="500" />
+<img src="./img/logo.ico" alt="Accurat System Logo" />
 
 [![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
 [![Last Commit](https://badgen.net/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
