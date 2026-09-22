@@ -8,10 +8,14 @@
     <File Path="TIME_MIGRATION_RUNBOOK.md" />
   </Folder>
   <Folder Name="/Элементы решения/">
+    <File Path=".github/ISSUE_TEMPLATE/bug_report.md" />
+    <File Path=".github/ISSUE_TEMPLATE/feature_request.md" />
     <File Path=".github/workflows/dotnet.yml" />
+    <File Path="CONTRIBUTING.md" />
     <File Path="img/logo.svg" />
     <File Path="LICENSE" />
     <File Path="README.md" />
+    <File Path="SECURITY.md" />
   </Folder>
   <Project Path="Accurat.WebAPI/Accurat.WebAPI.csproj" />
   <Project Path="AccuratPanelCarWashing/AccuratPanelCarWashing.csproj" Id="91065681-afbe-4ea9-867d-6d9885c61197">
