@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="45" d:DesignWidth="400">
+             d:DesignHeight="40" d:DesignWidth="400">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -15,7 +15,7 @@
         <!-- Поле отображения даты -->
         <TextBox x:Name="DateTextBox" 
                  Grid.Column="0" 
-                 Height="45" 
+                 Height="40" 
                  Padding="15,0" 
                  IsReadOnly="True" 
                  Background="{DynamicResource InputBackground}"
@@ -23,7 +23,7 @@
                  Cursor="Hand"
                  MouseDown="DateTextBox_MouseDown"
                  BorderBrush="{DynamicResource InputBorder}" 
-                 BorderThickness="1"
+                 BorderThickness="2"
                  HorizontalContentAlignment="Left"
                  VerticalContentAlignment="Center"
                  FontSize="14"
@@ -49,8 +49,8 @@
 
         <!-- Кнопка открытия календаря -->
         <Button Grid.Column="1" 
-                Width="45" 
-                Height="45" 
+                Width="40" 
+                Height="40" 
                 Content="📅" 
                 Background="{DynamicResource AccentBlue}" 
                 Foreground="White" 
@@ -83,7 +83,7 @@
                AllowsTransparency="True">
             <Border Background="{DynamicResource BgCard}" 
                     BorderBrush="{DynamicResource BorderColor}" 
-                    BorderThickness="1" 
+                    BorderThickness="2" 
                     CornerRadius="6" 
                     Padding="15"
                     Margin="10">
@@ -107,8 +107,8 @@
 
                         <Button Grid.Column="0" 
                                 Content="◀" 
-                                Width="35" 
-                                Height="35" 
+                                Width="40" 
+                                Height="40" 
                                 Background="{DynamicResource AccentBlue}" 
                                 Foreground="White" 
                                 BorderThickness="0" 
@@ -142,8 +142,8 @@
 
                         <Button Grid.Column="2" 
                                 Content="▶" 
-                                Width="35" 
-                                Height="35" 
+                                Width="40" 
+                                Height="40" 
                                 Background="{DynamicResource AccentBlue}" 
                                 Foreground="White" 
                                 BorderThickness="0" 

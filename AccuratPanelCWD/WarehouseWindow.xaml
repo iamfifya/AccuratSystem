@@ -53,11 +53,15 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,12,0,0">
+                <WrapPanel Grid.Row="4" Orientation="Horizontal" Margin="0,12,0,0">
                     <Button Content="➕ Добавить" Style="{StaticResource PrimaryBtn}" Click="AddItem_Click" Margin="0,0,8,0"/>
                     <Button Content="🗄 В архив" Style="{StaticResource DangerBtn}" Click="ArchiveItem_Click" Margin="0,0,8,0"/>
                     <Button Content="🏷 Категории" Style="{StaticResource PrimaryBtn}" Click="Categories_Click"/>
-                </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="📊 Остатки" Style="{StaticResource PrimaryBtn}" Click="Balances_Click" Margin="0,0,8,0"/>
+                        <Button Content="📄 Документы" Style="{StaticResource PrimaryBtn}" Click="Documents_Click"/>
+                    </StackPanel>
+                </WrapPanel>
             </Grid>
         </Border>
 

@@ -3,7 +3,7 @@
                     xmlns:controls="clr-namespace:AccuratPanelCWD.Controls">
 
     <Style TargetType="{x:Type controls:CustomComboBox}">
-        <Setter Property="Height" Value="40"/>
+        <!-- <Setter Property="Height" Value="40"/> -->
         <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
         <Setter Property="BorderThickness" Value="2"/>
@@ -37,7 +37,7 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="{TemplateBinding CornerRadius}"
-                                Height="{TemplateBinding Height}"
+                                Height="40"
                                 Cursor="Hand">
 
                             <Grid>
@@ -51,7 +51,7 @@
                                          Grid.Column="0"
                                          BorderThickness="0"
                                          Background="Transparent"
-                                         Padding="15,0,0,0"
+                                         Padding="15,0,40,0"
                                          VerticalAlignment="Center"
                                          IsReadOnly="{TemplateBinding IsEditable}"
                                          Foreground="{DynamicResource InputText}"
@@ -94,7 +94,7 @@
                                PlacementTarget="{Binding ElementName=PART_MainBorder}"
                                Placement="Bottom"
                                StaysOpen="False"
-                               Width="{Binding ActualWidth, ElementName=PART_MainBorder}">
+                               MinWidth="{Binding ActualWidth, ElementName=PART_MainBorder}">
 
                             <Border Background="{DynamicResource BgCard}"
                                     BorderBrush="{DynamicResource BorderColor}"

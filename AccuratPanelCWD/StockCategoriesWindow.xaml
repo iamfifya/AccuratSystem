@@ -4,7 +4,7 @@
         Title="🏷 Категории склада" Height="450" Width="420"
         WindowStartupLocation="CenterOwner" Background="{DynamicResource BgMain}"
         Foreground="{DynamicResource TextMain}">
-    <Grid Margin="18">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -12,26 +12,32 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="🏷 Категории номенклатуры" FontWeight="Bold" FontSize="18" Margin="0,0,0,12"/>
+        <TextBlock Text="🏷 Категории номенклатуры" FontWeight="Bold" FontSize="18" Margin="0,0,0,16"/>
 
-        <ListBox x:Name="CategoriesList" Grid.Row="1" DisplayMemberPath="Name"
-                 SelectionChanged="CategoriesList_SelectionChanged"
-                 Background="{DynamicResource BgCard}" Foreground="{DynamicResource TextMain}"
-                 BorderBrush="{DynamicResource BorderColor}"/>
+        <!-- Обернули ListBox в Border для скруглений, как в остальных карточках -->
+        <Border Grid.Row="1" Background="{DynamicResource BgCard}" 
+                BorderBrush="{DynamicResource BorderColor}" BorderThickness="2" CornerRadius="6">
+            <ListBox x:Name="CategoriesList" DisplayMemberPath="Name"
+                     SelectionChanged="CategoriesList_SelectionChanged"
+                     Style="{StaticResource CleanListBoxStyle}" Margin="2"/>
+        </Border>
 
-        <Grid Grid.Row="2" Margin="0,12,0,0">
+        <Grid Grid.Row="2" Margin="0,16,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="NameTextBox" Height="40" Padding="12,0" FontSize="13"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
-                <Button Content="💾" Style="{StaticResource SuccessBtn}" Click="Save_Click" Margin="0,0,6,0" ToolTip="Создать / переименовать"/>
-                <Button Content="🗑" Style="{StaticResource DangerBtn}" Click="Delete_Click" ToolTip="Удалить (если не используется)"/>
+
+            <!-- Убраны Height и Padding, так как они заданы в AppStyles.xaml -->
+            <TextBox x:Name="NameTextBox"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                <Button Content="💾" Style="{StaticResource SuccessBtn}" Click="Save_Click" ToolTip="Создать / переименовать"/>
+                <Button Content="🗑" Style="{StaticResource DangerBtn}" Margin="0" Click="Delete_Click" ToolTip="Удалить (если не используется)"/>
             </StackPanel>
         </Grid>
 
         <Button Grid.Row="3" Content="✖ Закрыть" Style="{StaticResource DangerBtn}"
-                HorizontalAlignment="Center" Margin="0,14,0,0" Click="Close_Click"/>
+                HorizontalAlignment="Center" Margin="0,20,0,0" Click="Close_Click"/>
     </Grid>
 </Window>

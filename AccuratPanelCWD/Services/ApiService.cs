@@ -3,6 +3,7 @@
 using AccuratPanelCWD.Models;
 using AccuratPanelCWD.Services;
 using AccuratSystem.Contracts.DTOs;
+using AccuratSystem.Contracts.Enums;
 using AccuratSystem.Contracts.Models;
 using System;
 using System.Collections.Generic;
@@ -1041,6 +1042,31 @@ namespace AccuratPanelCWD.Services
         {
             var r = await _http.DeleteAsync($"Stock/items/{id}");
             r.EnsureSuccessStatusCode();
+        }
+
+        public async Task<List<StockBalance>> GetStockBalancesAsync(int branchId)
+        {
+            try { return await _http.GetJsonAsync<List<StockBalance>>($"Stock/balances?branchId={branchId}") ?? new List<StockBalance>(); }
+            catch (Exception ex) { throw new Exception($"Остатки: {ex.Message}"); }
+        }
+
+        public async Task<List<StockDocument>> GetStockDocumentsAsync(int branchId, StockDocumentType? type = null)
+        {
+            var url = $"Stock/documents?branchId={branchId}";
+            if (type.HasValue) url += $"&type={(int)type.Value}";
+            try { return await _http.GetJsonAsync<List<StockDocument>>(url) ?? new List<StockDocument>(); }
+            catch (Exception ex) { throw new Exception($"Документы склада: {ex.Message}"); }
+        }
+
+        public async Task<StockDocument> CreateStockDocumentAsync(StockDocument doc)
+        {
+            var r = await _http.PostJsonAsync("Stock/documents", doc);
+            if (!r.IsSuccessStatusCode)
+            {
+                var err = await r.Content.ReadAsStringAsync();
+                throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {err}");
+            }
+            return await r.Content.ReadJsonAsync<StockDocument>();
         }
         #endregion
     }
