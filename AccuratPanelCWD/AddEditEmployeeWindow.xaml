@@ -158,10 +158,10 @@
                     Orientation="Horizontal" 
                     HorizontalAlignment="Center" 
                     Margin="0,20">
-            <Button Content="✓ Сохранить" 
+            <Button Content="✅ Сохранить" 
                     Click="SaveButton_Click" 
                     Style="{StaticResource SuccessBtn}"/>
-            <Button Content="✗ Отмена" 
+            <Button Content="✖ Отмена" 
                     Click="CloseButton_Click" 
                     Style="{StaticResource DangerBtn}"/>
         </StackPanel>
