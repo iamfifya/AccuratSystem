@@ -49,6 +49,11 @@ namespace Accurat.WebAPI.Data
         public DbSet<StockCategory> StockCategories => Set<StockCategory>();
         public DbSet<StockItem> StockItems => Set<StockItem>();
 
+        // Складской учет: документы и движения
+        public DbSet<StockBalance> StockBalances => Set<StockBalance>();
+        public DbSet<StockDocument> StockDocuments => Set<StockDocument>();
+        public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -410,6 +415,44 @@ namespace Accurat.WebAPI.Data
                     .WithMany()
                     .HasForeignKey(e => e.CompanyId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // === СКЛАД: ОСТАТКИ (уникальны в паре позиция+филиал) ===
+            modelBuilder.Entity<StockBalance>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ItemId, e.BranchId }).IsUnique();
+                entity.Property(e => e.Quantity).HasPrecision(18, 3);
+                entity.Property(e => e.AvgCost).HasPrecision(18, 2);
+                entity.HasOne(e => e.Item).WithMany()
+                    .HasForeignKey(e => e.ItemId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Branch).WithMany()
+                    .HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // === СКЛАД: ДОКУМЕНТЫ ===
+            modelBuilder.Entity<StockDocument>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.CompanyId, e.Number }).IsUnique();
+                entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(20);
+                entity.HasOne(e => e.Branch).WithMany()
+                    .HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // === СКЛАД: ДВИЖЕНИЯ ===
+            modelBuilder.Entity<StockMovement>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ItemId, e.BranchId });
+                entity.HasIndex(e => e.DocumentId);
+                entity.Property(e => e.Type).HasConversion<string>().HasMaxLength(20);
+                entity.Property(e => e.Quantity).HasPrecision(18, 3);
+                entity.Property(e => e.CostPrice).HasPrecision(18, 2);
+                entity.HasOne(e => e.Item).WithMany()
+                    .HasForeignKey(e => e.ItemId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Document).WithMany(d => d.Movements)
+                    .HasForeignKey(e => e.DocumentId).OnDelete(DeleteBehavior.Cascade);
             });
 
         }

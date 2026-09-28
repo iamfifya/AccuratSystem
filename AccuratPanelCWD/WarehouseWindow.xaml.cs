@@ -213,5 +213,8 @@ namespace AccuratPanelCWD
             e.Handled = !Regex.IsMatch(e.Text, @"^[0-9.,]+$");
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
+
+        private void Balances_Click(object sender, RoutedEventArgs e) => new StockBalancesWindow().ShowDialog();
+        private void Documents_Click(object sender, RoutedEventArgs e) => new StockDocumentsWindow().ShowDialog();
     }
 }
