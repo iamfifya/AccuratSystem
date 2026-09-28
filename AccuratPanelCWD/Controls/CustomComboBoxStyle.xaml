@@ -6,7 +6,7 @@
         <Setter Property="Height" Value="40"/>
         <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="CornerRadius" Value="6"/>
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="13"/>
@@ -98,7 +98,7 @@
 
                             <Border Background="{DynamicResource BgCard}"
                                     BorderBrush="{DynamicResource BorderColor}"
-                                    BorderThickness="1"
+                                    BorderThickness="2"
                                     CornerRadius="6"
                                     Margin="0,4,0,0">
                             <ScrollViewer x:Name="PART_ScrollViewer"
