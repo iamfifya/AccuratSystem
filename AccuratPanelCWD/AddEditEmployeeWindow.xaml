@@ -33,71 +33,55 @@
 
                 <!-- ФИО -->
                 <TextBlock Text="ФИО" 
-                           FontSize="13" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextMain}"
                            Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentEmployee.FullName, UpdateSourceTrigger=PropertyChanged}" 
                          Margin="0,0,0,20" 
-                         Height="45" 
                          Padding="15,0"
-                         FontSize="14"/>
+                         />
 
                 <!-- Телефон -->
                 <TextBlock Text="📱 Телефон" 
-                           FontSize="13" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextMain}"
                            Margin="0,0,0,8"/>
                 <TextBox x:Name="PhoneTextBox" 
                          Text="{Binding CurrentEmployee.Phone, UpdateSourceTrigger=PropertyChanged}" 
                          Margin="0,0,0,5" 
-                         Height="45" 
                          Padding="15,0" 
-                         FontSize="14"
                          PreviewTextInput="PhoneTextBox_PreviewTextInput"
                          TextChanged="PhoneTextBox_TextChanged" 
                          MaxLength="20"/>
                 <TextBlock Text="Формат: 89996094363" 
                            Foreground="{DynamicResource TextMuted}" 
                            Margin="0,0,0,20" 
-                           FontSize="11" 
                            HorizontalAlignment="Left"/>
 
                 <!-- Логин -->
                 <TextBlock Text="Логин" 
-                           FontSize="13" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextMain}"
                            Margin="0,0,0,8"/>
                 <TextBox Text="{Binding CurrentEmployee.Login, UpdateSourceTrigger=PropertyChanged}" 
                          Margin="0,0,0,20" 
-                         Height="45" 
-                         Padding="15,0"
-                         FontSize="14"/>
+                         Padding="15,0"/>
 
                 <!-- Пароль -->
                 <TextBlock Text="Пароль" 
-                           FontSize="13" 
+                            
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextMain}"
                            Margin="0,0,0,8"/>
                 <PasswordBox x:Name="PasswordBox" 
                              Margin="0,0,0,20" 
-                             Height="45" 
                              Padding="15,0" 
-                             FontSize="14"
                              VerticalContentAlignment="Center"/>
 
                 <!-- Должность -->
-                <TextBlock Text="Должность" 
-                           FontSize="13" 
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextMain}"
-                           Margin="0,0,0,8"/>
                 <controls:CustomComboBox x:Name="RoleComboBox" 
+                                         Header="Категория-фильтр"
                                          Margin="0,0,0,20" 
-                                         Height="45" 
                                          Placeholder="Выберите должность"
                                          DisplayMemberPath="Name" 
                                          SelectedValuePath="Id"
@@ -119,40 +103,40 @@
 
                         <!-- Ставка зарплаты -->
                         <TextBlock Text="Ставка зарплаты (%)" 
-                                   FontSize="13" 
+                                    
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextMain}"
                                    Margin="0,0,0,8"/>
                         <TextBox Text="{Binding CurrentEmployee.BaseWagePercentage, UpdateSourceTrigger=PropertyChanged}" 
                                  Margin="0,0,0,15" 
-                                 Height="45" 
+                                  
                                  Padding="15,0"
-                                 FontSize="14"/>
+                                 />
 
                         <!-- Фиксированный оклад -->
                         <TextBlock Text="Фиксированный оклад за смену (₽)" 
-                                   FontSize="13" 
+                                    
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextMain}"
                                    Margin="0,0,0,8"/>
                         <TextBox x:Name="SalaryTextBox" 
-                                 Height="45" 
+                                  
                                  Padding="15,0" 
                                  VerticalContentAlignment="Center"
-                                 FontSize="14"
+                                 
                                  Text="{Binding CurrentEmployee.BaseSalaryPerShift, UpdateSourceTrigger=PropertyChanged, FallbackValue=0}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Филиал привязки -->
                 <TextBlock Text="📂 Филиал привязки" 
-                           FontSize="13" 
+                            
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextMain}"
                            Margin="0,0,0,8"/>
                 <controls:CustomComboBox x:Name="BranchComboBox" 
                                          Margin="0,0,0,20" 
-                                         Height="45" 
+                                          
                                          Placeholder="Выберите филиал"
                                          DisplayMemberPath="Name" 
                                          SelectedValuePath="Id"
@@ -164,7 +148,7 @@
                           Margin="0,10,0,0" 
                           HorizontalAlignment="Left" 
                           Foreground="{DynamicResource TextMain}"
-                          FontSize="14"
+                          
                           FontWeight="SemiBold"/>
             </StackPanel>
         </ScrollViewer>

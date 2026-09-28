@@ -3,7 +3,7 @@
                     xmlns:controls="clr-namespace:AccuratPanelCWD.Controls">
 
     <Style TargetType="{x:Type controls:CustomComboBox}">
-        <Setter Property="Height" Value="45"/>
+        <Setter Property="Height" Value="40"/>
         <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
@@ -61,8 +61,8 @@
                                 <!-- Кнопка-стрелка -->
                                 <ToggleButton x:Name="PART_ToggleButton"
                                               Grid.Column="1"
-                                              Width="35"
-                                              Height="35"
+                                              Width="40"
+                                              Height="40"
                                               Margin="0,0,5,0"
                                               VerticalAlignment="Center"
                                               IsHitTestVisible="True">

@@ -4,7 +4,7 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
 
     <!-- БАЗОВЫЙ СТИЛЬ КНОПОК -->
     <Style x:Key="BaseButtonStyle" TargetType="Button">
-        <Setter Property="Height" Value="45"/>
+        <Setter Property="Height" Value="40"/>
         <Setter Property="Padding" Value="15,0"/>
         <Setter Property="Margin" Value="0,0,8,0"/>
         <Setter Property="Foreground" Value="White"/>
@@ -113,7 +113,7 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
         <Setter Property="CornerRadius" Value="6"/>
         <Setter Property="Padding" Value="20"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="Effect">
             <Setter.Value>
                 <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.08" Color="#000000"/>
@@ -128,7 +128,7 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
         <Setter Property="Padding" Value="15"/>
         <Setter Property="Margin" Value="0,0,0,10"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Effect">
             <Setter.Value>
@@ -232,12 +232,12 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
     <Style TargetType="TextBox">
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="12"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
         <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
         <Setter Property="Foreground" Value="{DynamicResource InputText}"/>
         <Setter Property="Padding" Value="10,0"/>
-        <Setter Property="Height" Value="35"/>
+        <Setter Property="Height" Value="40"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -263,12 +263,12 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
     <Style TargetType="PasswordBox">
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}"/>
         <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
         <Setter Property="Foreground" Value="{DynamicResource InputText}"/>
         <Setter Property="Padding" Value="15,0"/>
-        <Setter Property="Height" Value="45"/>
+        <Setter Property="Height" Value="40"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -296,7 +296,7 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
     <Style TargetType="ComboBox">
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Height" Value="35"/>
+        <Setter Property="Height" Value="40"/>
         <Setter Property="Padding" Value="10,0"/>
         <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
         <Setter Property="Foreground" Value="{DynamicResource InputText}"/>
@@ -308,7 +308,7 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="Background" Value="{DynamicResource InputBackground}"/>
         <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Height" Value="35"/>
+        <Setter Property="Height" Value="40"/>
     </Style>
 
     <!-- Стиль для GroupBox -->
@@ -320,7 +320,7 @@ xmlns:models="clr-namespace:AccuratPanelCWD.Models">
         <Setter Property="Margin" Value="5,0,15,15"/>
         <Setter Property="Padding" Value="5,10,5,5"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2"/>
     </Style>
 
     <!-- ============ TAB CONTROL ============ -->
