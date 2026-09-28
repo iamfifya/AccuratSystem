@@ -9,6 +9,9 @@
 		<RootNamespace>AccuratPanelCarWashing</RootNamespace>
 		<AssemblyName>ACCURAT - Панель управления</AssemblyName>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
+		<!-- LiveCharts 0.9.7 — legacy под .NET Framework, но стабилен в WPF net10.
+         Миграция на LiveCharts2 запланирована отдельно (см. бэклог). -->
+		<NoWarn>$(NoWarn);NU1701</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="MaterialDesignThemes" Version="5.3.1" />

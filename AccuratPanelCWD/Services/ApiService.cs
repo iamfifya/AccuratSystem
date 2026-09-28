@@ -762,7 +762,7 @@ namespace AccuratPanelCWD.Services
         /// Внутренне использует защищённый GetFromJsonAsync, который корректно
         /// обрабатывает пустое тело и 404 — не падает с JsonException.
         /// </summary>
-        public async Task<UpsellSuggestion?> GetUpsellSuggestionAsync(List<int> selectedServiceIds, int branchId)
+        public async Task<UpsellSuggestion> GetUpsellSuggestionAsync(List<int> selectedServiceIds, int branchId)
         {
             if (selectedServiceIds == null || !selectedServiceIds.Any() || branchId <= 0)
                 return null;
@@ -891,7 +891,7 @@ namespace AccuratPanelCWD.Services
         /// Безопасная версия GET: ловит 404/пустое тело/"null" и возвращает default.
         /// Сериализация через JsonOpts.Default (с конвертером).
         /// </summary>
-        private async Task<T?> SafeGetAsync<T>(string url)
+        private async Task<T> SafeGetAsync<T>(string url)
         {
             try
             {

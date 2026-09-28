@@ -44,7 +44,7 @@ namespace AccuratPanelCWD
         {
             InitializeComponent();
             TimeZoneComboBox.ItemsSource = TimeZones;
-            LoadBranchesAsync();
+            _ = LoadBranchesAsync();
         }
 
         private async Task LoadBranchesAsync()

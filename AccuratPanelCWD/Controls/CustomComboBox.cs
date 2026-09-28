@@ -49,7 +49,7 @@ namespace AccuratPanelCWD.Controls
             DependencyProperty.Register(nameof(SelectedValuePath), typeof(string), typeof(CustomComboBox),
                 new FrameworkPropertyMetadata(null));
 
-        public static readonly DependencyProperty DisplayMemberPathProperty =
+        public static readonly new DependencyProperty DisplayMemberPathProperty =
             DependencyProperty.Register(nameof(DisplayMemberPath), typeof(string), typeof(CustomComboBox),
                 new FrameworkPropertyMetadata(null));
 
@@ -81,7 +81,7 @@ namespace AccuratPanelCWD.Controls
 
         #region Properties
 
-        public new object SelectedItem
+        public object SelectedItem
         {
             get => GetValue(SelectedItemProperty);
             set => SetValue(SelectedItemProperty, value);
@@ -99,7 +99,7 @@ namespace AccuratPanelCWD.Controls
             set => SetValue(SelectedValuePathProperty, value);
         }
 
-        public string DisplayMemberPath
+        public new string DisplayMemberPath
         {
             get => (string)GetValue(DisplayMemberPathProperty);
             set => SetValue(DisplayMemberPathProperty, value);

@@ -28,7 +28,6 @@ namespace AccuratPanelCWD.ViewModels
         private ContractsOrder _existingOrder;
         private bool _isEditMode;
         private bool _isAppointment;
-        private bool _isSubscribedToDataChanged = false;
         private OrderCalculation _currentCalc;
         private readonly ApiService _apiService;
         private List<ContractsService> _allServicesCache = new List<ContractsService>();
@@ -163,33 +162,42 @@ namespace AccuratPanelCWD.ViewModels
         {
             if (CurrentOrder == null || Services == null || _apiService == null) return;
 
-            SyncServiceIds();
-
-            var request = new OrderPreviewRequestDto
+            try
             {
-                BranchId = CurrentOrder.BranchId > 0 ? CurrentOrder.BranchId : AppSettings.CurrentBranchId,
-                WasherId = CurrentOrder.GetWasherId() ?? 0,
-                ServiceIds = Services.Where(s => s.IsSelected).Select(s => s.Id).ToList(),
-                BodyTypeCategory = CurrentOrder.BodyTypeCategory > 0 ? CurrentOrder.BodyTypeCategory : 1,
-                ExtraCost = CurrentOrder.ExtraCost,
-                DiscountPercent = CurrentOrder.DiscountPercent,
-                DiscountAmount = CurrentOrder.DiscountAmount,
-                Notes = CurrentOrder.Notes ?? "",
+                SyncServiceIds();
 
-                // ДОБАВЛЕНО: передаем тип смены из объекта _currentShift
-                ShiftType = _currentShift?.Type ?? ShiftType.Day
-            };
+                var request = new OrderPreviewRequestDto
+                {
+                    BranchId = CurrentOrder.BranchId > 0 ? CurrentOrder.BranchId : AppSettings.CurrentBranchId,
+                    WasherId = CurrentOrder.GetWasherId() ?? 0,
+                    ServiceIds = Services.Where(s => s.IsSelected).Select(s => s.Id).ToList(),
+                    BodyTypeCategory = CurrentOrder.BodyTypeCategory > 0 ? CurrentOrder.BodyTypeCategory : 1,
+                    ExtraCost = CurrentOrder.ExtraCost,
+                    DiscountPercent = CurrentOrder.DiscountPercent,
+                    DiscountAmount = CurrentOrder.DiscountAmount,
+                    Notes = CurrentOrder.Notes ?? "",
 
-            var calcResult = await _apiService.CalculateOrderPreviewAsync(request);
-            _currentCalc = calcResult;
+                    // ДОБАВЛЕНО: передаем тип смены из объекта _currentShift
+                    ShiftType = _currentShift?.Type ?? ShiftType.Day
+                };
 
-            OnPropertyChanged(nameof(ServicesTotal));
-            OnPropertyChanged(nameof(FinalTotal));
-            OnPropertyChanged(nameof(FinalTotalWithExpenses));
-            OnPropertyChanged(nameof(WasherEarningsDisplay));
-            OnPropertyChanged(nameof(CompanyEarningsDisplay));
+                var calcResult = await _apiService.CalculateOrderPreviewAsync(request);
+                _currentCalc = calcResult;
 
-            _ = CheckForUpsellAsync();
+                OnPropertyChanged(nameof(ServicesTotal));
+                OnPropertyChanged(nameof(FinalTotal));
+                OnPropertyChanged(nameof(FinalTotalWithExpenses));
+                OnPropertyChanged(nameof(WasherEarningsDisplay));
+                OnPropertyChanged(nameof(CompanyEarningsDisplay));
+
+                _ = CheckForUpsellAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Recalculate] ошибка: {ex.Message}");
+                // Не показываем MessageBox — это фоновый пересчёт,
+                // пользователь увидит устаревшие цифры и поймёт сам
+            }
         }
 
         private void FilterServicesByDepartment()
@@ -330,12 +338,6 @@ namespace AccuratPanelCWD.ViewModels
         {
             if (CurrentOrder != null && Services != null)
                 CurrentOrder.ServiceIds = Services.Where(s => s.IsSelected).Select(s => s.Id).ToList();
-        }
-
-        private void OnDataChanged()
-        {
-            _ = LoadServicesAsync();
-            Recalculate();
         }
 
         public async Task<(bool success, string message)> SaveOrderAsync()
@@ -620,7 +622,8 @@ namespace AccuratPanelCWD.ViewModels
 
         public void Cleanup()
         {
-            _isSubscribedToDataChanged = false;
+            // Резерв на будущее: сюда можно добавить отписку от событий,
+            // если в VM появятся подписки на внешние события (HubConnection и т.п.)
         }
 
         private ContractsClient _selectedClient;

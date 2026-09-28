@@ -48,10 +48,10 @@ namespace AccuratPanelCWD.Services
     /// <summary>Обёртки над System.Net.Http.Json с нашими опциями (единая точка конвертации).</summary>
     public static class HttpJsonExtensions
     {
-        public static Task<T?> GetJsonAsync<T>(this HttpClient http, string url) =>
+        public static Task<T> GetJsonAsync<T>(this HttpClient http, string url) =>
             http.GetFromJsonAsync<T>(url, JsonOpts.Default);
 
-        public static Task<T?> ReadJsonAsync<T>(this HttpContent content) =>
+        public static Task<T> ReadJsonAsync<T>(this HttpContent content) =>
             content.ReadFromJsonAsync<T>(JsonOpts.Default);
 
         public static Task<HttpResponseMessage> PostJsonAsync(this HttpClient http, string url, object payload) =>

@@ -11,10 +11,8 @@ using System.Windows.Input;
 
 namespace AccuratPanelCWD
 {
-    public partial class ClientsWindow : Window, INotifyPropertyChanged
+    public partial class ClientsWindow : Window
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private ApiService _apiService;
         private List<Client> _allClients;
         private Client _selectedClient;
