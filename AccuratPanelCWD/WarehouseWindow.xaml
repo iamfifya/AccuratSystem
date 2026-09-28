@@ -1,0 +1,147 @@
+﻿<Window x:Class="AccuratPanelCWD.WarehouseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AccuratPanelCWD.Controls"
+        Title="📦 Склад" Height="750" Width="1200"
+        WindowStyle="None" WindowStartupLocation="CenterScreen" WindowState="Maximized"
+        Background="{DynamicResource BgMain}" Foreground="{DynamicResource TextMain}">
+
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="420"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ЛЕВАЯ ПАНЕЛЬ: список позиций -->
+        <Border Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15"
+                Margin="0,0,15,0" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="📦 Номенклатура" Grid.Row="0" FontWeight="Bold" FontSize="20" Margin="0,0,0,12"/>
+
+                <TextBox x:Name="SearchTextBox" Grid.Row="1" Padding="12,0"
+                         TextChanged="SearchTextBox_TextChanged"
+                         ToolTip="Поиск по названию или артикулу"/>
+
+                <controls:CustomComboBox x:Name="CategoryFilterCombo" Grid.Row="2"
+                         Header="Категория-фильтр" DisplayMemberPath="Name"
+                         SelectedValuePath="Id" Placeholder="Все категории"
+                         Margin="0,10,0,0" SelectionChanged="CategoryFilter_Changed"
+                         Height="Auto"/>
+
+                <DataGrid x:Name="ItemsGrid" Grid.Row="3" Margin="0,12,0,0"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" SelectionChanged="ItemsGrid_SelectionChanged"
+                          Background="{DynamicResource BgMain}"
+                          BorderBrush="{DynamicResource BorderColor}"
+                          Foreground="{DynamicResource TextMain}"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource BorderColor}"
+                          RowHeight="38" HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Артикул" Binding="{Binding Article}" Width="80"/>
+                        <DataGridTextColumn Header="Мин." Binding="{Binding MinStock}" Width="50"/>
+                        <DataGridTextColumn Header="Цена" Binding="{Binding LastPurchaseCost, StringFormat=N0}" Width="60"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Content="➕ Добавить" Style="{StaticResource PrimaryBtn}" Click="AddItem_Click" Margin="0,0,8,0"/>
+                    <Button Content="🗄 В архив" Style="{StaticResource DangerBtn}" Click="ArchiveItem_Click" Margin="0,0,8,0"/>
+                    <Button Content="🏷 Категории" Style="{StaticResource PrimaryBtn}" Click="Categories_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ПРАВАЯ ПАНЕЛЬ: карточка позиции -->
+        <Border Grid.Column="1" Background="{DynamicResource BgCard}" CornerRadius="6" Padding="25"
+                BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="EditPanel" IsEnabled="False">
+                    <TextBlock x:Name="EditTitleText" Text="Карточка позиции" FontWeight="Bold" FontSize="20" Margin="0,0,0,18"/>
+
+                    <TextBlock Text="Название *" Margin="0,0,0,6"/>
+                    <TextBox x:Name="NameTextBox" Padding="12,0"/>
+
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Артикул (SKU)" Margin="0,0,0,6"/>
+                            <TextBox x:Name="ArticleTextBox" Padding="12,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                            <TextBlock Text="Категория" Margin="0,0,0,6"/>
+                            <controls:CustomComboBox x:Name="CategoryCombo" DisplayMemberPath="Name"
+                                                     SelectedValuePath="Id" Placeholder="Без категории"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Базовая единица" Margin="0,0,0,6"/>
+                            <controls:CustomComboBox x:Name="UnitCombo" DisplayMemberPath="Name" SelectedValuePath="Value"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                            <TextBlock Text="Единица приёмки" Margin="0,0,0,6"/>
+                            <controls:CustomComboBox x:Name="PurchaseUnitCombo" DisplayMemberPath="Name" SelectedValuePath="Value"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Коэфф. приёмки *" Margin="0,0,0,6"
+                                       ToolTip="Сколько базовых единиц в одной единице приёмки (канистра 5 л → 5)"/>
+                            <TextBox x:Name="RatioTextBox" Padding="12,0"
+                                     PreviewTextInput="DecimalOnly_PreviewTextInput"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                            <TextBlock Text="Мин. остаток" Margin="0,0,0,6"/>
+                            <TextBox x:Name="MinStockTextBox" Padding="12,0"
+                                     PreviewTextInput="DecimalOnly_PreviewTextInput"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Margin="12,0,0,0">
+                            <TextBlock Text="Цена закупки, ₽" Margin="0,0,0,6"/>
+                            <TextBox x:Name="CostTextBox" Padding="12,0"
+                                     PreviewTextInput="DecimalOnly_PreviewTextInput"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Заметки" Margin="0,14,0,6"/>
+                    <TextBox x:Name="NotesTextBox" Padding="12,8"
+                             AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+
+                    <CheckBox x:Name="IsActiveCheckBox" Content="Позиция активна" FontWeight="SemiBold"
+                              Margin="0,16,0,0" Foreground="{DynamicResource AccentGreen}"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0">
+                        <Button Content="💾 Сохранить" Style="{StaticResource SuccessBtn}" Click="SaveItem_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Кнопка закрытия поверх всего -->
+        <Button Grid.Column="1" Content="✖" HorizontalAlignment="Right" VerticalAlignment="Top"
+                Style="{StaticResource DangerBtn}" Click="CloseButton_Click"/>
+    </Grid>
+</Window>

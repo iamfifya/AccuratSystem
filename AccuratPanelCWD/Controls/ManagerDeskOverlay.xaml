@@ -199,12 +199,16 @@
                                        Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource TileButtonStyle}" x:Name="EmptyBtn1">
+                    <Button Style="{StaticResource TileButtonStyle}" x:Name="WarehouseButton" Click="WarehouseButton_Click">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text=" " FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"/>
+                                <TextBlock Text="📦" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"/>
                             </WrapPanel>
-                            <TextBlock Text=" " HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Управление складом" 
+                                       HorizontalAlignment="Center" 
+                                       TextWrapping="Wrap" 
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource TileButtonStyle}" x:Name="CashboxButton" Click="CashboxButton_Click">

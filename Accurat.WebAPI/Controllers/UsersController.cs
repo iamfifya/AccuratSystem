@@ -171,7 +171,8 @@ namespace Accurat.WebAPI.Controllers
                     IsCrmMarketingEnabled = tenantFeature.IsCrmMarketingEnabled,
                     IsTelegramBossEnabled = tenantFeature.IsTelegramBossEnabled,
                     IsReputationEnabled = tenantFeature.IsReputationEnabled,
-                    IsDiscountRulesEnabled = tenantFeature.IsDiscountRulesEnabled
+                    IsDiscountRulesEnabled = tenantFeature.IsDiscountRulesEnabled,
+                    IsInventoryEnabled = tenantFeature.IsInventoryEnabled,
                 };
             }
 

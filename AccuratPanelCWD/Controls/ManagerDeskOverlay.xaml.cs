@@ -160,6 +160,18 @@ namespace AccuratPanelCWD.Controls
             new UpsellManagementWindow().ShowDialog();
         }
 
+        private void WarehouseButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Проверка, куплен ли модуль "Склад" перед открытием окна управления складом
+            if (!UserSession.IsFeatureEnabled(f => f.IsInventoryEnabled))
+            {
+                MessageBox.Show("Модуль Управление складами отключен для вашей компании 🔒\nСвяжитесь с поддержкой для приобретения.", "Доступ закрыт");
+                return;
+            }
+
+            new WarehouseWindow().ShowDialog();
+        }
+
         private void DiscountRulesBtn_Click(object sender, RoutedEventArgs e)
         {
             // Добавили проверку купленного модуля

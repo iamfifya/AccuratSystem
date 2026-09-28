@@ -45,6 +45,10 @@ namespace Accurat.WebAPI.Data
 
         public DbSet<ShiftTimelineEntry> ShiftTimelineEntries => Set<ShiftTimelineEntry>();
 
+        // Складской учет
+        public DbSet<StockCategory> StockCategories => Set<StockCategory>();
+        public DbSet<StockItem> StockItems => Set<StockItem>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -341,7 +345,7 @@ namespace Accurat.WebAPI.Data
 
             // И не забудь включить сам модуль для филиала (иначе UserSession.IsFeatureEnabled вернет false)
             modelBuilder.Entity<TenantFeature>().HasData(
-                new TenantFeature { Id = 1, CompanyId = 1, IsUpsellEnabled = true },
+                new TenantFeature { Id = 1, CompanyId = 1, IsUpsellEnabled = true, IsInventoryEnabled = true },
                 new TenantFeature { Id = 2, CompanyId = 2, IsUpsellEnabled = true }
             );
 
@@ -367,6 +371,44 @@ namespace Accurat.WebAPI.Data
                 entity.HasOne(e => e.Shift)
                     .WithMany()
                     .HasForeignKey(e => e.ShiftId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // === СКЛАД: КАТЕГОРИИ (словарь компании) ===
+            modelBuilder.Entity<StockCategory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.CompanyId, e.Name }).IsUnique();
+                entity.HasOne<Company>()
+                    .WithMany()
+                    .HasForeignKey(e => e.CompanyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // === СКЛАД: НОМЕНКЛАТУРА ===
+            modelBuilder.Entity<StockItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.CompanyId, e.Name });
+
+                // Артикул уникален в рамках компании, но только если он задан
+                entity.HasIndex(e => new { e.CompanyId, e.Article }).IsUnique()
+                    .HasFilter("\"Article\" IS NOT NULL AND \"Article\" <> ''");
+
+                entity.Property(e => e.Unit).HasConversion<string>().HasMaxLength(20);
+                entity.Property(e => e.PurchaseUnit).HasConversion<string>().HasMaxLength(20);
+                entity.Property(e => e.PurchaseRatio).HasPrecision(18, 3);
+                entity.Property(e => e.MinStock).HasPrecision(18, 3);
+                entity.Property(e => e.LastPurchaseCost).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Category)
+                    .WithMany()
+                    .HasForeignKey(e => e.CategoryId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne<Company>()
+                    .WithMany()
+                    .HasForeignKey(e => e.CompanyId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

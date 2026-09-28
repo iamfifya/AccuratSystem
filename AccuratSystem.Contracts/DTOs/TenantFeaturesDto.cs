@@ -11,6 +11,7 @@
         public bool IsTelegramBossEnabled { get; set; }
         public bool IsReputationEnabled { get; set; }
         public bool IsDiscountRulesEnabled { get; set; }
+        public bool IsInventoryEnabled { get; set; }
     }
 
 }

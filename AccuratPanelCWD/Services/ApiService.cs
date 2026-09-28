@@ -907,7 +907,7 @@ namespace AccuratPanelCWD.Services
                     var errorBody = await response.Content.ReadAsStringAsync();
                     System.Diagnostics.Debug.WriteLine($"HTTP GET {requestUri} -> {(int)response.StatusCode} {response.ReasonPhrase}. Body: {errorBody}");
                     return default;
-                }   
+                }
 
                 var content = await response.Content.ReadAsStringAsync();
 
@@ -986,6 +986,61 @@ namespace AccuratPanelCWD.Services
             // Прямой _http.GetFromJsonAsync выбрасывал HttpRequestException.
             var result = await SafeGetAsync<List<AuditEntryDto>>(url);
             return result ?? new List<AuditEntryDto>();
+        }
+        #endregion
+
+        #region СКЛАД (STOCK)
+        public async Task<List<StockCategory>> GetStockCategoriesAsync()
+        {
+            try { return await _http.GetJsonAsync<List<StockCategory>>("Stock/categories") ?? new List<StockCategory>(); }
+            catch (Exception ex) { throw new Exception($"Категории склада: {ex.Message}"); }
+        }
+
+        public async Task<StockCategory> CreateStockCategoryAsync(StockCategory category)
+        {
+            var r = await _http.PostJsonAsync("Stock/categories", category);
+            r.EnsureSuccessStatusCode();
+            return await r.Content.ReadJsonAsync<StockCategory>();
+        }
+
+        public async Task UpdateStockCategoryAsync(StockCategory category)
+        {
+            var r = await _http.PutJsonAsync($"Stock/categories/{category.Id}", category);
+            r.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteStockCategoryAsync(int id)
+        {
+            var r = await _http.DeleteAsync($"Stock/categories/{id}");
+            r.EnsureSuccessStatusCode();
+        }
+
+        public async Task<List<StockItem>> GetStockItemsAsync(int? categoryId = null, string search = null, bool includeInactive = false)
+        {
+            var url = $"Stock/items?includeInactive={includeInactive}";
+            if (categoryId.HasValue) url += $"&categoryId={categoryId.Value}";
+            if (!string.IsNullOrWhiteSpace(search)) url += $"&search={Uri.EscapeDataString(search)}";
+            try { return await _http.GetJsonAsync<List<StockItem>>(url) ?? new List<StockItem>(); }
+            catch (Exception ex) { throw new Exception($"Номенклатура: {ex.Message}"); }
+        }
+
+        public async Task<StockItem> CreateStockItemAsync(StockItem item)
+        {
+            var r = await _http.PostJsonAsync("Stock/items", item);
+            r.EnsureSuccessStatusCode();
+            return await r.Content.ReadJsonAsync<StockItem>();
+        }
+
+        public async Task UpdateStockItemAsync(StockItem item)
+        {
+            var r = await _http.PutJsonAsync($"Stock/items/{item.Id}", item);
+            r.EnsureSuccessStatusCode();
+        }
+
+        public async Task ArchiveStockItemAsync(int id)
+        {
+            var r = await _http.DeleteAsync($"Stock/items/{id}");
+            r.EnsureSuccessStatusCode();
         }
         #endregion
     }
