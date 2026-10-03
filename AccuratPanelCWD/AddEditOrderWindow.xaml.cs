@@ -229,7 +229,7 @@ namespace AccuratPanelCWD
                 }
                 else
                 {
-                    ZoneComboBox.SelectedValue = null;
+                    ZoneComboBox.ClearSelection();
                 }
             }
         }

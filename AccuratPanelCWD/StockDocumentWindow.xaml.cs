@@ -72,20 +72,25 @@ namespace AccuratPanelCWD
 
         private void ItemCombo_Changed(object sender, RoutedEventArgs e)
         {
-            if (ItemCombo.SelectedValue is not int itemId) return;
+            if (ItemCombo.SelectedValue is not int itemId)
+            {
+                QtyUnitText.Text = "";
+                return;
+            }
             var item = _items.FirstOrDefault(i => i.Id == itemId);
-            if (item == null) return;
+            if (item == null)
+            {
+                QtyUnitText.Text = "";
+                return;
+            }
+
+            QtyUnitText.Text = $"{StockUnitNames.Get(item.Unit)}  (1 {StockUnitNames.Get(item.PurchaseUnit)} = {item.PurchaseRatio:0.###} {StockUnitNames.Get(item.Unit)})";
 
             var isReceipt = TypeCombo.SelectedValue is StockDocumentType t && t == StockDocumentType.Receipt;
-            if (isReceipt)
-            {
-                CostTextBox.Text = item.LastPurchaseCost.ToString(CultureInfo.InvariantCulture);
-            }
-            else
-            {
-                var avg = _balances.TryGetValue(itemId, out var b) ? b.AvgCost : item.LastPurchaseCost;
-                CostTextBox.Text = avg.ToString(CultureInfo.InvariantCulture);
-            }
+            var cost = isReceipt
+                ? item.LastPurchaseCost
+                : (_balances.TryGetValue(itemId, out var b) ? b.AvgCost : item.LastPurchaseCost);
+            CostTextBox.Text = cost.ToString(CultureInfo.InvariantCulture);
         }
 
         private void AddLine_Click(object sender, RoutedEventArgs e)
@@ -115,7 +120,9 @@ namespace AccuratPanelCWD
                 Cost = ParseDecimal(CostTextBox.Text, 0m)
             });
             QtyTextBox.Text = "";
-            ItemCombo.SelectedValue = null;
+            ItemCombo.ClearSelection();
+            QtyTextBox.Text = "";
+            QtyUnitText.Text = "";
         }
 
         private void RemoveLine_Click(object sender, RoutedEventArgs e)
@@ -166,12 +173,18 @@ namespace AccuratPanelCWD
             }
         }
 
+
         private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
-        private static decimal ParseDecimal(string s, decimal fallback) =>
-            decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : fallback;
-
         private void DecimalOnly_PreviewTextInput(object sender, TextCompositionEventArgs ev) =>
-            ev.Handled = !Regex.IsMatch(ev.Text, @"^[0-9.,]+$");
+            ev.Handled = !System.Text.RegularExpressions.Regex.IsMatch(ev.Text, @"^[0-9.,]+$");
+
+        private static decimal ParseDecimal(string s, decimal fallback)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return fallback;
+            var norm = s.Trim().Replace(',', '.');   // русская запятая = точка
+            return decimal.TryParse(norm, System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : fallback;
+        }
     }
 }

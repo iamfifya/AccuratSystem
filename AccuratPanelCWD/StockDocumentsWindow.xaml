@@ -56,7 +56,7 @@
         <DataGrid x:Name="LinesGrid" Grid.Row="4" Style="{StaticResource AuditDataGridStyle}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Позиция" Binding="{Binding Item.Name}" Width="*"/>
-                <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity, StringFormat=N3}" Width="120"/>
+                <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity, StringFormat={}{0:0.###}}" Width="120"/>
                 <DataGridTextColumn Header="Цена" Binding="{Binding CostPrice, StringFormat=N2}" Width="120"/>
                 <DataGridTextColumn Header="Сумма" Binding="{Binding LineSum, StringFormat=N0}" Width="140"/>
             </DataGrid.Columns>

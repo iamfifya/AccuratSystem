@@ -212,6 +212,13 @@ namespace Accurat.WebAPI.Controllers
                     transaction.Commit();
                     await _hubContext.Clients.All.SendAsync("UpdateData");
 
+                    // СКЛАД: если заказ создан сразу в финальном статусе — автосписание по нормам
+                    if (order.Status == "Выполнен" || order.Status == "Завершен")
+                    {
+                        await ApplyStockWriteOffAsync(order, await GetActorName());
+                        await _context.SaveChangesAsync();
+                    }
+
                     return Ok(order);
                 }
                 catch (Exception ex)
@@ -321,7 +328,12 @@ namespace Accurat.WebAPI.Controllers
                     return BadRequest("Нельзя редактировать цены или услуги в выполненном заказе. Доступна только смена статуса.");
 
                 // Разрешаем ТОЛЬКО смену статуса (например, на "Отменен")
+                var prevStatus = existingOrder.Status;   // Сохраняем предыдущий статус для логирования
                 existingOrder.Status = order.Status;
+
+                // СКЛАД: отмена завершённого заказа через PUT → сторно
+                if (order.Status == "Отменен" && (prevStatus == "Выполнен" || prevStatus == "Завершен"))
+                    await ApplyStockStornoAsync(existingOrder, await GetActorName());
 
                 // Логируем изменение в ленту
                 _context.OrderTimelineEntries.Add(new AccuratSystem.Contracts.Models.OrderTimelineEntry
@@ -334,7 +346,17 @@ namespace Accurat.WebAPI.Controllers
                 });
 
                 await _context.SaveChangesAsync();
+
+                // СКЛАД: при смене статуса через PUT
+                bool wasCompleted = prevStatus == "Выполнен" || prevStatus == "Завершен";
+                bool nowCompleted = order.Status == "Выполнен" || order.Status == "Завершен";
+                if (!wasCompleted && nowCompleted)
+                    await ApplyStockWriteOffAsync(existingOrder, await GetActorName());
+                else if (wasCompleted && order.Status == "Отменен")
+                    await ApplyStockStornoAsync(existingOrder, await GetActorName());
+
                 await _hubContext.Clients.All.SendAsync("UpdateData");
+
                 return NoContent(); // Успешно сохранили только статус, выходим
             }
 
@@ -504,6 +526,101 @@ namespace Accurat.WebAPI.Controllers
             }
         }
 
+        #region Склад: автосписание по нормам и сторно
+
+        /// <summary>
+        /// Автосписание расходников по нормам услуг заказа при завершении.
+        /// Идемпотентно: повторный вызов по тому же заказу ничего не списывает.
+        /// Вызывать ВНУТРИ транзакции смены статуса.
+        /// </summary>
+        private async Task ApplyStockWriteOffAsync(Order order, string actor)
+        {
+            var norms = await _context.ServiceStockNorms
+                .Include(n => n.Item)
+                .Where(n => order.ServiceIds.Contains(n.ServiceId) && n.Item.IsActive)
+                .ToListAsync();
+            if (!norms.Any()) return;
+
+            // Защита от двойного списания
+            if (await _context.StockMovements.AnyAsync(m => m.OrderId == order.Id && m.Type == StockMovementType.WriteOff))
+                return;
+
+            foreach (var norm in norms)
+            {
+                var balance = await _context.StockBalances
+                    .FirstOrDefaultAsync(b => b.ItemId == norm.ItemId && b.BranchId == order.BranchId);
+                if (balance == null)
+                {
+                    balance = new StockBalance
+                    {
+                        ItemId = norm.ItemId,
+                        BranchId = order.BranchId,
+                        Quantity = 0,
+                        AvgCost = norm.Item.LastPurchaseCost
+                    };
+                    _context.StockBalances.Add(balance);
+                    await _context.SaveChangesAsync();
+                }
+
+                var cost = balance.AvgCost;
+                balance.Quantity -= norm.Quantity;
+
+                _context.StockMovements.Add(new StockMovement
+                {
+                    ItemId = norm.ItemId,
+                    BranchId = order.BranchId,
+                    Type = StockMovementType.WriteOff,
+                    Quantity = -norm.Quantity,
+                    CostPrice = cost,
+                    OrderId = order.Id,
+                    ShiftId = order.ShiftId > 0 ? order.ShiftId : null,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = actor,
+                    Comment = $"Автосписание по заказу #{order.Id}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Сторно: возврат на остаток количеств автосписаний заказа (по цене исходного списания).
+        /// Идемпотентно: повторный вызов не дублирует сторно.
+        /// </summary>
+        private async Task ApplyStockStornoAsync(Order order, string actor)
+        {
+            var writeOffs = await _context.StockMovements
+                .Where(m => m.OrderId == order.Id && m.Type == StockMovementType.WriteOff)
+                .ToListAsync();
+            if (!writeOffs.Any()) return;
+
+            if (await _context.StockMovements.AnyAsync(m => m.OrderId == order.Id && m.Type == StockMovementType.Storno))
+                return;
+
+            foreach (var w in writeOffs)
+            {
+                var balance = await _context.StockBalances
+                    .FirstOrDefaultAsync(b => b.ItemId == w.ItemId && b.BranchId == w.BranchId);
+                if (balance == null) continue;
+
+                balance.Quantity += -w.Quantity; // w.Quantity отрицательное → возврат
+
+                _context.StockMovements.Add(new StockMovement
+                {
+                    ItemId = w.ItemId,
+                    BranchId = w.BranchId,
+                    Type = StockMovementType.Storno,
+                    Quantity = -w.Quantity,
+                    CostPrice = w.CostPrice,
+                    OrderId = order.Id,
+                    ShiftId = w.ShiftId,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = actor,
+                    Comment = $"Сторно автосписания по заказу #{order.Id}"
+                });
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Возвращает имя пользователя из БД по ID из заголовка.
         /// Это безопасно: сервер берёт реальное имя из БД, а не доверяет клиенту.
@@ -664,8 +781,13 @@ namespace Accurat.WebAPI.Controllers
 
                     foreach (var ow in order.OrderWashers) ow.EarnedAmount = finalCalc.WasherEarnings * ow.SplitShare;
 
+                    var prevStatus = order.Status;   // для проверки, нужно ли сторнировать списания
                     order.Status = "Выполнен";
                     if (!string.IsNullOrWhiteSpace(paymentMethod)) order.PaymentMethod = paymentMethod;
+
+                    // СКЛАД: автосписание по нормам (внутри текущей транзакции)
+                    if (prevStatus != "Выполнен" && prevStatus != "Завершен")
+                        await ApplyStockWriteOffAsync(order, await GetActorName());
 
                     var outboxMsg = new OutboxMessage
                     {
@@ -847,7 +969,17 @@ namespace Accurat.WebAPI.Controllers
                     var currentHistory = await _context.OrderStatusHistories.FirstOrDefaultAsync(h => h.OrderId == id && h.EndTime == null);
                     if (currentHistory != null) currentHistory.EndTime = DateTime.UtcNow;
 
+                    var prevStatus = order.Status;   // для проверки, нужно ли сторнировать списания
                     order.Status = dto.NewStatus;
+
+                    // СКЛАД: завершение → списание, отмена завершённого → сторно
+                    bool wasCompleted = prevStatus == "Выполнен" || prevStatus == "Завершен";
+                    bool nowCompleted = dto.NewStatus == "Выполнен" || dto.NewStatus == "Завершен";
+                    var stockActor = !string.IsNullOrEmpty(dto.UserName) ? dto.UserName : await GetActorName();
+                    if (!wasCompleted && nowCompleted)
+                        await ApplyStockWriteOffAsync(order, stockActor);
+                    else if (wasCompleted && dto.NewStatus == "Отменен")
+                        await ApplyStockStornoAsync(order, stockActor);
 
                     _context.OrderStatusHistories.Add(new AccuratSystem.Contracts.Models.OrderStatusHistories
                     {

@@ -54,6 +54,7 @@
                                          SelectionChanged="ItemCombo_Changed"/>
 
                 <StackPanel Grid.Column="1" Margin="15,0,0,0">
+                    <TextBlock x:Name="QtyUnitText" FontSize="11" Opacity="0.7"/>
                     <TextBlock Text="Количество" Style="{StaticResource FilterLabelStyle}"/>
                     <TextBox x:Name="QtyTextBox" PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                 </StackPanel>
@@ -72,7 +73,7 @@
         <DataGrid x:Name="LinesGrid" Grid.Row="3" Margin="0,15,0,0" Style="{StaticResource AuditDataGridStyle}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Позиция" Binding="{Binding Item.Name}" Width="*"/>
-                <DataGridTextColumn Header="Кол-во" Binding="{Binding Qty, StringFormat=N3}" Width="100"/>
+                <DataGridTextColumn Header="Кол-во" Binding="{Binding Qty, StringFormat={}{0:0.###}}" Width="100"/>
                 <DataGridTextColumn Header="Цена" Binding="{Binding Cost, StringFormat=N2}" Width="100"/>
                 <DataGridTextColumn Header="Сумма" Binding="{Binding Sum, StringFormat=N0}" Width="120"/>
 

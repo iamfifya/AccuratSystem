@@ -54,6 +54,9 @@ namespace Accurat.WebAPI.Data
         public DbSet<StockDocument> StockDocuments => Set<StockDocument>();
         public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
+        // Складской учет: нормы списания на услуги
+        public DbSet<ServiceStockNorm> ServiceStockNorms => Set<ServiceStockNorm>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -271,7 +274,7 @@ namespace Accurat.WebAPI.Data
             // Услуги (прайс-лист) — оставляем как есть
             modelBuilder.Entity<Service>().HasData(
                 new Service { Id = 1, Name = "Стандартная мойка кузова", Description = "2-х фазная мойка", DurationMinutes = 40, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 1150m }, { 2, 1250m }, { 3, 1500m }, { 4, 1750m } }, CompanyId = 1 },
-                new Service { Id = 2, Name = "КОМПЛЕКС ACCURAT", Description = "Двухфазная мойка, пылесос, уборка", DurationMinutes = 90, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 2150m }, { 2, 2350m }, { 3, 2700m }, { 4, 3150m } },CompanyId = 1 },
+                new Service { Id = 2, Name = "КОМПЛЕКС ACCURAT", Description = "Двухфазная мойка, пылесос, уборка", DurationMinutes = 90, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 2150m }, { 2, 2350m }, { 3, 2700m }, { 4, 3150m } }, CompanyId = 1 },
                 new Service { Id = 3, Name = "Чистка стекол", Description = "Внутренняя и внешняя очистка", DurationMinutes = 15, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } }, CompanyId = 1 },
                 new Service { Id = 4, Name = "Пылесос салона", Description = "Уборка салона", DurationMinutes = 20, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } }, CompanyId = 1 },
                 new Service { Id = 5, Name = "Влажная уборка", Description = "Уборка пластика", DurationMinutes = 15, IsActive = true, PriceByBodyType = new Dictionary<int, decimal> { { 1, 350m }, { 2, 350m }, { 3, 350m }, { 4, 350m } }, CompanyId = 1 },
@@ -455,6 +458,17 @@ namespace Accurat.WebAPI.Data
                     .HasForeignKey(e => e.DocumentId).OnDelete(DeleteBehavior.Cascade);
             });
 
+            // === СКЛАД: НОРМЫ СПИСАНИЯ (услуга → позиция) ===
+            modelBuilder.Entity<ServiceStockNorm>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.ServiceId, e.ItemId }).IsUnique();
+                entity.Property(e => e.Quantity).HasPrecision(18, 3);
+                entity.HasOne(e => e.Service).WithMany()
+                    .HasForeignKey(e => e.ServiceId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Item).WithMany()
+                    .HasForeignKey(e => e.ItemId).OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

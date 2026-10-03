@@ -18,8 +18,41 @@
         <Border Grid.Row="1" Background="{DynamicResource BgCard}" 
                 BorderBrush="{DynamicResource BorderColor}" BorderThickness="2" CornerRadius="6">
             <ListBox x:Name="CategoriesList" DisplayMemberPath="Name"
-                     SelectionChanged="CategoriesList_SelectionChanged"
-                     Style="{StaticResource CleanListBoxStyle}" Margin="2"/>
+         SelectionChanged="CategoriesList_SelectionChanged"
+         Margin="2"
+         Background="Transparent" BorderThickness="0">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter Property="Padding" Value="10,8"/>
+                        <Setter Property="Margin" Value="0,2"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Border"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}"
+                                Margin="{TemplateBinding Margin}">
+                                        <ContentPresenter VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource AccentBlue}"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource BgSelected}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
         </Border>
 
         <Grid Grid.Row="2" Margin="0,16,0,0">

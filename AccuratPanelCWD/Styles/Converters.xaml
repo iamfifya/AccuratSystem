@@ -23,5 +23,7 @@
     <local:DepartmentDisplayConverter x:Key="DepartmentDisplayConverter"/>
     <local:DepartmentToZoneLabelConverter x:Key="DepartmentToZoneLabelConverter"/>
     <local:HexToBrushConverter x:Key="HexToBrushConverter"/>
+    <local:StockDocTypeRuConverter x:Key="StockDocTypeRuConverter"/>
+    <local:StockUnitRuConverter x:Key="StockUnitRuConverter"/>
 
 </ResourceDictionary>

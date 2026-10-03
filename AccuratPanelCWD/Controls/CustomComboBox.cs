@@ -280,30 +280,33 @@ namespace AccuratPanelCWD.Controls
             }
             else if (SelectedValue != null && ItemsSource != null)
             {
-                var source = ItemsSource as IEnumerable;
-                if (source != null)
+                if (ItemsSource is IEnumerable source)
                 {
                     foreach (var item in source)
                     {
-                        var value = GetItemValue(item);
-                        // Сравниваем значения правильно, с учётом типов
-                        if (Equals(value, SelectedValue))
+                        if (Equals(GetItemValue(item), SelectedValue))
                         {
-                            SelectedItem = item;
-                            _textBox.Text = Placeholder;
-                            _textBox.Foreground = GetThemeBrush("TextLightMuted", new SolidColorBrush(Colors.Gray));
+                            SelectedItem = item;   // колбэк сам обновит текст и подсветку
                             return;
                         }
                     }
                 }
                 _textBox.Text = Placeholder;
-                _textBox.Foreground = new SolidColorBrush(Colors.Gray);
+                _textBox.Foreground = GetThemeBrush("TextLightMuted", new SolidColorBrush(Colors.Gray));
             }
             else if (!string.IsNullOrEmpty(Placeholder))
             {
                 _textBox.Text = Placeholder;
                 _textBox.Foreground = new SolidColorBrush(Colors.Gray);
             }
+        }
+
+        /// <summary>Полный сброс выбора (и SelectedItem, и SelectedValue).</summary>
+        public void ClearSelection()
+        {
+            SetValue(SelectedItemProperty, null);
+            SetValue(SelectedValueProperty, null);
+            UpdateDisplay();
         }
 
         private object GetItemValue(object item)

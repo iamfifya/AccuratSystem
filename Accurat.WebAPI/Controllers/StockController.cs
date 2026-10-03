@@ -298,6 +298,66 @@ namespace Accurat.WebAPI.Controllers
             }
         }
 
+        // ═════════════ НОРМЫ СПИСАНИЯ ═════════════
+
+        [HttpGet("norms")]
+        public async Task<ActionResult<IEnumerable<ServiceStockNorm>>> GetNorms(int serviceId)
+        {
+            var service = await _context.Services.FindAsync(serviceId);
+            if (service == null) return NotFound();
+            if (CurrentCompanyId != 0 && service.CompanyId != CurrentCompanyId) return Forbid();
+            return await _context.ServiceStockNorms
+                .Include(n => n.Item)
+                .Where(n => n.ServiceId == serviceId)
+                .OrderBy(n => n.Item.Name)
+                .ToListAsync();
+        }
+
+        [HttpPost("norms")]
+        public async Task<ActionResult<ServiceStockNorm>> CreateNorm(ServiceStockNorm norm)
+        {
+            if (norm.Quantity <= 0) return BadRequest("Норма должна быть больше нуля");
+            var service = await _context.Services.FindAsync(norm.ServiceId);
+            if (service == null) return NotFound("Услуга не найдена");
+            if (CurrentCompanyId != 0 && service.CompanyId != CurrentCompanyId) return Forbid();
+            var item = await _context.StockItems.FindAsync(norm.ItemId);
+            if (item == null || item.CompanyId != service.CompanyId)
+                return BadRequest("Позиция не найдена или принадлежит другой компании");
+            if (await _context.ServiceStockNorms.AnyAsync(n => n.ServiceId == norm.ServiceId && n.ItemId == norm.ItemId))
+                return BadRequest("Норма для этой позиции уже задана — измените существующую");
+
+            norm.Id = 0;
+            _context.ServiceStockNorms.Add(norm);
+            await _context.SaveChangesAsync();
+            return Ok(norm);
+        }
+
+        [HttpPut("norms/{id}")]
+        public async Task<IActionResult> UpdateNorm(int id, ServiceStockNorm norm)
+        {
+            if (id != norm.Id) return BadRequest("ID не совпадают");
+            if (norm.Quantity <= 0) return BadRequest("Норма должна быть больше нуля");
+            var existing = await _context.ServiceStockNorms.FindAsync(id);
+            if (existing == null) return NotFound();
+            var service = await _context.Services.FindAsync(existing.ServiceId);
+            if (CurrentCompanyId != 0 && service?.CompanyId != CurrentCompanyId) return Forbid();
+            existing.Quantity = norm.Quantity;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("norms/{id}")]
+        public async Task<IActionResult> DeleteNorm(int id)
+        {
+            var existing = await _context.ServiceStockNorms.FindAsync(id);
+            if (existing == null) return NotFound();
+            var service = await _context.Services.FindAsync(existing.ServiceId);
+            if (CurrentCompanyId != 0 && service?.CompanyId != CurrentCompanyId) return Forbid();
+            _context.ServiceStockNorms.Remove(existing);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
         // ═════════════ БЕЗОПАСНОСТЬ ═════════════
 
         private async Task<bool> VerifyBranchAccess(int branchId)

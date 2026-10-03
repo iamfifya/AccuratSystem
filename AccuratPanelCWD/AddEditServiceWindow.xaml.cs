@@ -99,6 +99,17 @@ namespace AccuratPanelCWD
             }
         }
 
+        private void NormsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // подставь свою переменную редактируемой услуги:
+            if (CurrentService == null || CurrentService.Id <= 0)
+            {
+                MessageBox.Show("Сначала сохраните услугу!", "Внимание");
+                return;
+            }
+            new StockNormsWindow(CurrentService.Id, CurrentService.Name).ShowDialog();
+        }
+
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try

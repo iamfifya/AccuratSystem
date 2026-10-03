@@ -36,9 +36,9 @@ namespace AccuratPanelCWD.Services
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
 
             // Для работы через туннель
-            _http = new HttpClient(handler) { BaseAddress = new Uri("https://cp4zpdt4-7165.uks1.devtunnels.ms/api/") };
+            // _http = new HttpClient(handler) { BaseAddress = new Uri("https://cp4zpdt4-7165.uks1.devtunnels.ms/api/") };
             // Для работы через локалхост  
-            // _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
+            _http = new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7165/api/") };
         }
 
         public ApiService()
@@ -1067,6 +1067,31 @@ namespace AccuratPanelCWD.Services
                 throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {err}");
             }
             return await r.Content.ReadJsonAsync<StockDocument>();
+        }
+
+        public async Task<List<ServiceStockNorm>> GetStockNormsAsync(int serviceId)
+        {
+            try { return await _http.GetJsonAsync<List<ServiceStockNorm>>($"Stock/norms?serviceId={serviceId}") ?? new List<ServiceStockNorm>(); }
+            catch (Exception ex) { throw new Exception($"Нормы списания: {ex.Message}"); }
+        }
+
+        public async Task<ServiceStockNorm> CreateStockNormAsync(ServiceStockNorm norm)
+        {
+            var r = await _http.PostJsonAsync("Stock/norms", norm);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+            return await r.Content.ReadJsonAsync<ServiceStockNorm>();
+        }
+
+        public async Task UpdateStockNormAsync(ServiceStockNorm norm)
+        {
+            var r = await _http.PutJsonAsync($"Stock/norms/{norm.Id}", norm);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+        }
+
+        public async Task DeleteStockNormAsync(int id)
+        {
+            var r = await _http.DeleteAsync($"Stock/norms/{id}");
+            r.EnsureSuccessStatusCode();
         }
         #endregion
     }

@@ -170,6 +170,9 @@
                     HorizontalAlignment="Center" 
                     Grid.Row="1" 
                     Margin="0,20">
+            <Button Content="📦 Нормы списания" 
+                    Style="{StaticResource PrimaryBtn}" 
+                    Click="NormsButton_Click"/>
             <Button Content="✅ Сохранить" 
                     Click="SaveButton_Click" 
                     Style="{StaticResource SuccessBtn}"

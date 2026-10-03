@@ -32,6 +32,8 @@ namespace AccuratPanelCWD
             new UnitOption { Value = StockUnit.Liter,    Name = "л"  },
             new UnitOption { Value = StockUnit.Kilogram, Name = "кг" },
             new UnitOption { Value = StockUnit.Meter,    Name = "м"  },
+            new UnitOption { Value = StockUnit.Milliliter, Name = "мл" },
+            new UnitOption { Value = StockUnit.Gram,     Name = "г"  },
         };
 
         public WarehouseWindow()
@@ -49,17 +51,11 @@ namespace AccuratPanelCWD
                 IsEnabled = false;
                 _categories = await _apiService.GetStockCategoriesAsync();
 
-                // Фильтр: добавляем служебный пункт «все категории» (Id = 0)
                 var filterOptions = new List<StockCategory> { new StockCategory { Id = 0, Name = "🌐 Все категории" } };
                 filterOptions.AddRange(_categories);
                 CategoryFilterCombo.ItemsSource = filterOptions;
-
-                // В форму редактирования — только реальные категории
                 CategoryCombo.ItemsSource = _categories;
 
-                await LoadItemsAsync();
-                CategoryCombo.ItemsSource = _categories;
-                CategoryFilterCombo.ItemsSource = _categories;
                 await LoadItemsAsync();
             }
             catch (Exception ex)
@@ -118,7 +114,7 @@ namespace AccuratPanelCWD
             EditTitleText.Text = "➕ Новая позиция";
             NameTextBox.Text = "";
             ArticleTextBox.Text = "";
-            CategoryCombo.SelectedValue = null;
+            CategoryCombo.ClearSelection();
             UnitCombo.SelectedValue = StockUnit.Piece;
             PurchaseUnitCombo.SelectedValue = StockUnit.Piece;
             RatioTextBox.Text = "1";
@@ -205,12 +201,16 @@ namespace AccuratPanelCWD
             win.ShowDialog();
         }
 
-        private static decimal ParseDecimal(string s, decimal fallback) =>
-            decimal.TryParse(s, System.Globalization.NumberStyles.Any,
-                             System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : fallback;
+        private void DecimalOnly_PreviewTextInput(object sender, TextCompositionEventArgs ev) =>
+            ev.Handled = !System.Text.RegularExpressions.Regex.IsMatch(ev.Text, @"^[0-9.,]+$");
 
-        private void DecimalOnly_PreviewTextInput(object sender, TextCompositionEventArgs e) =>
-            e.Handled = !Regex.IsMatch(e.Text, @"^[0-9.,]+$");
+        private static decimal ParseDecimal(string s, decimal fallback)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return fallback;
+            var norm = s.Trim().Replace(',', '.');   // русская запятая = точка
+            return decimal.TryParse(norm, System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : fallback;
+        }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
 
