@@ -15,6 +15,7 @@ using System.Windows.Media;
 using ContractsEmployeeReport = AccuratSystem.Contracts.Models.EmployeeReport;
 using ContractsShiftReport = AccuratSystem.Contracts.Models.ShiftReport;
 using WpfUser = AccuratPanelCWD.Models.User;
+using AccuratSystem.Contracts.DTOs;
 
 namespace AccuratPanelCWD
 {
@@ -151,6 +152,21 @@ namespace AccuratPanelCWD
                 RetentionText.Text = $"{clientStats.RetentionRate:N1}%";
                 RepeatClientsText.Text = clientStats.RepeatClients.ToString();
 
+                var stockConsumption = await _apiService.GetStockConsumptionAsync(branchId, start, end);
+                StockConsumptionText.Text = $"{stockConsumption.TotalConsumptionCost:N0} ₽";
+                StockValueText.Text = $"{stockConsumption.StockValueTotal:N0} ₽";
+                if (stockConsumption.LowStock.Any())
+                {
+                    LowStockText.Text = $"⚠ Ниже минимума: {stockConsumption.LowStock.Count} поз.";
+                    LowStockText.Foreground = TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Colors.Orange);
+                }
+                else
+                {
+                    LowStockText.Text = "✅ Запасы в норме";
+                    LowStockText.Foreground = TryFindResource("AccentGreen") as Brush ?? new SolidColorBrush(Colors.Green);
+                }
+                ConsumptionList.ItemsSource = stockConsumption.TopItems;
+
                 var allTopServices = periodReports
                     .SelectMany(r => r.TopServices)
                     .GroupBy(s => s.ServiceName)
@@ -166,20 +182,6 @@ namespace AccuratPanelCWD
                     .ToList();
 
                 TopServicesList.ItemsSource = allTopServices;
-
-                // ГРАФИКИ LiveCharts 
-                RevenueSeries = new SeriesCollection {
-                    new LineSeries {
-                        Title = "Выручка",
-                        Values = new ChartValues<decimal>(periodReports.OrderBy(r => r.Date).Select(r => r.TotalRevenue)),
-                        PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 10
-                    }
-                };
-
-                ShareSeries = new SeriesCollection {
-                    new PieSeries { Title = "Мойка", Values = new ChartValues<decimal> { periodReports.Sum(r => r.WashTotalRevenue) }, DataLabels = true },
-                    new PieSeries { Title = "Сервис", Values = new ChartValues<decimal> { periodReports.Sum(r => r.ServiceTotalRevenue) }, DataLabels = true }
-                };
 
                 Labels = periodReports.OrderBy(r => r.Date).Select(r => r.Date.ToString("dd.MM")).ToArray();
 
@@ -227,43 +229,43 @@ namespace AccuratPanelCWD
                 CashDifferenceText.Foreground = TryFindResource(cashDifference == 0 ? "AccentGreen" : "AccentRed") as Brush
                     ?? new SolidColorBrush(cashDifference == 0 ? Colors.Green : Colors.Red);
 
+                // === ГРАФИКИ (единый проход) ===
                 RevenueSeries = new SeriesCollection
+            {
+                new LineSeries
                 {
-                    new LineSeries
-                    {
-                        Title = "Выручка",
-                        Values = new ChartValues<decimal>(periodReports.OrderBy(r => r.Date).Select(r => r.TotalRevenue)),
-                        PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 10
-                    }
-                };
+                    Title = "Выручка",
+                    Values = new ChartValues<decimal>(periodReports.OrderBy(r => r.Date).Select(r => r.TotalRevenue)),
+                    PointGeometry = DefaultGeometries.Circle, PointGeometrySize = 10
+                }
+            };
 
                 ShareSeries = new SeriesCollection
-                {
-                    new PieSeries { Title = "Мойка", Values = new ChartValues<decimal> { periodReports.Sum(r => r.WashTotalRevenue) }, DataLabels = true },
-                    new PieSeries { Title = "Сервис", Values = new ChartValues<decimal> { periodReports.Sum(r => r.ServiceTotalRevenue) }, DataLabels = true }
-                };
+            {
+                new PieSeries { Title = "Мойка", Values = new ChartValues<decimal> { periodReports.Sum(r => r.WashTotalRevenue) }, DataLabels = true },
+                new PieSeries { Title = "Сервис", Values = new ChartValues<decimal> { periodReports.Sum(r => r.ServiceTotalRevenue) }, DataLabels = true }
+            };
 
                 HourlyLoadSeries = new SeriesCollection
+            {
+                new ColumnSeries
                 {
-                    new ColumnSeries
-                    {
-                        Title = "Заказы",
-                        Values = new ChartValues<int>(hourlyLoad.Select(h => h.OrdersCount)),
-                        DataLabels = true,
-                        LabelPoint = p => p.Instance.ToString()
-                    }
-                };
+                    Title = "Заказы",
+                    Values = new ChartValues<int>(hourlyLoad.Select(h => h.OrdersCount)),
+                    DataLabels = true,
+                    LabelPoint = p => p.Instance.ToString()
+                }
+            };
                 HourLabels = hourlyLoad.Select(h => h.HourLabel).ToArray();
 
                 ExpenseCategoriesSeries = new SeriesCollection();
                 var colors = new[] {
-                    TryFindResource("AccentRed") as Brush ?? new SolidColorBrush(Color.FromRgb(231, 76, 60)),
-                    TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Color.FromRgb(230, 126, 34)),
-                    TryFindResource("AccentYellow") as Brush ?? new SolidColorBrush(Color.FromRgb(241, 196, 15)),
-                    TryFindResource("AccentGreen") as Brush ?? new SolidColorBrush(Color.FromRgb(39, 174, 96)),
-                    TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush(Color.FromRgb(52, 152, 219))
-                };
-
+                TryFindResource("AccentRed") as Brush ?? new SolidColorBrush(Color.FromRgb(231, 76, 60)),
+                TryFindResource("AccentOrange") as Brush ?? new SolidColorBrush(Color.FromRgb(230, 126, 34)),
+                TryFindResource("AccentYellow") as Brush ?? new SolidColorBrush(Color.FromRgb(241, 196, 15)),
+                TryFindResource("AccentGreen") as Brush ?? new SolidColorBrush(Color.FromRgb(39, 174, 96)),
+                TryFindResource("AccentBlue") as Brush ?? new SolidColorBrush(Color.FromRgb(52, 152, 219))
+            };
                 for (int i = 0; i < Math.Min(allExpenses.Count, 5); i++)
                 {
                     var expense = allExpenses[i];
@@ -321,7 +323,11 @@ namespace AccuratPanelCWD
                             CarsWashed = g.Sum(x => x.CarsWashed),
                             Earnings = g.Sum(x => x.Earnings),
                             Advances = g.Sum(x => x.Advances)
-                        }).ToList()
+                        }).ToList(),
+
+                    TotalStockConsumption = stockConsumption.TotalConsumptionCost,
+                    StockConsumptionByItem = stockConsumption.TopItems,
+                    LowStock = stockConsumption.LowStock,
                 };
 
                 ApplyThemeToCharts();

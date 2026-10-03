@@ -1,9 +1,10 @@
+using AccuratPanelCWD.Services;
 using AccuratSystem.Contracts.DTOs;
 using AccuratSystem.Contracts.Models;
 using ClosedXML.Excel;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AccuratPanelCWD
 {
@@ -371,6 +372,9 @@ namespace AccuratPanelCWD
 
                     // === Лист 6: Загруженность по часам ===
                     ExportPeriodHourlyLoad(workbook, report);
+
+                    // === Лист 7: Остатки на складе ===
+                    AddStockSheet(workbook, report);
 
                     workbook.SaveAs(filePath);
                 }
@@ -1051,6 +1055,68 @@ namespace AccuratPanelCWD
             ws.Cell(row, 4).Style.Font.FontColor = changePercent > 0 ? PositiveColor : changePercent < 0 ? NegativeColor : NeutralColor;
 
             row++;
+        }
+
+        /// <summary>Лист «Расходники»: себестоимость, топ позиций, дефицит.</summary>
+        private static void AddStockSheet(ClosedXML.Excel.IXLWorkbook wb, AccuratSystem.Contracts.Models.CustomPeriodReport report)
+        {
+            var ws = wb.Worksheets.Add("Расходники");
+
+            ws.Cell(1, 1).Value = $"Расходники за {report.StartDate:dd.MM.yyyy} – {report.EndDate:dd.MM.yyyy} ({report.BranchName})";
+            ws.Cell(1, 1).Style.Font.Bold = true;
+            ws.Cell(1, 1).Style.Font.FontSize = 14;
+
+            ws.Cell(3, 1).Value = "Себестоимость списаний, ₽";
+            ws.Cell(3, 2).Value = (double)report.TotalStockConsumption;
+            ws.Cell(4, 1).Value = "Расходы (касса), ₽";
+            ws.Cell(4, 2).Value = (double)report.TotalExpenses;
+            ws.Cell(3, 1).Style.Font.Bold = true;
+
+            int row = 6;
+            ws.Cell(row, 1).Value = "Топ позиций по себестоимости";
+            ws.Cell(row, 1).Style.Font.Bold = true;
+            row++;
+            ws.Cell(row, 1).Value = "Позиция";
+            ws.Cell(row, 2).Value = "Ед.";
+            ws.Cell(row, 3).Value = "Съедено";
+            ws.Cell(row, 4).Value = "Себестоимость, ₽";
+            ws.Range(row, 1, row, 4).Style.Font.Bold = true;
+
+            foreach (var item in report.StockConsumptionByItem)
+            {
+                row++;
+                ws.Cell(row, 1).Value = item.ItemName;
+                ws.Cell(row, 2).Value = StockUnitNames.Get(item.Unit);
+                ws.Cell(row, 3).Value = (double)item.TotalQuantity;
+                ws.Cell(row, 4).Value = (double)item.TotalCost;
+            }
+
+            row += 2;
+            ws.Cell(row, 1).Value = "Позиции ниже минимума";
+            ws.Cell(row, 1).Style.Font.Bold = true;
+            row++;
+            ws.Cell(row, 1).Value = "Позиция";
+            ws.Cell(row, 2).Value = "Ед.";
+            ws.Cell(row, 3).Value = "Остаток";
+            ws.Cell(row, 4).Value = "Минимум";
+            ws.Range(row, 1, row, 4).Style.Font.Bold = true;
+
+            if (!report.LowStock.Any())
+            {
+                row++;
+                ws.Cell(row, 1).Value = "— все позиции выше минимума —";
+            }
+            foreach (var low in report.LowStock)
+            {
+                row++;
+                ws.Cell(row, 1).Value = low.ItemName;
+                ws.Cell(row, 2).Value = StockUnitNames.Get(low.Unit);
+                ws.Cell(row, 3).Value = (double)low.Quantity;
+                ws.Cell(row, 4).Value = (double)low.MinStock;
+                ws.Range(row, 1, row, 4).Style.Font.FontColor = ClosedXML.Excel.XLColor.OrangeRed;
+            }
+
+            ws.Columns().AdjustToContents();
         }
     }
 }

@@ -213,45 +213,63 @@ namespace AccuratPanelCWD
 
         private void FillKpiCards(KpiDeltas deltas, BaseReport current, BaseReport previous)
         {
-            // Выручка
+            // Выручка (рост = хорошо)
             RevenueCurrentText.Text = $"{current.TotalRevenue:N0} ₽";
             RevenuePreviousText.Text = $"{previous.TotalRevenue:N0} ₽";
             SetDeltaText(RevenueDeltaText, deltas.RevenueChange, deltas.RevenueChangePercent);
 
-            // Прибыль
+            // Прибыль (рост = хорошо)
             ProfitCurrentText.Text = $"{current.NetProfit:N0} ₽";
             ProfitPreviousText.Text = $"{previous.NetProfit:N0} ₽";
             SetDeltaText(ProfitDeltaText, deltas.ProfitChange, deltas.ProfitChangePercent);
 
-            // Заказы
+            // Заказы (рост = хорошо)
             CarsCurrentText.Text = current.TotalCars.ToString();
             CarsPreviousText.Text = previous.TotalCars.ToString();
             SetDeltaText(CarsDeltaText, deltas.CarsChange, deltas.CarsChangePercent);
 
-            // Средний чек
+            // Средний чек (рост = хорошо)
             AvgCheckCurrentText.Text = $"{current.AverageCheck:N0} ₽";
             AvgCheckPreviousText.Text = $"{previous.AverageCheck:N0} ₽";
             SetDeltaText(AvgCheckDeltaText, deltas.AvgCheckChange, deltas.AvgCheckChangePercent);
 
-            // Расходы
+            // Расходы (рост = ПЛОХО → invertColors: true)
             ExpensesCurrentText.Text = $"{current.TotalExpenses:N0} ₽";
             ExpensesPreviousText.Text = $"{previous.TotalExpenses:N0} ₽";
-            SetDeltaText(ExpensesDeltaText, deltas.ExpensesChange, deltas.ExpensesChangePercent);
+            SetDeltaText(ExpensesDeltaText, deltas.ExpensesChange, deltas.ExpensesChangePercent, invertColors: true);
 
-            // Новые клиенты
+            // 🆕 Себестоимость расходников (рост = ПЛОХО → invertColors: true)
+            ConsumptionCurrentText.Text = $"{current.TotalStockConsumption:N0} ₽";
+            ConsumptionPreviousText.Text = $"{previous.TotalStockConsumption:N0} ₽";
+            SetDeltaText(ConsumptionDeltaText, deltas.ConsumptionChange, deltas.ConsumptionChangePercent, invertColors: true);
+
+            // 🆕 Скидки (рост = ПЛОХО → invertColors: true)
+            DiscountsCurrentText.Text = $"{current.TotalDiscountAmount:N0} ₽";
+            DiscountsPreviousText.Text = $"{previous.TotalDiscountAmount:N0} ₽";
+            var discountChange = current.TotalDiscountAmount - previous.TotalDiscountAmount;
+            var discountPercent = previous.TotalDiscountAmount > 0
+                ? Math.Round(discountChange / previous.TotalDiscountAmount * 100, 1)
+                : (current.TotalDiscountAmount > 0 ? 100m : 0m);
+            SetDeltaText(DiscountsDeltaText, discountChange, discountPercent, invertColors: true);
+
+            // Новые клиенты (рост = хорошо)
             NewClientsCurrentText.Text = current.NewClientsCount.ToString();
             NewClientsPreviousText.Text = previous.NewClientsCount.ToString();
             SetDeltaText(NewClientsDeltaText, deltas.NewClientsChange, deltas.NewClientsChangePercent);
         }
 
-        private void SetDeltaText(System.Windows.Controls.TextBlock textBlock, decimal change, decimal percent)
+        private void SetDeltaText(System.Windows.Controls.TextBlock textBlock, decimal change, decimal percent, bool invertColors = false)
         {
             string arrow = change > 0 ? "↑" : change < 0 ? "↓" : "→";
             textBlock.Text = $"{arrow} {percent:+0.0;-0.0;0}%";
 
-            if (change > 0)
+            // Для расходов/себестоимости/скидок рост = плохо (invertColors = true)
+            bool isGood = invertColors ? change < 0 : change > 0;
+            bool isBad = invertColors ? change > 0 : change < 0;
+
+            if (isGood)
                 textBlock.Foreground = TryFindResource("AccentGreen") as Brush ?? Brushes.Green;
-            else if (change < 0)
+            else if (isBad)
                 textBlock.Foreground = TryFindResource("AccentRed") as Brush ?? Brushes.Red;
             else
                 textBlock.Foreground = TryFindResource("TextMuted") as Brush ?? Brushes.Gray;

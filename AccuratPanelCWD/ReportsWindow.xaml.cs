@@ -230,10 +230,11 @@ namespace AccuratPanelCWD
             lines.Add("");
 
             // Изменили заголовки (ФОТ Сотрудников вместо Начислено Мойщикам)
-            lines.Add("Дата;Время начала;Время окончания;Заказов;Выручка;ФОТ Сотрудников;Расходы;Выдано авансов;Чистая прибыль(ЧПКО);Примечание");
+            lines.Add("Дата;Время начала;Время окончания;Заказов;Выручка;ФОТ Сотрудников;Расходы;Выдано авансов;Чистая прибыль(ЧПКО);Себестоимость расходников;Примечание");
             lines.Add($"{report.Date:dd.MM.yyyy};{report.StartTime:HH:mm};{report.EndTime:HH:mm};" +
                       $"{report.TotalCars};{report.TotalRevenue:N0};{report.TotalWasherEarnings:N0};" +
-                      $"{report.TotalExpenses:N0};{report.TotalAdvances:N0};{report.NetProfit:N0};{report.Notes}");
+                      $"{report.TotalExpenses:N0};{report.TotalAdvances:N0};{report.NetProfit:N0};" +
+                      $"{report.TotalStockConsumption:N0};{report.Notes}");
 
             lines.Add("");
             // Изменили заголовки таблицы сотрудников

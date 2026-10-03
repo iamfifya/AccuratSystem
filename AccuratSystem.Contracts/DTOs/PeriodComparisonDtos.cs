@@ -71,6 +71,9 @@ namespace AccuratSystem.Contracts.DTOs
 
         public int NewClientsChange { get; set; }
         public decimal NewClientsChangePercent { get; set; }
+
+        public decimal ConsumptionChange { get; set; }
+        public decimal ConsumptionChangePercent { get; set; }
     }
 
     // ═══════════════════════════════════════════════════════

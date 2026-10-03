@@ -83,6 +83,9 @@
                 </Grid>
             </Border>
         </DataTemplate>
+
+        <local:StockUnitRuConverter x:Key="UnitRu"/>
+
     </Window.Resources>
 
     <Grid Margin="15">
@@ -329,6 +332,36 @@
                         </Grid>
                     </Border>
                 </Grid>
+
+                <!-- 📦 РАСХОДНИКИ -->
+                <Border Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15" Margin="0,15,0,0"
+                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="📦 Расходники и склад" FontWeight="Bold" FontSize="16"
+                                   Foreground="{DynamicResource TextMain}" Margin="0,0,0,10"/>
+                        <WrapPanel Margin="0,0,0,10">
+                            <TextBlock Text="Себестоимость списаний: " Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock x:Name="StockConsumptionText" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentBlue}" Margin="0,0,20,0"/>
+                            <TextBlock Text="Стоимость остатков: " Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock x:Name="StockValueText" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextMain}" Margin="0,0,20,0"/>
+                            <TextBlock x:Name="LowStockText" FontWeight="SemiBold"/>
+                        </WrapPanel>
+                        <DataGrid x:Name="ConsumptionList" AutoGenerateColumns="False" IsReadOnly="True"
+                                  MaxHeight="220" Background="Transparent" BorderThickness="0"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderColor}"
+                                  Foreground="{DynamicResource TextMain}" RowHeight="32">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Позиция" Binding="{Binding ItemName}" Width="*"/>
+                                <DataGridTextColumn Header="Ед." Binding="{Binding Unit, Converter={StaticResource UnitRu}}" Width="50"/>
+                                <DataGridTextColumn Header="Съедено" Binding="{Binding TotalQuantity, StringFormat={}{0:0.###}}" Width="90"/>
+                                <DataGridTextColumn Header="Себестоимость" Binding="{Binding TotalCost, StringFormat=N0}" Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
 
                 <TextBlock Text="⏰ Загруженность по часам"
            FontSize="18" FontWeight="Bold"

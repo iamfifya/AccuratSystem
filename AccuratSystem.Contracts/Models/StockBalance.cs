@@ -16,5 +16,11 @@
 
         /// <summary>Стоимость остатка по скользящей средней (для UI).</summary>
         public decimal TotalValue => Quantity * AvgCost;
+
+        /// <summary>Отрицательный остаток.</summary>
+        public bool IsNegative => Quantity < 0;
+
+        /// <summary>На уровне минимума или ниже (MinStock задан).</summary>
+        public bool IsLow => Item != null && Item.MinStock > 0 && Quantity <= Item.MinStock;
     }
 }

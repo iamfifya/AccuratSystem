@@ -597,6 +597,13 @@ namespace AccuratPanelCWD.Services
             return Newtonsoft.Json.JsonConvert.DeserializeObject<PeriodComparisonFull>(json);
         }
 
+        public async Task<StockConsumptionReport> GetStockConsumptionAsync(int branchId, DateTime start, DateTime end)
+        {
+            var url = $"Reports/stock-consumption?branchId={branchId}&start={Q(start)}&end={Q(end)}";
+            var result = await SafeGetAsync<StockConsumptionReport>(url);
+            return result ?? new StockConsumptionReport();
+        }
+
         #endregion
 
         #region ГРАФИКИ (SCHEDULES) И КОНВЕРТАЦИЯ

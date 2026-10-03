@@ -42,10 +42,12 @@ namespace Accurat.WebAPI.Controllers
             var shiftsQuery = _context.Shifts
                 .Where(s => s.IsClosed && s.Date >= startUtc && s.Date <= endUtc);
 
-            if (CurrentCompanyId != 0)
+            // branchId == 0 = "Вся сеть" (директор) — пропускаем проверку филиала
+            if (CurrentCompanyId != 0 && branchId > 0)
             {
-                var myBranchIds = _context.Branches.Where(b => b.CompanyId == CurrentCompanyId).Select(b => b.Id);
-                shiftsQuery = shiftsQuery.Where(s => myBranchIds.Contains(s.BranchId));
+                var branch = await _context.Branches.FindAsync(branchId);
+                if (branch == null || branch.CompanyId != CurrentCompanyId)
+                    return BadRequest("Нет доступа к филиалу");
             }
             if (branchId > 0)
             {
@@ -65,6 +67,12 @@ namespace Accurat.WebAPI.Controllers
 
             var allShiftTransactions = await _context.Transactions
                 .Where(t => t.ShiftId.HasValue && shiftIds.Contains(t.ShiftId.Value))
+                .ToListAsync();
+
+            // Движения склада, привязанные к заказам смен (автосписания и сторно)
+            var allStockMovements = await _context.StockMovements
+                .Where(m => m.ShiftId != null && shiftIds.Contains(m.ShiftId.Value)
+                         && (m.Type == StockMovementType.WriteOff || m.Type == StockMovementType.Storno))
                 .ToListAsync();
 
             var allUsers = await _context.Users.Where(u => CurrentCompanyId == 0 || u.CompanyId == CurrentCompanyId).ToListAsync();
@@ -98,6 +106,11 @@ namespace Accurat.WebAPI.Controllers
 
                     TotalExpenses = transactions.Where(t => t.Type == "Расход").Sum(t => t.Amount),
                     TotalAdvances = transactions.Where(t => t.Type == "Аванс мойщику").Sum(t => t.Amount),
+
+                    // Себестоимость расходников: WriteOff даёт плюс, Storno компенсирует
+                    TotalStockConsumption = allStockMovements
+                    .Where(m => m.ShiftId == shift.Id)
+                    .Sum(m => -m.Quantity * m.CostPrice),
 
                     WashTotalCars = orders.Count(o => o.Department == "Wash"),
                     WashTotalRevenue = orders.Where(o => o.Department == "Wash").Sum(o => o.FinalPrice),
@@ -351,7 +364,9 @@ namespace Accurat.WebAPI.Controllers
                 TotalExpenses = reports.Sum(r => r.TotalExpenses),
                 TotalAdvances = reports.Sum(r => r.TotalAdvances),
                 TotalDiscountAmount = reports.Sum(r => r.TotalDiscountAmount),
-                DiscountedOrdersCount = reports.Sum(r => r.DiscountedOrdersCount)
+                DiscountedOrdersCount = reports.Sum(r => r.DiscountedOrdersCount),
+
+                TotalStockConsumption = reports.Sum(r => r.TotalStockConsumption),
             };
 
             var allExpenses = reports.SelectMany(r => r.ExpensesByCategory).ToList();
@@ -573,7 +588,10 @@ namespace Accurat.WebAPI.Controllers
                 ExpensesChangePercent = CalcPercent(current.TotalExpenses, previous.TotalExpenses),
 
                 NewClientsChange = current.NewClientsCount - previous.NewClientsCount,
-                NewClientsChangePercent = CalcPercent(current.NewClientsCount, previous.NewClientsCount)
+                NewClientsChangePercent = CalcPercent(current.NewClientsCount, previous.NewClientsCount),
+
+                ConsumptionChange = current.TotalStockConsumption - previous.TotalStockConsumption,
+                ConsumptionChangePercent = CalcPercent(current.TotalStockConsumption, previous.TotalStockConsumption),
             };
 
             // 5. Строим данные по дням для графиков
@@ -859,6 +877,88 @@ namespace Accurat.WebAPI.Controllers
                 PreviousEmployeesCount = previousEmpCount,
                 Employees = employees
             };
+        }
+
+        // ═════════════ АНАЛИТИКА РАСХОДНИКОВ ═════════════
+
+        [HttpGet("stock-consumption")]
+        public async Task<ActionResult<StockConsumptionReport>> GetStockConsumption(int branchId, DateTime start, DateTime end)
+        {
+            if (CurrentCompanyId != 0)
+            {
+                var branch = await _context.Branches.FindAsync(branchId);
+                if (branch == null || branch.CompanyId != CurrentCompanyId) return Forbid();
+            }
+
+            // Простая нормализация дат — без NodaTime
+            var startUtc = start.Kind == DateTimeKind.Utc ? start : start.ToUniversalTime();
+            var endUtc = end.Kind == DateTimeKind.Utc ? end : end.ToUniversalTime();
+            if (endUtc.TimeOfDay == TimeSpan.Zero) endUtc = endUtc.AddDays(1).AddTicks(-1);
+
+            // Загружаем движения в память, фильтруем по компании уже там
+            // (LINQ-to-Entities может не транслировать m.Item.CompanyId)
+            var movements = (await _context.StockMovements
+                .Include(m => m.Item)
+                .Where(m => m.BranchId == branchId
+                         && m.CreatedAt >= startUtc && m.CreatedAt <= endUtc
+                         && (m.Type == StockMovementType.WriteOff || m.Type == StockMovementType.Storno))
+                .ToListAsync())
+                .Where(m => m.Item != null && m.Item.CompanyId == CurrentCompanyId)
+                .ToList();
+
+            var report = new StockConsumptionReport
+            {
+                TotalConsumptionCost = movements.Sum(m => -m.Quantity * m.CostPrice)
+            };
+
+            report.TopItems = movements
+                .GroupBy(m => m.ItemId)
+                .Select(g => new StockConsumptionItem
+                {
+                    ItemId = g.Key,
+                    ItemName = g.First().Item?.Name ?? $"Позиция #{g.Key}",
+                    Unit = g.First().Item != null ? g.First().Item.Unit : StockUnit.Piece,
+                    TotalQuantity = g.Sum(m => -m.Quantity),
+                    TotalCost = g.Sum(m => -m.Quantity * m.CostPrice)
+                })
+                .OrderByDescending(i => i.TotalCost)
+                .Take(10)
+                .ToList();
+
+            report.Daily = movements
+                .GroupBy(m => m.CreatedAt.Date)
+                .Select(g => new StockDailyConsumption
+                {
+                    Date = g.Key,
+                    DateLabel = g.Key.ToString("dd.MM"),
+                    Cost = g.Sum(m => -m.Quantity * m.CostPrice)
+                })
+                .OrderBy(d => d.Date)
+                .ToList();
+
+            // Остатки — тоже в память, фильтр по компании там же
+            var balances = (await _context.StockBalances
+                .Include(b => b.Item)
+                .Where(b => b.BranchId == branchId)
+                .ToListAsync())
+                .Where(b => b.Item != null && b.Item.CompanyId == CurrentCompanyId)
+                .ToList();
+
+            report.StockValueTotal = balances.Sum(b => b.Quantity * b.AvgCost);
+            report.LowStock = balances
+                .Where(b => b.Item.IsActive && b.Item.MinStock > 0 && b.Quantity <= b.Item.MinStock)
+                .OrderBy(b => b.Quantity - b.Item.MinStock)
+                .Select(b => new StockLowItem
+                {
+                    ItemId = b.ItemId,
+                    ItemName = b.Item.Name,
+                    Unit = b.Item.Unit,
+                    Quantity = b.Quantity,
+                    MinStock = b.Item.MinStock
+                })
+                .ToList();
+
+            return Ok(report);
         }
     }
 }

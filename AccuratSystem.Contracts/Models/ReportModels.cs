@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AccuratSystem.Contracts.DTOs;
 
 namespace AccuratSystem.Contracts.Models
 {
@@ -47,16 +48,24 @@ namespace AccuratSystem.Contracts.Models
         // === Топ услуг ===
         public List<ServiceAnalytics> TopServices { get; set; } = new List<ServiceAnalytics>();
 
-        // === НОВОЕ: Разбивка расходов по категориям ===
+        // === Разбивка расходов по категориям ===
         public List<ExpenseCategoryReport> ExpensesByCategory { get; set; } = new List<ExpenseCategoryReport>();
 
-        // === НОВОЕ: Загруженность по часам ===
+        // === Загруженность по часам ===
         public List<HourlyLoad> HourlyLoad { get; set; } = new List<HourlyLoad>();
 
-        // === НОВОЕ: Остаток по кассе ===
+        // === Остаток по кассе ===
         public decimal ExpectedCashBalance { get; set; }
         public decimal ActualCashBalance { get; set; }
         public decimal CashBalanceDifference { get; set; }
+
+        /// <summary>Себестоимость материалов, съеденных заказами периода
+        /// (автосписания минус сторно), ₽. Информационная метрика:
+        /// в NetProfit НЕ входит (отчёты остаются кассовыми).</summary>
+        public decimal TotalStockConsumption { get; set; }
+
+        public decimal ConsumptionChange { get; set; }
+        public decimal ConsumptionChangePercent { get; set; }
 
         public List<EmployeeReport> EmployeesWork { get; set; } = new List<EmployeeReport>();
     }
@@ -118,6 +127,10 @@ namespace AccuratSystem.Contracts.Models
         public DateTime EndDate { get; set; }
         public List<DailyReportSummary> DailyReports { get; set; } = new List<DailyReportSummary>();
         public string BranchName { get; set; } = string.Empty;
+
+        public decimal TotalStockConsumption { get; set; }
+        public List<StockConsumptionItem> StockConsumptionByItem { get; set; } = new List<StockConsumptionItem>();
+        public List<StockLowItem> LowStock { get; set; } = new List<StockLowItem>();
     }
 
     public class DailyReportSummary : BaseReport

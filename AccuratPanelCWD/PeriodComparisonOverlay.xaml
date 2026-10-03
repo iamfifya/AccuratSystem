@@ -209,7 +209,7 @@
                                        FontSize="16" FontWeight="Bold"
                                        Foreground="{DynamicResource TextMain}"
                                        Margin="5,20,0,10"/>
-                            <UniformGrid Columns="3" Margin="0,0,0,15">
+                            <UniformGrid Columns="4" Margin="0,0,0,15">
                                 <Border Style="{StaticResource ComparisonCard}">
                                     <StackPanel>
                                         <TextBlock Text="💰 Выручка" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
@@ -262,6 +262,8 @@
                                         <TextBlock x:Name="AvgCheckDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
                                     </StackPanel>
                                 </Border>
+
+                                <!-- Второй ряд -->
                                 <Border Style="{StaticResource ComparisonCard}">
                                     <StackPanel>
                                         <TextBlock Text="🛒 Расходы" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
@@ -273,6 +275,32 @@
                                                        Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <TextBlock x:Name="ExpensesDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="📦 Себестоимость" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="ConsumptionCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentOrange}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="ConsumptionPreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="ConsumptionDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ComparisonCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="🎁 Скидки (упущено)" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock x:Name="DiscountsCurrentText" FontSize="18" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentYellow}"/>
+                                            <TextBlock Text=" / " FontSize="14" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="DiscountsPreviousText" FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="DiscountsDeltaText" FontSize="13" FontWeight="Bold" Margin="0,3,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource ComparisonCard}">
