@@ -1,120 +1,58 @@
-// Controls/CustomComboBox.cs
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 
 namespace AccuratPanelCWD.Controls
 {
     [ContentProperty("Items")]
-    [TemplatePart(Name = "PART_ToggleButton", Type = typeof(ToggleButton))]
+    [TemplatePart(Name = "PART_DropDownToggle", Type = typeof(ToggleButton))]
+        [TemplatePart(Name = "PART_EditableTextBox", Type = typeof(TextBox))]
     [TemplatePart(Name = "PART_Popup", Type = typeof(Popup))]
-    [TemplatePart(Name = "PART_TextBox", Type = typeof(TextBox))]
-    [TemplatePart(Name = "PART_ItemsPanel", Type = typeof(StackPanel))]
-    [TemplatePart(Name = "PART_ScrollViewer", Type = typeof(ScrollViewer))]
-    [TemplatePart(Name = "PART_MainBorder", Type = typeof(Border))]
-    public class CustomComboBox : ItemsControl
+    public class CustomComboBox : ComboBox
     {
-        static CustomComboBox()
-        {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(typeof(CustomComboBox)));
-        }
-
-        private ToggleButton _toggleButton;
-        private Popup _popup;
-        private TextBox _textBox;
-        private StackPanel _itemsPanel;
-        private ScrollViewer _scrollViewer;
-        private Border _mainBorder;
-        private bool _isDropDownOpen;
-
-        #region Dependency Properties
-
-        public static readonly DependencyProperty SelectedItemProperty =
-            DependencyProperty.Register(nameof(SelectedItem), typeof(object), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedItemChanged));
-
-        public static readonly DependencyProperty SelectedValueProperty =
-            DependencyProperty.Register(nameof(SelectedValue), typeof(object), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
-        public static readonly DependencyProperty SelectedValuePathProperty =
-            DependencyProperty.Register(nameof(SelectedValuePath), typeof(string), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(null));
-
-        public static readonly new DependencyProperty DisplayMemberPathProperty =
-            DependencyProperty.Register(nameof(DisplayMemberPath), typeof(string), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(null));
-
-        public static readonly DependencyProperty IsEditableProperty =
-            DependencyProperty.Register(nameof(IsEditable), typeof(bool), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(false));
-
-        public static readonly DependencyProperty TextProperty =
-            DependencyProperty.Register(nameof(Text), typeof(string), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
         public static readonly DependencyProperty PlaceholderProperty =
-            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(CustomComboBox),
+            DependencyProperty.Register(
+                nameof(Placeholder),
+                typeof(string),
+                typeof(CustomComboBox),
                 new FrameworkPropertyMetadata("Выберите..."));
 
         public static readonly DependencyProperty HeaderProperty =
-            DependencyProperty.Register(nameof(Header), typeof(string), typeof(CustomComboBox),
+            DependencyProperty.Register(
+                nameof(Header),
+                typeof(string),
+                typeof(CustomComboBox),
                 new FrameworkPropertyMetadata(null));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(CustomComboBox),
-                new FrameworkPropertyMetadata(new CornerRadius(6)));
+            DependencyProperty.Register(
+                nameof(CornerRadius),
+                typeof(CornerRadius),
+                typeof(CustomComboBox),
+                new FrameworkPropertyMetadata(new CornerRadius(8)));
 
-        public static readonly RoutedEvent SelectionChangedEvent =
-            EventManager.RegisterRoutedEvent(nameof(SelectionChanged), RoutingStrategy.Bubble,
-                typeof(RoutedEventHandler), typeof(CustomComboBox));
+        public static readonly DependencyProperty DisplayTextProperty =
+            DependencyProperty.Register(
+                nameof(DisplayText),
+                typeof(string),
+                typeof(CustomComboBox),
+                new FrameworkPropertyMetadata(string.Empty));
 
-        #endregion
-
-        #region Properties
-
-        public object SelectedItem
+        static CustomComboBox()
         {
-            get => GetValue(SelectedItemProperty);
-            set => SetValue(SelectedItemProperty, value);
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(CustomComboBox),
+                new FrameworkPropertyMetadata(typeof(CustomComboBox)));
         }
 
-        public object SelectedValue
+        public CustomComboBox()
         {
-            get => GetValue(SelectedValueProperty);
-            set => SetValue(SelectedValueProperty, value);
-        }
-
-        public string SelectedValuePath
-        {
-            get => (string)GetValue(SelectedValuePathProperty);
-            set => SetValue(SelectedValuePathProperty, value);
-        }
-
-        public new string DisplayMemberPath
-        {
-            get => (string)GetValue(DisplayMemberPathProperty);
-            set => SetValue(DisplayMemberPathProperty, value);
-        }
-
-        public bool IsEditable
-        {
-            get => (bool)GetValue(IsEditableProperty);
-            set => SetValue(IsEditableProperty, value);
-        }
-
-        public string Text
-        {
-            get => (string)GetValue(TextProperty);
-            set => SetValue(TextProperty, value);
+            SetResourceReference(ItemContainerStyleProperty, "CustomComboBoxItemStyle");
         }
 
         public string Placeholder
@@ -135,335 +73,222 @@ namespace AccuratPanelCWD.Controls
             set => SetValue(CornerRadiusProperty, value);
         }
 
-        public bool IsDropDownOpen
+        public string DisplayText
         {
-            get => _isDropDownOpen;
-            set
+            get => (string)GetValue(DisplayTextProperty);
+            private set => SetValue(DisplayTextProperty, value ?? string.Empty);
+        }
+
+        protected override void OnSelectionChanged(SelectionChangedEventArgs e)
+        {
+            base.OnSelectionChanged(e);
+            UpdateDisplayText();
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+
+            if (e.Property == DisplayMemberPathProperty ||
+                e.Property == SelectedItemProperty ||
+                e.Property == ItemTemplateProperty)
             {
-                _isDropDownOpen = value;
-                if (_popup != null)
-                    _popup.IsOpen = value;
-                if (value)
-                    UpdateItemsPanel();
+                UpdateDisplayText();
+
+                if (e.Property == DisplayMemberPathProperty || e.Property == ItemTemplateProperty)
+                    RefreshRealizedItemContainers();
             }
         }
 
-        #endregion
-
-        #region Events
-
-        public event RoutedEventHandler SelectionChanged
+        protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
         {
-            add => AddHandler(SelectionChangedEvent, value);
-            remove => RemoveHandler(SelectionChangedEvent, value);
+            base.PrepareContainerForItemOverride(element, item);
+
+            if (element is not ComboBoxItem comboItem)
+                return;
+
+            // Preserve manually-created ComboBoxItem instances.
+            if (item is ComboBoxItem)
+                return;
+
+            // If the consumer supplied ItemTemplate, let WPF render it.
+            if (ItemTemplate != null)
+                return;
+
+            // WPF's internal DisplayMemberPath presentation is not reliably
+            // surfaced through a fully custom ComboBoxItem template. Resolve
+            // the member explicitly so both the popup and the selected field
+            // always show the human-readable value instead of Type.ToString().
+            if (!string.IsNullOrWhiteSpace(DisplayMemberPath))
+                comboItem.Content = GetDisplayText(item);
+            else
+                comboItem.Content = item;
         }
 
-        #endregion
+        protected override void ClearContainerForItemOverride(DependencyObject element, object item)
+        {
+            if (element is ComboBoxItem comboItem && item is not ComboBoxItem)
+            {
+                // Clear stale content before WPF recycles this container.
+                comboItem.Content = null;
+            }
 
-        #region Overrides
+            base.ClearContainerForItemOverride(element, item);
+        }
+
+        /// <summary>
+        /// Clears selection and editable text. Kept for backwards compatibility
+        /// with existing windows.
+        /// </summary>
+        public void ClearSelection()
+        {
+            SelectedItem = null;
+            SelectedValue = null;
+            SelectedIndex = -1;
+            Text = string.Empty;
+            UpdateDisplayText();
+        }
+
+        private void RefreshRealizedItemContainers()
+        {
+            for (int i = 0; i < Items.Count; i++)
+            {
+                var container = ItemContainerGenerator.ContainerFromIndex(i) as ComboBoxItem;
+                if (container == null)
+                    continue;
+
+                var item = Items[i];
+                if (item is ComboBoxItem)
+                    continue;
+
+                if (ItemTemplate != null)
+                    container.Content = item;
+                else if (!string.IsNullOrWhiteSpace(DisplayMemberPath))
+                    container.Content = GetDisplayText(item);
+                else
+                    container.Content = item;
+            }
+        }
+
+        private Border _mainBorder;
+        private ToggleButton _dropDownToggle;
+        private TextBox _editableTextBox;
 
         public override void OnApplyTemplate()
         {
+            // Detach handlers from the previous template before WPF replaces it.
+            if (_mainBorder != null)
+                _mainBorder.PreviewMouseLeftButtonDown -= MainBorder_PreviewMouseLeftButtonDown;
+
+            if (_dropDownToggle != null)
+                _dropDownToggle.Click -= DropDownToggle_Click;
+
             base.OnApplyTemplate();
 
-            _toggleButton = GetTemplateChild("PART_ToggleButton") as ToggleButton;
-            _popup = GetTemplateChild("PART_Popup") as Popup;
-            _textBox = GetTemplateChild("PART_TextBox") as TextBox;
-            _itemsPanel = GetTemplateChild("PART_ItemsPanel") as StackPanel;
-            _scrollViewer = GetTemplateChild("PART_ScrollViewer") as ScrollViewer;
             _mainBorder = GetTemplateChild("PART_MainBorder") as Border;
+            _dropDownToggle = GetTemplateChild("PART_DropDownToggle") as ToggleButton;
+            _editableTextBox = GetTemplateChild("PART_EditableTextBox") as TextBox;
 
-            if (_toggleButton != null)
-                _toggleButton.Click += ToggleButton_Click;
-
-            // Делаем весь комбобокс кликабельным
             if (_mainBorder != null)
-            {
-                _mainBorder.MouseLeftButtonUp += MainBorder_MouseLeftButtonUp;
-                _mainBorder.Cursor = Cursors.Hand;
-            }
+                _mainBorder.PreviewMouseLeftButtonDown += MainBorder_PreviewMouseLeftButtonDown;
 
-            // Также делаем кликабельным TextBox (если он не редактируемый)
-            if (_textBox != null && !IsEditable)
-            {
-                _textBox.MouseLeftButtonUp += TextBox_MouseLeftButtonUp;
-                _textBox.Cursor = Cursors.Hand;
-            }
+            if (_dropDownToggle != null)
+                _dropDownToggle.Click += DropDownToggle_Click;
 
-            UpdateDisplay();
+            UpdateDisplayText();
         }
 
-        protected override void OnItemsChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private void MainBorder_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            base.OnItemsChanged(e);
-            if (IsDropDownOpen)
-                UpdateItemsPanel();
-        }
+            if (IsEditable)
+                return;
 
-        #endregion
+            // The arrow toggle owns its own click. Do not toggle a second time
+            // when the mouse event tunnels through the main border.
+            var source = e.OriginalSource as DependencyObject;
+            if (_dropDownToggle != null && source != null &&
+                FindAncestor<ToggleButton>(source) == _dropDownToggle)
+                return;
 
-        #region Event Handlers
-
-        private void ToggleButton_Click(object sender, RoutedEventArgs e)
-        {
             IsDropDownOpen = !IsDropDownOpen;
+            e.Handled = true;
         }
 
-        private void MainBorder_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void DropDownToggle_Click(object sender, RoutedEventArgs e)
         {
-            // Открываем/закрываем список при клике на любую область комбобокса
-            IsDropDownOpen = !IsDropDownOpen;
+            // IsChecked is two-way bound to IsDropDownOpen by the template.
+            // Mark the event handled so the main border cannot toggle it again.
+            e.Handled = true;
         }
 
-        private void TextBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private static T FindAncestor<T>(DependencyObject start) where T : DependencyObject
         {
-            // Для нередактируемого TextBox - открываем список
-            if (!IsEditable)
+            var current = start;
+            while (current != null)
             {
-                IsDropDownOpen = !IsDropDownOpen;
+                if (current is T match)
+                    return match;
+
+                current = VisualTreeHelper.GetParent(current);
             }
+
+            return null;
         }
 
-        private void Item_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void UpdateDisplayText()
         {
-            var border = sender as Border;
-            if (border?.DataContext != null)
-            {
-                SelectedItem = border.DataContext;
-                UpdateSelectedValue(); // ← ДОБАВИТЬ ЭТУ СТРОКУ!
-                IsDropDownOpen = false;
-                UpdateDisplay();
-                RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
-            }
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var comboBox = d as CustomComboBox;
-            System.Diagnostics.Debug.WriteLine($"CustomComboBox OnSelectedItemChanged: old={e.OldValue}, new={e.NewValue}");
-
-            if (comboBox != null)
-            {
-                comboBox.UpdateSelectedValue();
-                comboBox.UpdateDisplay();
-
-                // Принудительно обновляем ItemsPanel если открыт
-                if (comboBox.IsDropDownOpen)
-                    comboBox.UpdateItemsPanel();
-            }
-        }
-
-        private void UpdateSelectedValue()
-        {
-            if (SelectedItem != null && !string.IsNullOrEmpty(SelectedValuePath))
-            {
-                var prop = SelectedItem.GetType().GetProperty(SelectedValuePath);
-                if (prop != null)
-                    SelectedValue = prop.GetValue(SelectedItem);
-            }
-        }
-
-        private void UpdateDisplay()
-        {
-            if (_textBox == null) return;
-
-            System.Diagnostics.Debug.WriteLine($"UpdateDisplay: SelectedItem={SelectedItem}, SelectedValue={SelectedValue}");
-
-            if (SelectedItem != null)
-            {
-                _textBox.Text = GetDisplayText(SelectedItem);
-                _textBox.Foreground = GetThemeBrush("InputText", new SolidColorBrush(Colors.Black));
-            }
-            else if (SelectedValue != null && ItemsSource != null)
-            {
-                if (ItemsSource is IEnumerable source)
-                {
-                    foreach (var item in source)
-                    {
-                        if (Equals(GetItemValue(item), SelectedValue))
-                        {
-                            SelectedItem = item;   // колбэк сам обновит текст и подсветку
-                            return;
-                        }
-                    }
-                }
-                _textBox.Text = Placeholder;
-                _textBox.Foreground = GetThemeBrush("TextLightMuted", new SolidColorBrush(Colors.Gray));
-            }
-            else if (!string.IsNullOrEmpty(Placeholder))
-            {
-                _textBox.Text = Placeholder;
-                _textBox.Foreground = new SolidColorBrush(Colors.Gray);
-            }
-        }
-
-        /// <summary>Полный сброс выбора (и SelectedItem, и SelectedValue).</summary>
-        public void ClearSelection()
-        {
-            SetValue(SelectedItemProperty, null);
-            SetValue(SelectedValueProperty, null);
-            UpdateDisplay();
-        }
-
-        private object GetItemValue(object item)
-        {
-            if (item == null) return null;
-            if (!string.IsNullOrEmpty(SelectedValuePath))
-            {
-                var prop = item.GetType().GetProperty(SelectedValuePath);
-                if (prop != null)
-                    return prop.GetValue(item);
-            }
-            return item;
+            DisplayText = GetDisplayText(SelectedItem);
         }
 
         private string GetDisplayText(object item)
         {
-            if (item == null) return string.Empty;
+            if (item == null)
+                return string.Empty;
 
-            // 1. СНАЧАЛА проверяем, задан ли DisplayMemberPath (мы задали "Value")
-            if (!string.IsNullOrEmpty(DisplayMemberPath))
-            {
-                var prop = item.GetType().GetProperty(DisplayMemberPath);
-                if (prop != null)
-                {
-                    var value = prop.GetValue(item);
-                    return value?.ToString() ?? string.Empty;
-                }
-            }
-
-            // 2. Если это KeyValuePair (Словарь), по умолчанию показываем текст (Value), а не цифру (Key)
-            // var type = item.GetType();
-            // if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            // {
-            //    var valueProp = type.GetProperty("Value"); // Было "Key", стало "Value"!
-            //     if (valueProp != null)
-            //     {
-            //         var val = valueProp.GetValue(item);
-            //         return val?.ToString() ?? string.Empty;
-            //     }
-            // }
-
-            // Если это KeyValuePair (Словарь), показываем Key (текст), а Value используем для SelectedValuePath
-            var type = item.GetType();
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            {
-                // Сначала проверяем, задан ли DisplayMemberPath
-                if (!string.IsNullOrEmpty(DisplayMemberPath))
-                {
-                    var prop = type.GetProperty(DisplayMemberPath);
-                    if (prop != null)
-                    {
-                        var value = prop.GetValue(item);
-                        return value?.ToString() ?? string.Empty;
-                    }
-                }
-                // По умолчанию для KeyValuePair показываем Key (текст)
-                var keyProp = type.GetProperty("Key");
-                if (keyProp != null)
-                {
-                    var val = keyProp.GetValue(item);
-                    return val?.ToString() ?? string.Empty;
-                }
-            }
-
-            // 3. Если это ComboBoxItem (для ручной верстки в XAML)
             if (item is ComboBoxItem comboBoxItem)
-            {
                 return comboBoxItem.Content?.ToString() ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(DisplayMemberPath))
+            {
+                var value = GetPropertyPathValue(item, DisplayMemberPath);
+                if (value != null)
+                    return value.ToString();
             }
 
-            // 4. Запасной вариант
-            return item.ToString();
+            var itemType = item.GetType();
+            if (itemType.IsGenericType &&
+                itemType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                var key = itemType.GetProperty("Key")?.GetValue(item);
+                return key?.ToString() ?? string.Empty;
+            }
+
+            return item.ToString() ?? string.Empty;
         }
 
-        private void UpdateItemsPanel()
+        private static object GetPropertyPathValue(object source, string path)
         {
-            if (_itemsPanel == null) return;
+            if (source == null || string.IsNullOrWhiteSpace(path))
+                return null;
 
-            _itemsPanel.Children.Clear();
+            object current = source;
 
-            var source = ItemsSource?.Cast<object>().ToList() ?? Items.Cast<object>().ToList();
-
-            foreach (var item in source)
+            foreach (var segment in path.Split('.'))
             {
-                var border = CreateItemBorder(item);
-                _itemsPanel.Children.Add(border);
+                if (current == null)
+                    return null;
+
+                var property = current.GetType().GetProperty(
+                    segment,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+
+                if (property == null)
+                    return null;
+
+                current = property.GetValue(current);
             }
 
-            if (_scrollViewer != null)
-            {
-                _scrollViewer.MaxHeight = Math.Min(300, _itemsPanel.Children.Count * 40);
-            }
+            return current;
         }
-
-        private Border CreateItemBorder(object item)
-        {
-            // === ЦВЕТА ИЗ ТЕМЫ (светлая/тёмная переключатся автоматически) ===
-            var bgCard = GetThemeBrush("BgCard", new SolidColorBrush(Color.FromRgb(255, 255, 255)));
-            var hoverBrush = GetThemeBrush("TableRowHover", new SolidColorBrush(Color.FromRgb(240, 240, 240)));
-            var textBrush = GetThemeBrush("InputText", new SolidColorBrush(Colors.Black));
-            var accentBlue = GetThemeBrush("AccentBlue", new SolidColorBrush(Color.FromRgb(52, 152, 219)));
-            var whiteBrush = new SolidColorBrush(Colors.White);
-
-            // Текущий выбранный пункт подсвечиваем синим
-            bool isSelected = ReferenceEquals(item, SelectedItem);
-
-            var border = new Border
-            {
-                Background = isSelected ? accentBlue : bgCard,   // было: hardcoded White
-                Padding = new Thickness(10),
-                Cursor = Cursors.Hand,
-                DataContext = item
-            };
-
-            border.MouseEnter += (s, e) =>
-            {
-                if (!ReferenceEquals(border.DataContext, SelectedItem))
-                    border.Background = hoverBrush;
-            };
-            border.MouseLeave += (s, e) =>
-            {
-                border.Background = ReferenceEquals(border.DataContext, SelectedItem) ? accentBlue : bgCard;
-            };
-            border.MouseLeftButtonUp += Item_MouseLeftButtonUp;
-
-            if (ItemTemplate != null)
-            {
-                border.Child = new ContentControl
-                {
-                    ContentTemplate = ItemTemplate,
-                    Content = item
-                };
-            }
-            else
-            {
-                border.Child = new TextBlock
-                {
-                    Text = GetDisplayText(item),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    FontSize = 13,
-                    // === ЯВНО ЗАДАЁМ ЦВЕТ ТЕКСТА: больше никакого наследованного белого ===
-                    Foreground = isSelected ? whiteBrush : textBrush
-                };
-            }
-
-            return border;
-        }
-
-        /// <summary>
-        /// Безопасно достаёт кисть из ресурсов темы.
-        /// Если ресурс не найден — возвращает fallback (чтобы не падало).
-        /// </summary>
-        private Brush GetThemeBrush(string key, Brush fallback)
-        {
-            return TryFindResource(key) as Brush ?? fallback;
-        }
-
-        #endregion
     }
 }

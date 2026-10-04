@@ -169,13 +169,11 @@
         <!-- 7. Кнопки -->
         <StackPanel Grid.Row="6" 
                     Orientation="Horizontal" 
-                    HorizontalAlignment="Center" 
-                    Margin="0,20,0,15">
+                    HorizontalAlignment="Center">
             <Button x:Name="SaveButton" 
                     Content="💾 Сохранить" 
                     Click="SaveButton_Click" 
                     Style="{StaticResource SuccessBtn}"
-                    Margin="0,0,10,0"
                     IsEnabled="False"/>
             <Button Content="✖ Закрыть" 
                     Click="CloseButton_Click" 

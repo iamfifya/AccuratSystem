@@ -213,13 +213,11 @@
         <!-- Кнопки внизу -->
         <StackPanel Orientation="Horizontal" 
                     HorizontalAlignment="Center" 
-                    Grid.Row="2" 
-                    Margin="0,20,0,15">
+                    Grid.Row="2">
             <Button x:Name="StartShiftButton" 
                     Content="✅ Начать смену" 
                     Click="StartShiftButton_Click" 
                     Style="{StaticResource SuccessBtn}"
-                    Margin="0,0,10,0"
                     Visibility="Collapsed"/>
             <Button Content="✖ Отмена" 
                     Click="CloseButton_Click" 

@@ -66,11 +66,11 @@
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
                 <Button Content="💾" Style="{StaticResource SuccessBtn}" Click="Save_Click" ToolTip="Создать / переименовать"/>
-                <Button Content="🗑" Style="{StaticResource DangerBtn}" Margin="0" Click="Delete_Click" ToolTip="Удалить (если не используется)"/>
+                <Button Content="🗑" Style="{StaticResource DangerBtn}" Click="Delete_Click" ToolTip="Удалить (если не используется)"/>
             </StackPanel>
         </Grid>
 
         <Button Grid.Row="3" Content="✖ Закрыть" Style="{StaticResource DangerBtn}"
-                HorizontalAlignment="Center" Margin="0,20,0,0" Click="Close_Click"/>
+                HorizontalAlignment="Center" Click="Close_Click"/>
     </Grid>
 </Window>

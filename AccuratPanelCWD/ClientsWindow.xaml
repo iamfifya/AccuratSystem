@@ -349,8 +349,7 @@
             <!-- Кнопка закрытия (БЕЗ размеров — из AppStyles) -->
             <StackPanel Grid.Row="4" 
                         Orientation="Horizontal" 
-                        HorizontalAlignment="Center" 
-                        Margin="0,20,0,15">
+                        HorizontalAlignment="Center">
                 <Button Content="✖ Закрыть" 
                         Click="CloseButton_Click" 
                         Style="{StaticResource DangerBtn}"/>

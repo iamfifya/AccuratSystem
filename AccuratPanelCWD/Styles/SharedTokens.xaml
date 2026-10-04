@@ -1,0 +1,76 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- ==================== SIZING ==================== -->
+    <sys:Double x:Key="ControlHeightXS">28</sys:Double>
+    <sys:Double x:Key="ControlHeightSM">34</sys:Double>
+    <sys:Double x:Key="ControlHeightMD">40</sys:Double>
+    <sys:Double x:Key="ControlHeightLG">48</sys:Double>
+
+    <Thickness x:Key="ControlPaddingXS">8,0</Thickness>
+    <Thickness x:Key="ControlPaddingSM">10,0</Thickness>
+    <Thickness x:Key="ControlPaddingMD">12,0</Thickness>
+    <Thickness x:Key="ControlPaddingLG">16,0</Thickness>
+
+    <Thickness x:Key="CardPadding">16</Thickness>
+    <Thickness x:Key="CardPaddingLarge">20</Thickness>
+    <Thickness x:Key="ButtonMargin">0,0,8,8</Thickness>
+    <Thickness x:Key="PopupPadding">6</Thickness>
+    <Thickness x:Key="PopupItemPadding">12,9</Thickness>
+
+    <CornerRadius x:Key="RadiusXS">4</CornerRadius>
+    <CornerRadius x:Key="RadiusSM">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMD">8</CornerRadius>
+    <CornerRadius x:Key="RadiusLG">12</CornerRadius>
+    <CornerRadius x:Key="RadiusXL">16</CornerRadius>
+    <CornerRadius x:Key="InputRightRadius">0,6,6,0</CornerRadius>
+
+    <!-- ==================== TYPOGRAPHY ==================== -->
+    <sys:Double x:Key="FontSizeXS">10</sys:Double>
+    <sys:Double x:Key="FontSizeSM">12</sys:Double>
+    <sys:Double x:Key="FontSizeMD">13</sys:Double>
+    <sys:Double x:Key="FontSizeLG">14</sys:Double>
+    <sys:Double x:Key="FontSizeXL">16</sys:Double>
+    <sys:Double x:Key="FontSizeHeadingSM">18</sys:Double>
+    <sys:Double x:Key="FontSizeHeadingMD">22</sys:Double>
+    <sys:Double x:Key="FontSizeHeadingLG">28</sys:Double>
+
+    <sys:Double x:Key="ControlGapXS">4</sys:Double>
+    <sys:Double x:Key="ControlGapSM">8</sys:Double>
+    <sys:Double x:Key="ControlGapMD">12</sys:Double>
+    <sys:Double x:Key="ControlGapLG">16</sys:Double>
+
+    <!-- ==================== POPUP / LIST LIMITS ==================== -->
+    <sys:Double x:Key="PopupMaxHeight">320</sys:Double>
+    <sys:Double x:Key="CalendarPopupMinWidth">320</sys:Double>
+
+    <!-- ==================== BUTTON PALETTE (v6.0) ==================== -->
+    <!-- Primary: original blue family, saturation reduced by 20% -->
+    <SolidColorBrush x:Key="ButtonPrimary">#4595CA</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonPrimaryHover">#6AAAD5</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonPrimaryPressed">#377DAB</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonPrimaryLight">#3EBC73</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonPrimarySoft">#65C98F</SolidColorBrush>
+
+    <!-- Secondary: original blue family for generic secondary actions -->
+    <SolidColorBrush x:Key="ButtonSecondary">#377DAB</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonSecondaryHover">#6AAAD5</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonSecondaryPressed">#31536C</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonSecondaryLight">#9762AD</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonSecondarySoft">#AC82BE</SolidColorBrush>
+
+    <!-- Warning: original yellow family -->
+    <SolidColorBrush x:Key="ButtonWarning">#DAB626</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonWarningHover">#E2C551</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonWarningPressed">#C0A021</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonWarningLight">#E2C551</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonWarningSoft">#E8D98B</SolidColorBrush>
+
+    <!-- Danger: original red family -->
+    <SolidColorBrush x:Key="ButtonDanger">#D65A4D</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonDangerHover">#DE7B71</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonDangerPressed">#B1453A</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonDangerLight">#DE7B71</SolidColorBrush>
+    <SolidColorBrush x:Key="ButtonDangerSoft">#E7A49C</SolidColorBrush>
+</ResourceDictionary>

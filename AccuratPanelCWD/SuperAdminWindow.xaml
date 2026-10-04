@@ -173,12 +173,10 @@
                         Margin="0,15,0,0">
                 <Button Content="🔄 Обновить" 
                         Click="RefreshTable_Click" 
-                        Style="{StaticResource PrimaryBtn}"
-                        Margin="0,0,8,0"/>
+                        Style="{StaticResource PrimaryBtn}"/>
                 <Button Content="🗑 Удалить выделенное" 
                         Click="DeleteRow_Click" 
-                        Style="{StaticResource DangerBtn}"
-                        Margin="0,0,8,0"/>
+                        Style="{StaticResource DangerBtn}"/>
                 <Button Content="💾 Сохранить изменения" 
                         Click="SaveChanges_Click" 
                         Style="{StaticResource SuccessBtn}"/>

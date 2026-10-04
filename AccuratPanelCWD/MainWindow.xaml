@@ -20,7 +20,7 @@
         Focusable="True">
 
     <Grid>
-        <Grid Margin="10">
+        <Grid Margin="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -31,7 +31,7 @@
             <TabControl Grid.Row="0" 
                         ItemsSource="{Binding BranchTabs}" 
                         SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
-                        Margin="0,0,0,10">
+                        Margin="0,0,0,14">
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                         <Setter Property="Padding" Value="10,5"/>
@@ -48,18 +48,18 @@
             </TabControl>
 
             <!-- 2. ВЕРХНЯЯ ПАНЕЛЬ -->
-            <Grid Grid.Row="1" Margin="10,0,10,10">
+            <Grid Grid.Row="1" Margin="0,0,0,14">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <Border CornerRadius="6" 
-                        Padding="10" 
+                        Padding="14,12" 
                         Background="Transparent" 
                         BorderBrush="{DynamicResource BorderColor}" 
                         BorderThickness="1" 
-                        Margin="0,0,0,10">
+                        Margin="0,0,0,12">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -124,10 +124,10 @@
                 </Border>
 
                 <!-- ПАНЕЛЬ КНОПОК -->
-                <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
                     <Button Content="👑 Панель Разработчика" 
                             Click="DevPanelButton_Click" 
-                            Style="{StaticResource PurpleBtn}" 
+                            Style="{StaticResource PurpleBtn}"
                             Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <Button x:Name="AddButton" 
                             Content="➕ Добавить заказ" 
@@ -136,28 +136,24 @@
                     <Button x:Name="ManagerDeskButton" 
                             Content="💼 Стол управляющего" 
                             Click="ManagerDeskButton_Click" 
-                            Style="{StaticResource PrimaryBtn}" 
+                            Style="{StaticResource PrimaryBtn}"
                             Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                    <Border Width="10"/>
 
                     <Button x:Name="StartShiftButton" 
                             Content="📅 Начать смену" 
                             Click="StartShiftButton_Click" 
-                            Style="{StaticResource SuccessBtn}" 
+                            Style="{StaticResource SuccessBtn}"
                             Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <Button x:Name="CloseShiftButton" 
                             Content="🔒 Закрыть смену" 
                             Click="CloseShiftButton_Click" 
-                            Style="{StaticResource DangerBtn}" 
+                            Style="{StaticResource DangerBtn}"
                             Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                    <Border Width="10"/>
 
                     <Button x:Name="CashboxButton" 
                             Content="💰 Трансфер сумм" 
                             Click="CashboxButton_Click" 
-                            Style="{StaticResource PrimaryBtn}" 
+                            Style="{StaticResource PrimaryBtn}"
                             Visibility="{Binding IsAdminOrDirector, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <Button x:Name="CalcButton" 
                             Content="🧮 Калькулятор" 
@@ -180,15 +176,14 @@
                              Padding="15,0" 
                              Width="280" 
                              Height="45" 
-                             Margin="8,0"
+                             Margin="0,0,8,8"
                              FontSize="13"
                              VerticalContentAlignment="Center" 
                              VerticalAlignment="Top"/>
 
                     <Button Content="🌓 Тема" 
                             Click="ToggleThemeButton_Click" 
-                            Style="{StaticResource PrimaryBtn}" 
-                            Margin="0,0,8,0"/>
+                            Style="{StaticResource PrimaryBtn}"/>
                     <Button Content="🚪 Выход" 
                             Click="ExitButton_Click" 
                             Style="{StaticResource DangerBtn}"/>
@@ -225,9 +220,9 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <GroupBox Header="{Binding ZoneName}" 
-                                                  Width="350" 
-                                                  MinHeight="400" 
-                                                  Margin="5,0,15,15" 
+                                                  Width="360" 
+                                                  MinHeight="420" 
+                                                  Margin="4,6,12,14" 
                                                   FontSize="14" 
                                                   FontWeight="Bold" 
                                                   Foreground="{DynamicResource TextMain}">
@@ -244,7 +239,7 @@
                                                      ItemTemplate="{StaticResource OrderTemplate}" 
                                                      Style="{StaticResource CleanListBoxStyle}"
                                                      MouseDoubleClick="BoxItemsControl_MouseDoubleClick" 
-                                                     Margin="5,10,5,5"/>
+                                                     Margin="6,12,6,8"/>
                                         </GroupBox>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -268,9 +263,9 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <GroupBox Header="{Binding ZoneName}" 
-                                                  Width="350" 
-                                                  MinHeight="400" 
-                                                  Margin="5,0,15,15" 
+                                                  Width="360" 
+                                                  MinHeight="420" 
+                                                  Margin="4,6,12,14" 
                                                   FontSize="14" 
                                                   FontWeight="Bold" 
                                                   Foreground="{DynamicResource TextMain}">
@@ -287,7 +282,7 @@
                                                      ItemTemplate="{StaticResource OrderTemplate}" 
                                                      Style="{StaticResource CleanListBoxStyle}"
                                                      MouseDoubleClick="BoxItemsControl_MouseDoubleClick" 
-                                                     Margin="5,10,5,5"/>
+                                                     Margin="6,12,6,8"/>
                                         </GroupBox>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -497,9 +492,7 @@
                                         Margin="0,10,0,0">
                                 <Button Content="📤 Экспорт данных" 
                                         Click="ExportButton_Click" 
-                                        Style="{StaticResource PurpleBtn}" 
-                                        Width="200" 
-                                        Margin="0,0,0,5"/>
+                                        Style="{StaticResource PurpleBtn}"/>
                                 <TextBlock Text="Важно при возникновении ошибок" 
                                            HorizontalAlignment="Center" 
                                            FontSize="11" 

@@ -369,16 +369,13 @@
         <!-- Кнопки действий (БЕЗ Width/Height — из AppStyles) -->
         <StackPanel Grid.Row="2" 
                     Orientation="Horizontal" 
-                    HorizontalAlignment="Center" 
-                    Margin="0,20,0,15">
+                    HorizontalAlignment="Center">
             <Button Content="📅 Интервальный отчет" 
                     Click="CustomReportButton_Click" 
-                    Style="{StaticResource PrimaryBtn}"
-                    Margin="0,0,8,0"/>
+                    Style="{StaticResource PrimaryBtn}"/>
             <Button Content="📄 Экспорт смены" 
                     Click="ExportButton_Click" 
-                    Style="{StaticResource SuccessBtn}"
-                    Margin="0,0,8,0"/>
+                    Style="{StaticResource SuccessBtn}"/>
             <Button Content="✖ Закрыть" 
                     Click="CloseButton_Click" 
                     Style="{StaticResource DangerBtn}"/>

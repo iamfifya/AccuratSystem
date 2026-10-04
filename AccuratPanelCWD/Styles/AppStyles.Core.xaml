@@ -1,0 +1,217 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ==================== EFFECTS ==================== -->
+    <DropShadowEffect x:Key="CardShadow"
+                      BlurRadius="14"
+                      ShadowDepth="2"
+                      Direction="270"
+                      Opacity="0.07"
+                      Color="{DynamicResource ShadowColor}"/>
+
+    <DropShadowEffect x:Key="CardListShadow"
+                      BlurRadius="10"
+                      ShadowDepth="1"
+                      Direction="270"
+                      Opacity="0.045"
+                      Color="{DynamicResource ShadowColor}"/>
+
+    <DropShadowEffect x:Key="PopupShadow"
+                      BlurRadius="20"
+                      ShadowDepth="4"
+                      Direction="270"
+                      Opacity="0.11"
+                      Color="{DynamicResource ShadowColor}"/>
+
+    <!-- ==================== TYPOGRAPHY ==================== -->
+    <Style x:Key="TextPrimaryStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMD}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+    </Style>
+
+    <Style x:Key="TextSecondaryStyle" TargetType="TextBlock" BasedOn="{StaticResource TextPrimaryStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+    </Style>
+
+    <Style x:Key="TextCaptionStyle" TargetType="TextBlock" BasedOn="{StaticResource TextPrimaryStyle}">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSM}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+    </Style>
+
+    <Style x:Key="HeadingSmallStyle" TargetType="TextBlock" BasedOn="{StaticResource TextPrimaryStyle}">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeHeadingSM}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="HeadingMediumStyle" TargetType="TextBlock" BasedOn="{StaticResource TextPrimaryStyle}">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeHeadingMD}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="HeadingLargeStyle" TargetType="TextBlock" BasedOn="{StaticResource TextPrimaryStyle}">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeHeadingLG}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- ==================== BUTTONS ==================== -->
+    <Style x:Key="BaseButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="{DynamicResource ControlHeightMD}"/>
+        <Setter Property="MinWidth" Value="72"/>
+        <Setter Property="Margin" Value="{DynamicResource ButtonMargin}"/>
+        <Setter Property="Padding" Value="{DynamicResource ControlPaddingLG}"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMD}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}"/>
+        <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid SnapsToDevicePixels="True">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{DynamicResource RadiusSM}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <Border x:Name="HoverOverlay"
+                                Background="{DynamicResource HoverOverlayBrush}"
+                                CornerRadius="{DynamicResource RadiusSM}"
+                                Opacity="0"
+                                IsHitTestVisible="False"/>
+                        <Border x:Name="FocusRing"
+                                BorderBrush="{DynamicResource FocusRing}"
+                                BorderThickness="2"
+                                CornerRadius="{DynamicResource RadiusSM}"
+                                Opacity="0"
+                                IsHitTestVisible="False"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="HoverOverlay" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="HoverOverlay" Property="Opacity" Value="0.65"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="FocusRing" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Chrome" Property="Opacity" Value="0.48"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="PrimaryBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="{DynamicResource ButtonPrimary}"/>
+    </Style>
+
+    <Style x:Key="SuccessBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="{DynamicResource ButtonPrimaryLight}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}"/>
+    </Style>
+
+    <Style x:Key="DangerBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="{DynamicResource ButtonDanger}"/>
+    </Style>
+
+    <Style x:Key="SecondaryBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="{DynamicResource ButtonSecondary}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <Style x:Key="WarningBtn" TargetType="Button" BasedOn="{StaticResource SecondaryBtn}">
+        <Setter Property="Background" Value="{DynamicResource ButtonWarning}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}"/>
+    </Style>
+
+    <Style x:Key="PurpleBtn" TargetType="Button" BasedOn="{StaticResource SecondaryBtn}">
+        <Setter Property="Background" Value="{DynamicResource ButtonSecondaryLight}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}"/>
+    </Style>
+
+
+
+    <Style x:Key="GhostBtn" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+
+    <Style x:Key="IconButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="Width" Value="{DynamicResource ControlHeightMD}"/>
+        <Setter Property="MinWidth" Value="{DynamicResource ControlHeightMD}"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <!-- ==================== CARDS ==================== -->
+    <Style x:Key="CardBaseStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource BgCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusMD}"/>
+        <Setter Property="Padding" Value="{DynamicResource CardPadding}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Effect" Value="{DynamicResource CardShadow}"/>
+    </Style>
+
+    <Style x:Key="CardFlatStyle" TargetType="Border" BasedOn="{StaticResource CardBaseStyle}">
+        <Setter Property="Effect" Value="{x:Null}"/>
+    </Style>
+
+    <Style x:Key="CardElevatedStyle" TargetType="Border" BasedOn="{StaticResource CardBaseStyle}">
+        <Setter Property="Effect" Value="{DynamicResource CardShadow}"/>
+    </Style>
+
+    <Style x:Key="CardInteractiveStyle" TargetType="Border" BasedOn="{StaticResource CardBaseStyle}">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderHover}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="StatCard" TargetType="Border" BasedOn="{StaticResource CardBaseStyle}">
+        <Setter Property="Padding" Value="{DynamicResource CardPaddingLarge}"/>
+    </Style>
+
+    <Style x:Key="ClickableTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMD}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentBlue}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource AccentBlueHover}"/>
+                <Setter Property="TextDecorations" Value="Underline"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="FilterLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSM}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+    </Style>
+
+</ResourceDictionary>

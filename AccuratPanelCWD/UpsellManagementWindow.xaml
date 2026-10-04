@@ -62,7 +62,8 @@
                                Text="👉" 
                                VerticalAlignment="Center" 
                                HorizontalAlignment="Center" 
-                               FontSize="20"/>
+                               FontSize="20"
+                               Margin="0,20,0,0"/>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="Предложить ему купить эту:" 
@@ -102,7 +103,6 @@
                                FontSize="13"/>
                     <TextBox x:Name="BonusTextBox" 
                              Grid.Column="1" 
-                             Height="45" 
                              Padding="15,0" 
                              Margin="10,0" 
                              Text="50"
@@ -111,7 +111,8 @@
                     <Button Grid.Column="2" 
                             Content="Сохранить правило" 
                             Click="AddRuleButton_Click" 
-                            Style="{StaticResource SuccessBtn}"/>
+                            Style="{StaticResource SuccessBtn}"
+                            Margin="0"/>
                 </Grid>
             </StackPanel>
         </Border>

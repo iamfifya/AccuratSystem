@@ -175,8 +175,7 @@
                     Click="NormsButton_Click"/>
             <Button Content="✅ Сохранить" 
                     Click="SaveButton_Click" 
-                    Style="{StaticResource SuccessBtn}"
-                    Margin="0,0,10,0"/>
+                    Style="{StaticResource SuccessBtn}"/>
             <Button Content="✖ Отмена" 
                     Click="CloseButton_Click" 
                     Style="{StaticResource DangerBtn}"/>

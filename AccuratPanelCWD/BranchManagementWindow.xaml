@@ -216,11 +216,9 @@
                     <!-- Кнопки сохранения (БЕЗ Width/Height — размеры из AppStyles) -->
                     <StackPanel Grid.Row="2" 
                                 Orientation="Horizontal" 
-                                HorizontalAlignment="Center" 
-                                Margin="0,20,0,0">
+                                HorizontalAlignment="Center">
                         <Button Content="✅ Сохранить" 
                                 Style="{StaticResource SuccessBtn}"
-                                Margin="0,0,10,0"
                                 Click="SaveBranch_Click"/>
 
                         <Button x:Name="DeleteButton" 
@@ -235,8 +233,7 @@
                         Content="✖ Вернуться к столу управляющего" 
                         Click="CloseButton_Click" 
                         Style="{StaticResource DangerBtn}"
-                        HorizontalAlignment="Center"
-                        Margin="0,20,0,0"/>
+                        HorizontalAlignment="Center"/>
             </Grid>
         </Border>
     </Grid>

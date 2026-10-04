@@ -144,14 +144,14 @@
                            Foreground="{DynamicResource TextMain}"
                            FontWeight="SemiBold"
                            FontSize="14"/>
-                <local:CustomDatePicker x:Name="StartDatePicker" Height="45" Width="280"/>
+                <local:CustomDatePicker x:Name="StartDatePicker" Width="280"/>
                 <TextBlock Text="По:"
                            VerticalAlignment="Center"
                            Margin="25,0,10,0"
                            Foreground="{DynamicResource TextMain}"
                            FontWeight="SemiBold"
                            FontSize="14"/>
-                <local:CustomDatePicker x:Name="EndDatePicker" Height="45" Width="280"/>
+                <local:CustomDatePicker x:Name="EndDatePicker" Width="280"/>
                 <Button Content="🚀 Сформировать"
                         Click="GenerateReportButton_Click"
                         Style="{StaticResource PrimaryBtn}"
@@ -647,12 +647,10 @@
                     Margin="0,20,0,15">
             <Button Content="📄 В Excel"
                     Click="ExportButton_Click"
-                    Style="{StaticResource SuccessBtn}"
-                    Margin="0,0,10,0"/>
+                    Style="{StaticResource SuccessBtn}"/>
             <Button Content="⚖️ Сравнить периоды"
                     Click="ComparePeriodsButton_Click"
-                    Style="{StaticResource PrimaryBtn}"
-                    Margin="0,0,10,0"/>
+                    Style="{StaticResource PrimaryBtn}"/>
             <Button Content="✖ Закрыть"
                     Click="CloseButton_Click"
                     Style="{StaticResource DangerBtn}"/>

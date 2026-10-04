@@ -76,7 +76,6 @@
         <!-- Панель управления -->
         <StackPanel Grid.Row="1" 
                     Orientation="Horizontal" 
-                    Margin="0,0,0,12" 
                     HorizontalAlignment="Left" 
                     VerticalAlignment="Center">
             <Button Content="➕ Добавить услугу" 
@@ -84,12 +83,10 @@
                     Style="{StaticResource SuccessBtn}"/>
             <Button Content="✏ Редактировать" 
                     Click="EditButton_Click" 
-                    Style="{StaticResource PrimaryBtn}"
-                    Margin="0,0,8,0"/>
+                    Style="{StaticResource PrimaryBtn}"/>
             <Button Content="🗑️ Удалить" 
                     Click="DeleteButton_Click" 
-                    Style="{StaticResource DangerBtn}"
-                    Margin="0,0,8,0"/>
+                    Style="{StaticResource DangerBtn}"/>
             <Button Content="🛠️ Управление доп.продажами" 
                     x:Name="UpsellButton" 
                     Click="UpsellButton_Click" 
@@ -238,13 +235,11 @@
         <!-- Кнопки внизу -->
         <StackPanel Grid.Row="4" 
                     Orientation="Horizontal" 
-                    HorizontalAlignment="Center" 
-                    Margin="0,15,0,10">
+                    HorizontalAlignment="Center">
             <Button Content="🔧 Проверить" 
                     Click="CheckIntegrityButton_Click" 
                     Style="{StaticResource WarningBtn}"
-                    Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"
-                    Margin="0,0,10,0"/>
+                    Visibility="{Binding IsDeveloper, Converter={StaticResource BoolToVisibilityConverter}}"/>
             <Button Content="✖ Закрыть" 
                     Click="CloseButton_Click" 
                     Style="{StaticResource DangerBtn}"/>
