@@ -164,5 +164,111 @@ namespace DaEtoZhe.WebAPI.Controllers
 
             return NoContent();
         }
+
+        // ═════════════ ДЕФЕКТНАЯ ВЕДОМОСТЬ ═════════════
+
+        [HttpGet("{id}/defects")]
+        public async Task<ActionResult<IEnumerable<VehicleDefect>>> GetDefects(int id)
+        {
+            if (!await VehicleExistsAsync(id)) return NotFound();
+            var defects = await _context.VehicleDefects
+                .Where(d => d.VehicleId == id)
+                .ToListAsync();
+            // Сортируем в памяти: enum хранится строкой, ORDER BY по строке дал бы алфавит
+            return Ok(defects
+                .OrderByDescending(d => d.Severity)
+                .ThenBy(d => d.Area)
+                .ToList());
+        }
+
+        [HttpPost("{id}/defects")]
+        public async Task<ActionResult<VehicleDefect>> CreateDefect(int id, CreateVehicleDefectDto dto)
+        {
+            if (!await VehicleExistsAsync(id)) return NotFound();
+            if (string.IsNullOrWhiteSpace(dto.Description)) return BadRequest("Опишите дефект");
+
+            var defect = new VehicleDefect
+            {
+                VehicleId = id,
+                Area = dto.Area,
+                Severity = dto.Severity,
+                Description = dto.Description.Trim(),
+                EstimatedCost = dto.EstimatedCost,
+                EstimatedHours = dto.EstimatedHours,
+                Notes = dto.Notes?.Trim() ?? ""
+            };
+            _context.VehicleDefects.Add(defect);
+            await _context.SaveChangesAsync();
+            return Ok(defect);
+        }
+
+        [HttpPut("defects/{defectId}")]
+        public async Task<IActionResult> UpdateDefect(int defectId, UpdateVehicleDefectDto dto)
+        {
+            if (defectId != dto.Id) return BadRequest();
+            var defect = await _context.VehicleDefects.FindAsync(defectId);
+            if (defect == null) return NotFound();
+            if (!await VehicleExistsAsync(defect.VehicleId)) return NotFound();
+
+            defect.Area = dto.Area;
+            defect.Severity = dto.Severity;
+            defect.Description = dto.Description?.Trim() ?? "";
+            defect.EstimatedCost = dto.EstimatedCost;
+            defect.EstimatedHours = dto.EstimatedHours;
+            defect.Notes = dto.Notes?.Trim() ?? "";
+            if (dto.IsFixed && !defect.IsFixed) defect.FixedAt = DateTime.UtcNow;
+            if (!dto.IsFixed) defect.FixedAt = null;
+            defect.IsFixed = dto.IsFixed;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("defects/{defectId}")]
+        public async Task<IActionResult> DeleteDefect(int defectId)
+        {
+            var defect = await _context.VehicleDefects.FindAsync(defectId);
+            if (defect == null) return NotFound();
+            if (!await VehicleExistsAsync(defect.VehicleId)) return NotFound();
+            _context.VehicleDefects.Remove(defect);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // ═════════════ АКТ ПРИЁМКИ ═════════════
+
+        /// <summary>
+        /// Завершает приёмку: сохраняет акт, фиксирует смету по дефектам
+        /// и переводит статус Purchase → Appraisal (атомарно).
+        /// </summary>
+        [HttpPost("{id}/acceptance")]
+        public async Task<ActionResult<Vehicle>> AcceptVehicle(int id, AcceptVehicleDto dto)
+        {
+            var vehicle = await _context.Vehicles
+                .FirstOrDefaultAsync(v => v.Id == id && v.CompanyId == CurrentCompanyId);
+            if (vehicle == null) return NotFound();
+
+            vehicle.KeysCount = dto.KeysCount;
+            vehicle.HasPts = dto.HasPts;
+            vehicle.HasSts = dto.HasSts;
+            vehicle.DocumentsNotes = dto.DocumentsNotes?.Trim() ?? "";
+            vehicle.ConditionSummary = dto.ConditionSummary?.Trim() ?? "";
+            vehicle.AcceptedBy = string.IsNullOrWhiteSpace(dto.AcceptedBy) ? "Не указан" : dto.AcceptedBy.Trim();
+            vehicle.AcceptedAt = DateTime.UtcNow;
+
+            // Смета-снапшот: сумма оценочных стоимостей дефектов
+            vehicle.EstimateCost = await _context.VehicleDefects
+                .Where(d => d.VehicleId == id)
+                .SumAsync(d => (decimal?)d.EstimatedCost) ?? 0m;
+
+            vehicle.Status = VehicleStatus.Appraisal;
+            vehicle.AppraisalDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(vehicle);
+        }
+
+        private async Task<bool> VehicleExistsAsync(int id) =>
+            await _context.Vehicles.AnyAsync(v => v.Id == id && v.CompanyId == CurrentCompanyId);
     }
 }

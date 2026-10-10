@@ -59,6 +59,7 @@ namespace DaEtoZhe.WebAPI.Data
 
         // Автомобили для сервиса и продажи
         public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+        public DbSet<VehicleDefect> VehicleDefects => Set<VehicleDefect>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -492,6 +493,10 @@ namespace DaEtoZhe.WebAPI.Data
                 entity.Property(e => e.RepairNotes).HasMaxLength(2000);
                 entity.Property(e => e.GeneralNotes).HasMaxLength(2000);
 
+                entity.Property(e => e.AcceptedBy).HasMaxLength(150);
+                entity.Property(e => e.DocumentsNotes).HasMaxLength(500);
+                entity.Property(e => e.ConditionSummary).HasMaxLength(2000);
+
                 entity.HasOne(e => e.Branch)
                       .WithMany()
                       .HasForeignKey(e => e.BranchId)
@@ -500,6 +505,22 @@ namespace DaEtoZhe.WebAPI.Data
                 entity.HasOne(e => e.Company)
                       .WithMany()
                       .HasForeignKey(e => e.CompanyId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Дефктная ведомость для транспортного средства (VehicleDefect)
+            modelBuilder.Entity<VehicleDefect>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.VehicleId);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Notes).HasMaxLength(500);
+                entity.Property(e => e.EstimatedCost).HasPrecision(18, 2);
+                entity.Property(e => e.EstimatedHours).HasPrecision(6, 1);
+                entity.Property(e => e.Area).HasConversion<string>().HasMaxLength(20);
+                entity.Property(e => e.Severity).HasConversion<string>().HasMaxLength(20);
+                entity.HasOne(e => e.Vehicle).WithMany()
+                      .HasForeignKey(e => e.VehicleId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }

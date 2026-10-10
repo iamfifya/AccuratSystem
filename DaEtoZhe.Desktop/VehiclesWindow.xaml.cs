@@ -214,8 +214,23 @@ namespace DaEtoZhe.Desktop
         {
             Close();
         }
+
+        private async void Acceptance_Click(object sender, RoutedEventArgs e)
+        {
+            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            {
+                var win = new VehicleAcceptanceWindow(vehicle);
+                win.ShowDialog();
+                await LoadVehiclesAsync();   // статус/смета могли измениться
+            }
+            else
+            {
+                MessageBox.Show("Выберите автомобиль в списке!", "Внимание");
+            }
+        }
     }
 
+    #region КОНВЕРТЕРЫ
     // Конвертер статуса в цвет
     public class VehicleStatusToColorConverter : System.Windows.Data.IValueConverter
     {
@@ -275,4 +290,6 @@ namespace DaEtoZhe.Desktop
             throw new NotImplementedException();
         }
     }
+
+    #endregion
 }

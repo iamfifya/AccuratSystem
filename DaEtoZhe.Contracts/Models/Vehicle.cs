@@ -61,5 +61,16 @@ namespace DaEtoZhe.Contracts.Models
         // === Навигационные свойства ===
         public Branch Branch { get; set; }
         public Company Company { get; set; }
+
+        // === АКТ ПРИЁМКИ ===
+        public DateTime? AcceptedAt { get; set; }
+        public string AcceptedBy { get; set; } = string.Empty;
+        public int KeysCount { get; set; }
+        public bool HasPts { get; set; }
+        public bool HasSts { get; set; }
+        public string DocumentsNotes { get; set; } = string.Empty;
+        public string ConditionSummary { get; set; } = string.Empty;
+        /// <summary>Смета ремонта на момент приёмки (снапшот суммы дефектов).</summary>
+        public decimal EstimateCost { get; set; }
     }
 }

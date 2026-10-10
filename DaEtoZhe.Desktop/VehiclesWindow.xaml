@@ -74,12 +74,13 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <Button Content="➕ Добавить авто" 
                             Click="AddVehicle_Click"
-                            Style="{StaticResource PrimaryBtn}"
-                            Margin="0,0,10,0"/>
+                            Style="{StaticResource PrimaryBtn}"/>
+                    <Button Content="📋 Приёмка"
+                            Click="Acceptance_Click" 
+                            Style="{StaticResource PrimaryBtn}"/>
                     <Button Content="🔄 Обновить" 
                             Click="RefreshButton_Click"
-                            Style="{StaticResource SecondaryBtn}"
-                            Margin="0,0,10,0"/>
+                            Style="{StaticResource SecondaryBtn}"/>
                     <Button Content="✖ Закрыть" 
                             Click="CloseButton_Click"
                             Style="{StaticResource DangerBtn}"/>

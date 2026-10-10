@@ -1164,6 +1164,38 @@ namespace DaEtoZhe.Desktop.Services
             response.EnsureSuccessStatusCode();
         }
 
+        public async Task<List<VehicleDefect>> GetVehicleDefectsAsync(int vehicleId)
+        {
+            try { return await _http.GetJsonAsync<List<VehicleDefect>>($"Vehicles/{vehicleId}/defects") ?? new List<VehicleDefect>(); }
+            catch (Exception ex) { throw new Exception($"Дефектная ведомость: {ex.Message}"); }
+        }
+
+        public async Task<VehicleDefect> CreateVehicleDefectAsync(int vehicleId, CreateVehicleDefectDto dto)
+        {
+            var r = await _http.PostJsonAsync($"Vehicles/{vehicleId}/defects", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+            return await r.Content.ReadJsonAsync<VehicleDefect>();
+        }
+
+        public async Task UpdateVehicleDefectAsync(UpdateVehicleDefectDto dto)
+        {
+            var r = await _http.PutJsonAsync($"Vehicles/defects/{dto.Id}", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+        }
+
+        public async Task DeleteVehicleDefectAsync(int defectId)
+        {
+            var r = await _http.DeleteAsync($"Vehicles/defects/{defectId}");
+            r.EnsureSuccessStatusCode();
+        }
+
+        public async Task<Vehicle> AcceptVehicleAsync(int vehicleId, AcceptVehicleDto dto)
+        {
+            var r = await _http.PostJsonAsync($"Vehicles/{vehicleId}/acceptance", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+            return await r.Content.ReadJsonAsync<Vehicle>();
+        }
+
         #endregion
     }
 }

@@ -231,7 +231,7 @@
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="🚗" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
-                                           Foreground="{DynamicResource AccentGreen}"/>
+                                           Foreground="{DynamicResource TextMain}"/>
                             </WrapPanel>
                             <TextBlock Text="Авто под продажу" 
                                        HorizontalAlignment="Center" 
