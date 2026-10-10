@@ -60,6 +60,8 @@ namespace DaEtoZhe.WebAPI.Data
         // Автомобили для сервиса и продажи
         public DbSet<Vehicle> Vehicles => Set<Vehicle>();
         public DbSet<VehicleDefect> VehicleDefects => Set<VehicleDefect>();
+        public DbSet<VehicleRepairPart> VehicleRepairParts => Set<VehicleRepairPart>();
+        public DbSet<VehicleRepairWork> VehicleRepairWorks => Set<VehicleRepairWork>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -522,6 +524,46 @@ namespace DaEtoZhe.WebAPI.Data
                 entity.HasOne(e => e.Vehicle).WithMany()
                       .HasForeignKey(e => e.VehicleId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // === РЕМОНТ: ЗАПЧАСТИ СО СКЛАДА ===
+            modelBuilder.Entity<VehicleRepairPart>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.VehicleId);
+                entity.HasIndex(e => e.StockItemId);
+                entity.Property(e => e.Quantity).HasPrecision(18, 3);
+                entity.Property(e => e.CostPrice).HasPrecision(18, 2);
+                entity.Property(e => e.AddedBy).HasMaxLength(150);
+                entity.Property(e => e.Comment).HasMaxLength(500);
+
+                entity.HasOne(e => e.Vehicle).WithMany()
+                      .HasForeignKey(e => e.VehicleId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.StockItem).WithMany()
+                      .HasForeignKey(e => e.StockItemId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.StockMovement).WithMany()
+                      .HasForeignKey(e => e.StockMovementId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // === РЕМОНТ: РАБОТЫ МЕХАНИКОВ ===
+            modelBuilder.Entity<VehicleRepairWork>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.VehicleId);
+                entity.HasIndex(e => e.MechanicId);
+                entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+                entity.Property(e => e.PlannedHours).HasPrecision(6, 1);
+                entity.Property(e => e.ActualHours).HasPrecision(6, 1);
+                entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Comment).HasMaxLength(500);
+
+                entity.HasOne(e => e.Vehicle).WithMany()
+                      .HasForeignKey(e => e.VehicleId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Mechanic).WithMany()
+                      .HasForeignKey(e => e.MechanicId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Defect).WithMany()
+                      .HasForeignKey(e => e.VehicleDefectId).OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

@@ -75,9 +75,6 @@
                     <Button Content="➕ Добавить авто" 
                             Click="AddVehicle_Click"
                             Style="{StaticResource PrimaryBtn}"/>
-                    <Button Content="📋 Приёмка"
-                            Click="Acceptance_Click" 
-                            Style="{StaticResource PrimaryBtn}"/>
                     <Button Content="🔄 Обновить" 
                             Click="RefreshButton_Click"
                             Style="{StaticResource SecondaryBtn}"/>
@@ -125,22 +122,25 @@
                 <DataGridTextColumn Header="Цена покупки" Binding="{Binding PurchasePrice, StringFormat=N0 ₽}" Width="120"/>
                 <DataGridTextColumn Header="Цена продажи" Binding="{Binding ListingPrice, StringFormat=N0 ₽}" Width="120"/>
                 <DataGridTextColumn Header="Дата покупки" Binding="{Binding PurchaseDate, StringFormat=dd.MM.yyyy}" Width="110"/>
-                <DataGridTemplateColumn Header="Действия" Width="200">
+                <DataGridTemplateColumn Header="Действия" Width="500">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="✏️" ToolTip="Редактировать"
                                         Click="EditVehicle_Click"
-                                        Style="{StaticResource SecondaryBtn}"
-                                        Width="40" Height="30" Margin="0,0,5,0"/>
+                                        Style="{StaticResource SecondaryBtn}"/>
+                                <Button Content="📋 Приёмка"
+                                        Click="Acceptance_Click" 
+                                        Style="{StaticResource PrimaryBtn}"/>
+                                <Button Content="🔧 Ремонт"
+                                        Click="Repair_Click"
+                                        Style="{StaticResource PrimaryBtn}"/>
                                 <Button Content="🔄" ToolTip="Изменить статус"
                                         Click="ChangeStatus_Click"
-                                        Style="{StaticResource PrimaryBtn}"
-                                        Width="40" Height="30" Margin="0,0,5,0"/>
+                                        Style="{StaticResource PrimaryBtn}"/>
                                 <Button Content="🗑️" ToolTip="Удалить"
                                         Click="DeleteVehicle_Click"
-                                        Style="{StaticResource DangerBtn}"
-                                        Width="40" Height="30"/>
+                                        Style="{StaticResource DangerBtn}"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

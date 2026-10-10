@@ -228,6 +228,20 @@ namespace DaEtoZhe.Desktop
                 MessageBox.Show("Выберите автомобиль в списке!", "Внимание");
             }
         }
+
+        private async void Repair_Click(object sender, RoutedEventArgs e)
+        {
+            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            {
+                var win = new VehicleRepairWindow(vehicle);
+                win.ShowDialog();
+                await LoadVehiclesAsync();
+            }
+            else
+            {
+                MessageBox.Show("Выберите автомобиль в списке!", "Внимание");
+            }
+        }
     }
 
     #region КОНВЕРТЕРЫ

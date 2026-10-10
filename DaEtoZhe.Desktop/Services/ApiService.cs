@@ -1196,6 +1196,51 @@ namespace DaEtoZhe.Desktop.Services
             return await r.Content.ReadJsonAsync<Vehicle>();
         }
 
+        public async Task<VehicleRepairSummary> GetVehicleRepairAsync(int vehicleId)
+        {
+            try { return await _http.GetJsonAsync<VehicleRepairSummary>($"Vehicles/{vehicleId}/repair") ?? new VehicleRepairSummary(); }
+            catch (Exception ex) { throw new Exception($"Ремонт: {ex.Message}"); }
+        }
+
+        public async Task<VehicleRepairPart> AddVehicleRepairPartAsync(int vehicleId, AddRepairPartDto dto)
+        {
+            var r = await _http.PostJsonAsync($"Vehicles/{vehicleId}/repair/parts", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+            return await r.Content.ReadJsonAsync<VehicleRepairPart>();
+        }
+
+        public async Task DeleteVehicleRepairPartAsync(int partId)
+        {
+            var r = await _http.DeleteAsync($"Vehicles/repair/parts/{partId}");
+            r.EnsureSuccessStatusCode();
+        }
+
+        public async Task<VehicleRepairWork> AddVehicleRepairWorkAsync(int vehicleId, AddRepairWorkDto dto)
+        {
+            var r = await _http.PostJsonAsync($"Vehicles/{vehicleId}/repair/works", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+            return await r.Content.ReadJsonAsync<VehicleRepairWork>();
+        }
+
+        public async Task UpdateVehicleRepairWorkAsync(UpdateRepairWorkDto dto)
+        {
+            var r = await _http.PutJsonAsync($"Vehicles/repair/works/{dto.Id}", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+        }
+
+        public async Task DeleteVehicleRepairWorkAsync(int workId)
+        {
+            var r = await _http.DeleteAsync($"Vehicles/repair/works/{workId}");
+            r.EnsureSuccessStatusCode();
+        }
+
+        public async Task<Vehicle> FinishVehicleRepairAsync(int vehicleId)
+        {
+            var r = await _http.PostJsonAsync($"Vehicles/{vehicleId}/repair/finish", null);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+            return await r.Content.ReadJsonAsync<Vehicle>();
+        }
+
         #endregion
     }
 }
