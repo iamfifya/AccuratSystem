@@ -16,6 +16,8 @@ namespace DaEtoZhe.Contracts.DTOs
         public decimal EstimateCost { get; set; }
         /// <summary>Факт минус смета. Положительное = превышение.</summary>
         public decimal Overrun { get; set; }
+        /// <summary> Сумма, которую должен получить каждый механик за работы по ремонту (с учётом долей).</summary>
+        public List<VehicleMechanicShare> Shares { get; set; } = new List<VehicleMechanicShare>();
     }
 
     public class AddRepairPartDto
@@ -49,5 +51,18 @@ namespace DaEtoZhe.Contracts.DTOs
         public decimal HourlyRate { get; set; }
         public VehicleWorkStatus Status { get; set; }
         public string Comment { get; set; } = string.Empty;
+
+        public class AddVehicleShareDto
+        {
+            public int MechanicId { get; set; }
+            public decimal SharePercent { get; set; }
+        }
+
+        public class UpdateVehicleShareDto
+        {
+            public int Id { get; set; }
+            public int MechanicId { get; set; }
+            public decimal SharePercent { get; set; }
+        }
     }
 }

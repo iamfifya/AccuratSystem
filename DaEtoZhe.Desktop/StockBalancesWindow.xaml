@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:DaEtoZhe.Desktop"
         xmlns:controls="clr-namespace:DaEtoZhe.Desktop.Controls"
         Title="📊 Остатки по филиалу" Height="650" Width="900"
-        WindowStartupLocation="CenterOwner" Background="{DynamicResource BgMain}"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource BgMain}"
         Foreground="{DynamicResource TextMain}">
 
     <Window.Resources>

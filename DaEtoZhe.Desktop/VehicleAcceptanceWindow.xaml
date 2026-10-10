@@ -1,13 +1,15 @@
 ﻿<Window x:Class="DaEtoZhe.Desktop.VehicleAcceptanceWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:DaEtoZhe.Desktop.Controls"
         Title="Акт приёмки и дефектная ведомость"
-        WindowStartupLocation="CenterOwner"
-        Width="1100" Height="760"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        MinWidth="1150" MinHeight="780"
         Background="{DynamicResource BgMain}"
         Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="20">
+    <Grid Margin="{StaticResource WindowContentMargin}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -15,9 +17,14 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TitleText" Text="📋 Акт приёмки" FontSize="22" FontWeight="Bold" Margin="0,0,0,6"/>
-        <TextBlock x:Name="VehicleInfoText" Grid.Row="1" FontSize="13"
-                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,15" TextWrapping="Wrap"/>
+        <!-- ==================== HEADER ==================== -->
+        <TextBlock x:Name="TitleText" Text="📋 Акт приёмки"
+                   Style="{StaticResource HeadingMediumStyle}"
+                   Margin="{StaticResource PageTitleMargin}"/>
+        <TextBlock x:Name="VehicleInfoText" Grid.Row="1"
+                   Style="{StaticResource TextSecondaryStyle}"
+                   TextWrapping="Wrap"
+                   Margin="{StaticResource PageSubtitleMargin}"/>
 
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
@@ -25,106 +32,111 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ЛЕВО: акт приёмки -->
-            <Border Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15"
-                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="0,0,15,0">
+            <!-- ==================== LEFT: АКТ ПРИЁМКИ ==================== -->
+            <Border Style="{StaticResource CardFlatStyle}"
+                    Margin="{StaticResource HCardGapMargin}">
                 <StackPanel>
-                    <TextBlock Text="📄 Акт приёмки" FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
+                    <TextBlock Text="📄 Акт приёмки" Style="{StaticResource CardHeaderStyle}"/>
 
-                    <TextBlock Text="Ключей, шт" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="KeysTextBox" Height="36" Padding="10,0" Margin="0,0,0,10"
+                    <TextBlock Text="Ключей, шт" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBox x:Name="KeysTextBox"
+                             Margin="{StaticResource FormFieldMargin}"
                              PreviewTextInput="NumericOnly_PreviewTextInput"/>
 
-                    <CheckBox x:Name="PtsCheckBox" Content="ПТС на руках" Margin="0,0,0,8"
-                              Foreground="{DynamicResource TextMain}"/>
-                    <CheckBox x:Name="StsCheckBox" Content="СТС на руках" Margin="0,0,0,12"
-                              Foreground="{DynamicResource TextMain}"/>
+                    <CheckBox x:Name="PtsCheckBox" Content="ПТС на руках"
+                              Margin="{StaticResource FormFieldMargin}"/>
+                    <CheckBox x:Name="StsCheckBox" Content="СТС на руках"
+                              Margin="{StaticResource FormFieldMargin}"/>
 
-                    <TextBlock Text="Документы (примечания)" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="DocsNotesTextBox" Height="60" Padding="10,6" Margin="0,0,0,12"
-                             AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                    <TextBlock Text="Документы (примечания)" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBox x:Name="DocsNotesTextBox"
+                             Style="{StaticResource MultilineTextBoxSmallStyle}"
+                             Margin="{StaticResource FormFieldMargin}"/>
 
-                    <TextBlock Text="Общее состояние при осмотре" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="ConditionTextBox" Height="90" Padding="10,6"
-                             AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                    <TextBlock Text="Общее состояние при осмотре" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBox x:Name="ConditionTextBox"
+                             Style="{StaticResource MultilineTextBoxStyle}"/>
 
-                    <TextBlock x:Name="AcceptedInfoText" FontSize="12" Foreground="{DynamicResource AccentGreen}"
-                               Margin="0,12,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="AcceptedInfoText"
+                               Style="{StaticResource SuccessInfoStyle}"
+                               Margin="{StaticResource FormSectionTopMargin}"/>
                 </StackPanel>
             </Border>
 
-            <!-- ПРАВО: дефектная ведомость -->
+            <!-- ==================== RIGHT: ДЕФЕКТНАЯ ВЕДОМОСТЬ ==================== -->
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <Border Background="{DynamicResource BgCard}" CornerRadius="6" Padding="12"
-                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="0,0,0,12">
-                    <Grid>
+                <!-- Форма добавления дефекта -->
+                <Border Style="{StaticResource CardFlatStyle}"
+                        Margin="{StaticResource CardGapMargin}">
+                    <Grid VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="130"/>
-                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
                             <ColumnDefinition Width="110"/>
                             <ColumnDefinition Width="110"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                            <TextBlock Text="Описание дефекта *" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                            <TextBox x:Name="DefectDescTextBox" Height="36" Padding="10,0"/>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
+                            <TextBlock Text="Описание дефекта *" Style="{StaticResource FormLabelStyle}"/>
+                            <TextBox x:Name="DefectDescTextBox" VerticalContentAlignment="Center"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                            <TextBlock Text="Зона" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                            <ComboBox x:Name="AreaCombo" Height="36" DisplayMemberPath="Name" SelectedValuePath="Value"/>
+                        <StackPanel Grid.Column="1" Margin="{StaticResource HFieldGapMargin}" VerticalAlignment="Bottom">
+                            <controls:CustomComboBox x:Name="AreaCombo" Header="Зона" DisplayMemberPath="Name" SelectedValuePath="Value"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="2" Margin="0,0,8,0">
-                            <TextBlock Text="Критичность" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                            <ComboBox x:Name="SeverityCombo" Height="36" DisplayMemberPath="Name" SelectedValuePath="Value"/>
+                        <StackPanel Grid.Column="2" Margin="{StaticResource HFieldGapMargin}" VerticalAlignment="Bottom">
+                            <controls:CustomComboBox x:Name="SeverityCombo" Header="Критичность" DisplayMemberPath="Name" SelectedValuePath="Value"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="3" Margin="0,0,8,0">
-                            <TextBlock Text="Цена, ₽" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                            <TextBox x:Name="DefectCostTextBox" Height="36" Padding="10,0"
+                        <StackPanel Grid.Column="3" Margin="{StaticResource HFieldGapMargin}" VerticalAlignment="Bottom">
+                            <TextBlock Text="Цена, ₽" Style="{StaticResource FormLabelStyle}"/>
+                            <TextBox x:Name="DefectCostTextBox" VerticalContentAlignment="Center"
                                      PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="4" Margin="0,0,8,0">
-                            <TextBlock Text="Нормо-часы" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                            <TextBox x:Name="DefectHoursTextBox" Height="36" Padding="10,0"
+                        <StackPanel Grid.Column="4" Margin="{StaticResource HFieldGapMargin}" VerticalAlignment="Bottom">
+                            <TextBlock Text="Нормо-часы" Style="{StaticResource FormLabelStyle}"/>
+                            <TextBox x:Name="DefectHoursTextBox" VerticalContentAlignment="Center"
                                      PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Bottom">
-                            <Button x:Name="AddDefectButton" Content="➕" Style="{StaticResource PrimaryBtn}"
-                                    Width="44" Height="36" Click="AddDefect_Click" ToolTip="Добавить дефект"/>
-                            <Button x:Name="UpdateDefectButton" Content="💾" Style="{StaticResource SuccessBtn}"
-                                    Width="44" Height="36" Margin="6,0,0,0" Click="UpdateDefect_Click"
+                        <StackPanel Grid.Column="5" Orientation="Horizontal"
+                                    Margin="{StaticResource InlineButtonGapMargin}"
+                                    VerticalAlignment="Bottom">
+                            <Button x:Name="AddDefectButton" Content="➕"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Click="AddDefect_Click" ToolTip="Добавить дефект"/>
+                            <Button x:Name="UpdateDefectButton" Content="💾"
+                                    Style="{StaticResource IconButtonStyle}"
+                                    Margin="{StaticResource InlineButtonGapMargin}"
+                                    Click="UpdateDefect_Click"
                                     ToolTip="Сохранить выбранный дефект" IsEnabled="False"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <DataGrid x:Name="DefectsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
-                          SelectionMode="Single" SelectionChanged="DefectsGrid_SelectionChanged"
-                          Background="Transparent" BorderThickness="0"
-                          GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="{DynamicResource BorderColor}"
-                          Foreground="{DynamicResource TextMain}" RowHeight="36">
+                <!-- Таблица дефектов -->
+                <DataGrid x:Name="DefectsGrid" Grid.Row="1"
+                          Style="{StaticResource AuditDataGridStyle}"
+                          SelectionMode="Single" SelectionChanged="DefectsGrid_SelectionChanged">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Зона" Binding="{Binding AreaName}" Width="110"/>
                         <DataGridTextColumn Header="Крит." Binding="{Binding SeverityName}" Width="90"/>
                         <DataGridTextColumn Header="Дефект" Binding="{Binding Description}" Width="*"/>
                         <DataGridTextColumn Header="Цена" Binding="{Binding EstimatedCost, StringFormat=N0}" Width="90"/>
-                        <DataGridTextColumn Header="Часы" Binding="{Binding EstimatedHours, StringFormat=N1}" Width="60"/>
+                        <DataGridTextColumn Header="Часы" Binding="{Binding EstimatedHours, StringFormat=N1}" Width="65"/>
                         <DataGridCheckBoxColumn Header="Устранён" Binding="{Binding IsFixed, Mode=OneWay}" Width="80"/>
                         <DataGridTemplateColumn Header="" Width="80">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
-                                        <Button Content="🔧" Click="ToggleFixed_Click" Tag="{Binding}"
-                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                        <Button Content="🔧" Style="{StaticResource GridActionButtonStyle}"
+                                                Click="ToggleFixed_Click" Tag="{Binding}"
                                                 ToolTip="Отметить устранённым / вернуть"/>
-                                        <Button Content="🗑" Click="DeleteDefect_Click" Tag="{Binding}"
-                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                        <Button Content="🗑" Style="{StaticResource GridActionButtonStyle}"
+                                                Click="DeleteDefect_Click" Tag="{Binding}"
                                                 Foreground="{DynamicResource AccentRed}" ToolTip="Удалить"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -135,23 +147,25 @@
             </Grid>
         </Grid>
 
-        <Border Grid.Row="3" Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15"
-                BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="0,15,0,0">
+        <!-- ==================== FOOTER: СМЕТА И ДЕЙСТВИЯ ==================== -->
+        <Border Grid.Row="3" Style="{StaticResource CardFlatStyle}"
+                Margin="{StaticResource CardGapMargin}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Смета ремонта: " FontSize="15" Foreground="{DynamicResource TextMuted}"/>
-                    <TextBlock x:Name="EstimateText" FontSize="20" FontWeight="Bold"
-                               Foreground="{DynamicResource AccentOrange}"/>
-                    <TextBlock x:Name="DefectsCountText" FontSize="13" Foreground="{DynamicResource TextMuted}"
-                               Margin="20,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Смета ремонта: " Style="{StaticResource TextSecondaryStyle}"/>
+                    <TextBlock x:Name="EstimateText" Style="{StaticResource StatValueStyle}"
+                               Margin="{StaticResource StatGapMargin}"/>
+                    <TextBlock x:Name="DefectsCountText" Style="{StaticResource TextSecondaryStyle}"
+                               VerticalAlignment="Center"
+                               Margin="{StaticResource StatGapMargin}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Button Content="💾 Сохранить акт и оценить" Style="{StaticResource SuccessBtn}"
-                            Click="Accept_Click" Margin="0,0,10,0"/>
+                            Click="Accept_Click" Margin="{StaticResource ButtonGapMargin}"/>
                     <Button Content="✖ Закрыть" Style="{StaticResource DangerBtn}" Click="Close_Click"/>
                 </StackPanel>
             </Grid>

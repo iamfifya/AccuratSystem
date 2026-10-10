@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using static DaEtoZhe.Contracts.DTOs.UpdateRepairWorkDto;
 
 namespace DaEtoZhe.WebAPI.Controllers
 {
@@ -40,7 +41,13 @@ namespace DaEtoZhe.WebAPI.Controllers
                 .OrderBy(w => w.Id)
                 .ToListAsync();
 
-            return Ok(BuildSummary(vehicle, parts, works));
+            var shares = await _context.VehicleMechanicShares
+                .Include(s => s.Mechanic)
+                .Where(s => s.VehicleId == id)
+                .OrderByDescending(s => s.SharePercent)
+                .ToListAsync();
+
+            return Ok(BuildSummary(vehicle, parts, works, shares));
         }
 
         // ═════════════ ЗАПЧАСТИ ═════════════
@@ -154,6 +161,9 @@ namespace DaEtoZhe.WebAPI.Controllers
             var error = await ValidateWorkAsync(dto.MechanicId, dto.VehicleDefectId, id, dto.PlannedHours, dto.HourlyRate);
             if (error != null) return BadRequest(error);
 
+            if (await IsAccruedAsync(id))          // для AddWork; в Update/Delete используй work.VehicleId
+                return BadRequest("Расчёт с бригадой проведён — работы заморожены");
+
             var work = new VehicleRepairWork
             {
                 VehicleId = id,
@@ -187,6 +197,9 @@ namespace DaEtoZhe.WebAPI.Controllers
                 .Include(w => w.Vehicle)
                 .FirstOrDefaultAsync(w => w.Id == workId);
             if (work == null || work.Vehicle.CompanyId != CurrentCompanyId) return NotFound();
+
+            if (await IsAccruedAsync(work.VehicleId))          // для AddWork; в Update/Delete используй work.VehicleId
+                return BadRequest("Расчёт с бригадой проведён — работы заморожены");
 
             var error = await ValidateWorkAsync(dto.MechanicId, dto.VehicleDefectId, work.VehicleId, dto.PlannedHours, dto.HourlyRate);
             if (error != null) return BadRequest(error);
@@ -226,6 +239,9 @@ namespace DaEtoZhe.WebAPI.Controllers
                 .FirstOrDefaultAsync(w => w.Id == workId);
             if (work == null || work.Vehicle.CompanyId != CurrentCompanyId) return NotFound();
 
+            if (await IsAccruedAsync(work.VehicleId))
+                return BadRequest("Расчёт с бригадой проведён — работы заморожены");
+
             if (work.Status == VehicleWorkStatus.Done && work.VehicleDefectId.HasValue)
                 await SetDefectFixedAsync(work.VehicleDefectId.Value, false);
 
@@ -244,8 +260,52 @@ namespace DaEtoZhe.WebAPI.Controllers
             if (vehicle == null) return NotFound();
             if (vehicle.Status != VehicleStatus.Repair)
                 return BadRequest("Завершить можно только ремонт со статусом «В ремонте»");
+            if (vehicle.BranchId == null)
+                return BadRequest("Укажите филиал автомобиля — начисления привязываются к филиалу");
 
             await RecalcCostsAsync(vehicle);
+
+            // === Бригада и начисление ЗП ===
+            var shares = await _context.VehicleMechanicShares
+                .Include(s => s.Mechanic)
+                .Where(s => s.VehicleId == id)
+                .ToListAsync();
+
+            var doneWorksExist = await _context.VehicleRepairWorks
+                .AnyAsync(w => w.VehicleId == id && w.Status == VehicleWorkStatus.Done);
+
+            if (doneWorksExist && !shares.Any())
+                return BadRequest("Есть выполненные работы, но не задана бригада — добавьте механиков с процентами");
+
+            if (shares.Any())
+            {
+                var sum = shares.Sum(s => s.SharePercent);
+                if (sum != 100m)
+                    return BadRequest($"Сумма процентов бригады = {sum:0.##}%, должно быть ровно 100%");
+
+                // Пулл ЗП = стоимость выполненных работ
+                var laborPool = vehicle.LaborCost;
+
+                foreach (var share in shares)
+                {
+                    share.EarnedAmount = Math.Round(laborPool * share.SharePercent / 100m, 2);
+                    share.AccruedAt = DateTime.UtcNow;
+
+                    // Проводка в финансы: начисление (не кассовый расход)
+                    _context.Transactions.Add(new Transaction
+                    {
+                        Type = "Начисление механику",
+                        Amount = share.EarnedAmount,
+                        EmployeeId = share.MechanicId,
+                        BranchId = vehicle.BranchId.Value,
+                        Department = "Repair",
+                        ShiftId = null,
+                        DateTime = DateTime.UtcNow,
+                        Comment = $"ЗП за ремонт авто #{id} ({vehicle.LicensePlate}), доля {share.SharePercent:0.##}%"
+                    });
+                }
+            }
+
             vehicle.Status = VehicleStatus.Prep;
             vehicle.RepairEndDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -312,7 +372,8 @@ namespace DaEtoZhe.WebAPI.Controllers
         private static VehicleRepairSummary BuildSummary(
             Vehicle vehicle,
             System.Collections.Generic.List<VehicleRepairPart> parts,
-            System.Collections.Generic.List<VehicleRepairWork> works)
+            System.Collections.Generic.List<VehicleRepairWork> works,
+            System.Collections.Generic.List<VehicleMechanicShare> shares)
         {
             var partsCost = parts.Sum(p => p.TotalCost);
             var laborCost = works.Where(w => w.Status == VehicleWorkStatus.Done).Sum(w => w.TotalCost);
@@ -322,12 +383,84 @@ namespace DaEtoZhe.WebAPI.Controllers
             {
                 Parts = parts,
                 Works = works,
+                Shares = shares,
                 PartsCost = partsCost,
                 LaborCost = laborCost,
                 TotalCost = total,
                 EstimateCost = vehicle.EstimateCost,
                 Overrun = total - vehicle.EstimateCost
             };
+        }
+
+        // ═════════════ БРИГАДА: ПРОЦЕНТЫ ЗП ═════════════
+
+        [HttpPost("{id}/repair/shares")]
+        public async Task<ActionResult<VehicleMechanicShare>> AddShare(int id, AddVehicleShareDto dto)
+        {
+            var vehicle = await GetVehicleAsync(id);
+            if (vehicle == null) return NotFound();
+            if (await IsAccruedAsync(id)) return BadRequest("Расчёт с бригадой уже проведён — доли заморожены");
+
+            var error = await ValidateShareAsync(dto.MechanicId, dto.SharePercent, id);
+            if (error != null) return BadRequest(error);
+
+            var share = new VehicleMechanicShare
+            {
+                VehicleId = id,
+                MechanicId = dto.MechanicId,
+                SharePercent = dto.SharePercent
+            };
+            _context.VehicleMechanicShares.Add(share);
+            await _context.SaveChangesAsync();
+            return Ok(share);
+        }
+
+        [HttpPut("repair/shares/{shareId}")]
+        public async Task<IActionResult> UpdateShare(int shareId, UpdateVehicleShareDto dto)
+        {
+            if (shareId != dto.Id) return BadRequest();
+            var share = await _context.VehicleMechanicShares
+                .Include(s => s.Vehicle)
+                .FirstOrDefaultAsync(s => s.Id == shareId);
+            if (share == null || share.Vehicle.CompanyId != CurrentCompanyId) return NotFound();
+            if (share.AccruedAt != null) return BadRequest("Расчёт с бригадой уже проведён — доли заморожены");
+
+            var error = await ValidateShareAsync(dto.MechanicId, dto.SharePercent, share.VehicleId);
+            if (error != null) return BadRequest(error);
+
+            share.MechanicId = dto.MechanicId;
+            share.SharePercent = dto.SharePercent;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("repair/shares/{shareId}")]
+        public async Task<IActionResult> DeleteShare(int shareId)
+        {
+            var share = await _context.VehicleMechanicShares
+                .Include(s => s.Vehicle)
+                .FirstOrDefaultAsync(s => s.Id == shareId);
+            if (share == null || share.Vehicle.CompanyId != CurrentCompanyId) return NotFound();
+            if (share.AccruedAt != null) return BadRequest("Расчёт с бригадой уже проведён — доли заморожены");
+
+            _context.VehicleMechanicShares.Remove(share);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        private async Task<bool> IsAccruedAsync(int vehicleId) =>
+            await _context.VehicleMechanicShares.AnyAsync(s => s.VehicleId == vehicleId && s.AccruedAt != null);
+
+        private async Task<string> ValidateShareAsync(int mechanicId, decimal percent, int vehicleId)
+        {
+            var mechanic = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == mechanicId && u.CompanyId == CurrentCompanyId);
+            if (mechanic == null) return "Механик не найден в вашей компании";
+            if (percent <= 0 || percent > 100) return "Процент должен быть в диапазоне (0..100]";
+            if (await _context.VehicleMechanicShares
+                    .AnyAsync(s => s.VehicleId == vehicleId && s.MechanicId == mechanicId))
+                return "Этот механик уже есть в бригаде машины — измените его долю";
+            return null;
         }
     }
 }

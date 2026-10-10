@@ -1,10 +1,11 @@
 ﻿<Window x:Class="DaEtoZhe.Desktop.VehicleEditWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:DaEtoZhe.Desktop.Controls"
         Title="Карточка автомобиля"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Width="780" Height="720"
+        Width="820" Height="780"
         Background="{DynamicResource BgMain}"
         Foreground="{DynamicResource TextMain}">
 
@@ -15,17 +16,15 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TitleText" Text="➕ Новый автомобиль"
-                   FontSize="22" FontWeight="Bold" Margin="0,0,0,15"/>
+        <TextBlock x:Name="TitleText" Text="➕ Новый автомобиль" Style="{StaticResource HeadingMediumStyle}" Margin="0,0,0,16"/>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
 
                 <!-- ═══ СЕКЦИЯ 1: ИДЕНТИФИКАЦИЯ ═══ -->
-                <Border Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15"
-                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="0,0,0,12">
+                <Border Style="{StaticResource CardFlatStyle}" Padding="16" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="🚗 Идентификация" FontSize="15" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <TextBlock Text="🚗 Идентификация" Style="{StaticResource HeadingSmallStyle}" Margin="0,0,0,12"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -40,79 +39,75 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
-                                <TextBlock Text="VIN" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="VinTextBox" Height="36" Padding="10,0" MaxLength="17"/>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,12">
+                                <TextBlock Text="VIN" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="VinTextBox" MaxLength="17"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="10,0,0,10">
-                                <TextBlock Text="Гос. номер *" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="PlateTextBox" Height="36" Padding="10,0" MaxLength="15"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,10">
-                                <TextBlock Text="Марка *" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="MakeTextBox" Height="36" Padding="10,0" MaxLength="50"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="10,0,0,10">
-                                <TextBlock Text="Модель *" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="ModelTextBox" Height="36" Padding="10,0" MaxLength="50"/>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="10,0,0,12">
+                                <TextBlock Text="Гос. номер *" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="PlateTextBox" MaxLength="15"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,10,10">
-                                <TextBlock Text="Год выпуска" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="YearTextBox" Height="36" Padding="10,0"
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,12">
+                                <TextBlock Text="Марка *" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="MakeTextBox" MaxLength="50"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="10,0,0,12">
+                                <TextBlock Text="Модель *" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="ModelTextBox" MaxLength="50"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,10,12">
+                                <TextBlock Text="Год выпуска" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="YearTextBox"
                                          PreviewTextInput="NumericOnly_PreviewTextInput"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="10,0,0,10">
-                                <TextBlock Text="Пробег, км" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="MileageTextBox" Height="36" Padding="10,0"
+                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="10,0,0,12">
+                                <TextBlock Text="Пробег, км" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="MileageTextBox"
                                          PreviewTextInput="NumericOnly_PreviewTextInput"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,10,10">
-                                <TextBlock Text="Цвет" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="ColorTextBox" Height="36" Padding="10,0" MaxLength="30"/>
+                            <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,10,12">
+                                <TextBlock Text="Цвет" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="ColorTextBox" MaxLength="30"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="3" Grid.Column="1" Margin="10,0,0,10">
-                                <TextBlock Text="Двигатель" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <ComboBox x:Name="EngineTypeCombo" Height="36" VerticalContentAlignment="Center">
+                            <StackPanel Grid.Row="3" Grid.Column="1" Margin="10,0,0,12">
+                                <controls:CustomComboBox x:Name="EngineTypeCombo" Header="Двигатель">
                                     <ComboBoxItem Content="Бензин"/>
                                     <ComboBoxItem Content="Дизель"/>
                                     <ComboBoxItem Content="Гибрид"/>
                                     <ComboBoxItem Content="Электро"/>
                                     <ComboBoxItem Content="Газ"/>
-                                </ComboBox>
+                                </controls:CustomComboBox>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,10,10">
-                                <TextBlock Text="Объём двигателя, л" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="EngineVolumeTextBox" Height="36" Padding="10,0"
+                            <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,10,12">
+                                <TextBlock Text="Объём двигателя, л" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="EngineVolumeTextBox"
                                          PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="4" Grid.Column="1" Margin="10,0,0,10">
-                                <TextBlock Text="КПП" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <ComboBox x:Name="TransmissionCombo" Height="36" VerticalContentAlignment="Center">
+                            <StackPanel Grid.Row="4" Grid.Column="1" Margin="10,0,0,12">
+                                <controls:CustomComboBox x:Name="TransmissionCombo" Header="КПП">
                                     <ComboBoxItem Content="АКПП"/>
                                     <ComboBoxItem Content="МКПП"/>
                                     <ComboBoxItem Content="Робот"/>
                                     <ComboBoxItem Content="Вариатор"/>
-                                </ComboBox>
+                                </controls:CustomComboBox>
                             </StackPanel>
 
                             <StackPanel Grid.Row="5" Grid.Column="0" Margin="0,0,10,0">
-                                <TextBlock Text="Филиал (где стоит)" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <ComboBox x:Name="BranchCombo" Height="36"
+                                <controls:CustomComboBox x:Name="BranchCombo" Header="Филиал (где стоит)"
                                           DisplayMemberPath="Name" SelectedValuePath="Id"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ СЕКЦИЯ 2: ПОКУПКА (продавец-физлицо) ═══ -->
-                <Border Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15"
-                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="0,0,0,12">
+                <!-- ═══ СЕКЦИЯ 2: ПОКУПКА ═══ -->
+                <Border Style="{StaticResource CardFlatStyle}" Padding="16" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="💰 Покупка (продавец — физлицо, данные для ДКП)" FontSize="15" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <TextBlock Text="💰 Покупка (продавец — физлицо, данные для ДКП)" Style="{StaticResource HeadingSmallStyle}" Margin="0,0,0,12"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -123,34 +118,33 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
-                                <TextBlock Text="Цена покупки, ₽" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="PurchasePriceTextBox" Height="36" Padding="10,0"
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,12">
+                                <TextBlock Text="Цена покупки, ₽" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="PurchasePriceTextBox"
                                          PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="10,0,0,10">
-                                <TextBlock Text="ФИО продавца" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="SellerNameTextBox" Height="36" Padding="10,0" MaxLength="150"/>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="10,0,0,12">
+                                <TextBlock Text="ФИО продавца" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="SellerNameTextBox" MaxLength="150"/>
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,0">
-                                <TextBlock Text="Телефон продавца" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="SellerPhoneTextBox" Height="36" Padding="10,0" MaxLength="20"/>
+                                <TextBlock Text="Телефон продавца" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="SellerPhoneTextBox" MaxLength="20"/>
                             </StackPanel>
                             <StackPanel Grid.Row="1" Grid.Column="1" Margin="10,0,0,0">
-                                <TextBlock Text="Паспорт (серия + номер)" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="SellerPassportTextBox" Height="36" Padding="10,0" MaxLength="50"/>
+                                <TextBlock Text="Паспорт (серия + номер)" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="SellerPassportTextBox" MaxLength="50"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ СЕКЦИЯ 3: РЕМОНТ И ПРОДАЖА (только режим редактирования) ═══ -->
-                <Border x:Name="RepairSection" Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15"
-                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="0,0,0,12"
+                <!-- ═══ СЕКЦИЯ 3: РЕМОНТ И ПРОДАЖА ═══ -->
+                <Border x:Name="RepairSection" Style="{StaticResource CardFlatStyle}" Padding="16" Margin="0,0,0,12"
                         Visibility="Collapsed">
                     <StackPanel>
-                        <TextBlock Text="🔧 Ремонт и продажа" FontSize="15" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <TextBlock Text="🔧 Ремонт и продажа" Style="{StaticResource HeadingSmallStyle}" Margin="0,0,0,12"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -162,42 +156,40 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,10">
-                                <TextBlock Text="Запчасти, ₽" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="PartsCostTextBox" Height="36" Padding="10,0"
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,12">
+                                <TextBlock Text="Запчасти, ₽" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="PartsCostTextBox"
                                          PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,8,10">
-                                <TextBlock Text="Работы, ₽" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="LaborCostTextBox" Height="36" Padding="10,0"
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,8,12">
+                                <TextBlock Text="Работы, ₽" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="LaborCostTextBox"
                                          PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="8,0,0,10">
-                                <TextBlock Text="Цена в объявлении, ₽" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="ListingPriceTextBox" Height="36" Padding="10,0"
+                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="8,0,0,12">
+                                <TextBlock Text="Цена в объявлении, ₽" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="ListingPriceTextBox"
                                          PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock Text="Цена продажи, ₽" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="SalePriceTextBox" Height="36" Padding="10,0"
+                                <TextBlock Text="Цена продажи, ₽" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="SalePriceTextBox"
                                          PreviewTextInput="DecimalOnly_PreviewTextInput"
                                          TextChanged="Money_TextChanged"/>
                             </StackPanel>
                             <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="8,0,0,0">
-                                <TextBlock Text="Маржа (продажа − покупка − ремонт)" FontSize="12"
-                                           Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
+                                <TextBlock Text="Маржа (продажа − покупка − ремонт)" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
                                 <TextBlock x:Name="MarginLabel" Text="0 ₽" FontSize="18" FontWeight="Bold"
                                            Foreground="{DynamicResource AccentGreen}" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Grid>
 
-                        <TextBlock Text="Что сделано / примечания по ремонту" FontSize="12"
-                                   Foreground="{DynamicResource TextMuted}" Margin="0,10,0,4"/>
-                        <TextBox x:Name="RepairNotesTextBox" Height="60" Padding="10,6"
+                        <TextBlock Text="Что сделано / примечания по ремонту" Style="{StaticResource FilterLabelStyle}" Margin="0,12,0,4"/>
+                        <TextBox x:Name="RepairNotesTextBox" MinHeight="60" Padding="10,8"
                                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
 
-                        <TextBlock Text="🧾 Покупатель (физлицо, данные для ДКП)" FontSize="14" FontWeight="SemiBold" Margin="0,12,0,8"/>
+                        <TextBlock Text="🧾 Покупатель (физлицо, данные для ДКП)" FontSize="14" FontWeight="SemiBold" Margin="0,16,0,8"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -205,37 +197,36 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock Text="ФИО покупателя" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="BuyerNameTextBox" Height="36" Padding="10,0" MaxLength="150"/>
+                                <TextBlock Text="ФИО покупателя" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="BuyerNameTextBox" MaxLength="150"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="8,0,8,0">
-                                <TextBlock Text="Телефон" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="BuyerPhoneTextBox" Height="36" Padding="10,0" MaxLength="20"/>
+                                <TextBlock Text="Телефон" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="BuyerPhoneTextBox" MaxLength="20"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2" Margin="8,0,0,0">
-                                <TextBlock Text="Паспорт" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="BuyerPassportTextBox" Height="36" Padding="10,0" MaxLength="50"/>
+                                <TextBlock Text="Паспорт" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                                <TextBox x:Name="BuyerPassportTextBox" MaxLength="50"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>
 
                 <!-- ═══ СЕКЦИЯ 4: ДЕФЕКТЫ И ЗАМЕТКИ ═══ -->
-                <Border Background="{DynamicResource BgCard}" CornerRadius="6" Padding="15"
-                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                <Border Style="{StaticResource CardFlatStyle}" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="⚠️ Дефекты (осмотр при приёмке)" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
-                        <TextBox x:Name="DefectsTextBox" Height="70" Padding="10,6"
+                        <TextBlock Text="⚠️ Дефекты (осмотр при приёмке)" Style="{StaticResource HeadingSmallStyle}" Margin="0,0,0,8"/>
+                        <TextBox x:Name="DefectsTextBox" MinHeight="70" Padding="10,8"
                                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
-                        <TextBlock Text="Общие заметки" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,10,0,4"/>
-                        <TextBox x:Name="NotesTextBox" Height="50" Padding="10,6"
+                        <TextBlock Text="Общие заметки" Style="{StaticResource FilterLabelStyle}" Margin="0,12,0,4"/>
+                        <TextBox x:Name="NotesTextBox" MinHeight="50" Padding="10,8"
                                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
             <Button Content="💾 Сохранить" Style="{StaticResource SuccessBtn}" Click="Save_Click"/>
             <Button Content="✖ Отмена" Style="{StaticResource DangerBtn}" Click="Cancel_Click"/>
         </StackPanel>

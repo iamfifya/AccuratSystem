@@ -112,6 +112,21 @@
         </Setter>
     </Style>
 
+
+    <!-- ==================== MULTILINE TEXTBOX ==================== -->
+    <Style x:Key="MultilineTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="MinHeight" Value="90"/>
+        <Setter Property="AcceptsReturn" Value="True"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="VerticalContentAlignment" Value="Top"/>
+        <Setter Property="Padding" Value="12,10"/>
+    </Style>
+
+    <Style x:Key="MultilineTextBoxSmallStyle" TargetType="TextBox" BasedOn="{StaticResource MultilineTextBoxStyle}">
+        <Setter Property="MinHeight" Value="60"/>
+    </Style>
+
     <!-- ==================== CHECKBOX ==================== -->
     <Style TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>

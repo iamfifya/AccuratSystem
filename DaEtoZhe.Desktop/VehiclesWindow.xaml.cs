@@ -66,7 +66,7 @@ namespace DaEtoZhe.Desktop
                     v.Make.ToLower().Contains(searchText) ||
                     v.Model.ToLower().Contains(searchText)).ToList();
 
-            VehiclesGrid.ItemsSource = _filteredVehicles;
+            VehiclesItemsControl.ItemsSource = _filteredVehicles; // Привязка к карточкам
         }
 
         private void UpdateStatistics()
@@ -121,7 +121,7 @@ namespace DaEtoZhe.Desktop
 
         private async void EditVehicle_Click(object sender, RoutedEventArgs e)
         {
-            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            if ((sender as FrameworkElement)?.DataContext is Vehicle vehicle)
             {
                 var editWindow = new VehicleEditWindow(vehicle);
                 if (editWindow.ShowDialog() == true)
@@ -130,13 +130,11 @@ namespace DaEtoZhe.Desktop
                     {
                         await _apiService.UpdateVehicleAsync(editWindow.UpdateDto);
                         await LoadVehiclesAsync();
-                        MessageBox.Show("Автомобиль успешно обновлён!", "Успех",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("Автомобиль успешно обновлён!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Ошибка при обновлении автомобиля: {ex.Message}", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Ошибка при обновлении: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -144,7 +142,7 @@ namespace DaEtoZhe.Desktop
 
         private async void ChangeStatus_Click(object sender, RoutedEventArgs e)
         {
-            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            if ((sender as FrameworkElement)?.DataContext is Vehicle vehicle)
             {
                 var statusWindow = new ChangeStatusWindow(vehicle.Status);
                 if (statusWindow.ShowDialog() == true)
@@ -170,7 +168,7 @@ namespace DaEtoZhe.Desktop
 
         private async void DeleteVehicle_Click(object sender, RoutedEventArgs e)
         {
-            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            if ((sender as FrameworkElement)?.DataContext is Vehicle vehicle)
             {
                 var result = MessageBox.Show(
                     $"Вы уверены, что хотите удалить автомобиль {vehicle.Make} {vehicle.Model} ({vehicle.Vin})?\n\n" +
@@ -199,7 +197,7 @@ namespace DaEtoZhe.Desktop
 
         private void VehiclesGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            if ((sender as FrameworkElement)?.DataContext is Vehicle vehicle)
             {
                 EditVehicle_Click(sender, e);
             }
@@ -217,7 +215,7 @@ namespace DaEtoZhe.Desktop
 
         private async void Acceptance_Click(object sender, RoutedEventArgs e)
         {
-            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            if ((sender as FrameworkElement)?.DataContext is Vehicle vehicle)
             {
                 var win = new VehicleAcceptanceWindow(vehicle);
                 win.ShowDialog();
@@ -231,7 +229,7 @@ namespace DaEtoZhe.Desktop
 
         private async void Repair_Click(object sender, RoutedEventArgs e)
         {
-            if (VehiclesGrid.SelectedItem is Vehicle vehicle)
+            if ((sender as FrameworkElement)?.DataContext is Vehicle vehicle)
             {
                 var win = new VehicleRepairWindow(vehicle);
                 win.ShowDialog();

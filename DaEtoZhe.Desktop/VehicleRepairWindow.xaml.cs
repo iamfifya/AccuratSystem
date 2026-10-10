@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using static DaEtoZhe.Contracts.DTOs.UpdateRepairWorkDto;
 
 namespace DaEtoZhe.Desktop
 {
@@ -25,6 +26,10 @@ namespace DaEtoZhe.Desktop
         private List<VehicleDefect> _defects = new List<VehicleDefect>();
         private VehicleRepairWork _editingWork;
 
+        private List<VehicleMechanicShare> _shares = new List<VehicleMechanicShare>();
+        private VehicleMechanicShare _editingShare;
+        private decimal _laborCost;   // пулл ЗП для превью
+
         private class StatusOption
         {
             public VehicleWorkStatus Value { get; set; }
@@ -35,6 +40,10 @@ namespace DaEtoZhe.Desktop
         {
             InitializeComponent();
             _vehicle = vehicle;
+
+            // Подписка на событие CustomComboBox
+            ItemCombo.SelectionChanged += ItemCombo_Changed;
+
             TitleText.Text = $"🔧 Ремонт: {vehicle.Make} {vehicle.Model} ({vehicle.LicensePlate})";
             VehicleInfoText.Text = $"VIN {vehicle.Vin} | статус: {vehicle.Status} | филиал: {(vehicle.BranchId ?? 0)}";
 
@@ -66,6 +75,7 @@ namespace DaEtoZhe.Desktop
                 var users = await _apiService.GetUsersAsync();
                 _mechanics = users.Where(u => u.IsActive).ToList();
                 MechanicCombo.ItemsSource = _mechanics;
+                ShareMechanicCombo.ItemsSource = _mechanics;
 
                 _defects = await _apiService.GetVehicleDefectsAsync(_vehicle.Id);
                 DefectCombo.ItemsSource = _defects.Where(d => !d.IsFixed).ToList();
@@ -76,6 +86,125 @@ namespace DaEtoZhe.Desktop
             {
                 MessageBox.Show($"Ошибка загрузки справочников: {ex.Message}", "Ошибка");
             }
+        }
+
+        private void UpdateShareSum()
+        {
+            var sum = _shares.Sum(s => s.SharePercent);
+            ShareSumText.Text = $"Сумма долей: {sum:0.##}% (пулл ЗП: {_laborCost:N0} ₽)";
+            ShareSumText.Foreground = sum == 100m
+                ? (TryFindResource("AccentGreen") as Brush ?? Brushes.Green)
+                : (TryFindResource("AccentRed") as Brush ?? Brushes.Red);
+        }
+
+        private void SharesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _editingShare = SharesGrid.SelectedItem as VehicleMechanicShare;
+            SaveShareButton.IsEnabled = _editingShare != null;
+            AddShareButton.Content = _editingShare != null ? "➕ Новый" : "➕ Добавить";
+            if (_editingShare == null) return;
+            ShareMechanicCombo.SelectedValue = _editingShare.MechanicId;
+            SharePercentTextBox.Text = _editingShare.SharePercent.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private async void AddShare_Click(object sender, RoutedEventArgs e)
+        {
+            if (ShareMechanicCombo.SelectedValue is not int mechanicId)
+            {
+                MessageBox.Show("Выберите механика!", "Внимание");
+                return;
+            }
+            var percent = ParseDecimal(SharePercentTextBox.Text, 0m);
+            if (percent <= 0)
+            {
+                MessageBox.Show("Процент должен быть больше нуля!", "Внимание");
+                return;
+            }
+            try
+            {
+                IsEnabled = false;
+                await _apiService.AddVehicleShareAsync(_vehicle.Id, new AddVehicleShareDto
+                {
+                    MechanicId = mechanicId,
+                    SharePercent = percent
+                });
+                ClearShareForm();
+                await LoadSummaryAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка добавления доли: {ex.Message}", "Ошибка");
+            }
+            finally
+            {
+                IsEnabled = true;
+            }
+        }
+
+        private async void SaveShare_Click(object sender, RoutedEventArgs e)
+        {
+            if (_editingShare == null) return;
+            if (ShareMechanicCombo.SelectedValue is not int mechanicId) return;
+            var percent = ParseDecimal(SharePercentTextBox.Text, 0m);
+            if (percent <= 0)
+            {
+                MessageBox.Show("Процент должен быть больше нуля!", "Внимание");
+                return;
+            }
+            try
+            {
+                IsEnabled = false;
+                await _apiService.UpdateVehicleShareAsync(new UpdateVehicleShareDto
+                {
+                    Id = _editingShare.Id,
+                    MechanicId = mechanicId,
+                    SharePercent = percent
+                });
+                ClearShareForm();
+                await LoadSummaryAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка сохранения доли: {ex.Message}", "Ошибка");
+            }
+            finally
+            {
+                IsEnabled = true;
+            }
+        }
+
+        private async void DeleteShare_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.Tag is VehicleMechanicShare share)
+            {
+                var r = MessageBox.Show($"Убрать {share.Mechanic?.FullName} из бригады?", "Подтверждение",
+                                        MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (r != MessageBoxResult.Yes) return;
+                try
+                {
+                    IsEnabled = false;
+                    await _apiService.DeleteVehicleShareAsync(share.Id);
+                    ClearShareForm();
+                    await LoadSummaryAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка удаления доли: {ex.Message}", "Ошибка");
+                }
+                finally
+                {
+                    IsEnabled = true;
+                }
+            }
+        }
+
+        private void ClearShareForm()
+        {
+            _editingShare = null;
+            SharesGrid.SelectedItem = null;
+            SharePercentTextBox.Text = "";
+            SaveShareButton.IsEnabled = false;
+            AddShareButton.Content = "➕ Добавить";
         }
 
         private async System.Threading.Tasks.Task LoadSummaryAsync()
@@ -95,6 +224,12 @@ namespace DaEtoZhe.Desktop
             OverrunText.Foreground = summary.Overrun > 0
                 ? (TryFindResource("AccentRed") as Brush ?? Brushes.Red)
                 : (TryFindResource("AccentGreen") as Brush ?? Brushes.Green);
+
+            _shares = summary.Shares;
+            _laborCost = summary.LaborCost;
+            SharesGrid.ItemsSource = null;
+            SharesGrid.ItemsSource = _shares;
+            UpdateShareSum();
         }
 
         private void ItemCombo_Changed(object sender, RoutedEventArgs e)

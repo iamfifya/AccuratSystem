@@ -1,16 +1,17 @@
 // === ЯВНЫЕ АЛИАСЫ ДЛЯ КОНТРАКТНЫХ МОДЕЛЕЙ (чтобы избежать конфликтов с UI-моделями) ===
 // === UI-МОДЕЛИ (без алиасов, так как они в том же неймспейсе) ===
-using DaEtoZhe.Desktop.Models;
-using DaEtoZhe.Desktop.Services;
 using DaEtoZhe.Contracts.DTOs;
 using DaEtoZhe.Contracts.Enums;
 using DaEtoZhe.Contracts.Models;
+using DaEtoZhe.Desktop.Models;
+using DaEtoZhe.Desktop.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using static DaEtoZhe.Contracts.DTOs.UpdateRepairWorkDto;
 using ContractsBranch = DaEtoZhe.Contracts.Models.Branch;
 using ContractsCashboxSummary = DaEtoZhe.Contracts.Models.CashboxSummary;
 using ContractsClient = DaEtoZhe.Contracts.Models.Client;
@@ -1239,6 +1240,25 @@ namespace DaEtoZhe.Desktop.Services
             var r = await _http.PostJsonAsync($"Vehicles/{vehicleId}/repair/finish", null);
             if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
             return await r.Content.ReadJsonAsync<Vehicle>();
+        }
+
+        public async Task<VehicleMechanicShare> AddVehicleShareAsync(int vehicleId, AddVehicleShareDto dto)
+        {
+            var r = await _http.PostJsonAsync($"Vehicles/{vehicleId}/repair/shares", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+            return await r.Content.ReadJsonAsync<VehicleMechanicShare>();
+        }
+
+        public async Task UpdateVehicleShareAsync(UpdateVehicleShareDto dto)
+        {
+            var r = await _http.PutJsonAsync($"Vehicles/repair/shares/{dto.Id}", dto);
+            if (!r.IsSuccessStatusCode) throw new Exception($"Отказ сервера ({(int)r.StatusCode}): {await r.Content.ReadAsStringAsync()}");
+        }
+
+        public async Task DeleteVehicleShareAsync(int shareId)
+        {
+            var r = await _http.DeleteAsync($"Vehicles/repair/shares/{shareId}");
+            r.EnsureSuccessStatusCode();
         }
 
         #endregion

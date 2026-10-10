@@ -214,4 +214,24 @@
         <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
     </Style>
 
+    <Style x:Key="FormLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource FilterLabelStyle}">
+        <Setter Property="Margin" Value="{DynamicResource FormLabelMargin}"/>
+    </Style>
+
+    <Style x:Key="CardHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource HeadingSmallStyle}">
+        <Setter Property="Margin" Value="0,0,0,16"/>
+    </Style>
+
+    <Style x:Key="StatValueStyle" TargetType="TextBlock" BasedOn="{StaticResource TextPrimaryStyle}">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeHeadingSM}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentOrange}"/>
+    </Style>
+
+    <Style x:Key="SuccessInfoStyle" TargetType="TextBlock" BasedOn="{StaticResource TextCaptionStyle}">
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentGreen}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
 </ResourceDictionary>

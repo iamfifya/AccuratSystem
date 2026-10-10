@@ -62,6 +62,7 @@ namespace DaEtoZhe.WebAPI.Data
         public DbSet<VehicleDefect> VehicleDefects => Set<VehicleDefect>();
         public DbSet<VehicleRepairPart> VehicleRepairParts => Set<VehicleRepairPart>();
         public DbSet<VehicleRepairWork> VehicleRepairWorks => Set<VehicleRepairWork>();
+        public DbSet<VehicleMechanicShare> VehicleMechanicShares => Set<VehicleMechanicShare>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -564,6 +565,20 @@ namespace DaEtoZhe.WebAPI.Data
                       .HasForeignKey(e => e.MechanicId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(e => e.Defect).WithMany()
                       .HasForeignKey(e => e.VehicleDefectId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // === РЕМОНТ: БРИГАДА И ПРОЦЕНТЫ ЗП ===
+            modelBuilder.Entity<VehicleMechanicShare>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.VehicleId, e.MechanicId }).IsUnique();
+                entity.Property(e => e.SharePercent).HasPrecision(5, 2);
+                entity.Property(e => e.EarnedAmount).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Vehicle).WithMany()
+                      .HasForeignKey(e => e.VehicleId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Mechanic).WithMany()
+                      .HasForeignKey(e => e.MechanicId).OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
