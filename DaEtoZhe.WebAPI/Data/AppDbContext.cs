@@ -57,6 +57,8 @@ namespace DaEtoZhe.WebAPI.Data
         // Складской учет: нормы списания на услуги
         public DbSet<ServiceStockNorm> ServiceStockNorms => Set<ServiceStockNorm>();
 
+        // Автомобили для сервиса и продажи
+        public DbSet<Vehicle> Vehicles => Set<Vehicle>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -467,6 +469,38 @@ namespace DaEtoZhe.WebAPI.Data
                     .HasForeignKey(e => e.ServiceId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.Item).WithMany()
                     .HasForeignKey(e => e.ItemId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Вводим сущность Vehicle для хранения информации о транспортных средствах
+            modelBuilder.Entity<Vehicle>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Vin).HasMaxLength(17);
+                entity.Property(e => e.LicensePlate).HasMaxLength(15);
+                entity.Property(e => e.Make).HasMaxLength(50);
+                entity.Property(e => e.Model).HasMaxLength(50);
+                entity.Property(e => e.Color).HasMaxLength(30);
+                entity.Property(e => e.EngineType).HasMaxLength(20);
+                entity.Property(e => e.Transmission).HasMaxLength(20);
+                entity.Property(e => e.SellerFullName).HasMaxLength(150);
+                entity.Property(e => e.SellerPhone).HasMaxLength(20);
+                entity.Property(e => e.SellerPassport).HasMaxLength(50);
+                entity.Property(e => e.BuyerFullName).HasMaxLength(150);
+                entity.Property(e => e.BuyerPhone).HasMaxLength(20);
+                entity.Property(e => e.BuyerPassport).HasMaxLength(50);
+                entity.Property(e => e.Defects).HasMaxLength(2000);
+                entity.Property(e => e.RepairNotes).HasMaxLength(2000);
+                entity.Property(e => e.GeneralNotes).HasMaxLength(2000);
+
+                entity.HasOne(e => e.Branch)
+                      .WithMany()
+                      .HasForeignKey(e => e.BranchId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Company)
+                      .WithMany()
+                      .HasForeignKey(e => e.CompanyId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

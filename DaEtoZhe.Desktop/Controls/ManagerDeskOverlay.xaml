@@ -226,13 +226,14 @@
                                        Foreground="{DynamicResource TextMain}"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource TileButtonStyle}" x:Name="UpsellBtn" Click="UpsellBtn_Click">
+                    <!-- <Button Style="{StaticResource TileButtonStyle}" x:Name="UpsellBtn" Click="UpsellBtn_Click"> -->
+                    <Button Style="{StaticResource TileButtonStyle}" x:Name="VehiclesBtn" Click="Vehicles_Click">
                         <StackPanel>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="🛠️" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
+                                <TextBlock Text="🚗" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10" TextAlignment="Center"
                                            Foreground="{DynamicResource AccentGreen}"/>
                             </WrapPanel>
-                            <TextBlock Text="Правила доп.продаж" 
+                            <TextBlock Text="Авто под продажу" 
                                        HorizontalAlignment="Center" 
                                        TextWrapping="Wrap" 
                                        TextAlignment="Center"

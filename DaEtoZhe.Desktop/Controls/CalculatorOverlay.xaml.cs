@@ -287,6 +287,13 @@ namespace DaEtoZhe.Desktop.Controls
         #endregion
 
         private void Overlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => Hide();
+
+        private void PopupPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Предотвращаем всплытие клика до фонового слоя (OverlayBackground),
+            // чтобы клики внутри калькулятора не закрывали окно.
+            e.Handled = true;
+        }
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Hide();
 
         public void Show()

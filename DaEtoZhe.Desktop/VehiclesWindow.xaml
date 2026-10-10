@@ -1,0 +1,183 @@
+﻿<Window x:Class="DaEtoZhe.Desktop.VehiclesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DaEtoZhe.Desktop"
+        Title="🚗 Авто под ремонт и продажу"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        MinWidth="1200" MinHeight="700"
+        Width="1400" Height="850"
+        Background="{DynamicResource BgMain}"
+        Foreground="{DynamicResource TextMain}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="🚗 Авто под ремонт и продажу"
+                       FontSize="26" FontWeight="Bold"
+                       Foreground="{DynamicResource TextMain}"/>
+            <TextBlock Text="Управление автомобилями для ремонта и перепродажи"
+                       FontSize="14" Foreground="{DynamicResource TextMuted}"
+                       Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Панель фильтров и действий -->
+        <Border Grid.Row="1" Background="{DynamicResource BgCard}" 
+                CornerRadius="6" Padding="15" Margin="0,0,0,15"
+                BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Фильтр по статусу -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="Статус:" VerticalAlignment="Center" 
+                               Margin="0,0,10,0" FontSize="14"/>
+                    <ComboBox x:Name="StatusFilter" Width="200" Height="35"
+                              SelectionChanged="StatusFilter_SelectionChanged">
+                        <ComboBoxItem Content="Все статусы" Tag=""/>
+                        <ComboBoxItem Content="Новый" Tag="0"/>
+                        <ComboBoxItem Content="Куплен" Tag="1"/>
+                        <ComboBoxItem Content="Оценен" Tag="2"/>
+                        <ComboBoxItem Content="В ремонте" Tag="3"/>
+                        <ComboBoxItem Content="Предпродажная подготовка" Tag="4"/>
+                        <ComboBoxItem Content="Выставлен на продажу" Tag="5"/>
+                        <ComboBoxItem Content="Зарезервирован" Tag="6"/>
+                        <ComboBoxItem Content="Продан" Tag="7"/>
+                        <ComboBoxItem Content="Списан" Tag="8"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Поиск -->
+                <TextBox x:Name="SearchBox" Grid.Column="1" 
+                         Height="35" Margin="15,0"
+                         VerticalContentAlignment="Center"
+                         TextChanged="SearchBox_TextChanged">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Setter Property="Tag" Value="🔍 Поиск по VIN, марке, модели, номеру..."/>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+
+                <!-- Кнопки действий -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="➕ Добавить авто" 
+                            Click="AddVehicle_Click"
+                            Style="{StaticResource PrimaryBtn}"
+                            Margin="0,0,10,0"/>
+                    <Button Content="🔄 Обновить" 
+                            Click="RefreshButton_Click"
+                            Style="{StaticResource SecondaryBtn}"
+                            Margin="0,0,10,0"/>
+                    <Button Content="✖ Закрыть" 
+                            Click="CloseButton_Click"
+                            Style="{StaticResource DangerBtn}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Таблица автомобилей -->
+        <DataGrid x:Name="VehiclesGrid" Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="{DynamicResource BorderColor}"
+                  Foreground="{DynamicResource TextMain}"
+                  RowHeight="40"
+                  MouseDoubleClick="VehiclesGrid_MouseDoubleClick">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="VIN" Binding="{Binding Vin}" Width="140"/>
+                <DataGridTextColumn Header="Гос. номер" Binding="{Binding LicensePlate}" Width="100"/>
+                <DataGridTextColumn Header="Марка" Binding="{Binding Make}" Width="120"/>
+                <DataGridTextColumn Header="Модель" Binding="{Binding Model}" Width="150"/>
+                <DataGridTextColumn Header="Год" Binding="{Binding Year}" Width="60"/>
+                <DataGridTextColumn Header="Пробег" Binding="{Binding Mileage, StringFormat=N0 км}" Width="100"/>
+                <DataGridTemplateColumn Header="Статус" Width="160">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding Status, Converter={StaticResource VehicleStatusToColorConverter}}"
+                                    CornerRadius="4" Padding="8,4">
+                                <TextBlock Text="{Binding Status, Converter={StaticResource VehicleStatusToTextConverter}}"
+                                           Foreground="White" FontWeight="SemiBold" FontSize="12"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Цена покупки" Binding="{Binding PurchasePrice, StringFormat=N0 ₽}" Width="120"/>
+                <DataGridTextColumn Header="Цена продажи" Binding="{Binding ListingPrice, StringFormat=N0 ₽}" Width="120"/>
+                <DataGridTextColumn Header="Дата покупки" Binding="{Binding PurchaseDate, StringFormat=dd.MM.yyyy}" Width="110"/>
+                <DataGridTemplateColumn Header="Действия" Width="200">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="✏️" ToolTip="Редактировать"
+                                        Click="EditVehicle_Click"
+                                        Style="{StaticResource SecondaryBtn}"
+                                        Width="40" Height="30" Margin="0,0,5,0"/>
+                                <Button Content="🔄" ToolTip="Изменить статус"
+                                        Click="ChangeStatus_Click"
+                                        Style="{StaticResource PrimaryBtn}"
+                                        Width="40" Height="30" Margin="0,0,5,0"/>
+                                <Button Content="🗑️" ToolTip="Удалить"
+                                        Click="DeleteVehicle_Click"
+                                        Style="{StaticResource DangerBtn}"
+                                        Width="40" Height="30"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Статистика -->
+        <Border Grid.Row="3" Background="{DynamicResource BgCard}" 
+                CornerRadius="6" Padding="15" Margin="0,15,0,0"
+                BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+            <UniformGrid Columns="5">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="Всего авто" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="TotalCountText" FontSize="18" FontWeight="Bold" 
+                               Foreground="{DynamicResource TextMain}" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="В ремонте" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="InRepairCountText" FontSize="18" FontWeight="Bold" 
+                               Foreground="{DynamicResource AccentOrange}" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="На продаже" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="ForSaleCountText" FontSize="18" FontWeight="Bold" 
+                               Foreground="{DynamicResource AccentBlue}" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="Продано" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="SoldCountText" FontSize="18" FontWeight="Bold" 
+                               Foreground="{DynamicResource AccentGreen}" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="Общая маржа" FontSize="12" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="TotalMarginText" FontSize="18" FontWeight="Bold" 
+                               Foreground="{DynamicResource AccentGreen}" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+            </UniformGrid>
+        </Border>
+    </Grid>
+</Window>

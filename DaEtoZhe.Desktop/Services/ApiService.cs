@@ -1101,5 +1101,69 @@ namespace DaEtoZhe.Desktop.Services
             r.EnsureSuccessStatusCode();
         }
         #endregion
+
+        #region АВТОПОД РЕМОНТ И ПРОДАЖУ (VEHICLES)
+
+        public async Task<List<Vehicle>> GetVehiclesAsync(VehicleStatus? status = null)
+        {
+            var url = "Vehicles";
+            if (status.HasValue)
+                url += $"?status={(int)status.Value}";
+
+            try
+            {
+                return await _http.GetJsonAsync<List<Vehicle>>(url) ?? new List<Vehicle>();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Автомобили (Vehicles): {ex.Message}");
+            }
+        }
+
+        public async Task<Vehicle> GetVehicleByIdAsync(int id)
+        {
+            try
+            {
+                return await _http.GetJsonAsync<Vehicle>($"Vehicles/{id}");
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Vehicle> CreateVehicleAsync(CreateVehicleDto dto)
+        {
+            var response = await _http.PostJsonAsync("Vehicles", dto);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadJsonAsync<Vehicle>();
+        }
+
+        public async Task UpdateVehicleAsync(UpdateVehicleDto dto)
+        {
+            var response = await _http.PutJsonAsync($"Vehicles/{dto.Id}", dto);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task ChangeVehicleStatusAsync(int vehicleId, VehicleStatus newStatus, string notes = "")
+        {
+            var dto = new ChangeVehicleStatusDto
+            {
+                VehicleId = vehicleId,
+                NewStatus = newStatus,
+                Notes = notes
+            };
+
+            var response = await _http.PatchJsonAsync($"Vehicles/{vehicleId}/status", dto);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteVehicleAsync(int id)
+        {
+            var response = await _http.DeleteAsync($"Vehicles/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+
+        #endregion
     }
 }

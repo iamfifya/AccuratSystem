@@ -25,4 +25,6 @@
     <local:HexToBrushConverter x:Key="HexToBrushConverter"/>
     <local:StockDocTypeRuConverter x:Key="StockDocTypeRuConverter"/>
     <local:StockUnitRuConverter x:Key="StockUnitRuConverter"/>
+    <local:VehicleStatusToColorConverter x:Key="VehicleStatusToColorConverter"/>
+    <local:VehicleStatusToTextConverter x:Key="VehicleStatusToTextConverter"/>
 </ResourceDictionary>

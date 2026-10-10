@@ -27,7 +27,7 @@
                         <Border Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="6">
+                                CornerRadius="{DynamicResource RadiusSM}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -41,7 +41,40 @@
             </Setter>
         </Style>
 
-        <!-- Анимации (синхронизированы с AppointmentsOverlay) -->
+        <!-- Компактные и аккуратные кнопки плюс/минус для денежного калькулятора -->
+        <Style x:Key="CalcCounterButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="{DynamicResource RadiusSM}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource BgSelected}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource BgHover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Анимации (синхронизированы с проектом) -->
         <Storyboard x:Key="ShowAnimation">
             <DoubleAnimation Storyboard.TargetName="OverlayBackground" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.25"/>
             <DoubleAnimation Storyboard.TargetName="PopupPanel" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2"/>
@@ -72,67 +105,38 @@
             </DoubleAnimation>
         </Storyboard>
 
-        <!-- Карточка КУПЮРЫ -->
-        <DataTemplate x:Key="BanknoteCardTemplate">
-            <Border Background="{DynamicResource BgCard}" CornerRadius="10" Margin="5" Padding="12,10"
-            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+        <!-- Карточка КУПЮРЫ / МОНЕТЫ (универсальный гармоничный шаблон) -->
+        <DataTemplate x:Key="DenominationCardTemplate">
+            <Border Background="{DynamicResource BgCard}" CornerRadius="{DynamicResource RadiusMD}" Margin="4" Padding="10,8"
+                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="{Binding DisplayName}" FontSize="15" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextMain}" 
-                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                    <TextBlock Text="{Binding DisplayName}" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextMain}" 
+                               HorizontalAlignment="Center" Margin="0,0,0,6"/>
 
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="36"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="36"/>
                         </Grid.ColumnDefinitions>
 
-                        <Button Content="−" Margin="0" FontSize="18" FontWeight="Bold" Cursor="Hand"
-                        Click="Money_Minus_Click" Tag="{Binding}" Style="{StaticResource DangerBtn}"/>
+                        <Button Grid.Column="0" Content="−" FontSize="16" FontWeight="Bold" Cursor="Hand"
+                                Click="Money_Minus_Click" Tag="{Binding}" Style="{StaticResource CalcCounterButtonStyle}"
+                                Foreground="{DynamicResource AccentRed}"/>
+
                         <TextBox Grid.Column="1" Text="{Binding Count, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="6,0" TextAlignment="Center" 
-                         FontSize="15" FontWeight="Bold" VerticalContentAlignment="Center"/>
-                        <Button Grid.Column="2" Content="+" Margin="0" FontSize="18" FontWeight="Bold" Cursor="Hand"
-                        Click="Money_Plus_Click" Tag="{Binding}" Style="{StaticResource SuccessBtn}"/>
-                    </Grid>
-                </Grid>
-            </Border>
-        </DataTemplate>
+                                 Margin="4,0" TextAlignment="Center" Height="36"
+                                 FontSize="14" FontWeight="Bold" VerticalContentAlignment="Center"/>
 
-        <!-- Карточка МОНЕТЫ (компактная) -->
-        <DataTemplate x:Key="CoinCardTemplate">
-            <Border Background="{DynamicResource BgCard}" CornerRadius="8" Margin="4" Padding="8,6"
-            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextMuted}" 
-                        HorizontalAlignment="Center" Margin="0,0,0,6"/>
-
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="45"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="45"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Button Content="−" Margin="0" FontSize="13" FontWeight="Bold" Cursor="Hand"
-                        Click="Money_Minus_Click" Tag="{Binding}" Style="{StaticResource DangerBtn}"/>
-                        <TextBox Grid.Column="1" Text="{Binding Count, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="4,0" TextAlignment="Center" 
-                         FontSize="13" FontWeight="Bold" VerticalContentAlignment="Center"/>
-                        <Button Grid.Column="2" Content="+" Margin="0" FontSize="13" FontWeight="Bold" Cursor="Hand"
-                        Click="Money_Plus_Click" Tag="{Binding}" Style="{StaticResource SuccessBtn}"/>
+                        <Button Grid.Column="2" Content="+" FontSize="16" FontWeight="Bold" Cursor="Hand"
+                                Click="Money_Plus_Click" Tag="{Binding}" Style="{StaticResource CalcCounterButtonStyle}"
+                                Foreground="{DynamicResource AccentGreen}"/>
                     </Grid>
                 </Grid>
             </Border>
@@ -140,9 +144,9 @@
 
     </UserControl.Resources>
 
-    <!-- ГЛАВНЫЙ КОНТЕЙНЕР -->
+    <!-- ГЛАВНЫЙ КОЙТЕЙНЕР (Затемнение фона) -->
     <Border x:Name="OverlayBackground" 
-            Background="#A6000000" 
+            Background="{DynamicResource BgOverlay}" 
             Visibility="Collapsed" 
             Opacity="0"
             HorizontalAlignment="Stretch" 
@@ -151,54 +155,60 @@
 
         <Border x:Name="PopupPanel" 
                 Background="{DynamicResource BgMain}" 
-                CornerRadius="6" 
+                CornerRadius="{DynamicResource RadiusLG}" 
                 HorizontalAlignment="Center" 
                 VerticalAlignment="Center"
-                Width="700" Height="850" 
-                Opacity="0">
+                Width="720" Height="860" 
+                Opacity="0"
+                MouseLeftButtonDown="PopupPanel_MouseLeftButtonDown">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="25" ShadowDepth="10" Opacity="0.4"/>
+                <DynamicResource ResourceKey="PopupShadow"/>
             </Border.Effect>
+
             <Border.RenderTransform>
                 <ScaleTransform ScaleX="0.8" ScaleY="0.8"/>
             </Border.RenderTransform>
 
-            <Grid Margin="25">
+            <!-- Содержимое панели -->
+
+            <Grid Margin="24">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
+
                 <!-- Заголовок -->
-                <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel Grid.Row="0" Margin="0,0,0,16">
                     <TextBlock Text="🧮 Калькулятор" 
-                               FontSize="24" 
-                               FontWeight="Black" 
+                               FontSize="22" 
+                               FontWeight="Bold" 
                                Foreground="{DynamicResource TextMain}" 
                                HorizontalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Переключатель режимов -->
+                <!-- Переключатель режимов (Табы) -->
                 <TabControl Grid.Row="1" 
-                            Background="{DynamicResource CalcBg}" 
+                            Background="Transparent" 
                             BorderThickness="0" 
-                            Margin="0,0,0,15">
+                            Margin="0,0,0,12">
                     <TabControl.ItemContainerStyle>
                         <Style TargetType="TabItem">
-                            <Setter Property="Padding" Value="10,5"/>
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="Padding" Value="14,8"/>
+                            <Setter Property="Cursor" Value="Hand"/>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="TabItem">
-                                        <Border x:Name="Border" Background="Transparent" CornerRadius="6" Margin="2,2,2,0" Padding="10,5">
+                                        <Border x:Name="Border" Background="{DynamicResource BgCard}" CornerRadius="{DynamicResource RadiusSM}" Margin="3,0" Padding="14,7" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
                                             <ContentPresenter ContentSource="Header"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsSelected" Value="True">
                                                 <Setter TargetName="Border" Property="Background" Value="{DynamicResource AccentBlue}"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBlue}"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -208,6 +218,7 @@
                     </TabControl.ItemContainerStyle>
 
                     <TabControl.Items>
+                        <!-- Классический режим -->
                         <TabItem Header="Классический" IsSelected="True">
                             <Grid Margin="0,10">
                                 <Grid.RowDefinitions>
@@ -215,77 +226,74 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Дисплей на всю ширину -->
                                 <Border Background="{DynamicResource BgCard}"
-                                CornerRadius="10"
-                                Padding="20,15" 
-                                Margin="0,0,0,20" 
-                                BorderBrush="{DynamicResource BorderColor}" 
-                                BorderThickness="1">
+                                        CornerRadius="{DynamicResource RadiusMD}"
+                                        Padding="16,12" 
+                                        Margin="0,0,0,16" 
+                                        BorderBrush="{DynamicResource BorderColor}" 
+                                        BorderThickness="1">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
-                                        <!-- Предыдущее выражение -->
                                         <TextBlock x:Name="ClassicExpressionText"
-                                        Grid.Row="0"
-                                        Text="{Binding ClassicExpression}" 
-                                        FontSize="16"
-                                        Foreground="{DynamicResource TextMuted}"
-                                        TextAlignment="Right"
-                                        Margin="0,0,0,4"
-                                        MinHeight="22"/>
+                                                   Grid.Row="0"
+                                                   Text="{Binding ClassicExpression}" 
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   TextAlignment="Right"
+                                                   Margin="0,0,0,4"
+                                                   MinHeight="20"/>
 
-                                        <!-- Текущее число -->
                                         <TextBlock Grid.Row="1"
-                                        Text="{Binding ClassicResult}" 
-                                        FontSize="48" 
-                                        FontWeight="SemiBold" 
-                                        Foreground="{DynamicResource TextMain}" 
-                                        TextAlignment="Right"
-                                        TextTrimming="CharacterEllipsis"/>
+                                                   Text="{Binding ClassicResult}" 
+                                                   FontSize="42" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="{DynamicResource TextMain}" 
+                                                   TextAlignment="Right"
+                                                   TextTrimming="CharacterEllipsis"/>
                                     </Grid>
                                 </Border>
 
                                 <UniformGrid Grid.Row="1" Columns="4" Rows="5">
                                     <Button Content="C" Style="{StaticResource CalcBttnStyle}" Click="Calc_Clear_Click" 
-                                    Background="{DynamicResource CalcClearBg}" Foreground="{DynamicResource AccentRed}"/>
+                                            Background="{DynamicResource CalcClearBg}" Foreground="{DynamicResource AccentRed}"/>
                                     <Button Content="±" Style="{StaticResource CalcBttnStyle}" Click="Calc_Sign_Click"/>
                                     <Button Content="%" Style="{StaticResource CalcBttnStyle}" Click="Calc_Percent_Click"/>
                                     <Button Content="÷" Style="{StaticResource CalcBttnStyle}" Click="Calc_Op_Click" 
-                                    Background="{DynamicResource CalcOperatorBg}"/>
+                                            Background="{DynamicResource CalcOperatorBg}"/>
 
                                     <Button Content="7" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="8" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="9" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="×" Style="{StaticResource CalcBttnStyle}" Click="Calc_Op_Click" 
-                                    Background="{DynamicResource CalcOperatorBg}"/>
+                                            Background="{DynamicResource CalcOperatorBg}"/>
 
                                     <Button Content="4" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="5" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="6" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="-" Style="{StaticResource CalcBttnStyle}" Click="Calc_Op_Click" 
-                                    Background="{DynamicResource CalcOperatorBg}"/>
+                                            Background="{DynamicResource CalcOperatorBg}"/>
 
                                     <Button Content="1" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="2" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="3" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="+" Style="{StaticResource CalcBttnStyle}" Click="Calc_Op_Click" 
-                                    Background="{DynamicResource CalcOperatorBg}"/>
+                                            Background="{DynamicResource CalcOperatorBg}"/>
 
-                                    <!-- Backspace вместо пустой кнопки -->
                                     <Button Content="⌫" Style="{StaticResource CalcBttnStyle}" Click="Calc_Backspace_Click"
-                                    FontSize="20" Foreground="{DynamicResource AccentOrange}"/>
+                                            FontSize="18" Foreground="{DynamicResource AccentOrange}"/>
                                     <Button Content="0" Style="{StaticResource CalcBttnStyle}" Click="Calc_Num_Click"/>
                                     <Button Content="," Style="{StaticResource CalcBttnStyle}" Click="Calc_Comma_Click"/>
                                     <Button Content="=" Style="{StaticResource CalcBttnStyle}" Click="Calc_Equal_Click" 
-                                    Background="{DynamicResource AccentGreen}" Foreground="White"/>
+                                            Background="{DynamicResource AccentGreen}" Foreground="{DynamicResource TextOnAccent}"/>
                                 </UniformGrid>
                             </Grid>
                         </TabItem>
 
+                        <!-- Денежный режим -->
                         <TabItem Header="Денежный">
                             <Grid Margin="0,10">
                                 <Grid.RowDefinitions>
@@ -293,52 +301,51 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- ИТОГО -->
-                                <Border Grid.Row="0" Background="{DynamicResource TextMain}" 
-                                CornerRadius="12" Padding="20,15" Margin="0,0,0,15">
+                                <!-- ИТОГО В КАССЕ -->
+                                <Border Grid.Row="0" Background="{DynamicResource BgElevated}" 
+                                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
+                                        CornerRadius="{DynamicResource RadiusMD}" Padding="16,12" Margin="0,0,0,12">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="ИТОГО В КАССЕ" Foreground="{DynamicResource TextLightMuted}" 
-                                        FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="ИТОГО В КАССЕ" Foreground="{DynamicResource TextMuted}" 
+                                                   FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" Text="{Binding MoneyTotal, StringFormat={}{0:N0} ₽}" 
-                                        Foreground="{DynamicResource AccentGreen}"
-                                        FontSize="30" FontWeight="Black" VerticalAlignment="Center"/>
+                                                   Foreground="{DynamicResource AccentGreen}"
+                                                   FontSize="26" FontWeight="Bold" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
 
                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                     <StackPanel>
-
-                                        <!-- КУПЮРЫ: индексы 0–8 (3 колонки = ровные 3 ряда по 3) -->
-                                        <TextBlock Text="Купюры" FontSize="16" FontWeight="Bold"
-                                        Foreground="{DynamicResource TextMain}" Margin="5,0,0,5"/>
+                                        <!-- КУПЮРЫ (3 колонки) -->
+                                        <TextBlock Text="Купюры" FontSize="15" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextMain}" Margin="4,0,0,6"/>
                                         <UniformGrid Columns="3">
-                                            <ContentControl Content="{Binding Denominations[0]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[1]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[2]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[3]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[4]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[5]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[6]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[7]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[8]}" ContentTemplate="{StaticResource BanknoteCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[0]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[1]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[2]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[3]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[4]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[5]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[6]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[7]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[8]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
                                         </UniformGrid>
 
-                                        <Separator Background="{DynamicResource BorderColor}" Margin="5,15"/>
+                                        <Separator Background="{DynamicResource BorderSubtle}" Margin="4,14"/>
 
-                                        <!-- МОНЕТЫ: индексы 9–12 (один ряд из 4) -->
-                                        <TextBlock Text="Монеты" FontSize="16" FontWeight="Bold"
-                                        Foreground="{DynamicResource TextMuted}" Margin="5,15,0,5"/>
+                                        <!-- МОНЕТЫ (4 колонки) -->
+                                        <TextBlock Text="Монеты" FontSize="15" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextMain}" Margin="4,10,0,6"/>
                                         <UniformGrid Columns="4">
-                                            <ContentControl Content="{Binding Denominations[9]}" ContentTemplate="{StaticResource CoinCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[10]}" ContentTemplate="{StaticResource CoinCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[11]}" ContentTemplate="{StaticResource CoinCardTemplate}"/>
-                                            <ContentControl Content="{Binding Denominations[12]}" ContentTemplate="{StaticResource CoinCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[9]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[10]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[11]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
+                                            <ContentControl Content="{Binding Denominations[12]}" ContentTemplate="{StaticResource DenominationCardTemplate}"/>
                                         </UniformGrid>
-
                                     </StackPanel>
                                 </ScrollViewer>
                             </Grid>
@@ -346,12 +353,13 @@
                     </TabControl.Items>
                 </TabControl>
 
-                <!-- ДОПИСАННАЯ Кнопка закрытия и закрывающие теги -->
+                <!-- Кнопка закрытия -->
                 <Button Grid.Row="3" 
                         Content="✖ Закрыть" 
                         Click="CloseButton_Click" 
-                        Style="{StaticResource DangerBtn}"
-                        HorizontalAlignment="Center" />
+                        Style="{StaticResource SecondaryBtn}"
+                        HorizontalAlignment="Center"
+                        Margin="0,10,0,0"/>
             </Grid>
         </Border>
     </Border>

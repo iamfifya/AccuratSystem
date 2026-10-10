@@ -197,5 +197,10 @@ namespace DaEtoZhe.Desktop.Controls
         {
             new Windows.AuditLogWindow().ShowDialog();
         }
+
+        private void Vehicles_Click(object sender, RoutedEventArgs e)
+        {
+            new VehiclesWindow().ShowDialog();
+        }
     }
 }
