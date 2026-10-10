@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true  # Отменяет старые сборки при новых коммитах
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -49,32 +49,32 @@ jobs:
           New-Item -ItemType Directory -Force -Path DaEtoZhe.Desktop\packages
           Copy-Item -Path packages\* -Destination DaEtoZhe.Desktop\packages -Recurse -Force
 
-      - name: Restore modern packages (WPF)
+      - name: Restore modern packages (Desktop)
         run: dotnet restore DaEtoZhe.Desktop\DaEtoZhe.Desktop.csproj
 
       - name: Restore modern packages (API)
         run: dotnet restore DaEtoZhe.WebAPI\DaEtoZhe.WebAPI.csproj
 
       # === BUILD PHASE ===
-      - name: Build WPF Client
+      - name: Build Desktop Client
         run: dotnet build DaEtoZhe.Desktop\DaEtoZhe.Desktop.csproj --configuration ${{ matrix.configuration }} --no-restore
 
       - name: Build Web API
         run: dotnet build DaEtoZhe.WebAPI\DaEtoZhe.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
 
       # === ARTIFACTS ===
-      - name: Upload WPF Artifact
+      - name: Upload Desktop Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Accurat-Client-${{ matrix.configuration }}
-          path: AccuratPanelCWD\bin\${{ matrix.configuration }}\net10.0-windows\
+          name: DaEtoZhe-Desktop-${{ matrix.configuration }}
+          path: DaEtoZhe.Desktop\bin\${{ matrix.configuration }}\net10.0-windows\
           retention-days: 14
           if-no-files-found: error
 
       - name: Upload API Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Accurat-API-${{ matrix.configuration }}
-          path: Accurat.WebAPI\bin\${{ matrix.configuration }}\net10.0\
+          name: DaEtoZhe-API-${{ matrix.configuration }}
+          path: DaEtoZhe.WebAPI\bin\${{ matrix.configuration }}\net10.0\
           retention-days: 14
           if-no-files-found: error
