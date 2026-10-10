@@ -1,0 +1,27 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/docs/">
+    <File Path="TIME_CONVENTIONS.md" />
+    <File Path="TIME_MIGRATION_RUNBOOK.md" />
+  </Folder>
+  <Folder Name="/img/" />
+  <Folder Name="/Элементы решения/">
+    <File Path=".github/ISSUE_TEMPLATE/bug_report.md" />
+    <File Path=".github/ISSUE_TEMPLATE/feature_request.md" />
+    <File Path=".github/workflows/dotnet.yml" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="SECURITY.md" />
+  </Folder>
+  <Project Path="DaEtoZhe.Contracts/DaEtoZhe.Contracts.csproj" Id="93b59f5d-e4aa-4688-b131-606bc4d105ef" />
+  <Project Path="DaEtoZhe.Desktop/DaEtoZhe.Desktop.csproj" Id="b2bd37f5-9735-4189-a848-43eae8609d87" />
+  <Project Path="DaEtoZhe.Mobile/DaEtoZhe.Mobile.csproj" Id="75f04d99-b6aa-4ec6-86bf-b0018c14b6f4">
+    <BuildDependency Project="DaEtoZhe.Contracts/DaEtoZhe.Contracts.csproj" />
+    <Deploy Solution="*|Any CPU" />
+  </Project>
+  <Project Path="DaEtoZhe.WebAPI/DaEtoZhe.WebAPI.csproj" />
+</Solution>

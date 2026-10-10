@@ -1,12 +1,12 @@
-# Accurat System — Комплексная SaaS-платформа управления сетью автомоек и сервисов
+# ДаЭтоЖе System — Комплексная SaaS-платформа управления сетью автомоек и сервисов
 
 <div align="center">
 
-<img src="./img/logo_repos.png" alt="Accurat System Logo" />
+<img src="./img/logo_readme.png" alt="ДаЭтоЖе System Logo" />
 
-[![.NET Build](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/AccuratSystem/actions/workflows/dotnet.yml)
-[![Last Commit](https://badgen.net/github/last-commit/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem/commits/main)
-[![Code Size](https://img.shields.io/github/languages/code-size/iamfifya/AccuratSystem)](https://github.com/iamfifya/AccuratSystem)
+[![.NET Build](https://github.com/iamfifya/DaEtoZheSystem/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iamfifya/DaEtoZheSystem/actions/workflows/dotnet.yml)
+[![Last Commit](https://badgen.net/github/last-commit/iamfifya/DaEtoZheSystem)](https://github.com/iamfifya/DaEtoZheSystem/commits/main)
+[![Code Size](https://img.shields.io/github/languages/code-size/iamfifya/DaEtoZheSystem)](https://github.com/iamfifya/DaEtoZheSystem)
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-darkblue.svg)](LICENSE)
 
 </div>
@@ -32,7 +32,7 @@
 
 ## 📝 Описание проекта
 
-**Accurat System** — это мультитенантная (Multi-tenant SaaS) клиент-серверная экосистема для полной автоматизации бизнес-процессов сетей автомоек и автосервисов. Проект спроектирован по принципу монорепозитория (monorepo) и обеспечивает строгую изоляцию данных независимых компаний-клиентов внутри единого серверного ядра.
+**ДаЭтоЖе System** — это мультитенантная (Multi-tenant SaaS) клиент-серверная экосистема для полной автоматизации бизнес-процессов сетей автомоек и автосервисов. Проект спроектирован по принципу монорепозитория (monorepo) и обеспечивает строгую изоляцию данных независимых компаний-клиентов внутри единого серверного ядра.
 
 В состав комплекса входят:
 
@@ -42,6 +42,9 @@
 
 ## 📸 Скриншоты интерфейса
 
+###### После ребрендинга (2026)
+
+<!--
 <table align="center" style="width: 100%;">
   <tr>
     <td valign="top" width="65%" align="center">
@@ -60,6 +63,7 @@
     </td>
   </tr>
 </table>
+!-->
 
 ## 📐 Архитектура системы
 
@@ -81,11 +85,10 @@ graph TD
 
 ## 📂 Структура монорепозитория
 
-* **`AccuratPanelCarWashing/`** — Десктопный клиент (WPF). Исторический артефакт (оставлен с исправленной критической финансовой логикой).
-* **`AccuratPanelCWD/`** — Десктопный клиент (WPF). Основное рабочее место кассира-администратора. Управление живой очередью боксов, проводка кассовых операций, расчет апселл-бонусов, синхронизация по WebSockets (SignalR), локальный экспорт аналитики и поддержка модульной системы тем.
-* **`AccuratPanelCWM/`** — Мобильный клиент (.NET MAUI). Оперативный кроссплатформенный пульт контроля с поддержкой динамической смены тем оформления, адаптивным дашбордом, выбором исторических смен (DatePicker) и «живым» поиском сотрудников.
-* **`Accurat.WebAPI/`** — Серверная часть (ASP.NET Core). Центральное REST API ядро системы. Инкапсулирует вычисления, финансовую математику, управление транзакциями и фоновые службы (Background Services).
-* **`AccuratSystem.Contracts/`** — Библиотека контрактов. Общие скомпилированные модели данных (`Order`, `User`, `Branch`), DTO-объекты авторизации/смены статусов и перечисления (`Enums`). Обеспечивает строгую типизацию и контрактную целостность между API и клиентами.
+* **`DaEtoZhe.Desktop/`** — Десктопный клиент (WPF). Основное рабочее место кассира-администратора. Управление живой очередью боксов, проводка кассовых операций, расчет апселл-бонусов, синхронизация по WebSockets (SignalR), локальный экспорт аналитики и поддержка модульной системы тем.
+* **`DaEtoZhe.Mobile/`** — Мобильный клиент (.NET MAUI). Оперативный кроссплатформенный пульт контроля с поддержкой динамической смены тем оформления, адаптивным дашбордом, выбором исторических смен (DatePicker) и «живым» поиском сотрудников.
+* **`DaEtoZhe.WebAPI/`** — Серверная часть (ASP.NET Core). Центральное REST API ядро системы. Инкапсулирует вычисления, финансовую математику, управление транзакциями и фоновые службы (Background Services).
+* **`DaEtoZhe.Contracts/`** — Библиотека контрактов. Общие скомпилированные модели данных (`Order`, `User`, `Branch`), DTO-объекты авторизации/смены статусов и перечисления (`Enums`). Обеспечивает строгую типизацию и контрактную целостность между API и клиентами.
 
 ## 🌟 Основные возможности
 
@@ -122,14 +125,14 @@ graph TD
 
 ### 1. Серверная часть (API)
 1. Установите .NET 10 SDK и СУБД PostgreSQL.
-2. Сконфигурируйте строку подключения в `Accurat.WebAPI/appsettings.json`.
+2. Сконфигурируйте строку подключения в `DaEtoZhe.WebAPI/appsettings.json`.
 3. Примените миграции: `dotnet ef database update`.
 4. Запустите Web-сервер: `dotnet run`.
 
 ### 2. Клиентская часть
-1. Откройте решение `AccuratSystem.slnx` в Visual Studio 2022.
+1. Откройте решение `DaEtoZheSystem.slnx` в Visual Studio 2022.
 2. Проверьте базовый URL сервера в статическом пуле `ApiService`.
-3. Запустите проект `AccuratPanelCWD` (F5).
+3. Запустите проект `DaEtoZhe.Desktop` (F5).
 
 ## 📄 Лицензия
 Исходный код проекта доступен по лицензии Business Source License 1.1 (BSL 1.1).
@@ -138,7 +141,7 @@ graph TD
 *Допускается использование в некоммерческих целях. Для коммерческого использования требуется отдельное соглашение.*
 
 ## 👤 Автор
-**Dima Kuraedov** (@iamfifya)
+**Dmitry Kuraedov** (@iamfifya)
 * Telegram: @iamfifya
 * Email: dimakuraedov@gmail.com
 

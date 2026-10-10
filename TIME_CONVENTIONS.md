@@ -16,7 +16,7 @@ legacy-даныe dev-БД сдвинуты SQL-миграцией (см. TIME_MI
 - Серверные таймстампы событий создаются ТОЛЬКО `DateTime.UtcNow`
   (заказы, смены, транзакции, ленты, Outbox).
 - Бизнес-семантика (день, час, границы суток, диапазоны отчётов) извлекается
-  ТОЛЬКО через `Accurat.WebAPI.Time.BusinessTime` с ЯВНОЙ зоной филиала:
+  ТОЛЬКО через `DaEtoZhe.WebAPI.Time.BusinessTime` с ЯВНОЙ зоной филиала:
   `InBranchZone`, `BusinessDay(zone)`, `BusinessHour(zone)`,
   `StoredRangeInclusive(..., zone)`, `ToWireDate(date, zone)`.
 - Входящие `DateTime` из query/тел нормализуются через

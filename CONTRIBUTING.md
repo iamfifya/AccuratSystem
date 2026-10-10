@@ -1,6 +1,6 @@
-# Как внести вклад в AccuratSystem
+# Как внести вклад в DaEtoZhe
 
-Спасибо за интерес к проекту! AccuratSystem распространяется под лицензией **BSL 1.1 (Business Source License)**. Это означает, что код открыт для изучения и аудита, но коммерческое использование требует отдельной лицензии. Мы приветствуем вклад сообщества и готовы принимать pull requests при соблюдении правил ниже.
+Спасибо за интерес к проекту! DaEtoZhe распространяется под лицензией **BSL 1.1 (Business Source License)**. Это означает, что код открыт для изучения и аудита, но коммерческое использование требует отдельной лицензии. Мы приветствуем вклад сообщества и готовы принимать pull requests при соблюдении правил ниже.
 
 ## 📋 Перед началом
 
@@ -15,8 +15,8 @@
 ### 1. Форк и ветка
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/AccuratSystem.git
-cd AccuratSystem
+git clone https://github.com/YOUR_USERNAME/DaEtoZhe.git
+cd DaEtoZhe
 git checkout -b feature/your-feature-name
 # или
 git checkout -b fix/issue-123-description
@@ -47,16 +47,16 @@ git checkout -b fix/issue-123-description
   - Максимум одна пустая строка подряд
 
 - **Обязательно:**
-  - XML-документация для публичных методов в `AccuratSystem.Contracts`
+  - XML-документация для публичных методов в `DaEtoZhe.Contracts`
   - Проверка `CurrentCompanyId` во всех новых API-эндпоинтах (SaaS-изоляция)
   - Использование `DateTime.UtcNow` для всех серверных таймстампов
   - Никаких `DateTime.SpecifyKind` — только `BusinessTime.ToInstantUtc` для входящих дат
 
 #### Что нужно знать про архитектуру
 
-- **`AccuratSystem.Contracts`** — netstandard2.0, используется ВСЕМИ клиентами (WPF, MAUI, .NET Framework 4.6.2). Не добавляйте сюда зависимости, несовместимые с netstandard2.0
-- **`AccuratPanelCarWashing`** — legacy WPF на .NET Framework 4.6.2. Любое изменение контрактов должно оставаться совместимым с ним
-- **`Accurat.WebAPI`** — сервер, использует NodaTime для работы со временем и зонами
+- **`DaEtoZhe.Contracts`** — netstandard2.0, используется ВСЕМИ клиентами (WPF, MAUI, .NET Framework 4.6.2). Не добавляйте сюда зависимости, несовместимые с netstandard2.0
+- **`DaEtoZhe.Desktop`** — WPF на .NET Framework 4.6.2. Любое изменение контрактов должно оставаться совместимым с ним
+- **`DaEtoZhe.WebAPI`** — сервер, использует NodaTime для работы со временем и зонами
 - **Модели в контрактах** одновременно являются EF-сущностями и wire-DTO — изменение модели = изменение схемы БД + API
 
 ### 3. Тестирование
@@ -145,7 +145,7 @@ git commit -s -m "feat(api): added new endpoint"
 
 - Контрибуции без Signed-off-by (DCO)
 - Изменения, ломающие совместимость с .NET Framework 4.6.2 клиентом
-- Зависимости, несовместимые с netstandard2.0, в `AccuratSystem.Contracts`
+- Зависимости, несовместимые с netstandard2.0, в `DaEtoZhe.Contracts`
 - Использование `DateTime.SpecifyKind`, `DateTime.Now` в серверном коде
 - Изменения в финансовых расчётах (`OrderMath`) без согласования с мейнтейнерами
 - Копипаст кода без атрибуции
@@ -157,13 +157,13 @@ git commit -s -m "feat(api): added new endpoint"
 - ✅ Тестирования в некоммерческих целях
 - ✅ Fork для личных экспериментов
 
-Для коммерческого использования (в том числе модифицированных версий) требуется коммерческая лицензия. Свяжитесь с нами: **sales@accurat.systems**
+Для коммерческого использования (в том числе модифицированных версий) требуется коммерческая лицензия. Свяжитесь с нами: **sales@DaEtoZhe.systems**
 
 ## 📞 Контакты
 
 - Вопросы по коду: создайте issue с тегом `question`
 - Баги: используйте шаблон [Bug Report](.github/ISSUE_TEMPLATE/bug_report.md)
-- Безопасность: **security@accurat.systems** (не создавайте issue!)
+- Безопасность: **security@DaEtoZhe.systems** (не создавайте issue!)
 - Коммерческие вопросы: **dimakuraedov@gmail.com**
 
 ---

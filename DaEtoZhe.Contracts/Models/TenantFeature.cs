@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace DaEtoZhe.Contracts.Models
+{
+    public class TenantFeature
+    {
+        public int Id { get; set; }
+        public int CompanyId { get; set; }
+
+        public bool IsUpsellEnabled { get; set; } = false; // Модуль Умный кассир, который предлагает дополнительные услуги при продаже
+        public bool IsServicesEnabled { get; set; } = false; // Модуль Управления услугами, который позволяет создавать и управлять услугами, которые предоставляет компания
+        public bool IsCrmMarketingEnabled { get; set; } = false; // Модуль CRM и маркетинга, который позволяет управлять клиентами, создавать маркетинговые кампании и анализировать их эффективность
+        public bool IsTelegramBossEnabled { get; set; } = false; // Модуль Telegram Босс, который позволяет получать уведомления о продажах и других событиях в Telegram
+        public bool IsReputationEnabled { get; set; } = false; // Модуль Репутация, который позволяет управлять отзывами клиентов и анализировать их для улучшения качества обслуживания
+        public bool IsDiscountRulesEnabled { get; set; } = false; // Модуль Правила скидок, который позволяет создавать и управлять правилами скидок для клиентов
+        public bool IsInventoryEnabled { get; set; } = false; // Модуль Складской учет, который позволяет управлять складскими запасами, отслеживать движения товаров и анализировать остатки
+
+        // public bool IsLoyaltyEnabled { get; set; } = false; // Модуль Лояльность, который позволяет создавать программы лояльности для клиентов и управлять ими
+        // ДОБАВИЛИ НАВИГАЦИОННОЕ СВОЙСТВО, чтобы работал Include() в контроллере
+        public Company Company { get; set; }
+    }
+}

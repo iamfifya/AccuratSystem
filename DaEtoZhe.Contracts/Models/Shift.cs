@@ -1,0 +1,26 @@
+﻿using DaEtoZhe.Contracts.Enums;
+using System;
+using System.Collections.Generic;
+
+namespace DaEtoZhe.Contracts.Models
+{
+    public class Shift
+    {
+        public int Id { get; set; }
+        public int BranchId { get; set; }
+        public DateTime Date { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public bool IsClosed { get; set; }
+
+        // НОВОЕ ПОЛЕ: Снапшот заработка админа за эту смену
+        public decimal AdminEarningsSnapshot { get; set; } 
+        public string Notes { get; set; } = string.Empty;
+        public List<int> EmployeeIds { get; set; } = new List<int>();
+        public ShiftType Type { get; set; } = ShiftType.Day;
+
+
+        // Навигационное свойство (без ? для C# 7.3)
+        public Branch Branch { get; set; }
+    }
+}

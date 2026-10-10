@@ -58,11 +58,10 @@ Fixes # (номер issue, если есть)
 
 ## 🎯 Затронутые компоненты
 
-- [ ] `AccuratSystem.Contracts` (netstandard2.0 — проверяйте совместимость!)
-- [ ] `Accurat.WebAPI` (сервер)
-- [ ] `AccuratPanelCWD` (WPF, .NET 10)
-- [ ] `AccuratPanelCWM` (MAUI)
-- [ ] `AccuratPanelCarWashing` (legacy WPF, .NET Framework 4.6.2)
+- [ ] `DaEtoZhe.Contracts` (netstandard2.0 — проверяйте совместимость!)
+- [ ] `DaEtoZhe.WebAPI` (сервер)
+- [ ] `DaEtoZhe.Desktop` (WPF, .NET 10)
+- [ ] `DaEtoZhe.Mobile` (MAUI)
 - [ ] `docs/` (документация)
 
 ## ✅ Чек-лист перед отправкой

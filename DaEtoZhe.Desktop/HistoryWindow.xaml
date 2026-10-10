@@ -1,0 +1,135 @@
+<Window x:Class="DaEtoZhe.Desktop.HistoryWindow"
+        x:Name="RootWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DaEtoZhe.Desktop"
+        xmlns:models="clr-namespace:DaEtoZhe.Desktop.Models"
+        Title="История смен"
+        Height="810" Width="1440"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        Background="{DynamicResource BgMain}"
+        BorderBrush="{DynamicResource BorderColor}"
+        BorderThickness="1"
+        WindowStyle="None"
+        Foreground="{DynamicResource TextMain}">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <!-- 1. Ряд для вкладок филиалов -->
+            <RowDefinition Height="Auto"/>
+            <!-- 2. Заголовок окна -->
+            <RowDefinition Height="Auto"/>
+            <!-- 3. Панель выбора даты -->
+            <RowDefinition Height="Auto"/>
+            <!-- 4. Рабочая область (Боксы) -->
+            <RowDefinition Height="*"/>
+            <!-- 5. Кнопка закрытия -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. ТАБЫ ДЛЯ ФИЛИАЛОВ (САМЫЙ ВЕРХ) -->
+        <TabControl Grid.Row="0" 
+                    ItemsSource="{Binding BranchTabs}" 
+                    SelectedItem="{Binding SelectedBranchTab, Mode=TwoWay}"
+                    Margin="0,0,0,15">
+
+            <TabControl.ItemContainerStyle>
+                <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                    <Setter Property="Visibility" Value="{Binding DataContext.IsDirector, ElementName=RootWindow, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                </Style>
+            </TabControl.ItemContainerStyle>
+
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding BranchName}" FontSize="12" FontWeight="Bold"/>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+
+            <!-- Пустой шаблон контента, чтобы избежать дублирования -->
+            <TabControl.ContentTemplate>
+                <DataTemplate/>
+            </TabControl.ContentTemplate>
+        </TabControl>
+
+        <!-- 2. ЗАГОЛОВОК ОКНА -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15,0,15,20">
+            <TextBlock Text="📁 История смен" 
+                       FontSize="26" 
+                       FontWeight="Bold" 
+                       Foreground="{DynamicResource TextMain}" 
+                       VerticalAlignment="Center"/>
+            <TextBlock Text=" | " 
+                       FontSize="22" 
+                       Foreground="{DynamicResource TextLightMuted}" 
+                       VerticalAlignment="Center"/>
+            <TextBlock Text="Просмотр закрытых заказов" 
+                       FontSize="16" 
+                       Foreground="{DynamicResource TextMuted}" 
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- 3. ПАНЕЛЬ ВЫБОРА ДАТЫ -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource BgCard}" 
+                CornerRadius="6" 
+                Padding="20" 
+                Margin="15,0,15,20" 
+                BorderBrush="{DynamicResource BorderColor}" 
+                BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="📅 Выберите дату смены:" 
+                           VerticalAlignment="Center" 
+                           FontSize="15" 
+                           FontWeight="SemiBold" 
+                           Foreground="{DynamicResource TextMain}" 
+                           Margin="0,0,15,0"/>
+                <local:CustomDatePicker x:Name="HistoryDatePicker" 
+                                        Width="300" 
+                                        Height="45" 
+                                        SelectedDateChanged="HistoryDatePicker_SelectedDateChanged"/>
+                <TextBlock Text="{Binding ShiftSummary}" 
+                           VerticalAlignment="Center" 
+                           FontSize="15" 
+                           FontWeight="Bold" 
+                           Foreground="{DynamicResource AccentGreen}" 
+                           Margin="30,0,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- 4. РАБОЧАЯ ОБЛАСТЬ (БОКСЫ ДЛЯ ВЫБРАННОЙ ВКЛАДКИ) -->
+        <Grid Grid.Row="3" Margin="10,0,10,0">
+            <ItemsControl ItemsSource="{Binding SelectedBranchTab.BranchWorkZones}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <GroupBox Header="{Binding ZoneName}" 
+                                  Margin="5,0,5,0" 
+                                  FontSize="14" 
+                                  FontWeight="Bold" 
+                                  Foreground="{DynamicResource TextMain}" 
+                                  Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <ListBox ItemsSource="{Binding Orders}"
+                                     ItemTemplate="{StaticResource OrderTemplate}"
+                                     Style="{StaticResource CleanListBoxStyle}"
+                                     Margin="5"/>
+                        </GroupBox>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+
+        <!-- 5. КНОПКА ЗАКРЫТИЯ (БЕЗ размеров — из AppStyles) -->
+        <StackPanel Grid.Row="4" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right">
+            <Button Content="✖ Закрыть" 
+                    Click="CloseButton_Click" 
+                    Style="{StaticResource DangerBtn}"/>
+        </StackPanel>
+    </Grid>
+</Window>

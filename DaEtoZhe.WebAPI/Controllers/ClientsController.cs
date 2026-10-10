@@ -1,0 +1,122 @@
+﻿using DaEtoZhe.Contracts.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using DaEtoZhe.WebAPI.Data;
+
+namespace DaEtoZhe.WebAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ClientsController : ControllerBase
+    {
+        private readonly AppDbContext _context;
+
+        public ClientsController(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        // Читаем заголовок из WPF
+        private int CurrentCompanyId => HttpContext.Request.Headers.TryGetValue("X-Company-Id", out var id)
+            ? int.Parse(id)
+            : 1;
+
+        // 1. Получить список клиентов (ТОЛЬКО СВОИХ)
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Client>>> GetClients()
+        {
+            return await _context.Clients
+                .Where(c => CurrentCompanyId == 0 || c.CompanyId == CurrentCompanyId)
+                .ToListAsync();
+        }
+
+        // 2. СУПЕР-ФИЧА: Найти клиента по части номера
+        [HttpGet("number/{carNumber}")]
+        public async Task<ActionResult<Client>> GetByNumber(string carNumber)
+        {
+            // Ищем только по своей компании (или везде, если Разработчик)
+            var client = await _context.Clients
+                .Where(c => CurrentCompanyId == 0 || c.CompanyId == CurrentCompanyId)
+                .FirstOrDefaultAsync(c => c.CarNumber.ToLower().Contains(carNumber.ToLower()));
+
+            if (client == null)
+            {
+                return NotFound(new { message = "Клиент с таким номером не найден" });
+            }
+
+            return Ok(client);
+        }
+
+        // 3. Добавить нового клиента
+        [HttpPost]
+        public async Task<ActionResult<Client>> CreateClient(Client client)
+        {
+            // ЖЕСТКАЯ ПРИВЯЗКА: Привязываем клиента к компании того, кто его создал
+            client.CompanyId = CurrentCompanyId == 0 ? 1 : CurrentCompanyId;
+
+            client.RegistrationDate = DateTime.UtcNow;
+            client.VisitsCount = 0;
+            client.TotalSpent = 0;
+
+            _context.Clients.Add(client);
+            await _context.SaveChangesAsync();
+
+            return Ok(client);
+        }
+
+        // 4. Обновить данные клиента
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateClient(int id, Client client)
+        {
+            if (id != client.Id) return BadRequest(new { message = "ID в URL и в объекте не совпадают" });
+
+            // 1. Достаем оригинал из базы без отслеживания
+            var existingClient = await _context.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+            if (existingClient == null) return NotFound(new { message = "Клиент не найден в базе" });
+
+            // 2. ЗАЩИТА SAAS: Жестко восстанавливаем CompanyId!
+            // Запрещаем клиенту менять компанию
+            client.CompanyId = existingClient.CompanyId;
+
+            // 3. ЗАЩИТА БИЗНЕС-ДАННЫХ: 
+            // Кассир не должен иметь возможности через подмену JSON изменить сумму покупок или количество визитов
+            client.RegistrationDate = existingClient.RegistrationDate;
+            client.VisitsCount = existingClient.VisitsCount;
+            client.TotalSpent = existingClient.TotalSpent;
+            client.LastVisitDate = existingClient.LastVisitDate;
+
+            // 4. Теперь безопасно сохраняем
+            _context.Entry(client).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
+
+            return NoContent();
+        }
+
+        // 5. Удалить клиента
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteClient(int id)
+        {
+            var client = await _context.Clients.FindAsync(id);
+            if (client == null) return NotFound(new { message = "Клиент не найден" });
+
+            // Запрещаем удалять чужих клиентов
+            if (CurrentCompanyId != 0 && client.CompanyId != CurrentCompanyId)
+            {
+                return Forbid();
+            }
+
+            _context.Clients.Remove(client);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+    }
+}

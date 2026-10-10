@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="DaEtoZhe.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:DaEtoZhe.Mobile.Views"
+    Shell.FlyoutBehavior="Disabled">
+
+    <Shell.Resources>
+        <ResourceDictionary>
+            <Style x:Key="BaseStyle" TargetType="Element">
+                <Setter Property="Shell.TabBarForegroundColor" Value="#27AE60"/>
+                <Setter Property="Shell.TabBarUnselectedColor" Value="#BDC3C7"/>
+                <Setter Property="Shell.TabBarTitleColor" Value="#2C3E50"/>
+            </Style>
+            <Style TargetType="TabBar" BasedOn="{StaticResource BaseStyle}" />
+        </ResourceDictionary>
+    </Shell.Resources>
+
+    <TabBar>
+        <Tab Title="Работа">
+            <Tab.Icon>
+                <FontImageSource Glyph="🚘" Size="20"/>
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:OrdersPage}" />
+        </Tab>
+
+        <Tab Title="Смена">
+            <Tab.Icon>
+                <FontImageSource Glyph="📋" Size="20"/>
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:ManagementPage}" />
+        </Tab>
+
+        <Tab Title="Отчеты">
+            <Tab.Icon>
+                <FontImageSource Glyph="📊" Size="20"/>
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:ReportsPage}" />
+        </Tab>
+
+        <Tab Title="Настройки">
+            <Tab.Icon>
+                <FontImageSource Glyph="⚙️" Size="20"/>
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" />
+        </Tab>
+    </TabBar>
+</Shell>

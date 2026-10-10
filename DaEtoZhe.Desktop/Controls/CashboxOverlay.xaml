@@ -1,0 +1,255 @@
+<UserControl x:Class="DaEtoZhe.Desktop.Controls.CashboxOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:DaEtoZhe.Desktop.Controls"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <Storyboard x:Key="ShowAnimation">
+            <DoubleAnimation Storyboard.TargetName="OverlayBackground" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="0.9" To="1" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.9" To="1" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="PopupPanel" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.15"/>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid>
+        <Border x:Name="OverlayBackground" Background="#90000000" Opacity="0" Visibility="Collapsed"/>
+
+        <Border x:Name="PopupPanel" 
+                Background="{DynamicResource BgMain}" 
+                CornerRadius="6" 
+                Width="950" 
+                Height="950" 
+                VerticalAlignment="Center" 
+                HorizontalAlignment="Center" 
+                BorderBrush="{DynamicResource BorderColor}" 
+                BorderThickness="1"
+                Opacity="0" 
+                Visibility="Collapsed">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="25" ShadowDepth="0" Opacity="0.4"/>
+            </Border.Effect>
+            <Border.RenderTransform>
+                <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
+            </Border.RenderTransform>
+
+            <Grid Margin="25">
+                <Grid.RowDefinitions>
+                    <!-- заголовок -->
+                    <RowDefinition Height="Auto"/> 
+                    <!-- карточки -->
+                    <RowDefinition Height="Auto"/> 
+                    <!-- НОВОЕ: полоса X-отчета -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- контент -->
+                    <RowDefinition Height="*"/> 
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок -->
+                <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,20" VerticalAlignment="Center">
+                    <TextBlock DockPanel.Dock="Left"
+                               Text="💰 Касса смены" 
+                               FontSize="26" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource TextMain}"
+                               VerticalAlignment="Center"/>
+                    <Button Click="Close_Click" 
+                            DockPanel.Dock="Right" 
+                            Width="40" Height="40"
+                            Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="CloseBorder" Background="Transparent" CornerRadius="6">
+                                    <TextBlock Text="✕" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               FontSize="20" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextMuted}"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="CloseBorder" Property="Background" Value="{DynamicResource TableRowHover}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </DockPanel>
+
+                <!-- Карточки итогов -->
+                <Grid Grid.Row="1" Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="20" Margin="0,0,10,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="💵 Наличных в ящике" FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding CashInHand, StringFormat={}{0:N0} ₽}" 
+                                       FontSize="28" FontWeight="Bold" 
+                                       Foreground="{DynamicResource AccentGreen}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="20" Margin="5,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="📉 Расходы / Авансы" FontSize="13" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding TotalExpenses, StringFormat={}{0:N0} ₽}" 
+                                       FontSize="28" FontWeight="Bold" 
+                                       Foreground="{DynamicResource AccentRed}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="{DynamicResource TextMain}" CornerRadius="6" 
+                            Padding="20" Margin="10,0,0,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="🏢 Чистая прибыль (наличная)" FontSize="13" 
+                                       Foreground="{DynamicResource TextLightMuted}" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding NetCashProfit, StringFormat={}{0:N0} ₽}" 
+                                       FontSize="28" FontWeight="Bold" 
+                                       Foreground="{DynamicResource BgCard}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- X-ОТЧЕТ: статус пересчёта кассы -->
+                <Border Grid.Row="2" Background="{DynamicResource BgCard}" CornerRadius="6"
+        Padding="15,10" Margin="0,0,0,15"
+        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Content="🧮 X-Отчет" Click="XReportButton_Click"
+                                Style="{StaticResource PrimaryBtn}" Margin="0,0,15,0"/>
+                        <TextBlock x:Name="ReconciliationStatusText" Grid.Column="1"
+                   Text="⚠️ Касса не пересчитана" FontSize="13" FontWeight="SemiBold"
+                   Foreground="{DynamicResource AccentOrange}"
+                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </Grid>
+                </Border>
+
+                <!-- Контент -->
+                <Grid Grid.Row="3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Лента операций -->
+                    <Border Grid.Column="0" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="15" Margin="0,0,15,0"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="📜 Лента операций" 
+                                       FontWeight="Bold" FontSize="16"
+                                       Foreground="{DynamicResource TextMain}" Margin="0,0,0,12"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ListBox ItemsSource="{Binding Transactions}" 
+                                         BorderThickness="0" Background="Transparent" 
+                                         HorizontalContentAlignment="Stretch">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter/>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{DynamicResource BorderColor}" 
+                                                    BorderThickness="0,0,0,1" Padding="8,12">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="40"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Icon}" FontSize="20" 
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
+                                                        <TextBlock Text="{Binding Type}" FontWeight="SemiBold" FontSize="14"
+                                                                   Foreground="{DynamicResource TextMain}"/>
+                                                        <TextBlock Text="{Binding Comment}" FontSize="12" 
+                                                                   Foreground="{DynamicResource TextMuted}" 
+                                                                   TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                                        <TextBlock Text="{Binding DateTime, StringFormat={}{0:dd.MM HH:mm}}" 
+                                                                   FontSize="11" Foreground="{DynamicResource TextLightMuted}" 
+                                                                   Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="{Binding FormattedAmount}" 
+                                                               FontWeight="Bold" FontSize="15"
+                                                               Foreground="{Binding ColorHex, Converter={StaticResource HexToBrushConverter}}" 
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Форма операции -->
+                    <Border Grid.Column="1" Background="{DynamicResource BgCard}" CornerRadius="6" 
+                            Padding="20"
+                            BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="➕ Новая операция" FontWeight="Bold" FontSize="16"
+                                       Foreground="{DynamicResource TextMain}" Margin="0,0,0,20"/>
+
+                            <TextBlock Text="Тип операции" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"/>
+                            <controls:CustomComboBox x:Name="TypeCashTransactionCombo" 
+                                                     Margin="0,0,0,15" Height="45"
+                                                     ItemsSource="{Binding OperationTypes}"
+                                                     SelectedValue="{Binding SelectedOperationType, Mode=TwoWay}"
+                                                     SelectedValuePath="Value" DisplayMemberPath="Key"
+                                                     Placeholder="Выберите тип операции"/>
+
+                            <TextBlock Text="Сотрудник" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"
+                                       Visibility="{Binding EmployeeComboVisibility}"/>
+                            <controls:CustomComboBox x:Name="EmployeeCombo" 
+                                                     Margin="0,0,0,15" Height="45"
+                                                     Visibility="{Binding EmployeeComboVisibility}"
+                                                     ItemsSource="{Binding ActiveEmployees}"
+                                                     SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}"
+                                                     DisplayMemberPath="FullName"
+                                                     Placeholder="Кому выдаем аванс?"/>
+
+                            <TextBlock Text="Сумма (₽)" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="AmountText" Height="45" FontSize="16" FontWeight="Bold" 
+                                     Padding="15,0" Margin="0,0,0,15"/>
+
+                            <TextBlock Text="Комментарий" FontSize="12" 
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="CommentText" Height="80" TextWrapping="Wrap" 
+                                     AcceptsReturn="True" Padding="12,10" Margin="0,0,0,25" FontSize="13"/>
+
+                            <Button Content="Провести операцию" Click="AddTransaction_Click" 
+                                    Style="{StaticResource SuccessBtn}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

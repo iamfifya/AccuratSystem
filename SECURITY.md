@@ -14,7 +14,7 @@ We actively maintain and patch security vulnerabilities for the following versio
 
 **⚠️ DO NOT open a public GitHub issue for security vulnerabilities.**
 
-AccuratSystem processes financial transactions and personal data. Public disclosure of vulnerabilities puts all commercial customers at risk.
+DaEtoZhe processes financial transactions and personal data. Public disclosure of vulnerabilities puts all commercial customers at risk.
 
 ### How to report
 
@@ -52,9 +52,9 @@ Include:
 ## Scope
 
 **In scope:**
-- `Accurat.WebAPI` (server-side code, authentication, authorization, API endpoints)
-- `AccuratSystem.Contracts` (shared DTOs and models)
-- `AccuratPanelCWD` / `AccuratPanelCWM` / `AccuratPanelCarWashing` (client applications)
+- `DaEtoZhe.WebAPI` (server-side code, authentication, authorization, API endpoints)
+- `DaEtoZhe.Contracts` (shared DTOs and models)
+- `DaEtoZhe.Desktop` / `DaEtoZhe.Mobile` (client applications)
 - SQL migrations and database schema
 - Authentication flows (BCrypt, session management)
 - SaaS tenant isolation (`X-Company-Id` header enforcement)

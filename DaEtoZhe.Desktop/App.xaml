@@ -1,0 +1,19 @@
+﻿<Application x:Class="DaEtoZhe.Desktop.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:DaEtoZhe.Desktop">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Конвертеры (загружаются ПЕРВЫМИ!) -->
+                <ResourceDictionary Source="/Styles/Converters.xaml"/>
+                <!-- Базовые стили -->
+                <ResourceDictionary Source="/Styles/AppStyles.xaml"/>
+                <!-- Тема по умолчанию (светлая) -->
+                <ResourceDictionary Source="/Styles/LightTheme.xaml"/>
+                <ResourceDictionary Source="/Styles/OrderCardTemplate.xaml"/>
+                <ResourceDictionary Source="/Controls/CustomComboBoxStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

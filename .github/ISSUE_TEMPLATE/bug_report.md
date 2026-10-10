@@ -13,10 +13,9 @@ assignees: ''
 ## 🖥 Окружение
 
 **Клиент (выберите один):**
-- [ ] AccuratPanelCWD (WPF, .NET 10, стол управляющего)
-- [ ] AccuratPanelCWM (MAUI, мобильный клиент)
-- [ ] AccuratPanelCarWashing (legacy WPF, .NET Framework 4.6.2)
-- [ ] Accurat.WebAPI (сервер)
+- [ ] DaEtoZhe.Desktop (WPF, .NET 10, стол управляющего)
+- [ ] DaEtoZhe.Mobile (MAUI, мобильный клиент)
+- [ ] DaEtoZhe.WebAPI (сервер)
 
 **Версия/коммит:** (например, `main` или `commit abc123`)
 

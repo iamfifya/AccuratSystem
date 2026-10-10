@@ -1,0 +1,98 @@
+﻿<Window x:Class="DaEtoZhe.Desktop.StockDocumentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:DaEtoZhe.Desktop.Controls"
+        Title="Новый документ склада" Height="700" Width="850"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource BgMain}"
+        Foreground="{DynamicResource TextMain}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TitleText" Text="📥 Приход" FontWeight="Bold" FontSize="22" Margin="0,0,0,16"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <controls:CustomComboBox x:Name="TypeCombo" Header="Тип документа"
+                                     DisplayMemberPath="Name" SelectedValuePath="Value"
+                                     SelectionChanged="TypeCombo_Changed"/>
+
+            <StackPanel Grid.Column="1" Margin="15,0,0,0">
+                <TextBlock Text="Поставщик (текстом)" Style="{StaticResource FilterLabelStyle}"/>
+                <TextBox x:Name="SupplierTextBox"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Margin="15,0,0,0">
+                <TextBlock Text="Комментарий" Style="{StaticResource FilterLabelStyle}"/>
+                <TextBox x:Name="CommentTextBox"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Редактор строки в стиле панели -->
+        <Border Grid.Row="2" Margin="0,20,0,0" Padding="15" CornerRadius="6"
+                Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource BorderColor}" BorderThickness="2">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <controls:CustomComboBox x:Name="ItemCombo" Header="Позиция"
+                                         DisplayMemberPath="Name" SelectedValuePath="Id"
+                                         SelectionChanged="ItemCombo_Changed"/>
+
+                <StackPanel Grid.Column="1" Margin="15,0,0,0">
+                    <TextBlock x:Name="QtyUnitText" FontSize="11" Opacity="0.7"/>
+                    <TextBlock Text="Количество" Style="{StaticResource FilterLabelStyle}"/>
+                    <TextBox x:Name="QtyTextBox" PreviewTextInput="DecimalOnly_PreviewTextInput"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Margin="15,0,0,0">
+                    <TextBlock x:Name="CostLabelText" Text="Цена закупки" Style="{StaticResource FilterLabelStyle}"/>
+                    <TextBox x:Name="CostTextBox" PreviewTextInput="DecimalOnly_PreviewTextInput"/>
+                </StackPanel>
+
+                <Button Grid.Column="3" Content="➕ Добавить" Style="{StaticResource PrimaryBtn}"
+                        Margin="15,0,0,0" VerticalAlignment="Bottom" Click="AddLine_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- AuditDataGridStyle делает таблицу чистой и современной -->
+        <DataGrid x:Name="LinesGrid" Grid.Row="3" Margin="0,15,0,0" Style="{StaticResource AuditDataGridStyle}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Позиция" Binding="{Binding Item.Name}" Width="*"/>
+                <DataGridTextColumn Header="Кол-во" Binding="{Binding Qty, StringFormat={}{0:0.###}}" Width="100"/>
+                <DataGridTextColumn Header="Цена" Binding="{Binding Cost, StringFormat=N2}" Width="100"/>
+                <DataGridTextColumn Header="Сумма" Binding="{Binding Sum, StringFormat=N0}" Width="120"/>
+
+                <DataGridTemplateColumn Header="" Width="50">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="✖" Click="RemoveLine_Click" Tag="{Binding}"
+                                    Background="Transparent" BorderThickness="0" 
+                                    Foreground="{DynamicResource AccentRed}"
+                                    FontWeight="Bold" Cursor="Hand" ToolTip="Удалить строку"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Button Content="💾 Провести документ" Style="{StaticResource SuccessBtn}" Click="Save_Click" Margin="0,0,15,0" Width="180"/>
+            <Button Content="✖ Отмена" Style="{StaticResource DangerBtn}" Click="Cancel_Click" Width="120" Margin="0"/>
+        </StackPanel>
+    </Grid>
+</Window>

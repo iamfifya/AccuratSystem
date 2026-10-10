@@ -1,4 +1,4 @@
-name: Accurat System CI
+name: ДаЭтоЖе System CI
 
 on:
   push:
@@ -41,26 +41,26 @@ jobs:
 
       # === RESTORE PHASE ===
       - name: Restore legacy packages (packages.config)
-        run: nuget restore AccuratPanelCarWashing\AccuratPanelCarWashing.csproj -PackagesDirectory packages
+        run: nuget restore DaEtoZhe.Desktop\DaEtoZhe.Desktop.csproj -PackagesDirectory packages
 
       - name: Fix broken CSPROJ paths
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path AccuratPanelCarWashing\packages
-          Copy-Item -Path packages\* -Destination AccuratPanelCarWashing\packages -Recurse -Force
+          New-Item -ItemType Directory -Force -Path DaEtoZhe.Desktop\packages
+          Copy-Item -Path packages\* -Destination DaEtoZhe.Desktop\packages -Recurse -Force
 
       - name: Restore modern packages (WPF)
-        run: dotnet restore AccuratPanelCWD\AccuratPanelCWD.csproj
+        run: dotnet restore DaEtoZhe.Desktop\DaEtoZhe.Desktop.csproj
 
       - name: Restore modern packages (API)
-        run: dotnet restore Accurat.WebAPI\Accurat.WebAPI.csproj
+        run: dotnet restore DaEtoZhe.WebAPI\DaEtoZhe.WebAPI.csproj
 
       # === BUILD PHASE ===
       - name: Build WPF Client
-        run: dotnet build AccuratPanelCWD\AccuratPanelCWD.csproj --configuration ${{ matrix.configuration }} --no-restore
+        run: dotnet build DaEtoZhe.Desktop\DaEtoZhe.Desktop.csproj --configuration ${{ matrix.configuration }} --no-restore
 
       - name: Build Web API
-        run: dotnet build Accurat.WebAPI\Accurat.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
+        run: dotnet build DaEtoZhe.WebAPI\DaEtoZhe.WebAPI.csproj --configuration ${{ matrix.configuration }} --no-restore
 
       # === ARTIFACTS ===
       - name: Upload WPF Artifact
