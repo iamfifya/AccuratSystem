@@ -1,10 +1,11 @@
-﻿<Window x:Class="DaEtoZhe.Desktop.VehiclesWindow"
+<Window x:Class="DaEtoZhe.Desktop.VehiclesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DaEtoZhe.Desktop.Controls"
         xmlns:local="clr-namespace:DaEtoZhe.Desktop"
         Title="🚗 Авто под ремонт и продажу"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         ResizeMode="CanResize"
         MinWidth="1200" MinHeight="700"
         Width="1400" Height="850"
@@ -13,7 +14,8 @@
         BorderThickness="1"
         Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="20">
+    <!-- Единый отступ содержимого окна берём из токена WindowContentMargin -->
+    <Grid Margin="{StaticResource WindowContentMargin}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -21,19 +23,19 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 1. Заголовок -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="🚗 Авто под ремонт и продажу" 
+        <!-- ==================== 1. ЗАГОЛОВОК СТРАНИЦЫ ==================== -->
+        <StackPanel Grid.Row="0" Margin="{StaticResource CardGapMargin}">
+            <TextBlock Text="🚗 Авто под ремонт и продажу"
                        Style="{StaticResource HeadingLargeStyle}"/>
-            <TextBlock Text="Управление автомобилями для ремонта и перепродажи" 
-                       Style="{StaticResource TextSecondaryStyle}" 
-                       Margin="0,4,0,0"/>
+            <TextBlock Text="Управление автомобилями для ремонта и перепродажи"
+                       Style="{StaticResource TextSecondaryStyle}"
+                       Margin="{StaticResource PageTitleMargin}"/>
         </StackPanel>
 
-        <!-- 2. Фильтры и действия -->
-        <Border Grid.Row="1" 
-                Style="{StaticResource CardFlatStyle}" 
-                Margin="0,0,0,16">
+        <!-- ==================== 2. ФИЛЬТРЫ И ДЕЙСТВИЯ ==================== -->
+        <Border Grid.Row="1"
+                Style="{StaticResource CardFlatStyle}"
+                Margin="{StaticResource CardGapMargin}">
             <Grid VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="240"/>
@@ -41,8 +43,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Комбобокс со встроенным Header="Статус" -->
-                <controls:CustomComboBox x:Name="StatusFilter" 
+                <!-- Фильтр статуса: используем встроенный Header кастомного комбобокса -->
+                <controls:CustomComboBox x:Name="StatusFilter"
                                          Grid.Column="0"
                                          Header="Статус"
                                          SelectionChanged="StatusFilter_SelectionChanged">
@@ -58,29 +60,37 @@
                     <ComboBoxItem Content="Списан" Tag="8"/>
                 </controls:CustomComboBox>
 
-                <!-- Поиск -->
-                <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Bottom">
-                    <TextBlock Text="Поиск" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,6"/>
-                    <TextBox x:Name="SearchBox" 
+                <!-- Поиск: метка сверху, выровнена по нижней границе с полем комбобокса -->
+                <StackPanel Grid.Column="1"
+                            Style="{StaticResource FormFieldStackStyle}"
+                            Margin="{StaticResource ControlGapLGMargin}"
+                            VerticalAlignment="Bottom">
+                    <TextBlock Text="Поиск" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBox x:Name="SearchBox"
                              TextChanged="SearchBox_TextChanged"/>
                 </StackPanel>
 
-                <!-- Главные кнопки -->
+                <!-- Кнопки действий: прижаты к правому краю, одинаковые зазоры из токенов -->
+                <!-- Сбрасываем базовый ButtonMargin (0,0,8,8), чтобы ряд кнопок не «прыгал»
+                     относительно полей фильтра — зазор задаём только горизонтальным токеном -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                    <Button Content="➕ Добавить авто" 
+                    <Button Content="➕ Добавить авто"
                             Click="AddVehicle_Click"
-                            Style="{StaticResource PrimaryBtn}"/>
-                    <Button Content="🔄 Обновить" 
+                            Style="{StaticResource PrimaryBtn}"
+                            Margin="{StaticResource ButtonRowGapMargin}"/>
+                    <Button Content="🔄 Обновить"
                             Click="RefreshButton_Click"
-                            Style="{StaticResource SecondaryBtn}"/>
-                    <Button Content="✖ Закрыть" 
+                            Style="{StaticResource SecondaryBtn}"
+                            Margin="{StaticResource ButtonRowGapMargin}"/>
+                    <Button Content="✖ Закрыть"
                             Click="CloseButton_Click"
-                            Style="{StaticResource DangerBtn}"/>
+                            Style="{StaticResource DangerBtn}"
+                            Margin="0"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- 3. Карточки авто -->
+        <!-- ==================== 3. КАРТОЧКИ АВТО ==================== -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="VehiclesItemsControl">
                 <ItemsControl.ItemsPanel>
@@ -91,11 +101,11 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Style="{StaticResource CardInteractiveStyle}"
-                                Width="340" 
-                                Margin="0,0,12,12">
+                                Width="{StaticResource CardListWidth}"
+                                Margin="{StaticResource ButtonMargin}">
                             <StackPanel>
-                                <!-- Шапка карточки -->
-                                <Grid Margin="0,0,0,12">
+                                <!-- Шапка карточки: марка/модель + бейдж статуса -->
+                                <Grid Style="{StaticResource SectionBlockStyle}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -104,20 +114,16 @@
                                         <TextBlock Text="{Binding Make}" Style="{StaticResource HeadingSmallStyle}"/>
                                         <TextBlock Text="{Binding Model}" Style="{StaticResource TextSecondaryStyle}"/>
                                     </StackPanel>
-                                    <Border Grid.Column="1" 
-                                            Background="{Binding Status, Converter={StaticResource VehicleStatusToColorConverter}}"
-                                            CornerRadius="{DynamicResource RadiusXS}" 
-                                            Padding="8,4" 
-                                            VerticalAlignment="Top">
+                                    <Border Grid.Column="1"
+                                            Style="{StaticResource BadgeStyle}"
+                                            Background="{Binding Status, Converter={StaticResource VehicleStatusToColorConverter}}">
                                         <TextBlock Text="{Binding Status, Converter={StaticResource VehicleStatusToTextConverter}}"
-                                                   Foreground="White" 
-                                                   FontWeight="SemiBold" 
-                                                   FontSize="{DynamicResource FontSizeSM}"/>
+                                                   Style="{StaticResource BadgeTextStyle}"/>
                                     </Border>
                                 </Grid>
 
-                                <!-- Детали -->
-                                <Grid Margin="0,0,0,12">
+                                <!-- Основные детали авто -->
+                                <Grid Style="{StaticResource SectionBlockStyle}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -131,34 +137,42 @@
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Гос. номер:" Style="{StaticResource TextSecondaryStyle}"/>
                                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LicensePlate}" Style="{StaticResource TextPrimaryStyle}" FontWeight="Bold"/>
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Год / Пробег:" Style="{StaticResource TextSecondaryStyle}" Margin="0,4,0,0"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource TextPrimaryStyle}" Margin="0,4,0,0">
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Год / Пробег:" Style="{StaticResource TextSecondaryStyle}" Margin="{StaticResource FormLabelMargin}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource TextPrimaryStyle}" Margin="{StaticResource FormLabelMargin}">
                                         <Run Text="{Binding Year}"/>
                                         <Run Text=" г., "/>
                                         <Run Text="{Binding Mileage, StringFormat=N0}"/>
                                         <Run Text=" км"/>
                                     </TextBlock>
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Цена продажи:" Style="{StaticResource TextSecondaryStyle}" Margin="0,4,0,0"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ListingPrice, StringFormat={}{0:N0} ₽}" 
-                                               Foreground="{DynamicResource AccentGreen}" 
-                                               FontWeight="Bold" 
-                                               Margin="0,4,0,0"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Цена продажи:" Style="{StaticResource TextSecondaryStyle}" Margin="{StaticResource FormLabelMargin}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ListingPrice, StringFormat={}{0:N0} ₽}"
+                                               Style="{StaticResource TextPrimaryStyle}"
+                                               Foreground="{DynamicResource AccentGreen}"
+                                               FontWeight="Bold"
+                                               Margin="{StaticResource FormLabelMargin}"/>
                                 </Grid>
 
-                                <!-- VIN и Дата -->
-                                <DockPanel Margin="0,0,0,12">
+                                <!-- VIN и дата покупки -->
+                                <DockPanel Style="{StaticResource SectionBlockStyle}">
                                     <TextBlock Text="{Binding Vin, StringFormat=VIN: {0}}" Style="{StaticResource TextCaptionStyle}"/>
                                     <TextBlock Text="{Binding PurchaseDate, StringFormat=от dd.MM.yyyy}" Style="{StaticResource TextCaptionStyle}" DockPanel.Dock="Right"/>
                                 </DockPanel>
 
-                                <!-- Кнопки действий (используем IconButtonStyle без сжатия по высоте!) -->
+                                <!-- Кнопки действий карточки (IconButtonStyle + токен-зазоры) -->
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Button Content="✏️" ToolTip="Редактировать" Click="EditVehicle_Click" Style="{StaticResource IconButtonStyle}"/>
-                                    <Button Content="📋" ToolTip="Приёмка" Click="Acceptance_Click" Style="{StaticResource IconButtonStyle}"/>
-                                    <Button Content="🔧" ToolTip="Ремонт" Click="Repair_Click" Style="{StaticResource IconButtonStyle}"/>
-                                    <Button Content="🔄" ToolTip="Статус" Click="ChangeStatus_Click" Style="{StaticResource IconButtonStyle}"/>
-                                    <Button Content="🗑️" ToolTip="Удалить" Click="DeleteVehicle_Click" Style="{StaticResource DangerBtn}"/>
+                                    <Button Content="✏️" ToolTip="Редактировать" Click="EditVehicle_Click"
+                                            Style="{StaticResource IconButtonStyle}" Margin="{StaticResource ButtonGapMargin}"/>
+                                    <Button Content="📋" ToolTip="Приёмка" Click="Acceptance_Click"
+                                            Style="{StaticResource IconButtonStyle}" Margin="{StaticResource ButtonGapMargin}"/>
+                                    <Button Content="🔧" ToolTip="Ремонт" Click="Repair_Click"
+                                            Style="{StaticResource IconButtonStyle}" Margin="{StaticResource ButtonGapMargin}"/>
+                                    <Button Content="🔄" ToolTip="Статус" Click="ChangeStatus_Click"
+                                            Style="{StaticResource IconButtonStyle}" Margin="{StaticResource ButtonGapMargin}"/>
+                                    <Button Content="🗑️" ToolTip="Удалить" Click="DeleteVehicle_Click"
+                                            Style="{StaticResource IconButtonStyle}"
+                                            Foreground="{DynamicResource AccentRed}"
+                                            Margin="0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -167,30 +181,30 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- 4. Статистика снизу -->
-        <Border Grid.Row="3" 
-                Style="{StaticResource StatCard}" 
-                Margin="0,16,0,0">
+        <!-- ==================== 4. СТАТИСТИКА ==================== -->
+        <Border Grid.Row="3"
+                Style="{StaticResource StatCard}"
+                Margin="{StaticResource FormSectionTopMargin}">
             <UniformGrid Columns="5">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Всего авто" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="TotalCountText" Style="{StaticResource HeadingMediumStyle}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="TotalCountText" Style="{StaticResource StatMetricStyle}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="В ремонте" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="InRepairCountText" Style="{StaticResource HeadingMediumStyle}" Foreground="{DynamicResource AccentOrange}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="InRepairCountText" Style="{StaticResource StatMetricStyle}" Foreground="{DynamicResource AccentOrange}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="На продаже" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="ForSaleCountText" Style="{StaticResource HeadingMediumStyle}" Foreground="{DynamicResource AccentBlue}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="ForSaleCountText" Style="{StaticResource StatMetricStyle}" Foreground="{DynamicResource AccentBlue}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Продано" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="SoldCountText" Style="{StaticResource HeadingMediumStyle}" Foreground="{DynamicResource AccentGreen}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="SoldCountText" Style="{StaticResource StatMetricStyle}" Foreground="{DynamicResource AccentGreen}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Общая маржа" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="TotalMarginText" Style="{StaticResource HeadingMediumStyle}" Foreground="{DynamicResource AccentGreen}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="TotalMarginText" Style="{StaticResource StatMetricStyle}" Foreground="{DynamicResource AccentGreen}"/>
                 </StackPanel>
             </UniformGrid>
         </Border>

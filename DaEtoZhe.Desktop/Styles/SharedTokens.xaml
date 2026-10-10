@@ -16,6 +16,11 @@
     <Thickness x:Key="CardPadding">16</Thickness>
     <Thickness x:Key="CardPaddingLarge">20</Thickness>
     <Thickness x:Key="ButtonMargin">0,0,8,8</Thickness>
+    <!-- Горизонтальное расстояние между кнопками в ряду (без вертикального отступа) -->
+    <Thickness x:Key="ButtonRowGapMargin">0,0,8,0</Thickness>
+    <!-- Поле формы в 2-колоночной сетке: зазор справа + нижний ряд -->
+    <Thickness x:Key="FormFieldColMargin">0,0,8,12</Thickness>
+    <Thickness x:Key="FormFieldColLastMargin">0,0,8,0</Thickness>
     <Thickness x:Key="PopupPadding">6</Thickness>
     <Thickness x:Key="PopupItemPadding">12,9</Thickness>
 
@@ -57,6 +62,10 @@
     <!-- ==================== POPUP / LIST LIMITS ==================== -->
     <sys:Double x:Key="PopupMaxHeight">320</sys:Double>
     <sys:Double x:Key="CalendarPopupMinWidth">320</sys:Double>
+
+    <!-- ==================== LAYOUT ==================== -->
+    <!-- Ширина карточек в grid-списках (WrapPanel) -->
+    <sys:Double x:Key="CardListWidth">340</sys:Double>
 
     <!-- ==================== BUTTON PALETTE (v6.0) ==================== -->
     <!-- Primary: original blue family, saturation reduced by 20% -->

@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- ==================== DATA GRID ==================== -->
     <Style x:Key="AuditDataGridStyle" TargetType="DataGrid">
         <Setter Property="AutoGenerateColumns" Value="False"/>
         <Setter Property="IsReadOnly" Value="True"/>
@@ -98,6 +99,11 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Кнопка-действие «в тон» (удаление/сторно) внутри строк DataGrid -->
+    <Style x:Key="GridDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource GridActionButtonStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource AccentRed}"/>
     </Style>
 
 </ResourceDictionary>

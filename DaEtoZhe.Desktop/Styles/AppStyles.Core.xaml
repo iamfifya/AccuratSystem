@@ -228,6 +228,27 @@
         <Setter Property="Foreground" Value="{DynamicResource AccentOrange}"/>
     </Style>
 
+    <!-- Значение метрики в стат-рядах (UniformGrid) — цвет задаётся локально -->
+    <Style x:Key="StatMetricStyle" TargetType="TextBlock" BasedOn="{StaticResource TextPrimaryStyle}">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeHeadingSM}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,4,0,0"/>
+    </Style>
+
+    <!-- ==================== BADGES ==================== -->
+    <Style x:Key="BadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AccentBlue}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusXS}"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+
+    <Style x:Key="BadgeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource TextCaptionStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
     <Style x:Key="SuccessInfoStyle" TargetType="TextBlock" BasedOn="{StaticResource TextCaptionStyle}">
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource AccentGreen}"/>

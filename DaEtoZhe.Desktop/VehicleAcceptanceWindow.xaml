@@ -5,6 +5,7 @@
         Title="Акт приёмки и дефектная ведомость"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
+        ResizeMode="CanResize"
         MinWidth="1150" MinHeight="780"
         Background="{DynamicResource BgMain}"
         Foreground="{DynamicResource TextMain}">
@@ -70,10 +71,11 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Форма добавления дефекта -->
+                <!-- Форма добавления дефекта: все поля выровнены по нижней границе,
+                     комбобоксы используют встроенный Header (метка занимает место сверху) -->
                 <Border Style="{StaticResource CardFlatStyle}"
                         Margin="{StaticResource CardGapMargin}">
-                    <Grid VerticalAlignment="Center">
+                    <Grid VerticalAlignment="Bottom">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="140"/>
@@ -135,9 +137,9 @@
                                         <Button Content="🔧" Style="{StaticResource GridActionButtonStyle}"
                                                 Click="ToggleFixed_Click" Tag="{Binding}"
                                                 ToolTip="Отметить устранённым / вернуть"/>
-                                        <Button Content="🗑" Style="{StaticResource GridActionButtonStyle}"
+                                        <Button Content="🗑" Style="{StaticResource GridDangerButtonStyle}"
                                                 Click="DeleteDefect_Click" Tag="{Binding}"
-                                                Foreground="{DynamicResource AccentRed}" ToolTip="Удалить"/>
+                                                ToolTip="Удалить"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

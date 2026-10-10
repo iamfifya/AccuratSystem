@@ -1,14 +1,18 @@
-﻿<Window x:Class="DaEtoZhe.Desktop.VehicleRepairWindow"
+<Window x:Class="DaEtoZhe.Desktop.VehicleRepairWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DaEtoZhe.Desktop.Controls"
         Title="Ремонт автомобиля"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        ResizeMode="CanResize"
+        MinWidth="1150" MinHeight="780"
         Width="1250" Height="820"
         Background="{DynamicResource BgMain}"
         Foreground="{DynamicResource TextMain}">
 
-    <Grid Margin="20">
+    <!-- Единый отступ содержимого окна из токена -->
+    <Grid Margin="{StaticResource WindowContentMargin}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -17,79 +21,85 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══ ROW 0: Заголовок и инфо об авто ═══ -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+        <!-- ═══ ROW 0: ЗАГОЛОВОК И ИНФО ОБ АВТО ═══ -->
+        <StackPanel Grid.Row="0" Margin="{StaticResource CardGapMargin}">
             <TextBlock x:Name="TitleText" Text="🔧 Ремонт" Style="{StaticResource HeadingMediumStyle}"/>
-            <TextBlock x:Name="VehicleInfoText" Style="{StaticResource TextSecondaryStyle}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+            <TextBlock x:Name="VehicleInfoText" Style="{StaticResource TextSecondaryStyle}"
+                       Margin="{StaticResource PageTitleMargin}" TextWrapping="Wrap"/>
         </StackPanel>
 
-        <!-- ═══ ROW 1: Финансовый пульс ремонта ═══ -->
-        <Border Grid.Row="1" Margin="0,0,0,16" Style="{StaticResource CardFlatStyle}" Padding="16">
+        <!-- ═══ ROW 1: ФИНАНСОВЫЙ ПУЛЬС РЕМОНТА ═══ -->
+        <Border Grid.Row="1" Style="{StaticResource CardFlatStyle}" Margin="{StaticResource CardGapMargin}">
             <UniformGrid Columns="5">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Запчасти" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="PartsCostText" FontSize="18" FontWeight="Bold"
-                               Foreground="{DynamicResource AccentOrange}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="PartsCostText" Style="{StaticResource StatMetricStyle}"
+                               Foreground="{DynamicResource AccentOrange}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Работы" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="LaborCostText" FontSize="18" FontWeight="Bold"
-                               Foreground="{DynamicResource AccentBlue}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="LaborCostText" Style="{StaticResource StatMetricStyle}"
+                               Foreground="{DynamicResource AccentBlue}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="ИТОГО факт" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="TotalCostText" FontSize="18" FontWeight="Bold"
-                               Foreground="{DynamicResource TextMain}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="TotalCostText" Style="{StaticResource StatMetricStyle}"
+                               Foreground="{DynamicResource TextMain}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Смета приёмки" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="EstimateText" FontSize="18" FontWeight="Bold"
-                               Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="EstimateText" Style="{StaticResource StatMetricStyle}"
+                               Foreground="{DynamicResource TextMuted}"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="Превышение сметы" Style="{StaticResource FilterLabelStyle}" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="OverrunText" FontSize="18" FontWeight="Bold"
-                               HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="OverrunText" Style="{StaticResource StatMetricStyle}"/>
                 </StackPanel>
             </UniformGrid>
         </Border>
 
-        <!-- ═══ ROW 2: Запчасти (слева) + Работы (справа) ═══ -->
+        <!-- ═══ ROW 2: ЗАПЧАСТИ (СЛЕВА) + РАБОТЫ (СПРАВА) ═══ -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ЛЕВО: запчасти -->
-            <Grid Margin="0,0,10,0">
+            <!-- ЛЕВО: запчасти со склада -->
+            <Grid Margin="{StaticResource FormFieldColLastMargin}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="📦 Запчасти со склада" Style="{StaticResource HeadingSmallStyle}" Margin="0,0,0,8"/>
+                <TextBlock Text="📦 Запчасти со склада" Style="{StaticResource HeadingSmallStyle}" Style="{StaticResource SectionBlockStyle}"/>
 
-                <Border Grid.Row="1" Style="{StaticResource CardFlatStyle}" Padding="12" Margin="0,0,0,12">
+                <Border Grid.Row="1" Style="{StaticResource CardCompactStyle}" Margin="{StaticResource CardGapMargin}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Margin="0,0,8,0">
-                            <TextBlock x:Name="StockHintText" FontSize="11" Opacity="0.7" Margin="0,0,0,2"/>
+
+                        <!-- Подсказка по остаткам + комбобокс через встроенный Header -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="StockHintText" Style="{StaticResource FormHintTextStyle}"/>
                             <controls:CustomComboBox x:Name="ItemCombo" Header="Позиция номенклатуры"
-                                DisplayMemberPath="Name" SelectedValuePath="Id"/>
+                                                     DisplayMemberPath="Name" SelectedValuePath="Id"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                            <TextBlock Text="Кол-во" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+
+                        <StackPanel Grid.Column="1" Style="{StaticResource FormFieldStackStyle}">
+                            <TextBlock Text="Кол-во" Style="{StaticResource FormLabelStyle}"/>
                             <TextBox x:Name="PartQtyTextBox"
                                      PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                         </StackPanel>
+
+                        <!-- Кнопка прижата к нижней границе ряда полей -->
                         <Button Grid.Column="2" Content="➕ Списать" Style="{StaticResource PrimaryBtn}"
-                                VerticalAlignment="Bottom" Click="AddPart_Click"/>
+                                VerticalAlignment="Bottom" Margin="{StaticResource InlineButtonGapMargin},0,0,0"
+                                Click="AddPart_Click"/>
                     </Grid>
                 </Border>
 
@@ -103,8 +113,8 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Button Content="↩" Click="ReturnPart_Click" Tag="{Binding}"
-                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                            Foreground="{DynamicResource AccentRed}" ToolTip="Вернуть на склад (сторно)"/>
+                                            Style="{StaticResource GridDangerButtonStyle}"
+                                            ToolTip="Вернуть на склад (сторно)"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -112,17 +122,17 @@
                 </DataGrid>
             </Grid>
 
-            <!-- ПРАВО: работы -->
-            <Grid Grid.Column="1" Margin="10,0,0,0">
+            <!-- ПРАВО: работы механиков -->
+            <Grid Grid.Column="1" Margin="{StaticResource HCardGapMargin}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="👨‍🔧 Работы механиков" Style="{StaticResource HeadingSmallStyle}" Margin="0,0,0,8"/>
+                <TextBlock Text="👨‍🔧 Работы механиков" Style="{StaticResource HeadingSmallStyle}" Style="{StaticResource SectionBlockStyle}"/>
 
-                <Border Grid.Row="1" Style="{StaticResource CardFlatStyle}" Padding="12" Margin="0,0,0,12">
+                <Border Grid.Row="1" Style="{StaticResource CardCompactStyle}" Margin="{StaticResource CardGapMargin}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -137,37 +147,40 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Margin="0,0,8,8">
-                            <controls:CustomComboBox x:Name="MechanicCombo" Header="Механик" DisplayMemberPath="FullName" SelectedValuePath="Id"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Margin="0,0,8,8">
-                            <controls:CustomComboBox x:Name="DefectCombo" Header="Дефект (опц.)" DisplayMemberPath="Description" SelectedValuePath="Id"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2" Margin="0,0,8,8">
-                            <TextBlock Text="План, ч" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                        <!-- Ряд 1: комбобоксы (Header встроенный) + числовые поля, всё выровнено по низу -->
+                        <controls:CustomComboBox Grid.Column="0" x:Name="MechanicCombo" Header="Механик"
+                                                 VerticalAlignment="Bottom"
+                                                 DisplayMemberPath="FullName" SelectedValuePath="Id"/>
+                        <controls:CustomComboBox Grid.Column="1" x:Name="DefectCombo" Header="Дефект (опц.)"
+                                                 VerticalAlignment="Bottom" Margin="{StaticResource HFieldGapMargin}"
+                                                 DisplayMemberPath="Description" SelectedValuePath="Id"/>
+                        <StackPanel Grid.Column="2" Style="{StaticResource FormFieldStackStyle}">
+                            <TextBlock Text="План, ч" Style="{StaticResource FormLabelStyle}"/>
                             <TextBox x:Name="PlannedHoursTextBox"
                                      PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="3" Margin="0,0,8,8">
-                            <TextBlock Text="Факт, ч" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                        <StackPanel Grid.Column="3" Style="{StaticResource FormFieldStackStyle}">
+                            <TextBlock Text="Факт, ч" Style="{StaticResource FormLabelStyle}"/>
                             <TextBox x:Name="ActualHoursTextBox"
                                      PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="4" Margin="0,0,8,8">
-                            <TextBlock Text="Ставка ₽/ч" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                        <StackPanel Grid.Column="4" Style="{StaticResource FormFieldStackStyle}">
+                            <TextBlock Text="Ставка ₽/ч" Style="{StaticResource FormLabelStyle}"/>
                             <TextBox x:Name="RateTextBox"
                                      PreviewTextInput="DecimalOnly_PreviewTextInput"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="5" Margin="0,0,0,8">
-                            <controls:CustomComboBox x:Name="WorkStatusCombo" Header="Статус" DisplayMemberPath="Name" SelectedValuePath="Value"/>
-                        </StackPanel>
+                        <controls:CustomComboBox Grid.Column="5" x:Name="WorkStatusCombo" Header="Статус"
+                                                 VerticalAlignment="Bottom" Margin="{StaticResource HFieldGapMargin}"
+                                                 DisplayMemberPath="Name" SelectedValuePath="Value"/>
 
-                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Margin="0,0,8,0">
-                            <TextBlock Text="Описание работы" Style="{StaticResource FilterLabelStyle}" Margin="0,0,0,4"/>
+                        <!-- Ряд 2: описание работы + кнопка добавления -->
+                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Margin="{StaticResource FormFieldColLastMargin}">
+                            <TextBlock Text="Описание работы" Style="{StaticResource FormLabelStyle}"/>
                             <TextBox x:Name="WorkDescTextBox"/>
                         </StackPanel>
                         <Button Grid.Row="1" Grid.Column="5" x:Name="SaveWorkButton" Content="➕ Добавить"
-                                Style="{StaticResource SuccessBtn}" VerticalAlignment="Bottom" Click="SaveWork_Click"/>
+                                Style="{StaticResource SuccessBtn}" VerticalAlignment="Bottom"
+                                Margin="{StaticResource FormFieldColLastMargin}" Click="SaveWork_Click"/>
                     </Grid>
                 </Border>
 
@@ -183,8 +196,8 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Button Content="🗑" Click="DeleteWork_Click" Tag="{Binding}"
-                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                            Foreground="{DynamicResource AccentRed}" ToolTip="Удалить работу"/>
+                                            Style="{StaticResource GridDangerButtonStyle}"
+                                            ToolTip="Удалить работу"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -193,19 +206,21 @@
             </Grid>
         </Grid>
 
-        <!-- ═══ ROW 3: Бригада и проценты ЗП ═══ -->
-        <Border Grid.Row="3" Margin="0,16,0,0" Style="{StaticResource CardFlatStyle}" Padding="16">
+        <!-- ═══ ROW 3: БРИГАДА И ПРОЦЕНТЫ ЗП ═══ -->
+        <Border Grid.Row="3" Style="{StaticResource CardFlatStyle}" Margin="{StaticResource FormSectionTopMargin}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="340"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Margin="0,0,16,0">
+                <!-- Таблица долей механиков -->
+                <StackPanel Margin="{StaticResource ControlGapLGMargin}">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <TextBlock Text="👷 Бригада и проценты ЗП" Style="{StaticResource HeadingSmallStyle}"/>
-                        <TextBlock x:Name="ShareSumText" FontSize="13" FontWeight="SemiBold"
-                                   Margin="15,0,0,2" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ShareSumText" Style="{StaticResource TextCaptionStyle}"
+                                   FontWeight="SemiBold"
+                                   Margin="{StaticResource InlineButtonGapMargin}" VerticalAlignment="Center"/>
                     </StackPanel>
                     <DataGrid x:Name="SharesGrid" Style="{StaticResource AuditDataGridStyle}"
                               MaxHeight="180" SelectionChanged="SharesGrid_SelectionChanged">
@@ -217,8 +232,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="🗑" Click="DeleteShare_Click" Tag="{Binding}"
-                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                                Foreground="{DynamicResource AccentRed}"/>
+                                                Style="{StaticResource GridDangerButtonStyle}"
+                                                ToolTip="Удалить долю"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -226,30 +241,38 @@
                     </DataGrid>
                 </StackPanel>
 
-                <Border Grid.Column="1" Background="{DynamicResource BgMain}" CornerRadius="{DynamicResource RadiusMD}" Padding="12"
-                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
+                <!-- Панель добавления/редактирования доли -->
+                <Border Grid.Column="1" Background="{DynamicResource BgMain}"
+                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
+                        CornerRadius="{DynamicResource RadiusMD}" Padding="{StaticResource ControlPaddingMD}">
                     <StackPanel>
                         <controls:CustomComboBox x:Name="ShareMechanicCombo" Header="Механик"
-                                  DisplayMemberPath="FullName" SelectedValuePath="Id"/>
-                        <TextBlock Text="Процент доли" Style="{StaticResource FilterLabelStyle}" Margin="0,10,0,4"/>
+                                                 DisplayMemberPath="FullName" SelectedValuePath="Id"
+                                                 Margin="{StaticResource FormFieldMargin}"/>
+                        <TextBlock Text="Процент доли" Style="{StaticResource FormLabelStyle}"/>
                         <TextBox x:Name="SharePercentTextBox"
-                                 PreviewTextInput="DecimalOnly_PreviewTextInput"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                 PreviewTextInput="DecimalOnly_PreviewTextInput"
+                                 Margin="{StaticResource FormFieldMargin}"/>
+                        <StackPanel Orientation="Horizontal">
                             <Button x:Name="AddShareButton" Content="➕ Добавить" Style="{StaticResource PrimaryBtn}"
-                                    Click="AddShare_Click"/>
+                                    Margin="{StaticResource ButtonRowGapMargin}" Click="AddShare_Click"/>
                             <Button x:Name="SaveShareButton" Content="💾 Сохранить" Style="{StaticResource SuccessBtn}"
-                                    Margin="8,0,0,0" Click="SaveShare_Click" IsEnabled="False"/>
+                                    Margin="0" Click="SaveShare_Click" IsEnabled="False"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- ═══ ROW 4: Футер с кнопками ═══ -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
-            <Button Content="✅ Завершить ремонт" Style="{StaticResource SuccessBtn}" Click="Finish_Click" Margin="0,0,10,0"/>
-            <Button Content="🔄 Обновить" Style="{StaticResource PrimaryBtn}" Click="Refresh_Click" Margin="0,0,10,0"/>
-            <Button Content="✖ Закрыть" Style="{StaticResource DangerBtn}" Click="Close_Click"/>
+        <!-- ═══ ROW 4: ФУТЕР С КНОПКАМИ ═══ -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center"
+                    Margin="{StaticResource FormSectionTopMargin}">
+            <Button Content="✅ Завершить ремонт" Style="{StaticResource SuccessBtn}" Click="Finish_Click"
+                    Margin="{StaticResource ButtonRowGapMargin}"/>
+            <Button Content="🔄 Обновить" Style="{StaticResource PrimaryBtn}" Click="Refresh_Click"
+                    Margin="{StaticResource ButtonRowGapMargin}"/>
+            <Button Content="✖ Закрыть" Style="{StaticResource DangerBtn}" Click="Close_Click"
+                    Margin="0"/>
         </StackPanel>
     </Grid>
 </Window>

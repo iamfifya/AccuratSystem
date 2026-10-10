@@ -127,6 +127,25 @@
         <Setter Property="MinHeight" Value="60"/>
     </Style>
 
+    <!-- Поле с подписью-меткой сверху: метка + контрол (одинаковые отступы во всех формах) -->
+    <Style x:Key="FormFieldStackStyle" TargetType="StackPanel">
+        <Setter Property="Margin" Value="{DynamicResource HFieldGapMargin}"/>
+    </Style>
+
+    <!-- Ячейка 2-колоночной формы: зазор между колонками и рядами из токенов -->
+    <Style x:Key="FormGridCellStackStyle" TargetType="StackPanel" BasedOn="{StaticResource FormFieldStackStyle}">
+        <Setter Property="Margin" Value="{DynamicResource FormFieldColMargin}"/>
+    </Style>
+
+    <!-- Блок/секция формы с вертикальным зазором между карточками -->
+    <Style x:Key="SectionBlockStyle" TargetType="FrameworkElement">
+        <Setter Property="Margin" Value="{DynamicResource CardGapMargin}"/>
+    </Style>
+
+    <Style x:Key="FormHintTextStyle" TargetType="TextBlock" BasedOn="{StaticResource TextCaptionStyle}">
+        <Setter Property="Margin" Value="0,0,0,2"/>
+    </Style>
+
     <!-- ==================== CHECKBOX ==================== -->
     <Style TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource TextMain}"/>
